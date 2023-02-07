@@ -1,4 +1,6 @@
-#2021年8～9月、2022年2～4月、8～9月、12月
+#ソレイユ（Soleil）
+#Since 2021/8
+#programmed by ぴーとうぉーでん@Peteworden31416
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import numpy as np
@@ -61,21 +63,14 @@ rg = 2.5     #視野の縦横/2
 
 StarNum1_3 = 1594    #Tychoにない星はヒッパルコスからspl1-3_lightにもってきてこの変数をその行数に変える、StarsOnlyも忘れずに！！
 
-f2 = open('supplement_1-3_light.txt')
+f2 = open('supplement_1-3_light.txt') ###これだけ linecache.getline を使う
 F2 = f2.readlines()
-f2.close()
 
 fHelp = open("TychoSearchHelper.txt")
 FHelp = fHelp.readlines()
-fHelp.close()
-
-fHelp2 = open("TychoSearchHelper2nd.txt")
-FHelp2 = fHelp2.readlines()
-fHelp2.close()
 
 fff = open('StarsNewHIP_to6_5.txt')
 FFF = fff.readlines() #8874個の星
-fff.close()
 
 def Eq_Ec(RA, Dec):  #deg
     d = Dec * pi/180
@@ -121,13 +116,6 @@ def check(event):
     plt.close()
     ButtonText.set('エラー')
 
-    global piccenRA, piccenDec
-    piccenRA = 0
-    piccenDec = 0
-
-    def SkyArea(RA, Dec): #(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
-        return int(360 * floor(Dec / 10 + 9) + floor(RA))
-
     def DrawStarsW(start, end, a):
         RAs = []
         Decs = []
@@ -152,17 +140,17 @@ def check(event):
                 sizes.append(round((mag_0 - step*sd[2])**2))
         ax.scatter(RAs, Decs, c=starclr, s=sizes)
     
-##    def DrawStars(start, end, a):
-##        RAs = []
-##        Decs = []
-##        sizes = []
-##        for i in range(start, end):
-##            [RA, Dec, mag] = list(map(float, linecache.getline('StarsNew-Tycho-to10.txt', i).split()))
-##            if mag <= Max_m and abs(Dec - piccenDec) <= rg:
-##                RAs.append(RA + a)
-##                Decs.append(Dec)
-##                sizes.append(round((mag_0 - step*mag)**2))
-##        ax.scatter(RAs, Decs, c=starclr, s=sizes)
+    def DrawStars(start, end, a):
+        RAs = []
+        Decs = []
+        sizes = []
+        for i in range(start, end):
+            [RA, Dec, mag] = list(map(float, linecache.getline('StarsNew-Tycho-to10.txt', i).split()))
+            if mag <= Max_m and abs(Dec - piccenDec) <= rg:
+                RAs.append(RA + a)
+                Decs.append(Dec)
+                sizes.append(round((mag_0 - step*mag)**2))
+        ax.scatter(RAs, Decs, c=starclr, s=sizes)
 
     def DrawStars2(start, end, a):
         RAs = []
@@ -176,82 +164,8 @@ def check(event):
                 sizes.append(round((mag_0 - step*sd[2])**2))
         ax.scatter(RAs, Decs, c=starclr, s=sizes)
 
-    def DrawStars(skyareas):
-        RAs = []
-        Decs = []
-        sizes = []
-        for arearange in skyareas:
-            st = int(FHelp2[arearange[0]])
-            fi = int(FHelp2[arearange[1]+1])
-            for i in range(st, fi):
-                [RA, Dec, mag] = list(map(float, linecache.getline('StarsNew-Tycho-to10-2nd.txt', i).strip().split()))
-                if abs(RAadjust(RA) - piccenRA) < rg and abs(Dec - piccenDec) < rg and mag < Max_m:
-                    RAs.append(RAadjust(RA))
-                    Decs.append(Dec)
-                    sizes.append(round((mag_0 - step*mag)**2))
-        ax.scatter(RAs, Decs, c=starclr, s=sizes)
-
-    def DrawStarsW_SH():
-        Xs = []
-        Ys = []
-        sizes = []
-        for i in range(8874):
-            sd = list(map(float, FFF[i].split()))
-            if sd[2] <= Max_mW:
-                x, y = SHzuho(sd[0], sd[1])
-                if abs(x) < rgW and abs(y) < rgW:
-                    Xs.append(x)
-                    Ys.append(y)
-                    sizes.append(round((mag_0W - stepW*sd[2])**2))
-        axW.scatter(Xs, Ys, c=starclr, s=sizes)
-
-    def DrawStars_SH(skyareas):
-        Xs = []
-        Ys = []
-        sizes = []
-        for arearange in skyareas:
-            st = int(FHelp2[arearange[0]])
-            fi = int(FHelp2[arearange[1]+1])
-            for i in range(st, fi):
-                [RA, Dec, mag] = list(map(float, linecache.getline('StarsNew-Tycho-to10-2nd.txt', i).strip().split()))
-                if mag <= Max_m:
-                    x, y = SHzuho(RA, Dec)
-                    if abs(x) < rg and abs(y) < rg:
-                        Xs.append(x)
-                        Ys.append(y)
-                        sizes.append(round((mag_0 - step*mag)**2))
-        ax.scatter(Xs, Ys, c=starclr, s=sizes)
-
-    def RAadjust(RA):
-        global piccenRA
+    def RAadjust(RA, piccenRA):
         return piccenRA + (RA - piccenRA + 180) % 360 - 180
-
-    def SHzuho(RA, Dec): #deg
-        global piccenRA, piccenDec
-        if RA == piccenRA and Dec == piccenDec:
-            x = 0
-            y = 0
-
-        else:
-            RA *= pi/180
-            Dec *= pi/180
-            
-            RAcen = piccenRA * pi/180
-            Deccen = piccenDec * pi/180
-            
-            a = sin(Deccen)*cos(Dec)*cos(RA-RAcen) - cos(Deccen)*sin(Dec)
-            b =             cos(Dec)*sin(RA-RAcen)
-            c = cos(Deccen)*cos(Dec)*cos(RA-RAcen) + sin(Deccen)*sin(Dec)
-
-            Dec_prime = atan(c / (a**2 + b**2)**0.5) #rad
-            x = -(Dec_prime * 180/pi - 90) * b / cos(Dec_prime)
-            y =  (Dec_prime * 180/pi - 90) * a / cos(Dec_prime)
-        return x, y
-
-    def SHzuho_to_RADec(x, y):
-        global piccenRA, piccenDec
-        Dec_prime = (90 - (x**2+y**2)**0.5) * pi/180
-        RA_prime = atan2(a, b)
 
     def calc(planet, JD, X, Y, Z):
         e = planet[2]
@@ -343,7 +257,7 @@ def check(event):
     piccenDec = delta_center + float(shift_Dec_Box.get())
 
     #赤道座標系、黄道座標系、距離
-    if EqEcCombo.get() == '赤道座標系（正距円筒図法）' or EqEcCombo.get() == '赤道座標系（正距方位図法）':
+    if EqEcCombo.get() == '赤道座標系':
         alpha_h = floor(alpha_center / 15)
         alpha_m = round((alpha_center - 15 * alpha_h) * 4, 1)
         alpha_str = '赤経  ' + str(alpha_h) + 'h ' + str('{:.1f}'.format(alpha_m)) + 'm\n'
@@ -408,112 +322,6 @@ def check(event):
     boundary.close()
     ConstListFile.close()
 
-    #明るさを計算
-    Vtext = ''
-    for n in range(len(planets)):
-        #if abs(RAadjust(RAlist[n]) -   piccenRA) <= rgW  and abs(Declist[n] - piccenDec) <= rgW:
-        x = Xlist[n]
-        y = Ylist[n]
-        z = Zlist[n]
-        dist = Distlist[n]
-        if n == 0: #Sun
-            Vlist[0] = -26.7
-            if Selected_number == 0:
-                Vtext = '\n\n-26.7 等'
-        elif n == 1: #Marcury
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            V = -0.613 + 0.06328*i - 0.0016336 * i**2 + 0.000033644 * i**3 - 3.4565*10**(-7) * i**4 +1.6893*10**(-9) * i**5 - 3.0334*10**(-12) * i**6+ 5 * log10(dist * sqrt(PS_2))
-            Vlist[1] = V
-            if Selected_number == 1:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-        elif n == 2: #Venus
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            if i <= 163.7:
-                V = -4.384 - 0.001044 * i + 0.0003687 * i**2 - 2.814*10**(-6) * i**3 + 8.938*10**(-9) * i**4 + 5 * log10(dist * sqrt(PS_2))
-            else:
-                V = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i**2 + 5 * log10(dist * sqrt(PS_2))
-            if Selected_number == 2:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-            Vlist[2] = V
-        elif n == 3: #Mars
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            if i <= 50:
-                V = -1.601 + 0.002267 * i - 0.0001302 * i**2 + 5 * log10(dist * sqrt(PS_2))
-            elif 50 < i <= 120:
-                V = -1.601 + 1.234 - 0.02573 * i + 0.0003445 * i**2 + 5 * log10(dist * sqrt(PS_2))
-            else:
-                V = 1
-            if Selected_number == 3:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-            Vlist[3] = V
-        elif n == 4: #Jupiter
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            if i <= 12:
-                V = -9.395 - 0.00037 * i + 0.000616 * i**2 + 5 * log10(dist * sqrt(PS_2))
-            else:
-                V = -9.395 - 0.033 - 2.5*log10(1 - 1.507*(i/180) - 0.363*(i/180)**2 - 0.062*(i/180)**3 + 2.809*(i/180)**4 - 1.876*(i/180)**5) + 5 * log10(dist * sqrt(PS_2))
-            if Selected_number == 4:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-            Vlist[4] = V
-        elif n == 5: #Saturn
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            if i <= 6.5:
-                V = -8.914 + 1.825*sin(15*pi/180) + 0.026 * i - 0.378*sin(15*pi/180) + exp(-2.25*i) + 5 * log10(dist * sqrt(PS_2)) #勝手にリングの傾きβ=15°とした
-            elif 6 < i < 150:
-                V = -8.914 + 0.026 + 0.0002446 * i + 0.0002672 * i**2 - 1.505*10**(-6) * i**3 + 4.767*10**(-9) * i**4 + 5 * log10(dist * sqrt(PS_2))
-            else:
-                V = 0.6
-            if Selected_number == 5:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-            Vlist[5] = V
-        elif n == 6: #Uranus
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            if i < 3.1:
-                V = -7.110 + 0.00009617 * i**2 + 0.0001045 * i**2+ 5 * log10(dist * sqrt(PS_2))
-            else:
-                V = 5.6
-            if Selected_number == 6:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-            Vlist[6] = V
-        elif n == 7: #Neptune
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
-            if i < 133:
-                V = -7.00 + 0.007944 * i**3 + 0.00009617 * i**2+ 5 * log10(dist * sqrt(PS_2))
-            else:
-                V = 7.8
-            if Selected_number == 7:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-            Vlist[7] = V
-        elif len(planets[n]) == 14 and planets[n][13] != 100.0: #ちゃんとしたH,GがPlanetに入っているとき
-            planet = planets[n]
-            H = planet[12]
-            G = planet[13]
-            PS_2 = x**2 + y**2 + z**2
-            ES_2 = X**2 + Y**2 + Z**2
-            a = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2)))
-            phi1 = exp(-3.33 * (tan(a/2))**0.63)
-            phi2 = exp(-1.87 * (tan(a/2))**1.22)
-            V = H - 2.5 * log10((1-G) * phi1 + G * phi2) + 5 * log10(dist * sqrt(PS_2))
-            Vlist[n] = V
-            if Selected_number == n:
-                Vtext = '\n\n' + str(round(V,1)) + ' 等'
-        else:
-            Vlist[n] = 10 #n=8（月）を含む
-
     #ダークモード
     if darkmode.get() == '白地に黒の星':
         backclr = 'white'
@@ -538,509 +346,356 @@ def check(event):
 
     #広い方
     axW = fig.add_subplot(121, aspect=1)
+    
+    axW.set_xlim(piccenRA+rgW, piccenRA-rgW)
+    ticksW = np.arange(10*floor((piccenRA+rgW)/10), piccenRA-rgW, -10, dtype=int)
+    axW.set_xticks(ticksW)
+    tickstrW = []
+    for i in range(len(ticksW)):
+        tickstrW.append(str(ticksW[i]))
+        tick = ticksW[i]
+        if tick >= 360:
+            tickstrW[i] = str(int(tick - 360))
+        if tick < 0:
+            tickstrW[i] = str(int(tick + 360))
+    axW.set_xticklabels(tickstrW)
+    
+    axW.set_ylim(piccenDec-rgW, piccenDec+rgW)
+    
+    axW.set_facecolor(backclr)
+    if screenblack == 1:
+        axW.tick_params(axis='x', colors='white')
+        axW.tick_params(axis='y', colors='white')
+        axW.spines['bottom'].set_color('white')
+        axW.spines['top'].set_color('white')
+        axW.spines['left'].set_color('white')
+        axW.spines['right'].set_color('white')
 
-    #赤道座標系
-    if EqEcCombo.get() == '赤道座標系（正距円筒図法）' or EqEcCombo.get() == '黄道座標系':
-        axW.set_xlim(piccenRA+rgW, piccenRA-rgW)
-        ticksW = np.arange(10*floor((piccenRA+rgW)/10), piccenRA-rgW, -10, dtype=int)
-        axW.set_xticks(ticksW)
-        tickstrW = []
-        for i in range(len(ticksW)):
-            tickstrW.append(str(ticksW[i]))
-            tick = ticksW[i]
-            if tick >= 360:
-                tickstrW[i] = str(int(tick - 360))
-            if tick < 0:
-                tickstrW[i] = str(int(tick + 360))
-        axW.set_xticklabels(tickstrW)
-        
-        axW.set_ylim(piccenDec-rgW, piccenDec+rgW)
-        
-        axW.set_facecolor(backclr)
-        if screenblack == 1:
-            axW.tick_params(axis='x', colors='white')
-            axW.tick_params(axis='y', colors='white')
-            axW.spines['bottom'].set_color('white')
-            axW.spines['top'].set_color('white')
-            axW.spines['left'].set_color('white')
-            axW.spines['right'].set_color('white')
-
-        #星座線
-        LineFile = open('Lines_light.txt')
-        LineList = LineFile.readlines()
-        
-        for line in LineList:
-            data = line.split()
-            RA1 = float(data[1])
-            Dec1 = float(data[2])
-            RA2 = float(data[3])
-            Dec2 = float(data[4])
-            if piccenRA - rgW < 0:
-                if min(RA1, RA2) < piccenRA + rgW and max(RA1, RA2) > piccenRA - rgW:
-                    if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
-                        axW.plot([RA1, RA2], [Dec1, Dec2], c='red', lw=1, zorder=0)
-                if min(RA1, RA2) - 360 < piccenRA + rgW and max(RA1, RA2) - 360 > piccenRA - rgW:
-                    if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
-                        axW.plot([RA1-360, RA2-360], [Dec1, Dec2], c='red', lw=1, zorder=0)
-
-            if piccenRA + rgW > 360:
-                if min(RA1, RA2) < piccenRA + rgW and max(RA1, RA2) > piccenRA - rgW:
-                    if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
-                        axW.plot([RA1, RA2], [Dec1, Dec2], c='red', lw=1, zorder=0)
-                if min(RA1, RA2) + 360 < piccenRA + rgW and max(RA1, RA2) + 360 > piccenRA - rgW:
-                    if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
-                        axW.plot([RA1+360, RA2+360], [Dec1, Dec2], c='red', lw=1, zorder=0)
-
-            else:
-                if min(RA1, RA2) < piccenRA + rgW and max(RA1, RA2) > piccenRA - rgW:
-                    if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
-                        axW.plot([RA1, RA2], [Dec1, Dec2], c='red', lw=1, zorder=0)
-
-        LineFile.close()
-
-        #星座名（星図）
-        ConstPos = open('ConstellationPositionNew.txt')
-        i = 0
-        for line in ConstPos.readlines():
-            data = line.split()
-            RA = float(data[0])
-            Dec = float(data[1])
-            if abs(Dec - piccenDec) < rgW and abs(RAadjust(RA) - piccenRA) < rgW:
-                ConstName = ConstList[i].strip()
-                axW.text(RAadjust(RA), Dec, ConstName, size=10, c=consttextclr, ha="center", va="center", fontname='MS Gothic')
-            i += 1
-        ConstPos.close()
-
-        #恒星
+    #星座線
+    LineFile = open('Lines_light.txt')
+    LineList = LineFile.readlines()
+    
+    for line in LineList:
+        data = line.split()
+        RA1 = float(data[1])
+        Dec1 = float(data[2])
+        RA2 = float(data[3])
+        Dec2 = float(data[4])
         if piccenRA - rgW < 0:
-            DrawStarsW(0, searchW(piccenRA + rgW), 0)
-            DrawStarsW(searchW(piccenRA - rgW + 360), 8874, -360)
-            
-        elif piccenRA + rgW >= 360:
-            DrawStarsW(searchW(piccenRA - rgW), 8874, 0)
-            DrawStarsW(0, searchW(piccenRA + rgW - 360), 360)
-                        
+            if min(RA1, RA2) < piccenRA + rgW and max(RA1, RA2) > piccenRA - rgW:
+                if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
+                    axW.plot([RA1, RA2], [Dec1, Dec2], c='red', lw=1, zorder=0)
+            if min(RA1, RA2) - 360 < piccenRA + rgW and max(RA1, RA2) - 360 > piccenRA - rgW:
+                if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
+                    axW.plot([RA1-360, RA2-360], [Dec1, Dec2], c='red', lw=1, zorder=0)
+
+        if piccenRA + rgW > 360:
+            if min(RA1, RA2) < piccenRA + rgW and max(RA1, RA2) > piccenRA - rgW:
+                if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
+                    axW.plot([RA1, RA2], [Dec1, Dec2], c='red', lw=1, zorder=0)
+            if min(RA1, RA2) + 360 < piccenRA + rgW and max(RA1, RA2) + 360 > piccenRA - rgW:
+                if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
+                    axW.plot([RA1+360, RA2+360], [Dec1, Dec2], c='red', lw=1, zorder=0)
+
         else:
-            DrawStarsW(searchW(piccenRA - rgW), searchW(piccenRA + rgW), 0)
+            if min(RA1, RA2) < piccenRA + rgW and max(RA1, RA2) > piccenRA - rgW:
+                if min(Dec1, Dec2) < piccenDec + rgW and max(Dec1, Dec2) > piccenDec - rgW:
+                    axW.plot([RA1, RA2], [Dec1, Dec2], c='red', lw=1, zorder=0)
 
-        for n in range(len(planets)):
-            if abs(RAadjust(RAlist[n]) -   piccenRA) <= rgW  and abs(Declist[n] - piccenDec) <= rgW:    
-                if n == 0:
-                    axW.scatter(RAadjust(RA_Sun), Dec_Sun, c='yellow', s=160)
-                    axW.text(RAadjust(RA_Sun-1), Dec_Sun+1, '太陽', c=textclr, fontname='MS Gothic')
+    LineFile.close()
+
+    #星座名（星図）
+    ConstPos = open('ConstellationPositionNew.txt')
+    i = 0
+    for line in ConstPos.readlines():
+        data = line.split()
+        RA = float(data[0])
+        Dec = float(data[1])
+        if abs(Dec - piccenDec) < rgW and abs(RAadjust(RA, piccenRA) - piccenRA) < rgW:
+            ConstName = ConstList[i].strip()
+            axW.text(RAadjust(RA, piccenRA), Dec, ConstName, size=10, c=consttextclr, ha="center", va="center", fontname='MS Gothic')
+        i += 1
+    ConstPos.close()
+
+    #恒星
+    if piccenRA - rgW < 0:
+        DrawStarsW(0, searchW(piccenRA + rgW), 0)
+        DrawStarsW(searchW(piccenRA - rgW + 360), 8874, -360)
+        
+    elif piccenRA + rgW >= 360:
+        DrawStarsW(searchW(piccenRA - rgW), 8874, 0)
+        DrawStarsW(0, searchW(piccenRA + rgW - 360), 360)
                     
-                elif n == 8:
-                    rs = RA_Sun * pi/180
-                    ds = Dec_Sun * pi/180
-                    rm = RA_Moon * pi/180
-                    dm = Dec_Moon * pi/180
-                    lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws #- 0.0002437 * (JD - 2451545.0) / 365.25
-                    k = (1 - cos(lons - lon) * cos(lat)) / 2
-                    P = 180 - atan2(cos(ds) * sin(rm - rs), -sin(dm) * cos(ds) * cos(rm - rs) + cos(dm) * sin(ds)) * 180/pi
-                    cirW = patches.Circle((RAadjust(RA_Moon), Dec_Moon), 1.5, fc='#ffff33')
-                    axW.add_patch(cirW)
-                    if k < 0.5:
-                        eliW = patches.Ellipse((RAadjust(RA_Moon), Dec_Moon), 3, 3*(1-2*k), angle=-P, fc='0.3')
-                        axW.add_patch(eliW)
-                        halfW = patches.Wedge((RAadjust(RA_Moon), Dec_Moon), 1.5, theta1=-P, theta2=-P+180, fc='0.3')
-                        axW.add_patch(halfW)
-                    else:
-                        halfW = patches.Wedge((RAadjust(RA_Moon), Dec_Moon), 1.5, theta1=-P, theta2=-P+180, fc='0.3')
-                        axW.add_patch(halfW)
-                        eliW = patches.Ellipse((RAadjust(RA_Moon), Dec_Moon), 3, 3*(1-2*k), angle=-P, fc='#ffff33')
-                        axW.add_patch(eliW)
-                    axW.text(RAadjust(RA_Moon-1), Dec_Moon+1, '月', c=textclr, fontname='MS Gothic')
-                    
-                else:
-                    if mag_0W - stepW * Vlist[n] < 1:   #サイズ
-                        size = 1
-                    else:
-                        size = round((mag_0W - stepW*Vlist[n])**2)
-
-                    axW.scatter(RAadjust(RAlist[n]), Declist[n], c='red', s=size) #天体をプロット
-                    axW.text(RAadjust(RAlist[n]), Declist[n], JPNplanets[n], c=textclr, fontname='MS Gothic')
-
-        if Val3.get() and Selected_number != 0 and Selected_number != 8:
-            planet = planets[Selected_number]
-            RAs = []
-            Decs = []
-            for iv in np.arange(float(moveW_on_Box1.get()), float(moveW_on_Box2.get())+0.001, float(moveW_on_Box1.get())):
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD+iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD+iv, X, Y, Z)
-                RAs.append(RAadjust(RA))
-                Decs.append(Dec)
-                
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD-iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD-iv, X, Y, Z)
-                RAs.append(RAadjust(RA))
-                Decs.append(Dec)
-                
-            axW.scatter(RAs, Decs, c='#00FF00', s=1)
-
-        #狭い方の枠
-        axW.plot([piccenRA + rg, piccenRA + rg], [piccenDec + rg, piccenDec - rg], c=frameclr, lw=1)
-        axW.plot([piccenRA + rg, piccenRA - rg], [piccenDec - rg, piccenDec - rg], c=frameclr, lw=1)
-        axW.plot([piccenRA - rg, piccenRA - rg], [piccenDec - rg, piccenDec + rg], c=frameclr, lw=1)
-        axW.plot([piccenRA - rg, piccenRA + rg], [piccenDec + rg, piccenDec + rg], c=frameclr, lw=1)
-
-        #狭い方
-        ax = fig.add_subplot(122, aspect=1)
-        
-        ax.set_xlim(piccenRA+rg, piccenRA-rg)
-        ticks = np.arange(floor(piccenRA+rg), piccenRA-rg, -1, dtype=int)
-        ax.set_xticks(ticks)
-        tickstr = []
-        for i in range(len(ticks)):
-            tickstr.append(str(ticks[i]))
-            tick = ticks[i]
-            if tick >= 360:
-                tickstr[i] = str(int(tick - 360))
-            if tick < 0:
-                tickstr[i] = str(int(tick + 360))
-        ax.set_xticklabels(tickstr)
-
-        ax.set_ylim(piccenDec-rg, piccenDec+rg)
-        
-        ax.set_facecolor(backclr)
-        if screenblack == 1:
-            ax.tick_params(axis='x', colors='white')
-            ax.tick_params(axis='y', colors='white')
-            ax.spines['bottom'].set_color('white')
-            ax.spines['top'].set_color('white')
-            ax.spines['left'].set_color('white')
-            ax.spines['right'].set_color('white')
-        
-        Max_m = float(MaxM_Box.get())
-
-        if piccenRA - rg < 0:   #恒星
-            skyareas = [[SkyArea(0, piccenDec-rg), SkyArea(piccenRA+rg, piccenDec-rg)], [SkyArea(piccenRA-rg+360, piccenDec - rg), SkyArea(359.9, piccenDec - rg)]]
-            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-                skyareas.append([skyareas[1][0]+360, skyareas[1][1]+360])
-            DrawStars(skyareas)
-
-            DrawStarsHIPforNarrow(0, searchW(piccenRA + rg), 0)
-            DrawStarsHIPforNarrow(searchW(piccenRA - rg + 360), 8874, -360)
-            
-            DrawStars2(0, search2(piccenRA + rg), 0)
-            DrawStars2(search2(piccenRA - rg + 360), StarNum1_3, -360)
-
-            
-        elif piccenRA + rg >= 360:
-            skyareas = [[SkyArea(0, piccenDec-rg), SkyArea(piccenRA+rg-360, piccenDec-rg)], [SkyArea(piccenRA-rg, piccenDec - rg), SkyArea(359.9, piccenDec - rg)]]
-            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-                skyareas.append([skyareas[1][0]+360, skyareas[1][1]+360])
-            DrawStars(skyareas)
-            
-            DrawStarsHIPforNarrow(searchW(piccenRA - rg), 8874, 0)
-            DrawStarsHIPforNarrow(0, searchW(piccenRA - rg + 360), 360)
-            
-            DrawStars2(search2(piccenRA - rg), StarNum1_3, 0)
-            DrawStars2(0, search2(piccenRA + rg - 360), 360)
-                        
-        else:
-            DrawStarsHIPforNarrow(searchW(piccenRA - rg), searchW(piccenRA + rg), 0)
-            DrawStars2(search2(piccenRA - rg), search2(piccenRA + rg), 0)
-
-            skyareas = [[SkyArea(piccenRA-rg, piccenDec - rg), SkyArea(piccenRA+rg, piccenDec - rg)]]
-            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-            DrawStars(skyareas)
-                
-        for n in range(len(planets)):
-            if n == 0:
-                if abs(RAadjust(RA_Sun) -   piccenRA) <= rgW  and abs(Dec_Sun - piccenDec) <= rgW:
-                    R = 0.267 / Distlist[0]
-                    SUNcir = patches.Circle((RAadjust(RA_Sun), Dec_Sun), R, fc='yellow')
-                    ax.add_patch(SUNcir)
-                    ax.text(RAadjust(RA_Sun-0.2), Dec_Sun+0.2, '太陽', c=textclr, fontname='MS Gothic')
-            elif n == 8:
-                if abs(RAadjust(RA_Moon) -   piccenRA) <= rgW  and abs(Dec_Moon - piccenDec) <= rgW:
-                    r = 0.259 / (dist_Moon / 384400)
-                    cir = patches.Circle((RAadjust(RA_Moon), Dec_Moon), r, fc='#ffff33')
-                    ax.add_patch(cir)
-                    if k < 0.5:
-                        eli = patches.Ellipse((RAadjust(RA_Moon), Dec_Moon), 2*r, 2*r*(1-2*k), angle=-P, fc='0.3')
-                        ax.add_patch(eli)
-                        half = patches.Wedge((RAadjust(RA_Moon), Dec_Moon), r, theta1=-P, theta2=-P+180, fc='0.3')
-                        ax.add_patch(half)
-                    else:
-                        half = patches.Wedge((RAadjust(RA_Moon), Dec_Moon), r, theta1=-P, theta2=-P+180, fc='0.3')
-                        ax.add_patch(half)
-                        eli = patches.Ellipse((RAadjust(RA_Moon), Dec_Moon), 2*r, 2*r*(1-2*k), angle=-P, fc='#ffff33')
-                        ax.add_patch(eli)
-                    ax.text(RAadjust(RA_Moon-0.2), Dec_Moon+0.2, '月', c=textclr, fontname='MS Gothic')
-            else:
-                if abs(RAadjust(RAlist[n]) -   piccenRA) <= rg  and abs(Declist[n] - piccenDec) <= rg:
-                    if mag_0 - step*Vlist[n] < 1:   #サイズ
-                        size = 1
-                    else:
-                        size = round((mag_0 - step*Vlist[n])**2)
-                    ax.scatter(RAadjust(RAlist[n]), Declist[n], c='red', s=size) #天体をプロット
-                    ax.text(RAadjust(RAlist[n]), Declist[n], JPNplanets[n], c=textclr, fontname='MS Gothic')
-
-        if Val3.get() and Selected_number != 0 and Selected_number != 8:
-            planet = planets[Selected_number]
-            RAs = []
-            Decs = []
-            for iv in np.arange(float(move_on_Box1.get()), float(move_on_Box2.get())+0.001, float(move_on_Box1.get())):
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD+iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD+iv, X, Y, Z)
-                RAs.append(RAadjust(RA))
-                Decs.append(Dec)
-
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD-iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD-iv, X, Y, Z)
-                RAs.append(RAadjust(RA))
-                Decs.append(Dec)
-                
-            ax.scatter(RAs, Decs, c='#00FF00', s=1)
-
-    #正距方位図法
     else:
-        axW.set_xlim(rgW, -rgW)
-        axW.set_ylim(-rgW, rgW)
+        DrawStarsW(searchW(piccenRA - rgW), searchW(piccenRA + rgW), 0)
 
-        tickW = np.arange(rgW, -rgW-0.00001, -10, dtype=int)
-        axW.set_xticks(tickW)
-        axW.set_xticklabels(tickW)
-        #axW.set_xticklabels(list(map(str, -tickW)))
-        
-        axW.set_facecolor(backclr)
-        if screenblack == 1:
-            axW.tick_params(axis='x', colors='white')
-            axW.tick_params(axis='y', colors='white')
-            axW.spines['bottom'].set_color('white')
-            axW.spines['top'].set_color('white')
-            axW.spines['left'].set_color('white')
-            axW.spines['right'].set_color('white')
-
-        #星座線
-        LineFile = open('Lines_light.txt')
-        LineList = LineFile.readlines()
-        
-        for line in LineList:
-            data = line.split()
-            RA1 = float(data[1])
-            Dec1 = float(data[2])
-            RA2 = float(data[3])
-            Dec2 = float(data[4])
-            x1, y1 = SHzuho(RA1, Dec1)
-            x2, y2 = SHzuho(RA2, Dec2)
-            if min(x1, x2) < rgW and max(x1, x2) > -rgW and min(y1, y2) < rgW and max(y1, y2) > -rgW:
-                if x1**2 + y1**2 < 8 * rgW ** 2 and x2**2 + y2**2 < 8 * rgW ** 2:
-                    axW.plot([x1, x2], [y1, y2], c='red', lw=1, zorder=0)
-                    if min(x1, x2) < -rgW and max(x1, x2) > rgW:
-                        print(RA1, Dec1, RA2, Dec2, x1, y1, x2, y2)
-
-        LineFile.close()
-
-        #星座名（星図）
-        ConstPos = open('ConstellationPositionNew.txt')
-        i = 0
-        for line in ConstPos.readlines():
-            data = line.split()
-            RA = float(data[0])
-            Dec = float(data[1])
-            x, y = SHzuho(RA, Dec)
-            if abs(x) < rgW and abs(y) < rgW:
-                ConstName = ConstList[i].strip()
-                axW.text(x, y, ConstName, size=10, c=consttextclr, ha="center", va="center", fontname='MS Gothic')
-            i += 1
-        ConstPos.close()
-
-        #恒星
-        DrawStarsW_SH()
-
-        #惑星たち
-        for n in range(len(planets)):
-            x, y = SHzuho(RAlist[n], Declist[n])
-            if abs(x) <= rgW  and abs(y) <= rgW:    
-                if n == 0:
-                    axW.scatter(x, y, c='yellow', s=160)
-                    axW.text(x-1, y+1, '太陽', c=textclr, fontname='MS Gothic')
-                    
-                elif n == 8:
-                    rs = RA_Sun * pi/180
-                    ds = Dec_Sun * pi/180
-                    rm = RA_Moon * pi/180
-                    dm = Dec_Moon * pi/180
-                    lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws #- 0.0002437 * (JD - 2451545.0) / 365.25
-                    k = (1 - cos(lons - lon) * cos(lat)) / 2
-                    P = 180 - atan2(cos(ds) * sin(rm - rs), -sin(dm) * cos(ds) * cos(rm - rs) + cos(dm) * sin(ds)) * 180/pi
-                    cirW = patches.Circle((x,y), 1.5, fc='#ffff33')
-                    axW.add_patch(cirW)
-                    if k < 0.5:
-                        eliW = patches.Ellipse((x, y), 3, 3*(1-2*k), angle=P, fc='0.3')
-                        axW.add_patch(eliW)
-                        halfW = patches.Wedge((x, y), 1.5, theta1=P, theta2=P+180, fc='0.3')
-                        axW.add_patch(halfW)
-                    else:
-                        halfW = patches.Wedge((x, y), 1.5, theta1=P, theta2=P+180, fc='0.3')
-                        axW.add_patch(halfW)
-                        eliW = patches.Ellipse((x, y), 3, 3*(1-2*k), angle=P, fc='#ffff33')
-                        axW.add_patch(eliW)
-                    axW.text(x-1, y+1, '月', c=textclr, fontname='MS Gothic')
-                    
+    #枠内なら明るさを計算して表示
+    Vtext = ''
+    for n in range(len(planets)):
+        if abs(RAadjust(RAlist[n], piccenRA) -   piccenRA) <= rgW  and abs(Declist[n] - piccenDec) <= rgW:
+            x = Xlist[n]
+            y = Ylist[n]
+            z = Zlist[n]
+            dist = Distlist[n]
+            if n == 0: #Sun
+                Vlist[0] = -26.7
+                if Selected_number == 0:
+                    Vtext = '\n\n-26.7 等'
+            elif n == 1: #Marcury
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                V = -0.613 + 0.06328*i - 0.0016336 * i**2 + 0.000033644 * i**3 - 3.4565*10**(-7) * i**4 +1.6893*10**(-9) * i**5 - 3.0334*10**(-12) * i**6+ 5 * log10(dist * sqrt(PS_2))
+                Vlist[1] = V
+                if Selected_number == 1:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+            elif n == 2: #Venus
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                if i <= 163.7:
+                    V = -4.384 - 0.001044 * i + 0.0003687 * i**2 - 2.814*10**(-6) * i**3 + 8.938*10**(-9) * i**4 + 5 * log10(dist * sqrt(PS_2))
                 else:
-                    if mag_0W - stepW * Vlist[n] < 1:   #サイズ
-                        size = 1
-                    else:
-                        size = round((mag_0W - stepW*Vlist[n])**2)
-                    x, y = SHzuho(RAlist[n], Declist[n])
-                    
-                    axW.scatter(x, y, c='red', s=size) #天体をプロット
-                    axW.text(x, y, JPNplanets[n], c=textclr, fontname='MS Gothic')
-
-        if Val3.get() and Selected_number != 0 and Selected_number != 8:
-            planet = planets[Selected_number]
-            Xs = []
-            Ys = []
-            for iv in np.arange(float(moveW_on_Box1.get()), float(moveW_on_Box2.get())+0.001, float(moveW_on_Box1.get())):
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD+iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD+iv, X, Y, Z)
-                x, y = SHzuho(RA, Dec)
-                Xs.append(x)
-                Ys.append(y)
-                
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD-iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD-iv, X, Y, Z)
-                x, y = SHzuho(RA, Dec)
-                Xs.append(x)
-                Ys.append(y)
-                
-            axW.scatter(Xs, Ys, c='#00FF00', s=1)
-
-        #狭い方の枠
-        axW.plot([ rg,  rg], [ rg, -rg], c=frameclr, lw=1)
-        axW.plot([ rg, -rg], [-rg, -rg], c=frameclr, lw=1)
-        axW.plot([-rg, -rg], [-rg,  rg], c=frameclr, lw=1)
-        axW.plot([-rg,  rg], [ rg,  rg], c=frameclr, lw=1)
-
-        #狭い方
-        ax = fig.add_subplot(122, aspect=1)
-        
-        ax.set_xlim(rg, -rg)
-        ax.set_ylim(-rg, rg)
-        
-        ax.set_facecolor(backclr)
-        if screenblack == 1:
-            ax.tick_params(axis='x', colors='white')
-            ax.tick_params(axis='y', colors='white')
-            ax.spines['bottom'].set_color('white')
-            ax.spines['top'].set_color('white')
-            ax.spines['left'].set_color('white')
-            ax.spines['right'].set_color('white')
-        
-        Max_m = float(MaxM_Box.get())
-
-        x_np, y_np = SHzuho(0, 90)
-        x_sp, y_sp = SHzuho(0, -90)
-        if abs(x_np) < rg and abs(y_np) < rg:
-            skyareas = [[360*17, 360*18-1]]
-            DrawStars_SH(skyareas)
-
-##        if piccenRA - rg < 0:   #恒星
-##            skyareas = [[SkyArea(0, piccenDec-rg), SkyArea(piccenRA+rg, piccenDec-rg)], [SkyArea(piccenRA-rg+360, piccenDec - rg), SkyArea(359.9, piccenDec - rg)]]
-##            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-##                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-##                skyareas.append([skyareas[1][0]+360, skyareas[1][1]+360])
-##            DrawStars(skyareas)
-##
-##            DrawStarsHIPforNarrow(0, searchW(piccenRA + rg), 0)
-##            DrawStarsHIPforNarrow(searchW(piccenRA - rg + 360), 8874, -360)
-##            
-##    ##        DrawStars(1, search(piccenRA + rg), 0)
-##    ##        DrawStars(search(piccenRA - rg + 360), 326882, -360)
-##            
-##            DrawStars2(0, search2(piccenRA + rg), 0)
-##            DrawStars2(search2(piccenRA - rg + 360), StarNum1_3, -360)
-##
-##            
-##        elif piccenRA + rg >= 360:
-##            skyareas = [[SkyArea(0, piccenDec-rg), SkyArea(piccenRA+rg-360, piccenDec-rg)], [SkyArea(piccenRA-rg, piccenDec - rg), SkyArea(359.9, piccenDec - rg)]]
-##            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-##                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-##                skyareas.append([skyareas[1][0]+360, skyareas[1][1]+360])
-##            DrawStars(skyareas)
-##            
-##            DrawStarsHIPforNarrow(searchW(piccenRA - rg), 8874, 0)
-##            DrawStarsHIPforNarrow(0, searchW(piccenRA - rg + 360), 360)
-##            
-##    ##        DrawStars(search(piccenRA - rg), 326882, 0)
-##    ##        DrawStars(1, search(piccenRA + rg - 360), 360)
-##            
-##            DrawStars2(search2(piccenRA - rg), StarNum1_3, 0)
-##            DrawStars2(0, search2(piccenRA + rg - 360), 360)
-##                        
-##        else:
-##            DrawStarsHIPforNarrow(searchW(piccenRA - rg), searchW(piccenRA + rg), 0)
-##    ##        DrawStars(search(piccenRA - rg), search(piccenRA + rg), 0)
-##            DrawStars2(search2(piccenRA - rg), search2(piccenRA + rg), 0)
-##
-##            skyareas = [[SkyArea(piccenRA-rg, piccenDec - rg), SkyArea(piccenRA+rg, piccenDec - rg)]]
-##            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-##                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-##            DrawStars(skyareas)
-        else:    
-            skyareas = [[0, 360*18-1]]
-            DrawStars_SH(skyareas)
-
-                
-        for n in range(len(planets)):
-            if n == 0:
-                x, y = SHzuho(RA_Sun, Dec_Sun)
-                if abs(x) <= rg  and abs(y) <= rg:
-                    R = 0.267 / Distlist[0]
-                    SUNcir = patches.Circle((x, y), R, fc='yellow')
-                    ax.add_patch(SUNcir)
-                    ax.text(x-0.2, y+0.2, '太陽', c=textclr, fontname='MS Gothic')
-            elif n == 8:
-                x, y = SHzuho(RA_Moon, Dec_Moon)
-                if abs(x) <= rg  and abs(y) <= rg:
-                    r = 0.259 / (dist_Moon / 384400)
-                    cir = patches.Circle((x, y), r, fc='#ffff33')
-                    ax.add_patch(cir)
-                    if k < 0.5:
-                        eli = patches.Ellipse((x, y), 2*r, 2*r*(1-2*k), angle=P, fc='0.3')
-                        ax.add_patch(eli)
-                        half = patches.Wedge((x, y), r, theta1=P, theta2=P+180, fc='0.3')
-                        ax.add_patch(half)
-                    else:
-                        half = patches.Wedge((x, y), r, theta1=P, theta2=P+180, fc='0.3')
-                        ax.add_patch(half)
-                        eli = patches.Ellipse((x, y), 2*r, 2*r*(1-2*k), angle=P, fc='#ffff33')
-                        ax.add_patch(eli)
-                    ax.text(x-0.2, y+0.2, '月', c=textclr, fontname='MS Gothic')
+                    V = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i**2 + 5 * log10(dist * sqrt(PS_2))
+                if Selected_number == 2:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+                Vlist[2] = V
+            elif n == 3: #Mars
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                if i <= 50:
+                    V = -1.601 + 0.002267 * i - 0.0001302 * i**2 + 5 * log10(dist * sqrt(PS_2))
+                elif 50 < i <= 120:
+                    V = -1.601 + 1.234 - 0.02573 * i + 0.0003445 * i**2 + 5 * log10(dist * sqrt(PS_2))
+                else:
+                    V = 1
+                if Selected_number == 3:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+                Vlist[3] = V
+            elif n == 4: #Jupiter
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                if i <= 12:
+                    V = -9.395 - 0.00037 * i + 0.000616 * i**2 + 5 * log10(dist * sqrt(PS_2))
+                else:
+                    V = -9.395 - 0.033 - 2.5*log10(1 - 1.507*(i/180) - 0.363*(i/180)**2 - 0.062*(i/180)**3 + 2.809*(i/180)**4 - 1.876*(i/180)**5) + 5 * log10(dist * sqrt(PS_2))
+                if Selected_number == 4:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+                Vlist[4] = V
+            elif n == 5: #Saturn
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                if i <= 6.5:
+                    V = -8.914 + 1.825*sin(15*pi/180) + 0.026 * i - 0.378*sin(15*pi/180) + exp(-2.25*i) + 5 * log10(dist * sqrt(PS_2)) #勝手にリングの傾きβ=15°とした
+                elif 6 < i < 150:
+                    V = -8.914 + 0.026 + 0.0002446 * i + 0.0002672 * i**2 - 1.505*10**(-6) * i**3 + 4.767*10**(-9) * i**4 + 5 * log10(dist * sqrt(PS_2))
+                else:
+                    V = 0.6
+                if Selected_number == 5:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+                Vlist[5] = V
+            elif n == 6: #Uranus
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                if i < 3.1:
+                    V = -7.110 + 0.00009617 * i**2 + 0.0001045 * i**2+ 5 * log10(dist * sqrt(PS_2))
+                else:
+                    V = 5.6
+                if Selected_number == 6:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+                Vlist[6] = V
+            elif n == 7: #Neptune
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                i = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2))) * 180/ pi
+                if i < 133:
+                    V = -7.00 + 0.007944 * i**3 + 0.00009617 * i**2+ 5 * log10(dist * sqrt(PS_2))
+                else:
+                    V = 7.8
+                if Selected_number == 7:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
+                Vlist[7] = V
+            elif len(planets[n]) == 14 and planets[n][13] != 100.0: #ちゃんとしたH,GがPlanetに入っているとき
+                planet = planets[n]
+                H = planet[12]
+                G = planet[13]
+                PS_2 = x**2 + y**2 + z**2
+                ES_2 = X**2 + Y**2 + Z**2
+                a = acos((PS_2 + dist**2 - ES_2) / (2 * dist * sqrt(PS_2)))
+                phi1 = exp(-3.33 * (tan(a/2))**0.63)
+                phi2 = exp(-1.87 * (tan(a/2))**1.22)
+                V = H - 2.5 * log10((1-G) * phi1 + G * phi2) + 5 * log10(dist * sqrt(PS_2))
+                Vlist[n] = V
+                if Selected_number == n:
+                    Vtext = '\n\n' + str(round(V,1)) + ' 等'
             else:
-                x, y = SHzuho(RAlist[n], Declist[n])
-                if abs(x) <= rg  and abs(y) <= rg:
-                    if mag_0 - step*Vlist[n] < 1:   #サイズ
-                        size = 1
-                    else:
-                        size = round((mag_0 - step*Vlist[n])**2)
-                    ax.scatter(x, y, c='red', s=size) #天体をプロット
-                    ax.text(x, y, JPNplanets[n], c=textclr, fontname='MS Gothic')
-
-        if Val3.get() and Selected_number != 0 and Selected_number != 8:
-            planet = planets[Selected_number]
-            Xs = []
-            Ys = []
-            for iv in np.arange(float(move_on_Box1.get()), float(move_on_Box2.get())+0.001, float(move_on_Box1.get())):
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD+iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD+iv, X, Y, Z)
-                x, y = SHzuho(RA, Dec)
-                Xs.append(x)
-                Ys.append(y)
-
-                X, Y, Z, a, b, c = cal_Ellipse(Earth, JD-iv, 0, 0, 0)
-                x, y, z, RA, Dec, dist = calc(planet, JD-iv, X, Y, Z)
-                x, y = SHzuho(RA, Dec)
-                Xs.append(x)
-                Ys.append(y)
+                Vlist[n] = 10 #n=8（月）を含む
+            
+            if n == 0:
+                axW.scatter(RAadjust(RA_Sun, piccenRA), Dec_Sun, c='yellow', s=160)
+                axW.text(RAadjust(RA_Sun-1, piccenRA), Dec_Sun+1, '太陽', c=textclr, fontname='MS Gothic')
                 
-            ax.scatter(Xs, Ys, c='#00FF00', s=1)
+            elif n == 8:
+                rs = RA_Sun * pi/180
+                ds = Dec_Sun * pi/180
+                rm = RA_Moon * pi/180
+                dm = Dec_Moon * pi/180
+                lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws #- 0.0002437 * (JD - 2451545.0) / 365.25
+                k = (1 - cos(lons - lon) * cos(lat)) / 2
+                P = 180 - atan2(cos(ds) * sin(rm - rs), -sin(dm) * cos(ds) * cos(rm - rs) + cos(dm) * sin(ds)) * 180/pi
+                cirW = patches.Circle((RAadjust(RA_Moon, piccenRA), Dec_Moon), 1.5, fc='#ffff33')
+                axW.add_patch(cirW)
+                if k < 0.5:
+                    eliW = patches.Ellipse((RAadjust(RA_Moon, piccenRA), Dec_Moon), 3, 3*(1-2*k), angle=-P, fc='0.3')
+                    axW.add_patch(eliW)
+                    halfW = patches.Wedge((RAadjust(RA_Moon, piccenRA), Dec_Moon), 1.5, theta1=-P, theta2=-P+180, fc='0.3')
+                    axW.add_patch(halfW)
+                else:
+                    halfW = patches.Wedge((RAadjust(RA_Moon, piccenRA), Dec_Moon), 1.5, theta1=-P, theta2=-P+180, fc='0.3')
+                    axW.add_patch(halfW)
+                    eliW = patches.Ellipse((RAadjust(RA_Moon, piccenRA), Dec_Moon), 3, 3*(1-2*k), angle=-P, fc='#ffff33')
+                    axW.add_patch(eliW)
+                axW.text(RAadjust(RA_Moon-1, piccenRA), Dec_Moon+1, '月', c=textclr, fontname='MS Gothic')
+                
+            else:
+                if mag_0W - stepW * Vlist[n] < 1:   #サイズ
+                    size = 1
+                else:
+                    size = round((mag_0W - stepW*Vlist[n])**2)
+
+                axW.scatter(RAadjust(RAlist[n], piccenRA), Declist[n], c='red', s=size) #天体をプロット
+                axW.text(RAadjust(RAlist[n], piccenRA), Declist[n], JPNplanets[n], c=textclr, fontname='MS Gothic')
+
+    if Val3.get() and Selected_number != 0 and Selected_number != 8:
+        planet = planets[Selected_number]
+        RAs = []
+        Decs = []
+        for iv in np.arange(float(moveW_on_Box1.get()), float(moveW_on_Box2.get())+0.001, float(moveW_on_Box1.get())):
+            X, Y, Z, a, b, c = cal_Ellipse(Earth, JD+iv, 0, 0, 0)
+            x, y, z, RA, Dec, dist = calc(planet, JD+iv, X, Y, Z)
+            RAs.append(RAadjust(RA, piccenRA))
+            Decs.append(Dec)
+            
+            X, Y, Z, a, b, c = cal_Ellipse(Earth, JD-iv, 0, 0, 0)
+            x, y, z, RA, Dec, dist = calc(planet, JD-iv, X, Y, Z)
+            RAs.append(RAadjust(RA, piccenRA))
+            Decs.append(Dec)
+            
+        axW.scatter(RAs, Decs, c='#00FF00', s=1)
+
+    #狭い方の枠
+    axW.plot([piccenRA + rg, piccenRA + rg], [piccenDec + rg, piccenDec - rg], c=frameclr, lw=1)
+    axW.plot([piccenRA + rg, piccenRA - rg], [piccenDec - rg, piccenDec - rg], c=frameclr, lw=1)
+    axW.plot([piccenRA - rg, piccenRA - rg], [piccenDec - rg, piccenDec + rg], c=frameclr, lw=1)
+    axW.plot([piccenRA - rg, piccenRA + rg], [piccenDec + rg, piccenDec + rg], c=frameclr, lw=1)
+
+    #狭い方
+    ax = fig.add_subplot(122, aspect=1)
+    
+    ax.set_xlim(piccenRA+rg, piccenRA-rg)
+    ticks = np.arange(floor(piccenRA+rg), piccenRA-rg, -1, dtype=int)
+    ax.set_xticks(ticks)
+    tickstr = []
+    for i in range(len(ticks)):
+        tickstr.append(str(ticks[i]))
+        tick = ticks[i]
+        if tick >= 360:
+            tickstr[i] = str(int(tick - 360))
+        if tick < 0:
+            tickstr[i] = str(int(tick + 360))
+    ax.set_xticklabels(tickstr)
+
+    ax.set_ylim(piccenDec-rg, piccenDec+rg)
+    
+    ax.set_facecolor(backclr)
+    if screenblack == 1:
+        ax.tick_params(axis='x', colors='white')
+        ax.tick_params(axis='y', colors='white')
+        ax.spines['bottom'].set_color('white')
+        ax.spines['top'].set_color('white')
+        ax.spines['left'].set_color('white')
+        ax.spines['right'].set_color('white')
+    
+    Max_m = float(MaxM_Box.get())
+
+    if piccenRA - rg < 0:   #恒星
+        DrawStarsHIPforNarrow(0, searchW(piccenRA + rg), 0)
+        DrawStarsHIPforNarrow(searchW(piccenRA - rg + 360), 8874, -360)
+        
+        DrawStars(1, search(piccenRA + rg), 0)
+        DrawStars(search(piccenRA - rg + 360), 326882, -360)
+        
+        DrawStars2(0, search2(piccenRA + rg), 0)
+        DrawStars2(search2(piccenRA - rg + 360), StarNum1_3, -360)
+
+        
+    elif piccenRA + rg >= 360:
+        DrawStarsHIPforNarrow(searchW(piccenRA - rg), 8874, 0)
+        DrawStarsHIPforNarrow(0, searchW(piccenRA - rg + 360), 360)
+        
+        DrawStars(search(piccenRA - rg), 326882, 0)
+        DrawStars(1, search(piccenRA + rg - 360), 360)
+        
+        DrawStars2(search2(piccenRA - rg), StarNum1_3, 0)
+        DrawStars2(0, search2(piccenRA + rg - 360), 360)
+                    
+    else:
+        DrawStarsHIPforNarrow(searchW(piccenRA - rg), searchW(piccenRA + rg), 0)
+        DrawStars(search(piccenRA - rg), search(piccenRA + rg), 0)
+        DrawStars2(search2(piccenRA - rg), search2(piccenRA + rg), 0)
+            
+    for n in range(len(planets)):
+        if n == 0:
+            if abs(RAadjust(RA_Sun, piccenRA) -   piccenRA) <= rgW  and abs(Dec_Sun - piccenDec) <= rgW:
+                R = 0.267 / Distlist[0]
+                SUNcir = patches.Circle((RAadjust(RA_Sun, piccenRA), Dec_Sun), R, fc='yellow')
+                ax.add_patch(SUNcir)
+                ax.text(RAadjust(RA_Sun-0.2, piccenRA), Dec_Sun+0.2, '太陽', c=textclr, fontname='MS Gothic')
+        elif n == 8:
+            if abs(RAadjust(RA_Moon, piccenRA) -   piccenRA) <= rgW  and abs(Dec_Moon - piccenDec) <= rgW:
+                r = 0.259 / (dist_Moon / 384400)
+                cir = patches.Circle((RAadjust(RA_Moon, piccenRA), Dec_Moon), r, fc='#ffff33')
+                ax.add_patch(cir)
+                if k < 0.5:
+                    eli = patches.Ellipse((RAadjust(RA_Moon, piccenRA), Dec_Moon), 2*r, 2*r*(1-2*k), angle=-P, fc='0.3')
+                    ax.add_patch(eli)
+                    half = patches.Wedge((RAadjust(RA_Moon, piccenRA), Dec_Moon), r, theta1=-P, theta2=-P+180, fc='0.3')
+                    ax.add_patch(half)
+                else:
+                    half = patches.Wedge((RAadjust(RA_Moon, piccenRA), Dec_Moon), r, theta1=-P, theta2=-P+180, fc='0.3')
+                    ax.add_patch(half)
+                    eli = patches.Ellipse((RAadjust(RA_Moon, piccenRA), Dec_Moon), 2*r, 2*r*(1-2*k), angle=-P, fc='#ffff33')
+                    ax.add_patch(eli)
+                ax.text(RAadjust(RA_Moon-0.2, piccenRA), Dec_Moon+0.2, '月', c=textclr, fontname='MS Gothic')
+        else:
+            if abs(RAadjust(RAlist[n], piccenRA) -   piccenRA) <= rgW  and abs(Declist[n] - piccenDec) <= rgW:
+                if mag_0 - step*Vlist[n] < 1:   #サイズ
+                    size = 1
+                else:
+                    size = round((mag_0 - step*Vlist[n])**2)
+                ax.scatter(RAadjust(RAlist[n], piccenRA), Declist[n], c='red', s=size) #天体をプロット
+                ax.text(RAadjust(RAlist[n], piccenRA), Declist[n], JPNplanets[n], c=textclr, fontname='MS Gothic')
+
+    if Val3.get() and Selected_number != 0 and Selected_number != 8:
+        planet = planets[Selected_number]
+        RAs = []
+        Decs = []
+        for iv in np.arange(float(move_on_Box1.get()), float(move_on_Box2.get())+0.001, float(move_on_Box1.get())):
+            X, Y, Z, a, b, c = cal_Ellipse(Earth, JD+iv, 0, 0, 0)
+            x, y, z, RA, Dec, dist = calc(planet, JD+iv, X, Y, Z)
+            RAs.append(RAadjust(RA, piccenRA))
+            Decs.append(Dec)
+
+            X, Y, Z, a, b, c = cal_Ellipse(Earth, JD-iv, 0, 0, 0)
+            x, y, z, RA, Dec, dist = calc(planet, JD-iv, X, Y, Z)
+            RAs.append(RAadjust(RA, piccenRA))
+            Decs.append(Dec)
+            
+        ax.scatter(RAs, Decs, c='#00FF00', s=1)
                 
     text = time_str + '\n\n' + Name + '\n\n' + alpha_str + delta_str + '    (J2000.0)\n\n' + dist_str + '\n\n' + Const + '座' + Vtext + Astr + hstr
     if screenblack == 0:
@@ -1049,6 +704,9 @@ def check(event):
         fig.text(ax.get_position().x1 + 0.02, ax.get_position().y0 + 0.2, text, fontname='MS Gothic', color='white')
 
     ButtonText.set('表示')
+
+    f2.close()
+    fHelp.close()
     
     fig.show()
 
@@ -1435,7 +1093,7 @@ lat_combo = ttk.Combobox(root, textvariable=tk.StringVar(), values=NorS, width=5
 lat_combo.set('北緯')
 lat_combo.place(x=140, y=230)
 lat_Box = tk.Entry(root, width=7)
-lat_Box.insert(tk.END, '35')
+lat_Box.insert(tk.END, '40')
 lat_Box.place(x=200, y=230)
 lat_d = tk.Label(root, text='°', width=2)
 lat_d.place(x=230, y=230)
@@ -1447,7 +1105,7 @@ lon_combo = ttk.Combobox(root, textvariable=tk.StringVar(), values=EorW, width=5
 lon_combo.set('東経')
 lon_combo.place(x=140, y=250)
 lon_Box = tk.Entry(root, width=7)
-lon_Box.insert(tk.END, '135')
+lon_Box.insert(tk.END, '140')
 lon_Box.place(x=200, y=250)
 lon_d = tk.Label(root, text='°', width=2)
 lon_d.place(x=230, y=250)
@@ -1455,12 +1113,12 @@ lon_d.place(x=230, y=250)
 darkornot = ['黒地に白の星', '白地に黒の星']
 darkmode = ttk.Combobox(root, textvariable=tk.StringVar(), values=darkornot, width=15)
 darkmode.set('黒地に白の星')
-darkmode.place(x=20, y=280)
+darkmode.place(x=60, y=280)
 
-EqEc = ['赤道座標系（正距円筒図法）','赤道座標系（正距方位図法）', '黄道座標系']
-EqEcCombo = ttk.Combobox(root, textvariable=tk.StringVar(), values=EqEc, width=30)
-EqEcCombo.set('赤道座標系（正距円筒図法）')
-EqEcCombo.place(x=160, y=280)
+EqEc = ['赤道座標系', '黄道座標系']
+EqEcCombo = ttk.Combobox(root, textvariable=tk.StringVar(), values=EqEc, width=15)
+EqEcCombo.set('赤道座標系')
+EqEcCombo.place(x=200, y=280)
 
 move_L = tk.Label(root, text='前後の移動', width=10)
 move_L.place(x=100, y=310)
