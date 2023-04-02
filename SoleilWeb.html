@@ -1,0 +1,59 @@
+<!--2023/3/31~-->
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body>
+        <h3>どえも</h3>
+        <p>
+            <label><input type="text" id="yearText" size="4" value="2023">年</label>
+            <label><input type="text" id="monthText" size="2" value="3">月</label>
+            <label><input type="text" id="dateText" size="2" value="31">日</label>
+            <button type="button" onclick="show()">表示</button>
+            <label>____</label>
+            <select id="viewpoint">
+                <option>太陽</option>
+                <option>水星</option>
+                <option>金星</option>
+                <option selected>地球</option>
+                <option>火星</option>
+                <option>木星</option>
+                <option>土星</option>
+                <option>天王星</option>
+                <option>海王星</option>
+                <option>月</option>
+                <option>Ceres</option>
+                <option>Vesta</option>
+            </select>
+            <label>から</label>
+            <select id="object">
+                <option>太陽</option>
+                <option>水星</option>
+                <option>金星</option>
+                <option>地球</option>
+                <option>火星</option>
+                <option>木星</option>
+                <option>土星</option>
+                <option>天王星</option>
+                <option>海王星</option>
+                <option selected>月</option>
+                <option>Ceres</option>
+                <option>Vesta</option>
+            </select>
+            <label>____</label>
+            <select id="NSCombo">
+                <option selected>北緯</option>
+                <option>南緯</option>
+            </select>
+            <label><input type="text" id="lat" size="2" value="35">°</label>
+            <select id="EWCombo">
+                <option selected>東経</option>
+                <option>西経</option>
+            </select>
+            <label><input type="text" id="lon" size="3" value="135">°</label>
+        </p>
+        <canvas id="canvas" width="50" height="0"></canvas>
+        <script src="soleil_web.js"></script>
+    </body>
+</html>
