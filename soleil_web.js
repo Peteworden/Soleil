@@ -14,8 +14,6 @@ const maglimN = 10;
 const zerosizeW = 5;
 const zerosizeN = 10;
 
-now();
-
 //HIP
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
@@ -128,12 +126,18 @@ xhrX.onreadystatechange = function() {
 }
 
 function now() {
-    const ymdhm = new Date();
+    var ymdhm = new Date();
     document.getElementById('yearText').value = ymdhm.getFullYear();
     document.getElementById('monthText').value = ymdhm.getMonth() + 1;
     document.getElementById('dateText').value = ymdhm.getDate();
     document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
 }
+
+var ymdhm = new Date();
+document.getElementById('yearText').value = ymdhm.getFullYear();
+document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+document.getElementById('dateText').value = ymdhm.getDate();
+document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
 
 //基本的にYMDHはJST, JDはTT
 
@@ -149,7 +153,7 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
     var H = Math.floor(G / 11);
     var M = G - 12 * H + 2;
     var Y = 100 * (B -49) + E + H;
-    var Hr = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 24, 1);
+    var Hr = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 240) / 10;
     if (M == 12 && D == 32) {
         Y += 1;
         M = 1;
@@ -176,7 +180,7 @@ function show() {
     let year = parseInt(document.getElementById('yearText').value);
     let month = parseInt(document.getElementById('monthText').value);
     let date = parseInt(document.getElementById('dateText').value);
-    let hour = parseInt(document.getElementById('hourText').value);
+    let hour = parseFloat(document.getElementById('hourText').value);
     showingJD = YMDHM_to_JD(year, month, date, hour);
     show_main(showingJD);
 }
@@ -318,8 +322,8 @@ function show_main(JD){
         }
     }
 
-    const Name = document.getElementById("object").value;
-    const Selected_number = JPNplanets.indexOf(Name);
+    var Name = document.getElementById("object").value;
+    var Selected_number = JPNplanets.indexOf(Name);
 
     var RA = RAlist[Selected_number];
     var Dec = Declist[Selected_number];
@@ -355,7 +359,7 @@ function show_main(JD){
         }
     }
     
-    var constellation = ""
+    var constellation = "";
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
             constellation = CLnames[i] + "座  ";
