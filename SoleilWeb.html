@@ -1,16 +1,16 @@
 <!--2023/3/31~-->
-
 <html>
     <head>
         <meta charset="UTF-8">
     </head>
     <body>
-        <h3>どえも</h3>
+        <h3>WebAPIを取ってこれないよ～～</h3>
         <p>
-            <label><input type="text" id="yearText" size="4" value="2023">年</label>
-            <label><input type="text" id="monthText" size="2" value="3">月</label>
-            <label><input type="text" id="dateText" size="2" value="31">日</label>
-            <button type="button" onclick="show()">表示</button>
+            <label><input type="text" id="yearText" size="2">年</label>
+            <label><input type="text" id="monthText" size="2">月</label>
+            <label><input type="text" id="dateText" size="2">日</label>
+            <label><input type="text" id="hourText" size="2">時</label>
+            <button type="button" onclick="now()">現在時刻</button>
             <label>____</label>
             <select id="viewpoint">
                 <option>太陽</option>
@@ -46,14 +46,45 @@
                 <option selected>北緯</option>
                 <option>南緯</option>
             </select>
-            <label><input type="text" id="lat" size="2" value="35">°</label>
+            <label><input type="text" id="lat" size="1" value="35">°</label>
             <select id="EWCombo">
                 <option selected>東経</option>
                 <option>西経</option>
             </select>
-            <label><input type="text" id="lon" size="3" value="135">°</label>
+            <label><input type="text" id="lon" size="1" value="135">°</label><br>
+            <button type="button" onclick="show()">-----表示-----</button>
+            <label>__</label>
+            <button type="button" onclick="show_JD_plus1()">１日進む</button>
+            <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+            <label>____</label>
+            <button type="button" onclick="show_RA_plus2()">2°左</button>
+            <button type="button" onclick="show_RA_minus2()">2°右</button>
+            <label>__</label>
+            <button type="button" onclick="show_Dec_plus2()">2°上</button>
+            <button type="button" onclick="show_Dec_minus2()">2°下</button>
+            <label>__</label>
+            <button type="button" onclick="viewreset()">視点リセット</button>
         </p>
-        <canvas id="canvas" width="50" height="0"></canvas>
-        <script src="soleil_web.js"></script>
-    </body>
+        <div id="coordtext"></p>
+        <p>
+            <canvas id="canvas" width="50" height="0"></canvas>
+            <script src="soleil_web.js"></script>
+        </p>
+        <!--<p>
+            <label>天体名・記号・番号<input type="text" id="addname" size="10" value="31416"></label><br>
+            <button type="button" onclick="search()">検索</button><br>
+            <label>軌道長半径aまたは近日点距離q[au]<input type="text" id="ele0" size="10" value="31416"></label><br>
+            <label>離心率<input type="text" id="ele1" size="10" value="31416"></label><br>
+            <label>近日点因数<input type="text" id="ele2" size="10" value="31416"></label><br>
+            <label>軌道傾斜角<input type="text" id="ele3" size="10" value="31416"></label><br>
+            <label>昇交点黄経<input type="text" id="ele4" size="10" value="31416"></label><br>
+            <label>元期平均近点離角<input type="text" id="ele5" size="10" value="31416"></label><br>
+            <label>標準等級H<input type="text" id="H" size="10" value="0"></label><br>
+            <label>G<input type="text" id="G" size="10" value="0"></label><br>
+            <label>元期（TT）</label><br>
+            <label>年<input type="text" id="T0Y" size="4" value="2023"></label><br>
+            <label>月<input type="text" id="T0M" size="4" value="1"></label><br>
+            <label>日<input type="text" id="T0D" size="4" value="1"></label><br>
+            <label>時<input type="text" id="T0H" size="4" value="0"></label><br>
+        </p>-->
 </html>
