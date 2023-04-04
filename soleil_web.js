@@ -14,11 +14,7 @@ const maglimN = 10;
 const zerosizeW = 5;
 const zerosizeN = 10;
 
-const ymdhm = new Date();
-document.getElementById('yearText').value = ymdhm.getFullYear();
-document.getElementById('monthText').value = ymdhm.getMonth() + 1;
-document.getElementById('dateText').value = ymdhm.getDate();
-document.getElementById('hourText').value = ymdhm.getHours();
+now();
 
 //HIP
 var HIPRAary = Array(1);
