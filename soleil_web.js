@@ -14,6 +14,12 @@ const maglimN = 10;
 const zerosizeW = 5;
 const zerosizeN = 10;
 
+const ymdhm = new Date();
+document.getElementById('yearText').value = ymdhm.getFullYear();
+document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+document.getElementById('dateText').value = ymdhm.getDate();
+document.getElementById('hourText').value = ymdhm.getHours();
+
 //HIP
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
@@ -69,6 +75,20 @@ xhrH.onreadystatechange = function() {
     }
 }
 
+//星座名
+var CLnames = [];
+var CLurl = "https://peteworden.github.io/Soleil/ConstellationList.txt";
+var xhrCL = new XMLHttpRequest();
+
+xhrCL.open('GET', CLurl);
+xhrCL.send();
+xhrCL.onreadystatechange = function() {
+    if(xhrCL.readyState === 4 && xhrCL.status === 200) {
+        CLnames = xhrCL.responseText.split('\r\n');
+        console.log("constellations' names ready");
+    }
+}
+
 //星座線
 var lines = [];
 var lineurl = "https://peteworden.github.io/Soleil/Lines_light_forJS.txt";
@@ -83,10 +103,138 @@ xhrL.onreadystatechange = function() {
     }
 }
 
-function show(){
+//星座境界線
+var boundary = [];
+var boundaryurl = "https://peteworden.github.io/Soleil/boundary_light_forJS.txt";
+var xhrB = new XMLHttpRequest();
+
+xhrB.open('GET', boundaryurl);
+xhrB.send();
+xhrB.onreadystatechange = function() {
+    if(xhrB.readyState === 4 && xhrB.status === 200) {
+        boundary = xhrB.responseText.split(',');
+        console.log("constellation boundarys ready")
+    }
+}
+
+//追加天体
+var extra = [];
+var extraurl = "https://peteworden.github.io/Soleil/ExtraPlanet.txt";
+var xhrX = new XMLHttpRequest();
+
+xhrX.open('GET', extraurl);
+xhrX.send();
+xhrX.onreadystatechange = function() {
+    if(xhrX.readyState === 4 && xhrX.status === 200) {
+        extra = xhrX.responseText.split(' ');
+        console.log("extra ready")
+    }
+}
+
+function now() {
+    const ymdhm = new Date();
+    document.getElementById('yearText').value = ymdhm.getFullYear();
+    document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+    document.getElementById('dateText').value = ymdhm.getDate();
+    document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+}
+
+//基本的にYMDHはJST, JDはTT
+
+function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
+    var JD = JD + 0.375;
+    var A = Math.floor(JD + 68569.5);
+    var B = Math.floor(A / 36524.25);
+    var C = A - Math.floor(36524.25 * B + 0.75);
+    var E = Math.floor((C + 1) / 365.25025);
+    var F = C - Math.floor(365.25 * E) + 31;
+    var G = Math.floor(F / 30.59);
+    D = F - Math.floor(30.59 * G);
+    var H = Math.floor(G / 11);
+    var M = G - 12 * H + 2;
+    var Y = 100 * (B -49) + E + H;
+    var Hr = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 24, 1);
+    if (M == 12 && D == 32) {
+        Y += 1;
+        M = 1;
+        D = 1;
+    }
+
+    return [Y, M, D, Hr];
+}
+
+function YMDHM_to_JD(Y, M, D, H){
+    if (M <= 2) {
+        M += 12;
+        Y--;
+    }
+    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
+    return JD;
+}
+
+var shiftRA = 0;
+var shiftDec = 0;
+var showingJD = 0;
+
+function show() {
+    let year = parseInt(document.getElementById('yearText').value);
+    let month = parseInt(document.getElementById('monthText').value);
+    let date = parseInt(document.getElementById('dateText').value);
+    let hour = parseInt(document.getElementById('hourText').value);
+    showingJD = YMDHM_to_JD(year, month, date, hour);
+    show_main(showingJD);
+}
+
+function show_JD_plus1(){
+    showingJD += 1;
+    var [Y, M, D, H] = JD_to_YMDH(showingJD);
+    document.getElementById('yearText').value = Y;
+    document.getElementById('monthText').value = M;
+    document.getElementById('dateText').value = D;
+    document.getElementById('hourText').value = H;
+    show_main(showingJD);
+}
+
+function show_JD_minus1(){
+    showingJD -= 1;
+    var [Y, M, D, H] = JD_to_YMDH(showingJD);
+    document.getElementById('yearText').value = Y;
+    document.getElementById('monthText').value = M;
+    document.getElementById('dateText').value = D;
+    document.getElementById('hourText').value = H;
+    show_main(showingJD);
+}
+
+function show_RA_plus2() {
+    shiftRA += 2;
+    show_main(showingJD);
+}
+
+function show_RA_minus2() {
+    shiftRA -= 2;
+    show_main(showingJD);
+}
+
+function show_Dec_plus2() {
+    shiftDec += 2;
+    show_main(showingJD);
+}
+
+function show_Dec_minus2() {
+    shiftDec -= 2;
+    show_main(showingJD);
+}
+
+function viewreset() {
+    shiftRA = 0;
+    shiftDec = 0;
+    show_main(showingJD);
+}
+
+function show_main(JD){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = '#003';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, canvas.height, canvas.height);
     
     const eps = 0.4090926; //黄道傾斜角
     const sine = sin(eps);
@@ -109,10 +257,20 @@ function show(){
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
     const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
 
-    let year = parseInt(document.getElementById('yearText').value);
-    let month = parseInt(document.getElementById('monthText').value);
-    let date = parseInt(document.getElementById('dateText').value);
-    let JD = YMDHM_to_JD(year, month, date, 0, 0);
+    const OriginalNumOfPlanets = planets.length;
+
+    if (extra.length != 0) {
+        var name = extra[1];
+        for (var i=2; i<parseInt(extra[0])+1; i++) {
+            name += ' ' + extra[i];
+        }
+        JPNplanets.push(name);
+        var New = [];
+        for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
+            New.push(parseFloat(extra[i]));
+        }
+        planets.push(New);
+    }
 
     const ObsPlanet = document.getElementById("viewpoint").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
@@ -167,8 +325,58 @@ function show(){
     const Name = document.getElementById("object").value;
     const Selected_number = JPNplanets.indexOf(Name);
 
-    var cenRA = RAlist[Selected_number];
-    var cenDec = Declist[Selected_number];
+    var RA = RAlist[Selected_number];
+    var Dec = Declist[Selected_number];
+
+    var Astr = "";
+    var hstr = "";
+    if (ObsPlanet == "地球") {
+        var Dec_rad = Dec * pi/180;
+        var RA_rad = RA * pi/180;
+        var A = (Math.atan2(-cos(Dec_rad)*sin(theta-RA_rad), sin(Dec_rad)*cos(lat_obs)-cos(Dec_rad)*sin(lat_obs)*cos(theta-RA_rad)) * 180/pi + 360) % 360;
+        const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
+        var direc = direcs[Math.floor((A + 11.25) / 22.5)];
+        var h = Math.asin(sin(Dec_rad)*sin(lat_obs) + cos(Dec_rad)*cos(lat_obs)*cos(theta-RA_rad)) * 180/pi;
+        Astr = '方位角  ' + Math.round(A*10)/10 + '°(' + direc + ')   ';
+        hstr = '高度  ' + Math.round(h*10)/10 + '°  ';
+    }
+
+    //星座判定
+    var RA = RAlist[Selected_number];
+    var Dec = Declist[Selected_number];
+    var A = Array(89).fill(0);
+    const num_of_boundary = boundary.length / 5;
+    for (var i=0; i<num_of_boundary; i++) {
+        var Dec1 = parseFloat(boundary[5*i+2]);
+        var Dec2 = parseFloat(boundary[5*i+4]);
+        if (Math.min(Dec1, Dec2) <= Dec && Dec < Math.max(Dec1, Dec2)) {
+            var RA1 = parseFloat(boundary[5*i+1]);
+            var RA2 = parseFloat(boundary[5*i+3]);
+            if (RA >= (Dec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
+                var No = parseInt(boundary[5*i]) - 1;
+                A[No] = (A[No] + 1) % 2;
+            }
+        }
+    }
+    
+    var constellation = ""
+    for (var i=0; i<89; i++) {
+        if (A[i] == 1) {
+            constellation = CLnames[i] + "座  ";
+        }
+    }
+
+    if (Obs_num == Selected_number) {
+        alert("観測地点と対象天体は別にしてください");
+    }
+    if (Obs_num != 3 && Name == "月") {
+        Name = "地球";
+        Selected_number = 3;
+        alert("代わりに地球を表示します");
+    }
+
+    var cenRA = RA + shiftRA;
+    var cenDec = Dec + shiftDec;
 
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
@@ -256,7 +464,7 @@ function show(){
                 V = H - 2.5 * Math.log10((1-G) * phi1 + G * phi2) + 5 * Math.log10(dist * Math.sqrt(PS_2));
                 Vlist[n] = V;
             }
-            else{Vlist[n] = 10}  //n=9（月）を含む
+            else{Vlist[n] = 100}  //n=9（月）を含む
         }        
         else{ //観測地自体
             Vlist[n] = 0;
@@ -264,7 +472,6 @@ function show(){
     }
 
     //星座線
-    console.log(ctx.strokeStyle);
     ctx.strokeStyle = 'red';
     ctx.beginPath();
     const num_of_lines = lines.length / 5;
@@ -314,12 +521,17 @@ function show(){
                     var [x2, y2] = coordW(RA2, Dec2);
                     ctx.moveTo(x1, y1);
                     ctx.lineTo(x2, y2);
-                    ctx.stroke();
                 }
             }
         }
     }
     ctx.stroke();
+
+    //分断
+    ctx.fillStyle = '#FFF';
+    ctx.fillRect(canvas.height, 0, Math.max(canvas.width-canvas.height, canvas.height), canvas.height);
+    ctx.fillStyle = '#003';
+    ctx.fillRect(canvas.width-canvas.height, 0, canvas.height, canvas.height);
 
     //HIP
     ctx.fillStyle = 'white';
@@ -368,10 +580,6 @@ function show(){
         }
         DrawStars(skyareas);
     }
-
-    //分断
-    ctx.fillStyle = '#FFF';
-    ctx.fillRect(canvas.height, 0, Math.max(canvas.width-2*canvas.height, 0), canvas.height);
 
     //惑星、惑星の名前
     ctx.font = '20px serif';
@@ -478,6 +686,62 @@ function show(){
                 }
             }
         }
+    }
+
+    var RA = RAlist[Selected_number];
+    var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m  ";
+    
+    var Dec = Declist[Selected_number];
+    if (Dec >= 0) {
+        var Dectext = "赤緯 +" + Math.floor(Dec) + "° " + Math.round((Dec-Math.floor(Dec))*60) + "'(J2000.0)  ";
+    } else {
+        var Dectext = "赤緯 -" + Math.floor(-Dec) + "° " + Math.round((-Dec-Math.floor(-Dec))*60) + "'(J2000.0)  ";
+    }
+
+    if (Selected_number == 9) {
+        var Disttext = "距離 " + Math.round(Distlist[Selected_number]/1000)/10 + "万km  ";
+    } else {
+        var Disttext = "距離 " + Math.round(Distlist[Selected_number]*100)/100 + "au  ";
+    }
+
+    var Vtext = ""
+    if (Vlist[Selected_number] != 100) {
+        var Vtext = Math.round(Vlist[Selected_number]*10)/10 + "等級  ";
+    }
+
+    
+    
+    var coordtext = constellation + RAtext + Dectext + Disttext + Vtext + Astr + hstr;
+    document.getElementById("coordtext").innerHTML = coordtext;
+
+
+    function sin(a){return Math.sin(a)}
+    function cos(a){return Math.cos(a)}
+
+    function YMDHM_to_JD(Y, M, D, H, Mi){
+        if (M <= 2) {
+            M += 12;
+            Y--;
+        }
+        var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + Mi/1440 + 1721088.5 + 0.0008 - 0.375;
+        return JD;
+    }
+
+    function xyz_to_RADec(x, y, z) {  //deg
+        dist = Math.sqrt(x*x + y*y + z*z);
+        if (dist  < 0.00000001){
+            var RA = 0;
+            var Dec = 200;
+        }
+        else{
+            RA = (Math.atan2(y, x) * 180/pi + 360) % 360; //deg
+            Dec = Math.atan(z / Math.sqrt(x*x + y*y)) * 180/pi; //deg
+        }
+        return [RA, Dec, dist];
+    }
+
+    function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
+        return parseInt(360 * Math.floor(Dec / 10 + 9) + Math.floor(RA));
     }
 
     function RApos(RA) {
@@ -651,33 +915,36 @@ function show(){
     }
 }
 
-function sin(a){return Math.sin(a)}
-function cos(a){return Math.cos(a)}
+async function search () {
+    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
+    var xhr = new XMLHttpRequest();
 
-function YMDHM_to_JD(Y, M, D, H, Mi){
-    if (M <= 2) {
-        M += 12;
-        Y--;
-    }
-    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + Mi/1440 + 1721088.5 + 0.0008 - 0.375;
-    return JD;
-}
+    const res = await fetch(url);
+    console.log(res)
 
-function xyz_to_RADec(x, y, z) {  //deg
-    dist = Math.sqrt(x*x + y*y + z*z);
-    if (dist  < 0.00000001){
-        var RA = 0;
-        var Dec = 100;
-    }
-    else{
-        RA = (Math.atan2(y, x) * 180/pi + 360) % 360; //deg
-        Dec = Math.atan(z / Math.sqrt(x*x + y*y)) * 180/pi; //deg
-    }
-    return [RA, Dec, dist];
-}
+    /*xhr.open('GET', url, true);
+    xhr.responseType = 'json';
 
-function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
-    return parseInt(360 * Math.floor(Dec / 10 + 9) + Math.floor(RA));
+    console.log(url);
+
+    xhr.onload = function () {
+        var res = this.response;
+        console.log(res);
+    };
+
+    xhr.send();*/
+
+    function addplenet () {
+        var Name = document.getElementById('addname').value;
+
+        var x_eles = [];
+        var s_time = [];
+
+        for (var i=0; i<6; i++) {
+            s_eles.push(document.getElementById('ele' + String(i)).value);
+        }
+    }
+
 }
 
 document.body.appendChild(canvas);
