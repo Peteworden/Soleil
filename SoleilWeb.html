@@ -11,6 +11,13 @@
             <label><input type="text" id="monthText" size="2">月</label>
             <label><input type="text" id="dateText" size="2">日</label>
             <label><input type="text" id="hourText" size="2">時</label>
+<script>
+    var ymdhm = new Date();
+    document.getElementById('yearText').value = ymdhm.getFullYear();
+    document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+    document.getElementById('dateText').value = ymdhm.getDate();
+    document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10
+</script>
             <button type="button" onclick="now()">現在時刻</button>
             <label>____</label>
             <select id="viewpoint">
