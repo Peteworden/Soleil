@@ -177,6 +177,8 @@ var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
 
+show();
+
 function show() {
     let year = parseInt(document.getElementById('yearText').value);
     let month = parseInt(document.getElementById('monthText').value);
