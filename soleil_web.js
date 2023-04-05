@@ -177,6 +177,7 @@ var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
 
+
 show();
 
 function show() {
