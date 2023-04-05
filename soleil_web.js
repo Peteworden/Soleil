@@ -15,6 +15,7 @@ const zerosizeW = 5;
 const zerosizeN = 10;
 
 //HIP
+var num_of_stars = 0;
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
@@ -380,6 +381,7 @@ function show_main(JD){
 
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
+    vsr Vlist = Array(planets.length);
     for (n=0; n<planets.length; n++) {
         var x = Xlist[n];
         var y = Ylist[n];
