@@ -42,6 +42,7 @@ xhr.onreadystatechange = function() {
             HIPmagary[i] = parseFloat(DataAry[3*i+2]);
         }
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -57,6 +58,7 @@ xhrT.onreadystatechange = function() {
         Tycho = xhrT.responseText.split(',');
         console.log("Tycho2 ready");
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -72,6 +74,7 @@ xhrH.onreadystatechange = function() {
         Help = xhrH.responseText.split(',');
         console.log("helper ready")
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -87,6 +90,7 @@ xhrCL.onreadystatechange = function() {
         CLnames = xhrCL.responseText.split('\r\n');
         console.log("constellations' names ready");
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -102,6 +106,7 @@ xhrL.onreadystatechange = function() {
         lines = xhrL.responseText.split(',');
         console.log("lines ready");
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -117,6 +122,7 @@ xhrB.onreadystatechange = function() {
         boundary = xhrB.responseText.split(',');
         console.log("constellation boundarys ready");
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -132,6 +138,7 @@ xhrX.onreadystatechange = function() {
         extra = xhrX.responseText.split(' ');
         console.log("extra ready");
         xhrcheck++;
+        show_initial();
     }
 }
 
@@ -186,8 +193,10 @@ var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
 
+function show_initial(){
 if (xhrcheck == 7){
 show();
+}
 }
 
 function show() {
