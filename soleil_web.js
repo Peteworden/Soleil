@@ -14,6 +14,8 @@ const maglimN = 10;
 const zerosizeW = 5;
 const zerosizeN = 10;
 
+var xhrcheck = 0;
+
 //HIP
 var num_of_stars = 0;
 var HIPRAary = Array(1);
@@ -39,6 +41,7 @@ xhr.onreadystatechange = function() {
             HIPDecary[i] = parseFloat(DataAry[3*i+1]);
             HIPmagary[i] = parseFloat(DataAry[3*i+2]);
         }
+        xhrcheck++;
     }
 }
 
@@ -52,7 +55,8 @@ xhrT.send();
 xhrT.onreadystatechange = function() {
     if(xhrT.readyState === 4 && xhrT.status === 200) {
         Tycho = xhrT.responseText.split(',');
-        console.log("Tycho2 ready")
+        console.log("Tycho2 ready");
+        xhrcheck++;
     }
 }
 
@@ -67,6 +71,7 @@ xhrH.onreadystatechange = function() {
     if(xhrH.readyState === 4 && xhrH.status === 200) {
         Help = xhrH.responseText.split(',');
         console.log("helper ready")
+        xhrcheck++;
     }
 }
 
@@ -81,6 +86,7 @@ xhrCL.onreadystatechange = function() {
     if(xhrCL.readyState === 4 && xhrCL.status === 200) {
         CLnames = xhrCL.responseText.split('\r\n');
         console.log("constellations' names ready");
+        xhrcheck++;
     }
 }
 
@@ -94,7 +100,8 @@ xhrL.send();
 xhrL.onreadystatechange = function() {
     if(xhrL.readyState === 4 && xhrL.status === 200) {
         lines = xhrL.responseText.split(',');
-        console.log("lines ready")
+        console.log("lines ready");
+        xhrcheck++;
     }
 }
 
@@ -108,7 +115,8 @@ xhrB.send();
 xhrB.onreadystatechange = function() {
     if(xhrB.readyState === 4 && xhrB.status === 200) {
         boundary = xhrB.responseText.split(',');
-        console.log("constellation boundarys ready")
+        console.log("constellation boundarys ready");
+        xhrcheck++;
     }
 }
 
@@ -122,7 +130,8 @@ xhrX.send();
 xhrX.onreadystatechange = function() {
     if(xhrX.readyState === 4 && xhrX.status === 200) {
         extra = xhrX.responseText.split(' ');
-        console.log("extra ready")
+        console.log("extra ready");
+        xhrcheck++;
     }
 }
 
@@ -177,8 +186,9 @@ var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
 
-
+if (xhrcheck == 7){
 show();
+}
 
 function show() {
     let year = parseInt(document.getElementById('yearText').value);
