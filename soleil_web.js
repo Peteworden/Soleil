@@ -381,7 +381,6 @@ function show_main(JD){
 
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
-    vsr Vlist = Array(planets.length);
     for (n=0; n<planets.length; n++) {
         var x = Xlist[n];
         var y = Ylist[n];
