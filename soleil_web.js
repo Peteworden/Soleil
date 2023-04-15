@@ -142,19 +142,20 @@ xhrX.onreadystatechange = function() {
     }
 }
 
+var shiftRA = 0;
+var shiftDec = 0;
+var showingJD = 0;
+
 function now() {
     var ymdhm = new Date();
-    document.getElementById('yearText').value = ymdhm.getFullYear();
-    document.getElementById('monthText').value = ymdhm.getMonth() + 1;
-    document.getElementById('dateText').value = ymdhm.getDate();
-    document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+    var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
+    document.getElementById('yearText').value = y;
+    document.getElementById('monthText').value = m;
+    document.getElementById('dateText').value = d;
+    document.getElementById('hourText').value = h;
+    showingJD = YMDHM_to_JD(y, m, d, h);
+    show_main(showingJD);
 }
-
-var ymdhm = new Date();
-document.getElementById('yearText').value = ymdhm.getFullYear();
-document.getElementById('monthText').value = ymdhm.getMonth() + 1;
-document.getElementById('dateText').value = ymdhm.getDate();
-document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
 
 //基本的にYMDHはJST, JDはTT
 
@@ -189,14 +190,10 @@ function YMDHM_to_JD(Y, M, D, H){
     return JD;
 }
 
-var shiftRA = 0;
-var shiftDec = 0;
-var showingJD = 0;
-
 function show_initial(){
-if (xhrcheck == 7){
-show();
-}
+    if (xhrcheck == 7){
+        show();
+    }
 }
 
 function show() {
@@ -656,7 +653,7 @@ function show_main(JD){
                 var mag = Vlist[i];
                 ctx.fillStyle = '#F33'
                 ctx.beginPath();
-                ctx.arc(x, y, Math.max(0.5*(7-mag), 0.5), 0, 2 * pi, false);
+                ctx.arc(x, y, Math.max(sizeW(mag), 0.5), 0, 2 * pi, false);
                 ctx.fill();
                 ctx.fillStyle = '#FF8';
                 ctx.fillText(JPNplanets[i], x, y);
@@ -702,13 +699,71 @@ function show_main(JD){
                     var mag = Vlist[i];
                     ctx.fillStyle = '#F33'
                     ctx.beginPath();
-                    ctx.arc(x, y, Math.max(0.5*(7-mag), 0.5), 0, 2 * pi, false);
+                    ctx.arc(x, y, Math.max(sizeN(mag), 0.5), 0, 2 * pi, false);
                     ctx.fill();
                     ctx.fillStyle = '#FF8';
                     ctx.fillText(JPNplanets[i], x, y);
                 }
             }
         }
+    }
+    
+    var zengo = document.getElementsByName("zengo");
+    if (zengo[1].checked && Selected_number != 9 && Selected_number != 0){
+        ctx.fillStyle = '#3F3'
+        var planet = planets[Selected_number];
+        
+        var interval1 = parseFloat(document.getElementById("zengo11").value);
+        var zengorange1 = parseFloat(document.getElementById("zengo12").value);
+        for (var i=1; i<=parseInt(zengorange1/interval1); i++){
+            JD = showingJD + i * interval1;
+            var [X, Y, Z] = calc(planets[Obs_num], JD);
+            var [x, y, z] = calc(planet, JD);
+            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            if (Math.abs(RApos(RA)) < rgW && Math.abs(Dec-cenDec) < rgW) {
+                var [x, y] = coordW(RA, Dec);
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(sizeW(maglimW), 0.5), 0, 2 * pi, false);
+                ctx.fill();
+            }
+
+            JD = showingJD - i * interval1;
+            var [X, Y, Z] = calc(planets[Obs_num], JD);
+            var [x, y, z] = calc(planet, JD);
+            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            if (Math.abs(RApos(RA)) < rgW && Math.abs(Dec-cenDec) < rgW) {
+                var [x, y] = coordW(RA, Dec);
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(sizeW(maglimW), 0.5), 0, 2 * pi, false);
+                ctx.fill();
+            }
+        }
+
+        var interval2 = parseFloat(document.getElementById("zengo21").value);
+        var zengorange2 = parseFloat(document.getElementById("zengo22").value);
+        for (var i=1; i<=parseInt(zengorange2/interval2); i++){
+            JD = showingJD + i * interval2;
+            var [X, Y, Z] = calc(planets[Obs_num], JD);
+            var [x, y, z] = calc(planet, JD);
+            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            if (Math.abs(RApos(RA)) < rgN && Math.abs(Dec-cenDec) < rgN) {
+                var [x, y] = coordN(RA, Dec);
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(sizeN(maglimN), 0.5), 0, 2 * pi, false);
+                ctx.fill();
+            }
+            JD = showingJD - i * interval2;
+            var [X, Y, Z] = calc(planets[Obs_num], JD);
+            var [x, y, z] = calc(planet, JD);
+            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            if (Math.abs(RApos(RA)) < rgN && Math.abs(Dec-cenDec) < rgN) {
+                var [x, y] = coordN(RA, Dec);
+                ctx.beginPath();
+                ctx.arc(x, y, Math.max(sizeN(maglimN), 0.5), 0, 2 * pi, false);
+                ctx.fill();
+            }
+        }
+
     }
 
     var RA = RAlist[Selected_number];
@@ -936,38 +991,6 @@ function show_main(JD){
 
         return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
     }
-}
-
-async function search () {
-    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
-    var xhr = new XMLHttpRequest();
-
-    const res = await fetch(url);
-    console.log(res)
-
-    /*xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-
-    console.log(url);
-
-    xhr.onload = function () {
-        var res = this.response;
-        console.log(res);
-    };
-
-    xhr.send();*/
-
-    function addplenet () {
-        var Name = document.getElementById('addname').value;
-
-        var x_eles = [];
-        var s_time = [];
-
-        for (var i=0; i<6; i++) {
-            s_eles.push(document.getElementById('ele' + String(i)).value);
-        }
-    }
-
 }
 
 document.body.appendChild(canvas);
