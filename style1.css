@@ -1,0 +1,18 @@
+
+h1 {
+    color: whitesmoke;
+    background-color: darkblue;
+    text-align: center;
+    padding: 20px;
+}
+
+.toSoleilRead {
+    width: 40%;
+    padding: 10px;
+    border: 1px solid #333;
+    background: lightyellow;
+}
+
+h3 {
+    margin-top: 40px;
+}
