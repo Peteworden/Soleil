@@ -142,6 +142,24 @@ xhrX.onreadystatechange = function() {
     }
 }
 
+/*
+//SBDL
+var fromSBDL = [];
+var sbdlurl = 'https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=' + '31416' + '&full-prec=true&phys-par=true'
+var xhrsbdl = new XMLHttpRequest();
+
+xhrsbdl.open('GET', sbdlurl);
+xhrsbdl.send();
+xhrsbdl.onreadystatechange = function() {
+    if(xhrsbdl.readyState === 4 && xhrsbdl.status === 200) {
+        sbdl = xhrsbdl.responseText.split(' ');
+        console.log("sbdl ready");
+        xhrcheck++;
+        show_initial();
+    }
+}
+*/
+
 var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
@@ -279,6 +297,14 @@ function show_main(JD){
 
     const OriginalNumOfPlanets = planets.length;
 
+    // 視点
+    const ObsPlanet = document.getElementById("viewpoint").value;
+    const Obs_num = JPNplanets.indexOf(ObsPlanet);
+
+    // 観測対象
+    var Name = document.getElementById("object").value;
+    var Selected_number = JPNplanets.indexOf(Name);
+
     if (extra.length != 0) {
         var name = extra[1];
         for (var i=2; i<parseInt(extra[0])+1; i++) {
@@ -292,8 +318,25 @@ function show_main(JD){
         planets.push(New);
     }
 
-    const ObsPlanet = document.getElementById("viewpoint").value;
-    const Obs_num = JPNplanets.indexOf(ObsPlanet);
+    if (Obs_num == Selected_number) {
+        if (Obs_num != 3) {
+            alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
+            Name = "地球";
+            Selected_number = 3;
+            document.getElementById("object").options[3].selected = true;
+        }
+        else {
+            alert("観測地点と対象天体は別にしてください。\n代わりに月を表示します。");
+            Name = "月";
+            Selected_number = 9;
+            document.getElementById("object").options[9].selected = true;
+        }
+    }
+    if (Obs_num != 3 && Obs_num != 9 && Name == "月") {
+        Name = "地球";
+        Selected_number = 3;
+        alert("代わりに地球を表示します");
+    }
 
     var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
     var lon_obs = parseInt(document.getElementById('lon').value) * pi/180;
@@ -342,9 +385,6 @@ function show_main(JD){
         }
     }
 
-    var Name = document.getElementById("object").value;
-    var Selected_number = JPNplanets.indexOf(Name);
-
     var RA = RAlist[Selected_number];
     var Dec = Declist[Selected_number];
 
@@ -384,15 +424,6 @@ function show_main(JD){
         if (A[i] == 1) {
             constellation = CLnames[i] + "座  ";
         }
-    }
-
-    if (Obs_num == Selected_number) {
-        alert("観測地点と対象天体は別にしてください");
-    }
-    if (Obs_num != 3 && Name == "月") {
-        Name = "地球";
-        Selected_number = 3;
-        alert("代わりに地球を表示します");
     }
 
     var cenRA = RA + shiftRA;
@@ -607,8 +638,10 @@ function show_main(JD){
 	ctx.textAlign = 'left';
 
     for (i=0; i<planets.length; i++){
+        // 枠内に入っていて
         if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgW && Math.abs(Declist[i]-cenDec) < rgW) {
             var [x, y] = coordW(RAlist[i], Declist[i]);
+            // 太陽
             if (i == 0){
                 ctx.fillStyle = 'yellow';
                 ctx.beginPath();
@@ -616,40 +649,45 @@ function show_main(JD){
                 ctx.fill();
                 ctx.fillStyle = '#FF8';
                 ctx.fillText(JPNplanets[i], x+10, y-10);
-            } else if (i == 9 && Obs_num == 3) {
-                var rs = RA_Sun * pi/180;
-                var ds = Dec_Sun * pi/180;
-                var rm = RA_Moon * pi/180;
-                var dm = Dec_Moon * pi/180;
-                var lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
-                k = (1 - cos(lons-lon) * cos(lat)) / 2;
-                P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
+            }
+            // 月(地球から見たときだけ)
+            else if (i == 9) {
+                if (Obs_num == 3) {
+                    var rs = RA_Sun * pi/180;
+                    var ds = Dec_Sun * pi/180;
+                    var rm = RA_Moon * pi/180;
+                    var dm = Dec_Moon * pi/180;
+                    var lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
+                    k = (1 - cos(lons-lon) * cos(lat)) / 2;
+                    P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
 
-                ctx.beginPath();
-                if (k < 0.5) {
-                    ctx.fillStyle = 'yellow';
-                    ctx.arc(x, y, 16, 0, 2*pi, false);
-                    ctx.fill();
-                    ctx.fillStyle = '#333';
                     ctx.beginPath();
-                    ctx.arc(x, y, 16, pi-P, 2*pi-P);
-                    ctx.ellipse(x, y, 16, 16*(1-2*k), -P, 0, pi);
-                    ctx.fill()
-                } else {
-                    ctx.fillStyle = '#333';
-                    ctx.arc(x, y, 16, 0, 2*pi, false);
-                    ctx.fill();
-                    ctx.fillStyle = 'yellow';
-                    ctx.beginPath();
-                    ctx.arc(x, y, 16, -P, pi-P);
-                    ctx.ellipse(x, y, 16, 16*(2*k-1), pi-P, 0, pi);
-                    ctx.fill()
+                    if (k < 0.5) {
+                        ctx.fillStyle = 'yellow';
+                        ctx.arc(x, y, 16, 0, 2*pi, false);
+                        ctx.fill();
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 16, pi-P, 2*pi-P);
+                        ctx.ellipse(x, y, 16, 16*(1-2*k), -P, 0, pi);
+                        ctx.fill()
+                    } else {
+                        ctx.fillStyle = '#333';
+                        ctx.arc(x, y, 16, 0, 2*pi, false);
+                        ctx.fill();
+                        ctx.fillStyle = 'yellow';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 16, -P, pi-P);
+                        ctx.ellipse(x, y, 16, 16*(2*k-1), pi-P, 0, pi);
+                        ctx.fill()
+                    }
+
+                    ctx.fillStyle = '#FF8';
+                    ctx.fillText(JPNplanets[i], x+10, y-10);
                 }
-
-                ctx.fillStyle = '#FF8';
-                ctx.fillText(JPNplanets[i], x+10, y-10);
-
-            } else if (i != 9) {
+            }
+            // 太陽と月以外
+            else if (i != 9) {
                 var mag = Vlist[i];
                 ctx.fillStyle = '#F33'
                 ctx.beginPath();
@@ -669,32 +707,34 @@ function show_main(JD){
                     ctx.fill();
                     ctx.fillStyle = '#FF8';
                     ctx.fillText(JPNplanets[i], x+0.8*R, y-0.8*R);
-                } else if (i == 9 && Obs_num == 3) {
-                    var r = canvas.height * (0.259 / (dist_Moon / 384400)) / rgN / 2;
-                    ctx.beginPath();
-                    if (k < 0.5) {
-                        ctx.fillStyle = 'yellow';
-                        ctx.arc(x, y, r, 0, 2*pi, false);
-                        ctx.fill();
-                        ctx.fillStyle = '#333';
+                }
+                else if (i == 9) {
+                    if (Obs_num == 3) {
+                        var r = canvas.height * (0.259 / (dist_Moon / 384400)) / rgN / 2;
                         ctx.beginPath();
-                        ctx.arc(x, y, r, pi-P, 2*pi-P);
-                        ctx.ellipse(x, y, r, r*(1-2*k), -P, 0, pi);
-                        ctx.fill()
-                    } else {
-                        ctx.fillStyle = '#333';
-                        ctx.arc(x, y, r, 0, 2*pi, false);
-                        ctx.fill();
-                        ctx.fillStyle = 'yellow';
-                        ctx.beginPath();
-                        ctx.arc(x, y, r, -P, pi-P);
-                        ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
-                        ctx.fill()
+                        if (k < 0.5) {
+                            ctx.fillStyle = 'yellow';
+                            ctx.arc(x, y, r, 0, 2*pi, false);
+                            ctx.fill();
+                            ctx.fillStyle = '#333';
+                            ctx.beginPath();
+                            ctx.arc(x, y, r, pi-P, 2*pi-P);
+                            ctx.ellipse(x, y, r, r*(1-2*k), -P, 0, pi);
+                            ctx.fill()
+                        } else {
+                            ctx.fillStyle = '#333';
+                            ctx.arc(x, y, r, 0, 2*pi, false);
+                            ctx.fill();
+                            ctx.fillStyle = 'yellow';
+                            ctx.beginPath();
+                            ctx.arc(x, y, r, -P, pi-P);
+                            ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
+                            ctx.fill()
+                        }
+
+                        ctx.fillStyle = '#FF8';
+                        ctx.fillText(JPNplanets[i], x+0.8*r, y-0.8*r);
                     }
-
-                    ctx.fillStyle = '#FF8';
-                    ctx.fillText(JPNplanets[i], x+0.8*r, y-0.8*r);
-
                 } else if (i != 9) {
                     var mag = Vlist[i];
                     ctx.fillStyle = '#F33'
@@ -993,5 +1033,33 @@ function show_main(JD){
     }
 }
 
+async function search () {
+    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
+    var xhr = new XMLHttpRequest();
+
+    const res = await fetch(url);
+    console.log(res)
+
+    /*xhr.open('GET', url, true);
+    xhr.responseType = 'json';
+    console.log(url);
+    xhr.onload = function () {
+        var res = this.response;
+        console.log(res);
+    };
+    xhr.send();*/
+
+    function addplenet () {
+        var Name = document.getElementById('addname').value;
+
+        var x_eles = [];
+        var s_time = [];
+
+        for (var i=0; i<6; i++) {
+            s_eles.push(document.getElementById('ele' + String(i)).value);
+        }
+    }
+
+}
 
 document.body.appendChild(canvas);
