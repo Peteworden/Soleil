@@ -336,6 +336,7 @@ function show_main(JD){
         Name = "地球";
         Selected_number = 3;
         alert("代わりに地球を表示します");
+        document.getElementById("object").options[3].selected = true;
     }
 
     var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
