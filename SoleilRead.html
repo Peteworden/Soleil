@@ -3,65 +3,77 @@
     <head>
         <title>ソレイユの導入</title>
         <meta charset="UTF-8">
+        <link rel="stylesheet" href="style2.css">
     </head>
     <body>
         <h1><<<使い方>>></h1>
-            <h3>自分のやり方。ほかにもできる方法はある。Anacondaがいいって見るときあるな、よく知らない</h3>
-            <p>行き詰まったら気軽に聞いてください。書いたの自分だし</p>
-            <p>1. Pythonをパソコンにインストールする。最新版なら多分大丈夫。インストール時、「Add Python 3.10 to PATH」に必ずチェックを入れる（デフォルトでは入っていない）！！</p>
-            <img src="PythonPATH.png" alt="" title="お、よく見てるぅ" width="40%" height="40%">
-            <p>2. IDLEを開く。Windowsなら画面左下のWindowsをクリックしてPythonかIDLEかで検索。デスクトップかツールバーにもってきとくといい</p>
-            <p>3. 白い正方形の画面が出てくる。Shellというらしい。>>>のところに「print("3+5=" + str(3+5))」と打ってみよう。「3+5=8」と出てくるはず。</p>
-            <p>4. File --> Open... で出てくる画面に新しいフォルダを作る。名前は適当</p>
-            <p>5.フォルダ内に下の9ファイル（空）を作る。打つの面倒なのでコピペをうまく使おう：<br>
+        <h3>自分のやり方。ほかにもできる方法はある（PowerShellで実行するとか）。Anacondaがいいって見るときあるな、よく知らない</h3>
+        <p>行き詰まったら気軽に聞いてください。書いたの自分だし</p>
+
+        <ol>
+            <li>公式サイトからPythonをパソコンにインストールする。最新版なら多分大丈夫。インストール時、「Add Python 3.11 to PATH」に必ずチェックを入れる（デフォルトでは入っていない）！！<br>
+            <img src="PythonPATH.png" alt="" title="お、よく見てるぅ" width="40%" height="40%"> </li>
+            <li>IDLEを開く。Windowsなら画面左下のWindowsをクリックして「Python」か「IDLE」で検索。デスクトップかツールバーにもってきとくといい</li>
+            <li>白い正方形の画面が出てくる。Shellというらしい。>>>のところに「print("3+5=" + str(3+5))」と打ってみよう。「3+5=8」と出てくるはず。</li>
+            <li>その画面の左上のFile -->Open... で出てくる画面に新しいフォルダを作る（右クリック-->新規作成-->フォルダー）。名前は適当</li>
+            <li>フォルダ内に下の9ファイル（空）を作る。打つの面倒なのでコピペをうまく使おう:
                 ＜注意＞「.txt」は拡張子です。拡張子が表示されないようになっているときは.txtの手前までをコピペ。
-                よくわからなければ.txtを含めた名前（ConstellationList.txtとか）のファイルを作って開いてみて、
+                よくわからなければ.txtを含めた名前（ConstellationList.txtとか）のファイルを作って（右クリック-->新規作成-->テキストドキュメント-->名前変える）開いてみて、
                 左上に出てくるファイル名が「ConstellationList.txt」になってたらOK。「ConstellationList.txt.txt」になってたら拡張子を隠す設定になってるので、
                 .txtを除いた部分をファイル名のところにペースト。設定を変える必要はありません<br>
-                ConstellationList.txt<br>
-                ConstellationPositionNew.txt<br>
-                ExtraPlanet.txt<br>
-                Lines_light.txt<br>
-                StarsNew-Tycho-to10-2nd.txt<br>
-                StarsNewHIP_to6_5.txt<br>
-                TychoSearchHelper2nd.txt<br>
-                boundary_light.txt<br>
-                supplement_1-3_light.txt</p>
-            <p>6.下のURLすべてにアクセスする。テキストファイル（.txtで終わるもの）は上で作ったファイルに中身をコピーする。行数が30万を超えるものもあるのでコピーはドラッグではなく
+                <ul>
+                    <li>ConstellationList.txt</li>
+                    <li>ConstellationPositionNew.txt</li>
+                    <li>ExtraPlanet.txt</li>
+                    <li>Lines_light.txt</li>
+                    <li>StarsNew-Tycho-to10-2nd.txt</li>
+                    <li>StarsNewHIP_to6_5.txt</li>
+                    <li>TychoSearchHelper2nd.txt</li>
+                    <li>boundary_light.txt</li>
+                    <li>supplement_1-3_light.txt</li>
+                </ul>
+            </li>
+            <li>下のURLすべてにアクセスする。テキストファイル（.txtで終わるもの）は上で作ったファイルに中身をコピーする。行数が30万を超えるものもあるのでコピーはドラッグではなく
                 「すべて選択」(Ctrl + A + C)で。
-                StarsShow.pyはたぶん勝手にダウンロードされるので、上のフォルダ内に移す。<br>
-                <a href="ConstellationList.txt">ConstellationList.txt</a><br>
-                <a href="ConstellationPositionNew.txt">ConstellationPositionNew.txt</a><br>
-                <a href="ExtraPlanet.txt">ExtraPlanet.txt</a><br>
-                <a href="Lines_light.txt">Lines_light.txt</a><br>
-                <a href="StarsNew-Tycho-to10-2nd.txt">StarsNew-Tycho-to10-2nd.txt</a><br>
-                <a href="StarsNewHIP_to6_5.txt">StarsNewHIP_to6_5.txt</a><br>
-                <a href="TychoSearchHelper2nd.txt">TychoSearchHelper2nd.txt</a><br>
-                <a href="boundary_light.txt">boundary_light.txt</a><br>
-                <a href="supplement_1-3_light.txt">supplement_1-3_light.txt</a><br>
-                <a href="StarsShow.py">StarsShow.py</a><br></p>
+                StarsShow.pyはたぶん勝手にダウンロードされるので、上のフォルダ内に移す。
+                <ul>
+                    <li><a href="ConstellationList.txt">ConstellationList.txt</a></li>
+                    <li><a href="ConstellationPositionNew.txt">ConstellationPositionNew.txt</a></li>
+                    <li><a href="ExtraPlanet.txt">ExtraPlanet.txt</a></li>
+                    <li><a href="Lines_light.txt">Lines_light.txt</a></li>
+                    <li><a href="StarsNew-Tycho-to10-2nd.txt">StarsNew-Tycho-to10-2nd.txt</a></li>
+                    <li><a href="StarsNewHIP_to6_5.txt">StarsNewHIP_to6_5.txt</a></li>
+                    <li><a href="TychoSearchHelper2nd.txt">TychoSearchHelper2nd.txt</a></li>
+                    <li><a href="boundary_light.txt">boundary_light.txt</a></li>
+                    <li><a href="supplement_1-3_light.txt">supplement_1-3_light.txt</a></li>
+                    <li><a href="StarsShow.py">StarsShow.py</a></li>
+                </ul>
+            </li>
 
-            <p>7. プログラムを動かすのに必要なライブラリというものをインストールする。StarsShow.pyをIDLEで開くと最初にimportが並んでますね、そのmatplotlibとかがライブラリです。
-                たぶんここが難関。「Python ライブラリ　インストール」とか調べてみるとやり方が分かると思う（以下でWindowsの場合を書く）。<br>
+            <li>プログラムを動かすのに必要なライブラリというものをインストールする。StarsShow.pyを（IDLEで）開くと最初にimportが並んでますね、そのmatplotlibとかがライブラリです。
+                たぶんここが難関。「Python ライブラリ インストール」とか調べてみるとやり方が分かると思う（以下でWindowsの場合を書く）。<br>
                 おそらくインストール必要なのはmatplotlib、numpy、datetime、requests、jsonです
-            </p>
-            <p>Windowsの場合:<br>
-                (1) Windowsキーを押す<br>
-                (2) 検索窓で「cmd」と検索<br>
-                (3) コマンドプロンプトが開く<br>
-                (4) 「pip install matplotlib」と入力、Enter<br>
-                (5) 何かいろいろ出てきて勝手に終わる。最後にSuccessfully installedって書いてれば成功。ありませんみたいなエラーは、1.でチェックを忘れていたか、スペルミスか、インストール不要（mathとかはいらない）かだと思います。１つめなら面倒だけどPythonの再インストールをおすすめします。もし再インストールしてもだめだったら、もう１回再インストールしたら直るかも<br>
-                <img src="pipinstallnumpy.png" alt="" title="numpy、numpy！" width="40%" height="40%"><br>
-                (6) matplotlibの部分をnumpyやdatetimeに替えてほかもインストールする</p>
+                <p>Windowsの場合:</p>
+                <ol>
+                    <li>Windowsキーを押す</li>
+                    <li>検索窓で「cmd」と検索</li>
+                    <li>コマンドプロンプトが開く</li>
+                    <li>「pip install matplotlib」と入力、Enter</li>
+                    <li>何かいろいろ出てきて勝手に終わる。最後にSuccessfully installedって書いてれば成功。ありませんみたいなエラーは、1.でチェックを忘れていたか、スペルミスか、インストール不要（mathとかはいらない）かだと思います。１つめなら面倒だけどPythonの再インストールをおすすめします。もし再インストールしてもだめだったら、もう１回再インストールしたら直るかも<br>
+                    <img src="pipinstallnumpy.png" alt="" title="numpy、numpy！" width="40%" height="40%"></li>
+                    <li>matplotlibの部分をnumpyやdatetimeに替えてほかもインストールする</li>
+                </ol>
+            </li>
   
-            <p>8. StarsShow.pyに戻り、上のRun --> Run Module で実行する。WindowsならF5でもできる。インストールしていないライブラリがあるとShellにmatplotlib is not foundのようなエラーが出るので、怖がらずにコマンドプロンプトでインストールする。</p>
+            <li>StarsShow.pyに戻り、画面上のRun --> Run Module で実行する。WindowsならF5でもできる。インストールしていないライブラリがあるとShellにmatplotlib is not foundのようなエラーが出るので、怖がらずにコマンドプロンプトでインストールする。</li>
 
-            <p>9. エラーなくうまくいけば準備は終わり。よい天文ライフを。</p>
+            <li>エラーなくうまくいけば準備は終わり。よい天文ライフを。</li>
+        </ol>
 
-            <p>StarsShow.pyの6, 7行目は自宅など好きな緯度経度に書きかえてください。<br>
-                そしてぜひ、StarsShow.pyの中身を読んでみてください。質問も、あればどうぞ。
-            </p>
-            
-            <a href="SoleilTop.html">紹介文に戻る</a>
+        <p>StarsShow.pyの6, 7行目は自宅など好きな緯度経度に書きかえてください。<br>
+            そしてぜひ、StarsShow.pyの中身を読んでみてください。質問も、あればどうぞ。
+        </p>
+        
+        <a href="SoleilTop.html">紹介文に戻る</a>
     </body>
 </html>
