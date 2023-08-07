@@ -41,6 +41,7 @@ xhr.onreadystatechange = function() {
             HIPDecary[i] = parseFloat(DataAry[3*i+1]);
             HIPmagary[i] = parseFloat(DataAry[3*i+2]);
         }
+        console.log("HIP ready");
         xhrcheck++;
         show_initial();
     }
@@ -171,7 +172,7 @@ function now() {
     document.getElementById('monthText').value = m;
     document.getElementById('dateText').value = d;
     document.getElementById('hourText').value = h;
-    showingJD = YMDHM_to_JD(y, m, d, h);
+    showingJD = YMDH_to_JD(y, m, d, h);
     show_main(showingJD);
 }
 
@@ -199,7 +200,7 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
     return [Y, M, D, Hr];
 }
 
-function YMDHM_to_JD(Y, M, D, H){
+function YMDH_to_JD(Y, M, D, H){
     if (M <= 2) {
         M += 12;
         Y--;
@@ -219,7 +220,7 @@ function show() {
     let month = parseInt(document.getElementById('monthText').value);
     let date = parseInt(document.getElementById('dateText').value);
     let hour = parseFloat(document.getElementById('hourText').value);
-    showingJD = YMDHM_to_JD(year, month, date, hour);
+    showingJD = YMDH_to_JD(year, month, date, hour);
     show_main(showingJD);
 }
 
@@ -230,6 +231,7 @@ function show_JD_plus1(){
     document.getElementById('monthText').value = M;
     document.getElementById('dateText').value = D;
     document.getElementById('hourText').value = H;
+    console.log("check236");
     show_main(showingJD);
 }
 
@@ -310,6 +312,7 @@ function show_main(JD){
         for (var i=2; i<parseInt(extra[0])+1; i++) {
             name += ' ' + extra[i];
         }
+        console.log(name);
         JPNplanets.push(name);
         var New = [];
         for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
@@ -362,9 +365,11 @@ function show_main(JD){
     RAlist[0] = RA_Sun;
     Declist[0] = Dec_Sun;
     Distlist[0] = dist;
+    console.log("check368", planets.length);
 
     for (i=1; i<planets.length; i++) {
         var planet = planets[i];
+        if (i == 12) {console.log(planet)}
         if (i == 9) {
             var [x, y, z] = calc(Earth, JD);
             var [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist_Moon, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta);
@@ -374,17 +379,23 @@ function show_main(JD){
             RAlist[9] = RA_Moon;
             Declist[9] = Dec_Moon;
             Distlist[9] = dist_Moon;
+            console.log("9 OK");
         } else {
             var [x, y, z] = calc(planet, JD);
+            if (i==12) {console.log(384)};
             var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            if (i==12) {console.log(386)};
             Xlist[i] = x;
             Ylist[i] = y;
             Zlist[i] = z;
             RAlist[i] = RA;
             Declist[i] = Dec;
             Distlist[i] = dist;
+            console.log(i, "OK");
         }
     }
+
+    console.log("check393");
 
     var RA = RAlist[Selected_number];
     var Dec = Declist[Selected_number];
@@ -579,7 +590,7 @@ function show_main(JD){
     }
     ctx.stroke();
 
-    //分断
+   //分断
     ctx.fillStyle = '#FFF';
     ctx.fillRect(canvas.height, 0, Math.max(canvas.width-canvas.height, canvas.height), canvas.height);
     ctx.fillStyle = '#003';
@@ -642,17 +653,14 @@ function show_main(JD){
         // 枠内に入っていて
         if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgW && Math.abs(Declist[i]-cenDec) < rgW) {
             var [x, y] = coordW(RAlist[i], Declist[i]);
-            // 太陽
-            if (i == 0){
+            if (i == 0){ // 太陽
                 ctx.fillStyle = 'yellow';
                 ctx.beginPath();
                 ctx.arc(x, y, 13, 0, 2 * pi, false);
                 ctx.fill();
                 ctx.fillStyle = '#FF8';
                 ctx.fillText(JPNplanets[i], x+10, y-10);
-            }
-            // 月(地球から見たときだけ)
-            else if (i == 9) {
+            } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
                     var rs = RA_Sun * pi/180;
                     var ds = Dec_Sun * pi/180;
@@ -686,9 +694,7 @@ function show_main(JD){
                     ctx.fillStyle = '#FF8';
                     ctx.fillText(JPNplanets[i], x+10, y-10);
                 }
-            }
-            // 太陽と月以外
-            else if (i != 9) {
+            } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
                 ctx.fillStyle = '#F33'
                 ctx.beginPath();
@@ -830,19 +836,19 @@ function show_main(JD){
 
     
     
-    var coordtext = constellation + RAtext + Dectext + Disttext + Vtext + Astr + hstr;
+    var coordtext = constellation + "__" + RAtext + Dectext + "__" + Disttext + "__" + Vtext + "__" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
 
     function sin(a){return Math.sin(a)}
     function cos(a){return Math.cos(a)}
 
-    function YMDHM_to_JD(Y, M, D, H, Mi){
+    function YMDH_to_JD(Y, M, D, H){
         if (M <= 2) {
             M += 12;
             Y--;
         }
-        var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + Mi/1440 + 1721088.5 + 0.0008 - 0.375;
+        var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
         return JD;
     }
 
@@ -851,8 +857,7 @@ function show_main(JD){
         if (dist  < 0.00000001){
             var RA = 0;
             var Dec = 200;
-        }
-        else{
+        } else {
             RA = (Math.atan2(y, x) * 180/pi + 360) % 360; //deg
             Dec = Math.atan(z / Math.sqrt(x*x + y*y)) * 180/pi; //deg
         }
@@ -1025,7 +1030,7 @@ function show_main(JD){
         var xe = Xe - cos(lat_obs) * cos(theta) * 6378.14 / 1.49598e8; //au
         var ye = Ye - cos(lat_obs) * sin(theta) * 6378.14 / 1.49598e8; //au
         var ze = Ze - sin(lat_obs)              * 6378.14 / 1.49598e8; //au
-        var RA = (Math.atan2(ye, xe) * 180/pi) % 360; //deg
+        var RA = (Math.atan2(ye, xe) * 180/pi + 360) % 360; //deg
         var Dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * 180/pi; //deg
 
         dist *= 6378.14;

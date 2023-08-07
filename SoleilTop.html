@@ -6,26 +6,22 @@
     <link rel="stylesheet" href="style1.css">
   </head>
   <body>
-    <h1>ソレイユへようこそ！</h1>
-    
-    <img src="2022091002_2月.png" alt="" title="うさぎうさぎ　何見て跳ねる　十五夜お月様　見て跳ねる" width="60%" height="60%">
-    
-    <p>本家 : <a href="https://www.heavens-above.com/">Heavens-Above<a>の小惑星のページ</p>
-      
-    <div class="toSoleilRead">使えるようにするやりかた⇒<a href="SoleilRead.html">こちら</a>（パソコンがおすすめ）</div>
-      
-    <h3>更新情報</h3>
-      <p>ファイルの再ダウンロードorコピペ推奨。特に書いていなければStarsShow.py</p>
-      <ul>
-        <li>正距方位図法に対応、１画面にまとめた、ボタンを増やした、他惑星からの視点で見れる (2023/03/29)</li>
-        <li>正距方位図法でも表示できるようになった。でもちょっと遅い。
-          StarsShow.pyを更新して、上の「こちら」から2ndのついたテキストファイル2つをほかのファイルと同じフォルダに追加してください (2023/02/08)</li>
-        <li>描画が速くなった。ファイル名を修正 (2022/12/27)</li>
-        <li>右側の図にもヒッパルコス星表を重ねることにした。これで右側の図に明るい星がないということはなくなるはず (2022/12/21)</li>
-        <li>99行目「+1」を削除 (2022/12/08)
-      </ul>
+    <header>
+      <h1>ソレイユへようこそ！</h1>
+    </header>
 
-    <h3>Heavens-Aboveにはない機能</h3>
+    <img class="topimage" src="2022091002_2月.png" alt="" title="うさぎうさぎ　何見て跳ねる　十五夜お月様　見て跳ねる" width="60%" height="60%">
+    
+    <p>本家 : <a href="https://www.heavens-above.com/">Heavens-Above</a>の小惑星のページ</p>
+      
+    <div class="toSoleilRead">
+      使えるようにするやりかた⇒<a href="SoleilRead.html">こちら</a>（パソコンがおすすめ）
+    </div>
+
+    <div class="sectionTitle">
+      <h3>Heavens-Aboveにはない機能</h3>
+    </div>
+    <div class="sectionContents">
       <ul>
         <li>好きな小惑星・彗星を指定できる！自分と同じ名前の小惑星とか</li>
         <li>惑星も見れる！海王星とか見たいとき便利</li>
@@ -34,12 +30,20 @@
         <li>計算も図の作成もプログラム中でやるので、「天体を変更」の中の「Search」以外のすべての機能はオフラインで使える！</li>
         <li>ほかの惑星から見た景色がわかる！</li>
       </ul>
+    </div>
     
-    <h3>Heavens-Aboveにあってこっちにない機能</h3>
+    <div class="sectionTitle">
+      <h3>Heavens-Aboveにあってこっちにない機能</h3>
+    </div>
+    <div class="sectionContents">
       <ul><li>明るい小惑星や彗星を自動で候補として出してくれる</li></ul>
-      
-    <h3>機能紹介</h3>
-      <img src="2022010100Moon.png" alt="" title="全体はこんな感じ！" width="50%" height="50%">
+    </div>  
+    
+    <div class="sectionTitle">
+      <h3>できること</h3>
+    </div>
+    <div class="sectionContents">
+      <img class="introFunc" src="2022010100Moon.png" alt="" title="全体はこんな感じ！" width="50%" height="50%">
       <ul>
         <li>年月日時刻を指定、現在時刻ボタンで現在時刻にできる</li>
         <li>天体は惑星、月、ケレスとベスタ、さらにお好みの１天体から選べる</li>
@@ -52,34 +56,58 @@
         <li>「Shift」を使うと目標天体を中心からずらせる。暗い星を見たくて明るい星からたどりたいときにとっても便利</li>
         <li>画像を保存できる</li>
         <li>「天体を変更」ボタン。押すと出てくる新しい画面の一番上に小惑星や彗星の名前や番号を入力して「Search」を押すと、軌道要素がその天体のものに置きかわり、OKを押して閉じると設定画面の
-        天体のところがその天体になります。Searchで複数候補がでるかも。Searchを使わず、架空の天体の名前や軌道要素にしてもOK。</li>
+        天体のところがその天体になります。Searchで複数候補がでるかも。Searchを使わず、架空の天体の名前や軌道要素にしてもOK。楕円軌道の天体だけでなく、放物線軌道や双曲線軌道でも計算できます</li>
         <li>星図の上のボタンで日付や見る範囲を簡単に変えられます</li>
         <li>「表示」ボタン！　押してみよう</li>
       </ul>
-        
-    <p>遊んだら報告、感想など教えてもらえると嬉しいです！<br>
-      バグ、直すべき点、改善してほしい点、ほしい機能などあればそれもぜひ<br>
-    </p>
+    </div>
 
-    <h3>その他</h3>
+    <div class="sectionTitle">
+      <h3>その他</h3>
+    </div>
+    <div class="sectionContents">
       <ul>
         <li>「天体を編集」で小惑星や彗星を検索するときは、名前や小惑星番号のほか、名前の一部の前か後ろに*をつけて検索できます。例えば「petew*」で「Search」を押すと17799 Petewilliamsと31416 Petewordenから選べます。</li>
         <li>あえてプログラム内で位置を計算しているため、惑星や小惑星の位置はかなり正確ですが、月はちょっとずれます。気になったら日食を表示させてみて</li>
+        <li>遊んだら報告、感想など教えてもらえると嬉しいです！　バグ、直すべき点、改善してほしい点、ほしい機能などあればそれもぜひ</li>
       </ul>
+    </div>
 
-    <h3>利用しているサイト、参考文献</h3>
-    <ul>
-      <li>小天体の軌道要素：<a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/">Small-Body Database Lookup</a>のWeb API</li>
-      <li>恒星の座標：<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/hipparcos.html">ヒッパルコス星表</a>、<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/tycho2.html">ティコ第２星表</a></li>
-      <li>星座関係：<a href="http://astro.starfree.jp/commons/index.html">Astro Commons</a></li>
-      <li>惑星の軌道要素：<a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html">JPL Approximate Positions of the Planets</a>(英語)</li>
-      <li>月の位置の式：<a href="https://www.stjarnhimlen.se/comp/ppcomp.html">How to compute planetary positions</a>(英語)</li>
-      <li>等級計算：忘れた、しまった 探しても見つからない</li>
-      <li>位置計算、座標変換など：『天文の計算教室』（斉田博、地人書館）、『新天文学講座　第XIV巻　天体の軌道計算』（渡辺敏夫ほか、恒星社厚生閣）</li>
-    </ul>
+    <div class="sectionTitle">
+      <h3>更新情報</h3>
+    </div>
+    <div class="sectionContents">
+      <p>ファイルの再ダウンロードorコピペ推奨。特に書いていなければStarsShow.py</p>
+      <ul>
+        <li>正距方位図法に対応、１画面にまとめた、ボタンを増やした、他惑星からの視点で見れる (2023/03/29)</li>
+        <li>正距方位図法でも表示できるようになった。でもちょっと遅い。
+          StarsShow.pyを更新して、上の「こちら」から2ndのついたテキストファイル2つをほかのファイルと同じフォルダに追加してください (2023/02/08)</li>
+        <li>描画が速くなった。ファイル名を修正 (2022/12/27)</li>
+        <li>右側の図にもヒッパルコス星表を重ねることにした。これで右側の図に明るい星がないということはなくなるはず (2022/12/21)</li>
+        <li>99行目「+1」を削除 (2022/12/08)
+      </ul>
+    </div>
+
+    <div class="sectionTitle">
+      <h3>利用しているサイト、参考文献</h3>
+    </div>
+    <div class="sectionContents">
+      <ul>
+        <li>小天体の軌道要素：<a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/">Small-Body Database Lookup</a>のWeb API</li>
+        <li>恒星の座標：<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/hipparcos.html">ヒッパルコス星表</a>、<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/tycho2.html">ティコ第２星表</a></li>
+        <li>星座関係：<a href="http://astro.starfree.jp/commons/index.html">Astro Commons</a></li>
+        <li>惑星の軌道要素：<a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html">JPL Approximate Positions of the Planets</a>(英語)</li>
+        <li>月の位置の式：<a href="https://www.stjarnhimlen.se/comp/ppcomp.html">How to compute planetary positions</a>(英語)</li>
+        <li>等級計算：忘れた、しまった 探しても見つからない</li>
+        <li>位置計算、座標変換など：『天文の計算教室』（斉田博、地人書館）、『新天文学講座　第XIV巻　天体の軌道計算』（渡辺敏夫ほか、恒星社厚生閣）</li>
+      </ul>
+    </div>
 
     <p>いつかAndroidアプリかWebアプリにしたい 技術と時間が足りない いつかきっとします やっぱしないかも</p>
-      
-    <p><a href="PeteHOME.html">ぴーとの部屋に戻る　(*>∀<*)ﾉただいま★</a></p>
+    
+    <div class="backLink">
+      <a href="PeteHOME.html">ぴーとの部屋に戻る　(*>∀<*)ﾉただいま★</a>
+    </div>
+    
   </body>
 </html>

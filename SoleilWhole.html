@@ -3,15 +3,26 @@
 <html>
     <head>
         <meta charset="UTF-8">
+        <link rel="stylesheet" href="styleWeb.css">
     </head>
     <body>
         <h3>おおっ分かってきたかも</h3>
         <p>
-            <label><input type="text" id="yearText" size="4" value="2023">年</label>
-            <label><input type="text" id="monthText" size="2" value="3">月</label>
-            <label><input type="text" id="dateText" size="2" value="31">日</label>
-            <button type="button" onclick="show()">表示</button>
+            <label><input type="text" id="yearText">年</label>
+            <label><input type="text" id="monthText">月</label>
+            <label><input type="text" id="dateText">日</label>
+            <label><input type="text" id="hourText">時</label>
+            <script>
+                var ymdhm = new Date();
+                document.getElementById('yearText').value = ymdhm.getFullYear();
+                document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+                document.getElementById('dateText').value = ymdhm.getDate();
+                document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+            </script>
+            <button type="button" onclick="now()">現在時刻</button>
+            
             <label>____</label>
+
             <select id="viewpoint">
                 <option>太陽</option>
                 <option>水星</option>
@@ -27,20 +38,7 @@
                 <option>Vesta</option>
             </select>
             <label>から</label>
-            <select id="object">
-                <option>太陽</option>
-                <option>水星</option>
-                <option>金星</option>
-                <option>地球</option>
-                <option>火星</option>
-                <option>木星</option>
-                <option>土星</option>
-                <option>天王星</option>
-                <option>海王星</option>
-                <option selected>月</option>
-                <option>Ceres</option>
-                <option>Vesta</option>
-            </select>
+            
             <label>____</label>
             <select id="NSCombo">
                 <option selected>北緯</option>
@@ -52,7 +50,14 @@
                 <option>西経</option>
             </select>
             <label><input type="text" id="lon" size="3" value="135">°</label>
+            <label>____</label>
+            <button type="button" onclick="show_JD_plus1()">１日進む</button>
+            <button type="button" onclick="show_JD_minus1()">１日戻る</button>
         </p>
+        <button class="showBtn" type="button" onclick="show()">表示</button>
+        <a href="SoleilWeb.html">四角が2つあるほう</a>
+        <label>____</label>
+        <a href="PeteHOME.html">PeteHOMEに戻る</a>
         <canvas id="canvas" width="0" height="0"></canvas>
         <script src="soleil_whole.js"></script>
     </body>

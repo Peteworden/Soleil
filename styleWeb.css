@@ -1,0 +1,55 @@
+h3 {
+    margin: 0px 20px;
+}
+
+h6 {
+    margin: 0px 20px;
+}
+
+.setting {
+    display: flex;
+}
+
+.settingBlock {
+    text-align: center;
+    margin: 3px 10px;
+}
+
+input {
+    width: 3em;
+    max-width: 100%;
+}
+
+.radio {
+    width: 1em;
+}
+
+.zengoDiv {
+    text-align: left;
+}
+
+.direcRows {
+    text-align: center;
+    margin: 3px;
+}
+
+button {
+    cursor: pointer;
+}
+
+.showBtn {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #eb7000;
+    padding: 0rem 2rem;
+    line-height: 3em;
+    margin: 0px 100px 6px 10px;
+    border-radius: 1rem;
+    border: 0;
+}
+
+.showBtn:hover {
+    color: #fff;
+    background: #f56500;
+}

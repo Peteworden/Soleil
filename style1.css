@@ -1,18 +1,48 @@
-
-h1 {
+header {
     color: whitesmoke;
-    background-color: darkblue;
+    background-color: rgb(4, 4, 48);
     text-align: center;
     padding: 20px;
+}
+
+p {
+    margin: 20px;
+}
+
+.topimage {
+    text-align: center;
+    margin: 20px;
 }
 
 .toSoleilRead {
     width: 40%;
     padding: 10px;
+    margin: 20px 20px;
     border: 1px solid #333;
     background: lightyellow;
 }
 
-h3 {
-    margin-top: 40px;
+.sectionTitle {
+    margin: 40px 0px 0px 20px;
+}
+
+.sectionTitle h3 {
+    font-size: 24px;
+    border-bottom: lightblue solid 2px;
+}
+
+.sectionContents {
+    padding: 0px 20px;
+}
+
+.introFunc {
+    margin: 10px;
+}
+
+.backLink {
+    width: 30%;
+    padding: 10px;
+    margin: 20px 20px;
+    border: 1px solid #333;
+    background: lightyellow;
 }

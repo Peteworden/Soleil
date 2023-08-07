@@ -1,6 +1,25 @@
-p {
-    width: 50%;
+header {
+    color: whitesmoke;
+    background-color: rgb(4, 4, 48);
+    text-align: center;
+    padding: 20px;
+}
+
+.main {
+    height: 250px;
+    margin: 10px 0px;
+}
+
+.main ul li {
+    width: 60%;
     padding: 10px;
+    margin: 10px 0px;
     border: 1px solid #333;
     background: lightyellow;
+    list-style-type: none;
+}
+
+footer {
+    margin: 20px;
+    border-top: 3px solid #333;
 }

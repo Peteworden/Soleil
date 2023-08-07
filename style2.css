@@ -1,3 +1,14 @@
+header {
+    color: whitesmoke;
+    background-color: rgb(4, 4, 48);
+    text-align: center;
+    padding: 20px;
+}
+
+.CQtop {
+    text-align: center;
+}
+
 ol li {
     margin-top: 20px;
 }
@@ -10,4 +21,12 @@ ol li ul li {
 ol li ol li {
     list-style-type: lower-roman;
     margin-top: 0px;
+}
+
+.backLink {
+    width: 30%;
+    padding: 10px;
+    margin: 20px 20px;
+    border: 1px solid #333;
+    background: lightyellow;
 }

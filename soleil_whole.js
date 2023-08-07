@@ -5,7 +5,78 @@ canvas.height = 600;
 
 const ctx = canvas.getContext('2d');
 
-function show(){
+var num_of_stars = 0;
+var RAary = Array(1);
+var Decary = Array(1);
+var magary = Array(1);
+
+var url = "https://peteworden.github.io/Soleil/StarsNewHIP_to6_5_set.txt";
+var xhr = new XMLHttpRequest();
+
+xhr.open('GET', url);
+xhr.send();
+xhr.onreadystatechange = function() {
+if(xhr.readyState === 4 && xhr.status === 200) {
+    const DataAry = xhr.responseText.split(',');
+    
+    num_of_stars = DataAry.length / 3;
+
+    RAary = Array(num_of_stars);
+    Decary = Array(num_of_stars);
+    magary = Array(num_of_stars);
+    for (i=0; i<num_of_stars; i++){
+        RAary[i] = parseFloat(DataAry[3*i]);
+        Decary[i] = parseFloat(DataAry[3*i+1]);
+        magary[i] = parseFloat(DataAry[3*i+2]);
+    }
+    console.log("HIP ready");
+    show();
+}
+}
+
+var showingJD = 0;
+
+function now() {
+    var ymdhm = new Date();
+    var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
+    document.getElementById('yearText').value = y;
+    document.getElementById('monthText').value = m;
+    document.getElementById('dateText').value = d;
+    document.getElementById('hourText').value = h;
+    showingJD = YMDH_to_JD(y, m, d, h);
+    show_main(showingJD);
+}
+
+function show() {
+    let year = parseInt(document.getElementById('yearText').value);
+    let month = parseInt(document.getElementById('monthText').value);
+    let date = parseInt(document.getElementById('dateText').value);
+    let hour = parseFloat(document.getElementById('hourText').value);
+    showingJD = YMDH_to_JD(year, month, date, hour);
+    show_main(showingJD);
+}
+
+function show_JD_plus1(){
+    showingJD += 1;
+    var [Y, M, D, H] = JD_to_YMDH(showingJD);
+    document.getElementById('yearText').value = Y;
+    document.getElementById('monthText').value = M;
+    document.getElementById('dateText').value = D;
+    document.getElementById('hourText').value = H;
+    show_main(showingJD);
+}
+
+function show_JD_minus1(){
+    showingJD -= 1;
+    var [Y, M, D, H] = JD_to_YMDH(showingJD);
+    document.getElementById('yearText').value = Y;
+    document.getElementById('monthText').value = M;
+    document.getElementById('dateText').value = D;
+    document.getElementById('hourText').value = H;
+    show_main(showingJD);
+}
+
+function show_main(JD){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = '#005';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -30,11 +101,6 @@ function show(){
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
     const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-
-    let year = parseInt(document.getElementById('yearText').value);
-    let month = parseInt(document.getElementById('monthText').value);
-    let date = parseInt(document.getElementById('dateText').value);
-    let JD = YMDHM_to_JD(year, month, date, 0, 0);
 
     const ObsPlanet = document.getElementById("viewpoint").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
@@ -85,9 +151,6 @@ function show(){
             Distlist[i] = dist;
         }
     }
-
-    const Name = document.getElementById("object").value;
-    const Selected_number = JPNplanets.indexOf(Name);
 
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
@@ -181,46 +244,24 @@ function show(){
             Vlist[n] = 0;
         }
     }
-
-    var url = "https://peteworden.github.io/Soleil/StarsNewHIP_to6_5_set.txt";
-    var xhr = new XMLHttpRequest();
-
-    xhr.open('GET', url);
-    xhr.send();
-    xhr.onreadystatechange = function() {
-    if(xhr.readyState === 4 && xhr.status === 200) {
-        const DataAry = xhr.responseText.split(',');
-        
-        num_of_stars = DataAry.length / 3;
-
-        var RAary = Array(num_of_stars);
-        var Decary = Array(num_of_stars);
-        var magary = Array(num_of_stars);
-        for (i=0; i<num_of_stars; i++){
-            RAary[i] = parseFloat(DataAry[3*i]);
-            Decary[i] = parseFloat(DataAry[3*i+1]);
-            magary[i] = parseFloat(DataAry[3*i+2]);
+ 
+    ctx.fillStyle = 'white';
+    for (i=0; i<num_of_stars; i++){
+        var mag = magary[i];
+        if (mag < 6.5) {
+            var RA = RAary[i];
+            var Dec = Decary[i];
+            ctx.beginPath();
+            ctx.arc(canvas.width*(1-RA/360), canvas.height*(1-Dec/90)/2, 0.5*(7-mag), 0, 2 * pi, false);
+            ctx.fill();
         }
-        
-        ctx.fillStyle = 'white';
-        for (i=0; i<num_of_stars; i++){
-            var mag = magary[i];
-            if (mag < 6.5) {
-                var RA = RAary[i];
-                var Dec = Decary[i];
-                ctx.beginPath();
-                ctx.arc(canvas.width*(1-RA/360), canvas.height*(1-Dec/90)/2, 0.5*(7-mag), 0, 2 * pi, false);
-                ctx.fill();
-            }
-        }
-
-    }
     }
     
     //惑星描画
     ctx.font = '20px serif';
     ctx.textBaseline = 'bottom';
 	ctx.textAlign = 'left';
+    console.log(RAlist);
 
     for (i=0; i<planets.length; i++){
         if (i != Obs_num){
@@ -233,17 +274,41 @@ function show(){
                 ctx.fill();
                 ctx.fillStyle = '#FF8';
                 ctx.fillText(JPNplanets[i], x, y);
-            }
-            else if (i == 9 && Obs_num == 3) {
-                ctx.fillStyle = 'yellow';
-                ctx.beginPath();
-                console.log(x, y);
-                ctx.arc(x, y, 12, 0, 2 * pi, false);
-                ctx.fill();
-                ctx.fillStyle = '#FF8';
-                ctx.fillText(JPNplanets[i], x, y);
-            }
-            else if (i != 9) {
+            } else if (i == 9) { // 月(地球から見たときだけ)
+                if (Obs_num == 3) {
+                    var rs = RA_Sun * pi/180;
+                    var ds = Dec_Sun * pi/180;
+                    var rm = RA_Moon * pi/180;
+                    var dm = Dec_Moon * pi/180;
+                    var lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
+                    k = (1 - cos(lons-lon) * cos(lat)) / 2;
+                    P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
+
+                    ctx.beginPath();
+                    if (k < 0.5) {
+                        ctx.fillStyle = 'yellow';
+                        ctx.arc(x, y, 16, 0, 2*pi, false);
+                        ctx.fill();
+                        ctx.fillStyle = '#333';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 16, pi-P, 2*pi-P);
+                        ctx.ellipse(x, y, 16, 16*(1-2*k), -P, 0, pi);
+                        ctx.fill()
+                    } else {
+                        ctx.fillStyle = '#333';
+                        ctx.arc(x, y, 16, 0, 2*pi, false);
+                        ctx.fill();
+                        ctx.fillStyle = 'yellow';
+                        ctx.beginPath();
+                        ctx.arc(x, y, 16, -P, pi-P);
+                        ctx.ellipse(x, y, 16, 16*(2*k-1), pi-P, 0, pi);
+                        ctx.fill()
+                    }
+
+                    ctx.fillStyle = '#FF8';
+                    ctx.fillText(JPNplanets[i], x+10, y-10);
+                }
+            } else if (i != 9) {
                 var mag = Vlist[i];
                 ctx.fillStyle = '#F33'
                 ctx.beginPath();
@@ -338,7 +403,7 @@ function show(){
         
         var lon = Math.atan2(yh, xh);
         var lat = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
-        
+
         lon +=(- 1.274*sin(Mm - 2*D)
             + 0.658*sin(2*D)
             - 0.186*sin(Ms)
@@ -367,7 +432,7 @@ function show(){
         var xe = Xe - cos(lat_obs) * cos(theta) * 6378.14 / 1.49598e8; //au
         var ye = Ye - cos(lat_obs) * sin(theta) * 6378.14 / 1.49598e8; //au
         var ze = Ze - sin(lat_obs)              * 6378.14 / 1.49598e8; //au
-        var RA = (Math.atan2(ye, xe) * 180/pi) % 360; //deg
+        var RA = (Math.atan2(ye, xe) * 180/pi + 360) % 360; //deg
         var Dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * 180/pi; //deg
 
         dist *= 6378.14;
@@ -379,12 +444,36 @@ function show(){
 function sin(a){return Math.sin(a)}
 function cos(a){return Math.cos(a)}
 
-function YMDHM_to_JD(Y, M, D, H, Mi){
+//基本的にYMDHはJST, JDはTT
+
+function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
+    var JD = JD + 0.375;
+    var A = Math.floor(JD + 68569.5);
+    var B = Math.floor(A / 36524.25);
+    var C = A - Math.floor(36524.25 * B + 0.75);
+    var E = Math.floor((C + 1) / 365.25025);
+    var F = C - Math.floor(365.25 * E) + 31;
+    var G = Math.floor(F / 30.59);
+    D = F - Math.floor(30.59 * G);
+    var H = Math.floor(G / 11);
+    var M = G - 12 * H + 2;
+    var Y = 100 * (B -49) + E + H;
+    var Hr = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 240) / 10;
+    if (M == 12 && D == 32) {
+        Y += 1;
+        M = 1;
+        D = 1;
+    }
+
+    return [Y, M, D, Hr];
+}
+
+function YMDH_to_JD(Y, M, D, H){
     if (M <= 2) {
         M += 12;
         Y--;
     }
-    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + Mi/1440 + 1721088.5 + 0.0008 - 0.375;
+    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
     return JD;
 }
 
