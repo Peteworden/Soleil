@@ -5,12 +5,12 @@ header {
     padding: 20px;
 }
 
-.main {
+main {
     height: 250px;
     margin: 10px 0px;
 }
 
-.main ul li {
+main ul li {
     width: 60%;
     padding: 10px;
     margin: 10px 0px;
