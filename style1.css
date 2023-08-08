@@ -1,17 +1,59 @@
+body {
+    background: linear-gradient(90deg, #dadae8, rgb(161, 143, 204));
+    margin: 0px;
+}
+
 header {
     color: whitesmoke;
     background-color: rgb(4, 4, 48);
     text-align: center;
-    padding: 20px;
+    height: 150px;
+    display: flex;
+}
+
+.headerHome {
+    text-align: center;
+    width: 100px;
+    height: 60px;
+    line-height: 60px;
+    background-color: lightyellow;
+    margin: 45px 25px;
+    border-radius: 1rem;
+}
+
+.titleCenterizer {
+    width: 150px;
+    height: 150px;
+}
+
+header h1 {
+    width: 100%;
+    text-align: center;
+    font-size: 40px;
+    margin: 0px;
+    line-height: 150px;
+}
+
+header span {
+    font-size: 35px;
 }
 
 p {
     margin: 20px;
 }
 
-.topimage {
+img {
+    border-color: antiquewhite;
+    border-width: 3px;
+}
+
+.topDiv {
     text-align: center;
     margin: 20px;
+}
+
+.topDiv img {
+    width: 70%;
 }
 
 .toSoleilRead {
@@ -37,6 +79,7 @@ p {
 
 .introFunc {
     margin: 10px;
+    width: 60%;
 }
 
 .backLink {
