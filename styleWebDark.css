@@ -1,0 +1,82 @@
+html {
+    background-color: black;
+    color: #f38080;
+}
+
+body {
+    margin: 0px;
+}
+
+h3 {
+    margin: 0px 20px;
+}
+
+h6 {
+    margin: 0px 20px;
+}
+
+.setting {
+    display: flex;
+}
+
+.settingBlock {
+    text-align: center;
+    margin: 3px 10px;
+}
+
+input {
+    width: 3em;
+    max-width: 100%;
+    color: whitesmoke;
+    background-color: #c22424;
+}
+
+select {
+    color: whitesmoke;
+    background-color: #c22424;
+}
+
+.radio {
+    width: 1em;
+    background-color: #c22424;
+}
+
+.zengoDiv {
+    text-align: left;
+}
+
+.direcRows {
+    text-align: center;
+    margin: 3px;
+}
+
+button {
+    cursor: pointer;
+    color: #e6c0c0;
+    background-color: #c22424;
+}
+
+.showBtn {
+    font-size: 16px;
+    font-weight: 600;
+    color: whitesmoke;
+    background-color: #c22424;
+    padding: 0rem 2rem;
+    line-height: 3em;
+    margin: 0px 100px 6px 10px;
+    border-radius: 1rem;
+    border: 0;
+}
+
+.showBtn:hover {
+    color: #fff;
+    background: #9f4301;
+}
+
+a:link {
+    color: blue;
+}
+
+a:visited {
+    color: blueviolet;
+}

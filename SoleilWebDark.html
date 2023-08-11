@@ -1,0 +1,113 @@
+<!--2023/3/31~-->
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="styleWebDark.css">
+    </head>
+    <body>
+        <h3>WebAPIを取ってこれないよ～～</h3>
+        <h6>
+            星のデータは自分のGitHubから取ってきてるのに、表示ボタンの右のリンクとブラウザの戻るボタンをうまく使うと
+            オフラインでも星が表示されます、なんで？？　教えてください
+        </h6>
+        <div class="setting">
+            <div class="settingBlock">
+                <div class="mainSettingRows">
+                    <label><input type="text" id="yearText">年</label>
+                    <label><input type="text" id="monthText">月</label>
+                    <label><input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">時</label>
+                    <script>
+                        var ymdhm = new Date();
+                        document.getElementById('yearText').value = ymdhm.getFullYear();
+                        document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+                        document.getElementById('dateText').value = ymdhm.getDate();
+                        document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+                    </script>
+                    <button type="button" onclick="now()">現在時刻</button>
+                </div>
+                
+                <div class="mainSettingRows">
+                    <select id="viewpoint">
+                        <option>太陽</option>
+                        <option>水星</option>
+                        <option>金星</option>
+                        <option selected>地球</option>
+                        <option>火星</option>
+                        <option>木星</option>
+                        <option>土星</option>
+                        <option>天王星</option>
+                        <option>海王星</option>
+                        <option>月</option>
+                        <option>Ceres</option>
+                        <option>Vesta</option>
+                    </select>
+                    <label>から</label>
+                    <select id="object">
+                        <option>太陽</option>
+                        <option>水星</option>
+                        <option>金星</option>
+                        <option>地球</option>
+                        <option>火星</option>
+                        <option>木星</option>
+                        <option>土星</option>
+                        <option>天王星</option>
+                        <option>海王星</option>
+                        <option selected>月</option>
+                        <option>Ceres</option>
+                        <option>Vesta</option>
+                    </select>
+                </div>
+                
+                <div class="mainSettingRows">
+                    <select id="NSCombo">
+                        <option selected>北緯</option>
+                        <option>南緯</option>
+                    </select>
+                    <label><input type="text" id="lat" size="1" value="35">°</label>
+                    <select id="EWCombo">
+                        <option selected>東経</option>
+                        <option>西経</option>
+                    </select>
+                    <label><input type="text" id="lon" size="1" value="135">°</label>
+                </div>
+            </div>
+
+            <div class="settingBlock">
+                <div class="zengoDiv">
+                    <input class="radio" type="radio" name="zengo" value="前後なし" checked>前後なし<br>
+                    <input class="radio" type="radio" name="zengo" value="前後あり">前後あり<br>
+                    <label>　左：<input type="text" id="zengo11" value="10" size="2">日ごとにそれぞれ<input type="text" id="zengo12" value="100" size="4">日</label><br>
+                    <label>　右：<input type="text" id="zengo21" value="1" size="2">日ごとにそれぞれ<input type="text" id="zengo22" value="10" size="3">日</label>
+                </div>
+            </div>
+
+            <div class="settingBlock">
+                <br>
+                <button type="button" onclick="show_JD_plus1()">１日進む</button>
+                <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+            </div>
+
+            <div class="settingBlock">
+                <div class="direcRows">
+                    <button type="button" onclick="show_Dec_plus2()">2°上</button>
+                </div>
+                <div class="direcRows">
+                    <button type="button" onclick="show_RA_plus2()">2°左</button>
+                    <button type="button" onclick="viewreset()">RESET</button>
+                    <button type="button" onclick="show_RA_minus2()">2°右</button>
+                </div>
+                <div class="direcRows">
+                    <button type="button" onclick="show_Dec_minus2()">2°下</button>
+                </div>
+            </div>
+        </div>
+
+        <button class="showBtn" type="button" onclick="show()">表示</button>
+        <a href="PeteHOME.html">PeteHOMEに戻る</a>
+        <div id="coordtext"></div>
+        <div class="result">
+            <canvas id="canvas" width="50" height="0"></canvas>
+            <script src="soleil_web_dark.js"></script>
+        </div>
+</html>
