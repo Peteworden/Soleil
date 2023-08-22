@@ -161,30 +161,34 @@ xhrsbdl.onreadystatechange = function() {
 }
 */
 
+var defaultcheck = 0;
+
 var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
 
 const url = new URL(window.location.href);
+
 // キーを指定し、クエリパラメータを付与
 // url.searchParams.set('time', '2023-8-22-13');
 // url.searchParams.set('observer', 'Earth');
 // url.searchParams.set('target', 'Mars');
-// console.log(url.href); // https://example.com?addParam=test
+console.log(url.href); // https://example.com?addParam=test
 // history.replaceState('', '', url.href);
 
 // キーを指定し、クエリパラメータを取得
-const addParam = url.searchParams.get('time');
-console.log(addParam); // test
-if (url.searchParams.get('time') != null) {
+// const addParam = url.searchParams.get('time');
+// console.log(addParam); // test
+if (url.searchParams.has('time')) {
     var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
     console.log(y, m, d, h, h_min);
     document.getElementById('yearText').value = parseInt(y).toString();
     document.getElementById('monthText').value = parseInt(m).toString();
     document.getElementById('dateText').value = parseInt(d).toString();
     document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
-    showingJD = YMDH_to_JD(y, m, d, h+h_min*Math.pow(10, -h_min.length));
-    show_main(showingJD);
+    defaultcheck++;
+} else {
+    defaultcheck++;
 }
 
 const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
@@ -195,13 +199,20 @@ if (url.searchParams.has('observer')) {
     if (indexNum != -1) {
         document.getElementById("observer").value = JPNplanets[indexNum];
     }
+    defaultcheck++;
+} else {
+    defaultcheck++;
 }
 
 if (url.searchParams.has('target')) {
     var indexNum = ENGplanets.indexOf(url.searchParams.get('target'));
+    console.log(url.searchParams.get('target'));
     if (indexNum != -1) {
         document.getElementById("target").value = JPNplanets[indexNum];
     }
+    defaultcheck++;
+} else {
+    defaultcheck++;
 }
 
 if (url.searchParams.has('lat')) {
@@ -213,6 +224,9 @@ if (url.searchParams.has('lat')) {
         document.getElementById("NSCombo").value == '南緯';
         document.getElementById('lat').value == -lat;
     }
+    defaultcheck++;
+} else {
+    defaultcheck++;
 }
 
 if (url.searchParams.has('lon')) {
@@ -224,6 +238,9 @@ if (url.searchParams.has('lon')) {
         document.getElementById("EWCombo").value == '西経';
         document.getElementById('lon').value == -lon;
     }
+    defaultcheck++;
+} else {
+    defaultcheck++;
 }
 
 function now() {
@@ -274,8 +291,10 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 7){
+    if (xhrcheck == 7 && defaultcheck == 5){
         show();
+    } else {
+        console.log(xhrcheck, defaultcheck);
     }
 }
 
