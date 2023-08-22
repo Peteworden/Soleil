@@ -1,5 +1,5 @@
 const canvas = document.createElement('canvas');
-  
+
 canvas.width = 1100;
 canvas.height = 500;
 
@@ -165,6 +165,67 @@ var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
 
+const url = new URL(window.location.href);
+// キーを指定し、クエリパラメータを付与
+// url.searchParams.set('time', '2023-8-22-13');
+// url.searchParams.set('observer', 'Earth');
+// url.searchParams.set('target', 'Mars');
+// console.log(url.href); // https://example.com?addParam=test
+// history.replaceState('', '', url.href);
+
+// キーを指定し、クエリパラメータを取得
+const addParam = url.searchParams.get('time');
+console.log(addParam); // test
+if (url.searchParams.get('time') != null) {
+    var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
+    console.log(y, m, d, h, h_min);
+    document.getElementById('yearText').value = parseInt(y).toString();
+    document.getElementById('monthText').value = parseInt(m).toString();
+    document.getElementById('dateText').value = parseInt(d).toString();
+    document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
+    showingJD = YMDH_to_JD(y, m, d, h+h_min*Math.pow(10, -h_min.length));
+    show_main(showingJD);
+}
+
+const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+
+if (url.searchParams.has('observer')) {
+    var indexNum = ENGplanets.indexOf(url.searchParams.get('observer'));
+    if (indexNum != -1) {
+        document.getElementById("observer").value = JPNplanets[indexNum];
+    }
+}
+
+if (url.searchParams.has('target')) {
+    var indexNum = ENGplanets.indexOf(url.searchParams.get('target'));
+    if (indexNum != -1) {
+        document.getElementById("target").value = JPNplanets[indexNum];
+    }
+}
+
+if (url.searchParams.has('lat')) {
+    var lat = parseInt(url.searchParams.get('lat'));
+    if (lat >= 0) {
+        document.getElementById("NSCombo").value == '北緯';
+        document.getElementById('lat').value == lat;
+    } else {
+        document.getElementById("NSCombo").value == '南緯';
+        document.getElementById('lat').value == -lat;
+    }
+}
+
+if (url.searchParams.has('lon')) {
+    var lon = parseInt(url.searchParams.get('lon'));
+    if (lon >= 0) {
+        document.getElementById("EWCombo").value == '東経';
+        document.getElementById('lon').value == lat;
+    } else {
+        document.getElementById("EWCombo").value == '西経';
+        document.getElementById('lon').value == -lon;
+    }
+}
+
 function now() {
     var ymdhm = new Date();
     var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
@@ -172,6 +233,9 @@ function now() {
     document.getElementById('monthText').value = m;
     document.getElementById('dateText').value = d;
     document.getElementById('hourText').value = h;
+    /*url.searchParams.set('time', `${y}-${m}-${d}-${ymdhm.getHours()}-${Math.round(ymdhm.getMinutes()*10/60)}`);
+    console.log(url.href);
+    history.replaceState('', '', url.href);*/
     showingJD = YMDH_to_JD(y, m, d, h);
     show_main(showingJD);
 }
@@ -296,15 +360,27 @@ function show_main(JD){
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
     const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
     const OriginalNumOfPlanets = planets.length;
 
+    var y = document.getElementById('yearText').value;
+    var m = document.getElementById('monthText').value;
+    var d = document.getElementById('dateText').value;
+    if (document.getElementById('hourText').value.split('.').length == 1) {
+        var h = document.getElementById('hourText').value;
+        var h_min = 0;
+    } else {
+        var [h, h_min] = document.getElementById('hourText').value.split('.');
+    }
+    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
+
     // 視点
-    const ObsPlanet = document.getElementById("viewpoint").value;
+    const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
 
     // 観測対象
-    var Name = document.getElementById("object").value;
+    var Name = document.getElementById("target").value;
     var Selected_number = JPNplanets.indexOf(Name);
 
     if (extra.length != 0) {
@@ -314,6 +390,7 @@ function show_main(JD){
         }
         console.log(name);
         JPNplanets.push(name);
+        ENGplanets.push(name);
         var New = [];
         for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
             New.push(parseFloat(extra[i]));
@@ -326,21 +403,62 @@ function show_main(JD){
             alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
             Name = "地球";
             Selected_number = 3;
-            document.getElementById("object").options[3].selected = true;
-        }
-        else {
+            document.getElementById("target").options[3].selected = true;
+        } else {
             alert("観測地点と対象天体は別にしてください。\n代わりに月を表示します。");
             Name = "月";
             Selected_number = 9;
-            document.getElementById("object").options[9].selected = true;
+            document.getElementById("target").options[9].selected = true;
         }
     }
     if (Obs_num != 3 && Obs_num != 9 && Name == "月") {
         Name = "地球";
         Selected_number = 3;
         alert("代わりに地球を表示します");
-        document.getElementById("object").options[3].selected = true;
+        document.getElementById("target").options[3].selected = true;
     }
+
+    if (Obs_num == 3) {
+        if (url.searchParams.has('observer')) {
+            url.searchParams.delete('observer');
+        }   
+    } else {
+        url.searchParams.set('observer', ENGplanets[Obs_num]);
+    }
+
+    if (Selected_number == 9) {
+        if (url.searchParams.has('target')) {
+            url.searchParams.delete('target');
+        }   
+    } else {
+        url.searchParams.set('target', ENGplanets[Selected_number]);
+    }
+
+    if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
+        if (url.searchParams.has('lat')) {
+            url.searchParams.delete('lat');
+        }
+    } else {
+        if (document.getElementById("NSCombo").value == '北緯') {
+            url.searchParams.set('lat', document.getElementById('lat').value);
+        } else {
+            url.searchParams.set('lat', -document.getElementById('lat').value);
+        }
+    }
+
+    if (document.getElementById("EWCombo").value == '東経' && document.getElementById('lon').value == '135') {
+        if (url.searchParams.has('lon')) {
+            url.searchParams.delete('lon');
+        }
+    } else {
+        if (document.getElementById("EWCombo").value == '東経') {
+            url.searchParams.set('lon', document.getElementById('lon').value);
+        } else {
+            url.searchParams.set('lon', -document.getElementById('lon').value);
+        }
+    }
+    
+    history.replaceState('', '', url.href);
 
     var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
     var lon_obs = parseInt(document.getElementById('lon').value) * pi/180;
