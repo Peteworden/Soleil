@@ -222,13 +222,13 @@ if (url.searchParams.has('target')) {
 }
 
 if (url.searchParams.has('lat')) {
-    var lat = parseInt(url.searchParams.get('lat'));
+    var lat = url.searchParams.get('lat');
     if (lat >= 0) {
-        document.getElementById("NSCombo").value == '北緯';
-        document.getElementById('lat').value == lat;
+        document.getElementById("NSCombo").value = '北緯';
+        document.getElementById('lat').value = lat;
     } else {
-        document.getElementById("NSCombo").value == '南緯';
-        document.getElementById('lat').value == -lat;
+        document.getElementById("NSCombo").value = '南緯';
+        document.getElementById('lat').value = -lat;
     }
     defaultcheck++;
     show_initial();
@@ -238,13 +238,13 @@ if (url.searchParams.has('lat')) {
 }
 
 if (url.searchParams.has('lon')) {
-    var lon = parseInt(url.searchParams.get('lon'));
+    var lon = url.searchParams.get('lon');
     if (lon >= 0) {
-        document.getElementById("EWCombo").value == '東経';
-        document.getElementById('lon').value == lat;
+        document.getElementById("EWCombo").value = '東経';
+        document.getElementById('lon').value = lon;
     } else {
-        document.getElementById("EWCombo").value == '西経';
-        document.getElementById('lon').value == -lon;
+        document.getElementById("EWCombo").value = '西経';
+        document.getElementById('lon').value = -lon;
     }
     defaultcheck++;
     show_initial();
@@ -253,22 +253,22 @@ if (url.searchParams.has('lon')) {
     show_initial();
 }
 
-if (url.searchParams.has('ground')) {
+if (url.searchParams.has('zengo')) {
     document.getElementsByName("zengo")[0].checked;
     defaultcheck++;
     show_initial();
 } else {
-    if (url.searchParams.has('z11') && isNaN(url.searchParams.get('z11').replace('-', '.')) == false) {
-        document.getElementById('zengo11').value = url.searchParams.get('z11').replace('-', '.');
+    if (url.searchParams.has('z11') && isNaN(url.searchParams.get('z11').replace('_', '.')) == false) {
+        document.getElementById('zengo11').value = url.searchParams.get('z11').replace('_', '.');
     }
-    if (url.searchParams.has('z12') && isNaN(url.searchParams.get('z12').replace('-', '.')) == false) {
-        document.getElementById('zengo12').value = url.searchParams.get('z12').replace('-', '.');
+    if (url.searchParams.has('z12') && isNaN(url.searchParams.get('z12').replace('_', '.')) == false) {
+        document.getElementById('zengo12').value = url.searchParams.get('z12').replace('_', '.');
     }
-    if (url.searchParams.has('z21') && isNaN(url.searchParams.get('z21').replace('-', '.')) == false) {
-        document.getElementById('zengo21').value = url.searchParams.get('z21').replace('-', '.');
+    if (url.searchParams.has('z21') && isNaN(url.searchParams.get('z21').replace('_', '.')) == false) {
+        document.getElementById('zengo21').value = url.searchParams.get('z21').replace('_', '.');
     }
-    if (url.searchParams.has('z22') && isNaN(url.searchParams.get('z22').replace('-', '.')) == false) {
-        document.getElementById('zengo22').value = url.searchParams.get('z22').replace('-', '.');
+    if (url.searchParams.has('z22') && isNaN(url.searchParams.get('z22').replace('_', '.')) == false) {
+        document.getElementById('zengo22').value = url.searchParams.get('z22').replace('_', '.');
     }
     defaultcheck++;
     show_initial();
@@ -276,7 +276,7 @@ if (url.searchParams.has('ground')) {
 
 if (url.searchParams.has('shiftRA')) {
     if (isNaN(url.searchParams.get('shiftRA').replace('_', '.')) == false) {
-        shiftDec = parseFloat(url.searchParams.get('shiftRA').replace('_', '.'));
+        shiftRA = parseFloat(url.searchParams.get('shiftRA').replace('_', '.'));
     }
     defaultcheck++;
     show_initial();
@@ -531,24 +531,32 @@ function show_main(JD){
     }
 
     if (document.getElementsByName("zengo")[0].checked) {
-        url.searchParams.set('ground', 'n');
-        if (url.searchParams.has('zengo11')) {url.searchParams.delete('zengo11');}
-        if (url.searchParams.has('zengo12')) {url.searchParams.delete('zengo12');}
-        if (url.searchParams.has('zengo21')) {url.searchParams.delete('zengo21');}
-        if (url.searchParams.has('zengo22')) {url.searchParams.delete('zengo22');}
+        url.searchParams.set('zengo', 'n');
+        if (url.searchParams.has('z11')) {url.searchParams.delete('z11')}
+        if (url.searchParams.has('z12')) {url.searchParams.delete('z12')}
+        if (url.searchParams.has('z21')) {url.searchParams.delete('z21')}
+        if (url.searchParams.has('z22')) {url.searchParams.delete('z22')}
     } else {
-        if (url.searchParams.has('ground')) {url.searchParams.delete('ground');}
+        if (url.searchParams.has('zengo')) {url.searchParams.delete('zengo')}
         if (document.getElementById("zengo11").value != '10' && isNaN(document.getElementById("zengo11").value) == false) {
-            url.searchParams.set('zengo11', document.getElementById("zengo11").value.replace('.', '_'));
+            url.searchParams.set('z11', document.getElementById("zengo11").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z11');
         }
         if (document.getElementById("zengo12").value != '100' && isNaN(document.getElementById("zengo12").value) == false) {
-            url.searchParams.set('zengo12', document.getElementById("zengo12").value.replace('.', '_'));
+            url.searchParams.set('z12', document.getElementById("zengo12").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z12');
         }
         if (document.getElementById("zengo21").value != '1' && isNaN(document.getElementById("zengo21").value) == false) {
-            url.searchParams.set('zengo21', document.getElementById("zengo21").value.replace('.', '_'));
+            url.searchParams.set('z21', document.getElementById("zengo21").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z21');
         }
         if (document.getElementById("zengo22").value != '10' && isNaN(document.getElementById("zengo22").value) == false) {
-            url.searchParams.set('zengo22', document.getElementById("zengo22").value.replace('.', '_'));
+            url.searchParams.set('z22', document.getElementById("zengo22").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z22');
         }
     }
 
