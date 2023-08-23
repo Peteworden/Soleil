@@ -187,8 +187,10 @@ if (url.searchParams.has('time')) {
     document.getElementById('dateText').value = parseInt(d).toString();
     document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
     defaultcheck++;
+    show_initial();
 } else {
     defaultcheck++;
+    show_initial();
 }
 
 const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
@@ -200,8 +202,10 @@ if (url.searchParams.has('observer')) {
         document.getElementById("observer").value = JPNplanets[indexNum];
     }
     defaultcheck++;
+    show_initial();
 } else {
     defaultcheck++;
+    show_initial();
 }
 
 if (url.searchParams.has('target')) {
@@ -211,8 +215,10 @@ if (url.searchParams.has('target')) {
         document.getElementById("target").value = JPNplanets[indexNum];
     }
     defaultcheck++;
+    show_initial();
 } else {
     defaultcheck++;
+    show_initial();
 }
 
 if (url.searchParams.has('lat')) {
@@ -225,8 +231,10 @@ if (url.searchParams.has('lat')) {
         document.getElementById('lat').value == -lat;
     }
     defaultcheck++;
+    show_initial();
 } else {
     defaultcheck++;
+    show_initial();
 }
 
 if (url.searchParams.has('lon')) {
@@ -239,8 +247,53 @@ if (url.searchParams.has('lon')) {
         document.getElementById('lon').value == -lon;
     }
     defaultcheck++;
+    show_initial();
 } else {
     defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('ground')) {
+    document.getElementsByName("zengo")[0].checked;
+    defaultcheck++;
+    show_initial();
+} else {
+    if (url.searchParams.has('z11') && isNaN(url.searchParams.get('z11').replace('-', '.')) == false) {
+        document.getElementById('zengo11').value = url.searchParams.get('z11').replace('-', '.');
+    }
+    if (url.searchParams.has('z12') && isNaN(url.searchParams.get('z12').replace('-', '.')) == false) {
+        document.getElementById('zengo12').value = url.searchParams.get('z12').replace('-', '.');
+    }
+    if (url.searchParams.has('z21') && isNaN(url.searchParams.get('z21').replace('-', '.')) == false) {
+        document.getElementById('zengo21').value = url.searchParams.get('z21').replace('-', '.');
+    }
+    if (url.searchParams.has('z22') && isNaN(url.searchParams.get('z22').replace('-', '.')) == false) {
+        document.getElementById('zengo22').value = url.searchParams.get('z22').replace('-', '.');
+    }
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('shiftRA')) {
+    if (isNaN(url.searchParams.get('shiftRA').replace('_', '.')) == false) {
+        shiftDec = parseFloat(url.searchParams.get('shiftRA').replace('_', '.'));
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('shiftDec')) {
+    if (isNaN(url.searchParams.get('shiftDec').replace('_', '.')) == false) {
+        shiftDec = parseFloat(url.searchParams.get('shiftDec').replace('_', '.'));
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
 }
 
 function now() {
@@ -291,7 +344,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 7 && defaultcheck == 5){
+    if (xhrcheck == 7 && defaultcheck == 8){
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -476,7 +529,45 @@ function show_main(JD){
             url.searchParams.set('lon', -document.getElementById('lon').value);
         }
     }
-    
+
+    if (document.getElementsByName("zengo")[0].checked) {
+        url.searchParams.set('ground', 'n');
+        if (url.searchParams.has('zengo11')) {url.searchParams.delete('zengo11');}
+        if (url.searchParams.has('zengo12')) {url.searchParams.delete('zengo12');}
+        if (url.searchParams.has('zengo21')) {url.searchParams.delete('zengo21');}
+        if (url.searchParams.has('zengo22')) {url.searchParams.delete('zengo22');}
+    } else {
+        if (url.searchParams.has('ground')) {url.searchParams.delete('ground');}
+        if (document.getElementById("zengo11").value != '10' && isNaN(document.getElementById("zengo11").value) == false) {
+            url.searchParams.set('zengo11', document.getElementById("zengo11").value.replace('.', '_'));
+        }
+        if (document.getElementById("zengo12").value != '100' && isNaN(document.getElementById("zengo12").value) == false) {
+            url.searchParams.set('zengo12', document.getElementById("zengo12").value.replace('.', '_'));
+        }
+        if (document.getElementById("zengo21").value != '1' && isNaN(document.getElementById("zengo21").value) == false) {
+            url.searchParams.set('zengo21', document.getElementById("zengo21").value.replace('.', '_'));
+        }
+        if (document.getElementById("zengo22").value != '10' && isNaN(document.getElementById("zengo22").value) == false) {
+            url.searchParams.set('zengo22', document.getElementById("zengo22").value.replace('.', '_'));
+        }
+    }
+
+    if (shiftRA == 0) {
+        if (url.searchParams.has('shiftRA')) {
+            url.searchParams.delete('shiftRA');
+        }
+    } else {
+        url.searchParams.set('shiftRA', shiftRA.toString().replace('.', '_'));
+    }
+
+    if (shiftDec == 0) {
+        if (url.searchParams.has('shiftDec')) {
+            url.searchParams.delete('shiftDec');
+        }
+    } else {
+        url.searchParams.set('shiftDec', shiftDec.toString().replace('.', '_'));
+    }
+        
     history.replaceState('', '', url.href);
 
     var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
@@ -947,8 +1038,21 @@ function show_main(JD){
                 ctx.fill();
             }
         }
-
     }
+
+    // 枠
+    var [x0, y0] = coordW(cenRA-rgN, cenDec-rgN);
+    var [x0, y1] = coordW(cenRA-rgN, cenDec+rgN);
+    var [x1, y1] = coordW(cenRA+rgN, cenDec+rgN);
+    var [x1, y0] = coordW(cenRA+rgN, cenDec-rgN);
+    ctx.strokeStyle = 'white';
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x0, y1);
+    ctx.lineTo(x1, y1);
+    ctx.lineTo(x1, y0);
+    ctx.lineTo(x0, y0);
+    ctx.stroke();
 
     var RA = RAlist[Selected_number];
     var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m  ";
