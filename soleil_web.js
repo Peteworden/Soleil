@@ -128,6 +128,9 @@ xhrB.onreadystatechange = function() {
 }
 
 //追加天体
+const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+
 var extra = [];
 var extraurl = "https://peteworden.github.io/Soleil/ExtraPlanet.txt";
 var xhrX = new XMLHttpRequest();
@@ -137,6 +140,59 @@ xhrX.send();
 xhrX.onreadystatechange = function() {
     if(xhrX.readyState === 4 && xhrX.status === 200) {
         extra = xhrX.responseText.split(' ');
+
+        if (extra.length != 0) {
+            var name = extra[1];
+            for (var i=2; i<parseInt(extra[0])+1; i++) {
+                name += ' ' + extra[i];
+            }
+            ENGplanets.push(name);
+            JPNplanets.push(name);
+            const option1 = document.createElement('option');
+            option1.innerHTML = name;
+            document.getElementById('observer').appendChild(option1);
+            const option2 = document.createElement('option');
+            option2.innerHTML = name;
+            document.getElementById('target').appendChild(option2);
+                        
+            if (url.searchParams.has('observer') && xhrcheck == 7) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("observer").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                /*var indexNum = ENGplanets.indexOf(url.searchParams.get('observer'));
+                if (indexNum != -1) {
+                    document.getElementById("observer").value = JPNplanets[indexNum];
+                }*/
+                defaultcheck++;
+                //show_initial();
+            } else {
+                defaultcheck++;
+                //show_initial();
+            }
+
+            if (url.searchParams.has('target')) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("target").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                /*var indexNum = ENGplanets.indexOf(url.searchParams.get('target'));
+                console.log(url.searchParams.get('target'));
+                if (indexNum != -1) {
+                    document.getElementById("target").value = JPNplanets[indexNum];
+                }*/
+                defaultcheck++;
+                //show_initial();
+            } else {
+                defaultcheck++;
+                //show_initial();
+            }
+        }
+
         console.log("extra ready");
         xhrcheck++;
         show_initial();
@@ -193,33 +249,7 @@ if (url.searchParams.has('time')) {
     show_initial();
 }
 
-const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
 
-if (url.searchParams.has('observer')) {
-    var indexNum = ENGplanets.indexOf(url.searchParams.get('observer'));
-    if (indexNum != -1) {
-        document.getElementById("observer").value = JPNplanets[indexNum];
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('target')) {
-    var indexNum = ENGplanets.indexOf(url.searchParams.get('target'));
-    console.log(url.searchParams.get('target'));
-    if (indexNum != -1) {
-        document.getElementById("target").value = JPNplanets[indexNum];
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
 
 if (url.searchParams.has('lat')) {
     var lat = url.searchParams.get('lat');
@@ -447,14 +477,6 @@ function show_main(JD){
     }
     url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
 
-    // 視点
-    const ObsPlanet = document.getElementById("observer").value;
-    const Obs_num = JPNplanets.indexOf(ObsPlanet);
-
-    // 観測対象
-    var Name = document.getElementById("target").value;
-    var Selected_number = JPNplanets.indexOf(Name);
-
     if (extra.length != 0) {
         var name = extra[1];
         for (var i=2; i<parseInt(extra[0])+1; i++) {
@@ -469,6 +491,14 @@ function show_main(JD){
         }
         planets.push(New);
     }
+
+    // 視点
+    const ObsPlanet = document.getElementById("observer").value;
+    const Obs_num = JPNplanets.indexOf(ObsPlanet);
+
+    // 観測対象
+    var Name = document.getElementById("target").value;
+    var Selected_number = JPNplanets.indexOf(Name);
 
     if (Obs_num == Selected_number) {
         if (Obs_num != 3) {
@@ -495,7 +525,7 @@ function show_main(JD){
             url.searchParams.delete('observer');
         }   
     } else {
-        url.searchParams.set('observer', ENGplanets[Obs_num]);
+        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
 
     if (Selected_number == 9) {
@@ -503,7 +533,7 @@ function show_main(JD){
             url.searchParams.delete('target');
         }   
     } else {
-        url.searchParams.set('target', ENGplanets[Selected_number]);
+        url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
     }
 
     if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
@@ -1175,7 +1205,13 @@ function show_main(JD){
             var [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta)
             return [x+Xe, y+Ye, z+Ze]
         } else {
-            return cal_Ellipse(planet, JD)
+            var e = planet[2];
+            if (e <= 0.99) {
+                return cal_Ellipse(planet, JD);
+            } else {
+                return cal_Parabola(planet, JD);
+            }
+            
         }
     }
 
@@ -1285,6 +1321,35 @@ function show_main(JD){
         dist *= 6378.14;
 
         return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
+    }
+
+    function cal_Parabola(planet, JD) {
+        var tp = planet[0];
+        var q = planet[1];
+        var peri = planet[3] * pi / 180; //ω
+        var i = planet[4] * pi / 180;
+        var node = planet[5] * pi / 180; //Ω
+    
+        var Ax =     q * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
+        var Bx = 2 * q * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
+        var Ay =     q * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
+        var By = 2 * q * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
+        var Az =     q * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
+        var Bz = 2 * q * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
+        
+        var b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (JD - tp));
+        if (Math.tan(b/2) >= 0) {
+            var g = Math.atan(Math.pow(Math.tan(b/2), 1/3));
+        } else {
+            var g = -Math.atan(Math.pow(-Math.tan(b/2), 1/3));
+        }
+        var tanv2 = 2 / Math.tan(2*g);
+
+        var x = Ax * (1 - tanv2**2) + Bx * tanv2;
+        var y = Ay * (1 - tanv2**2) + By * tanv2;
+        var z = Az * (1 - tanv2**2) + Bz * tanv2;
+        
+        return [x, y, z];
     }
 }
 
