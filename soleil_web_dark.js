@@ -1,5 +1,10 @@
+//分断の色と星の色を変える
+const separationColor = '#000'
+const starColor = '#F33'
+const yellowColor = '#990'
+
 const canvas = document.createElement('canvas');
-  
+
 canvas.width = 1100;
 canvas.height = 500;
 
@@ -128,6 +133,9 @@ xhrB.onreadystatechange = function() {
 }
 
 //追加天体
+const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+
 var extra = [];
 var extraurl = "https://peteworden.github.io/Soleil/ExtraPlanet.txt";
 var xhrX = new XMLHttpRequest();
@@ -137,6 +145,46 @@ xhrX.send();
 xhrX.onreadystatechange = function() {
     if(xhrX.readyState === 4 && xhrX.status === 200) {
         extra = xhrX.responseText.split(' ');
+
+        if (extra.length != 0) {
+            var name = extra[1];
+            for (var i=2; i<parseInt(extra[0])+1; i++) {
+                name += ' ' + extra[i];
+            }
+            ENGplanets.push(name);
+            JPNplanets.push(name);
+            const option1 = document.createElement('option');
+            option1.innerHTML = name;
+            document.getElementById('observer').appendChild(option1);
+            const option2 = document.createElement('option');
+            option2.innerHTML = name;
+            document.getElementById('target').appendChild(option2);
+                        
+            if (url.searchParams.has('observer') && xhrcheck == 7) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("observer").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                defaultcheck++;
+            } else {
+                defaultcheck++;
+            }
+
+            if (url.searchParams.has('target')) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("target").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                defaultcheck++;
+            } else {
+                defaultcheck++;
+            }
+        }
+
         console.log("extra ready");
         xhrcheck++;
         show_initial();
@@ -161,9 +209,114 @@ xhrsbdl.onreadystatechange = function() {
 }
 */
 
+var defaultcheck = 0;
+
 var shiftRA = 0;
 var shiftDec = 0;
 var showingJD = 0;
+
+const url = new URL(window.location.href);
+
+// キーを指定し、クエリパラメータを付与
+// url.searchParams.set('time', '2023-8-22-13');
+// url.searchParams.set('observer', 'Earth');
+// url.searchParams.set('target', 'Mars');
+console.log(url.href); // https://example.com?addParam=test
+// history.replaceState('', '', url.href);
+
+// キーを指定し、クエリパラメータを取得
+// const addParam = url.searchParams.get('time');
+// console.log(addParam); // test
+if (url.searchParams.has('time')) {
+    var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
+    console.log(y, m, d, h, h_min);
+    document.getElementById('yearText').value = parseInt(y).toString();
+    document.getElementById('monthText').value = parseInt(m).toString();
+    document.getElementById('dateText').value = parseInt(d).toString();
+    document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
+}
+
+
+
+if (url.searchParams.has('lat')) {
+    var lat = url.searchParams.get('lat');
+    if (lat >= 0) {
+        document.getElementById("NSCombo").value = '北緯';
+        document.getElementById('lat').value = lat;
+    } else {
+        document.getElementById("NSCombo").value = '南緯';
+        document.getElementById('lat').value = -lat;
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('lon')) {
+    var lon = url.searchParams.get('lon');
+    if (lon >= 0) {
+        document.getElementById("EWCombo").value = '東経';
+        document.getElementById('lon').value = lon;
+    } else {
+        document.getElementById("EWCombo").value = '西経';
+        document.getElementById('lon').value = -lon;
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('zengo')) {
+    document.getElementsByName("zengo")[0].checked;
+    defaultcheck++;
+    show_initial();
+} else {
+    if (url.searchParams.has('z11') && isNaN(url.searchParams.get('z11').replace('_', '.')) == false) {
+        document.getElementById('zengo11').value = url.searchParams.get('z11').replace('_', '.');
+    }
+    if (url.searchParams.has('z12') && isNaN(url.searchParams.get('z12').replace('_', '.')) == false) {
+        document.getElementById('zengo12').value = url.searchParams.get('z12').replace('_', '.');
+    }
+    if (url.searchParams.has('z21') && isNaN(url.searchParams.get('z21').replace('_', '.')) == false) {
+        document.getElementById('zengo21').value = url.searchParams.get('z21').replace('_', '.');
+    }
+    if (url.searchParams.has('z22') && isNaN(url.searchParams.get('z22').replace('_', '.')) == false) {
+        document.getElementById('zengo22').value = url.searchParams.get('z22').replace('_', '.');
+    }
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('shiftRA')) {
+    if (isNaN(url.searchParams.get('shiftRA').replace('_', '.')) == false) {
+        shiftRA = parseFloat(url.searchParams.get('shiftRA').replace('_', '.'));
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('shiftDec')) {
+    if (isNaN(url.searchParams.get('shiftDec').replace('_', '.')) == false) {
+        shiftDec = parseFloat(url.searchParams.get('shiftDec').replace('_', '.'));
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    defaultcheck++;
+    show_initial();
+}
 
 function now() {
     var ymdhm = new Date();
@@ -172,6 +325,9 @@ function now() {
     document.getElementById('monthText').value = m;
     document.getElementById('dateText').value = d;
     document.getElementById('hourText').value = h;
+    /*url.searchParams.set('time', `${y}-${m}-${d}-${ymdhm.getHours()}-${Math.round(ymdhm.getMinutes()*10/60)}`);
+    console.log(url.href);
+    history.replaceState('', '', url.href);*/
     showingJD = YMDH_to_JD(y, m, d, h);
     show_main(showingJD);
 }
@@ -210,8 +366,10 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 7){
+    if (xhrcheck == 7 && defaultcheck == 8){
         show();
+    } else {
+        console.log(xhrcheck, defaultcheck);
     }
 }
 
@@ -296,16 +454,20 @@ function show_main(JD){
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
     const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
     const OriginalNumOfPlanets = planets.length;
 
-    // 視点
-    const ObsPlanet = document.getElementById("viewpoint").value;
-    const Obs_num = JPNplanets.indexOf(ObsPlanet);
-
-    // 観測対象
-    var Name = document.getElementById("object").value;
-    var Selected_number = JPNplanets.indexOf(Name);
+    var y = document.getElementById('yearText').value;
+    var m = document.getElementById('monthText').value;
+    var d = document.getElementById('dateText').value;
+    if (document.getElementById('hourText').value.split('.').length == 1) {
+        var h = document.getElementById('hourText').value;
+        var h_min = 0;
+    } else {
+        var [h, h_min] = document.getElementById('hourText').value.split('.');
+    }
+    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
 
     if (extra.length != 0) {
         var name = extra[1];
@@ -314,6 +476,7 @@ function show_main(JD){
         }
         console.log(name);
         JPNplanets.push(name);
+        ENGplanets.push(name);
         var New = [];
         for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
             New.push(parseFloat(extra[i]));
@@ -321,26 +484,121 @@ function show_main(JD){
         planets.push(New);
     }
 
+    // 視点
+    const ObsPlanet = document.getElementById("observer").value;
+    const Obs_num = JPNplanets.indexOf(ObsPlanet);
+
+    // 観測対象
+    var Name = document.getElementById("target").value;
+    var Selected_number = JPNplanets.indexOf(Name);
+
     if (Obs_num == Selected_number) {
         if (Obs_num != 3) {
             alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
             Name = "地球";
             Selected_number = 3;
-            document.getElementById("object").options[3].selected = true;
-        }
-        else {
+            document.getElementById("target").options[3].selected = true;
+        } else {
             alert("観測地点と対象天体は別にしてください。\n代わりに月を表示します。");
             Name = "月";
             Selected_number = 9;
-            document.getElementById("object").options[9].selected = true;
+            document.getElementById("target").options[9].selected = true;
         }
     }
     if (Obs_num != 3 && Obs_num != 9 && Name == "月") {
         Name = "地球";
         Selected_number = 3;
         alert("代わりに地球を表示します");
-        document.getElementById("object").options[3].selected = true;
+        document.getElementById("target").options[3].selected = true;
     }
+
+    if (Obs_num == 3) {
+        if (url.searchParams.has('observer')) {
+            url.searchParams.delete('observer');
+        }   
+    } else {
+        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
+    }
+
+    if (Selected_number == 9) {
+        if (url.searchParams.has('target')) {
+            url.searchParams.delete('target');
+        }   
+    } else {
+        url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
+    }
+
+    if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
+        if (url.searchParams.has('lat')) {
+            url.searchParams.delete('lat');
+        }
+    } else {
+        if (document.getElementById("NSCombo").value == '北緯') {
+            url.searchParams.set('lat', document.getElementById('lat').value);
+        } else {
+            url.searchParams.set('lat', -document.getElementById('lat').value);
+        }
+    }
+
+    if (document.getElementById("EWCombo").value == '東経' && document.getElementById('lon').value == '135') {
+        if (url.searchParams.has('lon')) {
+            url.searchParams.delete('lon');
+        }
+    } else {
+        if (document.getElementById("EWCombo").value == '東経') {
+            url.searchParams.set('lon', document.getElementById('lon').value);
+        } else {
+            url.searchParams.set('lon', -document.getElementById('lon').value);
+        }
+    }
+
+    if (document.getElementsByName("zengo")[0].checked) {
+        url.searchParams.set('zengo', 'n');
+        if (url.searchParams.has('z11')) {url.searchParams.delete('z11')}
+        if (url.searchParams.has('z12')) {url.searchParams.delete('z12')}
+        if (url.searchParams.has('z21')) {url.searchParams.delete('z21')}
+        if (url.searchParams.has('z22')) {url.searchParams.delete('z22')}
+    } else {
+        if (url.searchParams.has('zengo')) {url.searchParams.delete('zengo')}
+        if (document.getElementById("zengo11").value != '10' && isNaN(document.getElementById("zengo11").value) == false) {
+            url.searchParams.set('z11', document.getElementById("zengo11").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z11');
+        }
+        if (document.getElementById("zengo12").value != '100' && isNaN(document.getElementById("zengo12").value) == false) {
+            url.searchParams.set('z12', document.getElementById("zengo12").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z12');
+        }
+        if (document.getElementById("zengo21").value != '1' && isNaN(document.getElementById("zengo21").value) == false) {
+            url.searchParams.set('z21', document.getElementById("zengo21").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z21');
+        }
+        if (document.getElementById("zengo22").value != '10' && isNaN(document.getElementById("zengo22").value) == false) {
+            url.searchParams.set('z22', document.getElementById("zengo22").value.replace('.', '_'));
+        } else {
+            url.searchParams.delete('z22');
+        }
+    }
+
+    if (shiftRA == 0) {
+        if (url.searchParams.has('shiftRA')) {
+            url.searchParams.delete('shiftRA');
+        }
+    } else {
+        url.searchParams.set('shiftRA', shiftRA.toString().replace('.', '_'));
+    }
+
+    if (shiftDec == 0) {
+        if (url.searchParams.has('shiftDec')) {
+            url.searchParams.delete('shiftDec');
+        }
+    } else {
+        url.searchParams.set('shiftDec', shiftDec.toString().replace('.', '_'));
+    }
+        
+    history.replaceState('', '', url.href);
 
     var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
     var lon_obs = parseInt(document.getElementById('lon').value) * pi/180;
@@ -591,13 +849,13 @@ function show_main(JD){
     ctx.stroke();
 
    //分断
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = separationColor;
     ctx.fillRect(canvas.height, 0, Math.max(canvas.width-canvas.height, canvas.height), canvas.height);
     ctx.fillStyle = '#003';
     ctx.fillRect(canvas.width-canvas.height, 0, canvas.height, canvas.height);
 
     //HIP
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = starColor;
     for (i=0; i<num_of_stars; i++){
         var RA = HIPRAary[i];
         var Dec = HIPDecary[i];
@@ -654,7 +912,7 @@ function show_main(JD){
         if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgW && Math.abs(Declist[i]-cenDec) < rgW) {
             var [x, y] = coordW(RAlist[i], Declist[i]);
             if (i == 0){ // 太陽
-                ctx.fillStyle = 'yellow';
+                ctx.fillStyle = yellowColor;
                 ctx.beginPath();
                 ctx.arc(x, y, 13, 0, 2 * pi, false);
                 ctx.fill();
@@ -672,7 +930,7 @@ function show_main(JD){
 
                     ctx.beginPath();
                     if (k < 0.5) {
-                        ctx.fillStyle = 'yellow';
+                        ctx.fillStyle = yellowColor;
                         ctx.arc(x, y, 16, 0, 2*pi, false);
                         ctx.fill();
                         ctx.fillStyle = '#333';
@@ -684,7 +942,7 @@ function show_main(JD){
                         ctx.fillStyle = '#333';
                         ctx.arc(x, y, 16, 0, 2*pi, false);
                         ctx.fill();
-                        ctx.fillStyle = 'yellow';
+                        ctx.fillStyle = yellowColor;
                         ctx.beginPath();
                         ctx.arc(x, y, 16, -P, pi-P);
                         ctx.ellipse(x, y, 16, 16*(2*k-1), pi-P, 0, pi);
@@ -708,7 +966,7 @@ function show_main(JD){
                 var [x, y] = coordN(RAlist[i], Declist[i]);
                 if (i == 0){
                     var  R = canvas.height * (Math.max(0.267 / Distlist[0], 0.1)) / rgN / 2;
-                    ctx.fillStyle = 'yellow';
+                    ctx.fillStyle = yellowColor;
                     ctx.beginPath();
                     ctx.arc(x, y, R, 0, 2 * pi, false);
                     ctx.fill();
@@ -720,7 +978,7 @@ function show_main(JD){
                         var r = canvas.height * (0.259 / (dist_Moon / 384400)) / rgN / 2;
                         ctx.beginPath();
                         if (k < 0.5) {
-                            ctx.fillStyle = 'yellow';
+                            ctx.fillStyle = yellowColor;
                             ctx.arc(x, y, r, 0, 2*pi, false);
                             ctx.fill();
                             ctx.fillStyle = '#333';
@@ -732,7 +990,7 @@ function show_main(JD){
                             ctx.fillStyle = '#333';
                             ctx.arc(x, y, r, 0, 2*pi, false);
                             ctx.fill();
-                            ctx.fillStyle = 'yellow';
+                            ctx.fillStyle = yellowColor;
                             ctx.beginPath();
                             ctx.arc(x, y, r, -P, pi-P);
                             ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
@@ -810,8 +1068,21 @@ function show_main(JD){
                 ctx.fill();
             }
         }
-
     }
+
+    // 枠
+    var [x0, y0] = coordW(cenRA-rgN, cenDec-rgN);
+    var [x0, y1] = coordW(cenRA-rgN, cenDec+rgN);
+    var [x1, y1] = coordW(cenRA+rgN, cenDec+rgN);
+    var [x1, y0] = coordW(cenRA+rgN, cenDec-rgN);
+    ctx.strokeStyle = 'white';
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    ctx.lineTo(x0, y1);
+    ctx.lineTo(x1, y1);
+    ctx.lineTo(x1, y0);
+    ctx.lineTo(x0, y0);
+    ctx.stroke();
 
     var RA = RAlist[Selected_number];
     var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m  ";
@@ -926,7 +1197,13 @@ function show_main(JD){
             var [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta)
             return [x+Xe, y+Ye, z+Ze]
         } else {
-            return cal_Ellipse(planet, JD)
+            var e = planet[2];
+            if (e <= 0.99) {
+                return cal_Ellipse(planet, JD);
+            } else {
+                return cal_Parabola(planet, JD);
+            }
+            
         }
     }
 
@@ -1037,23 +1314,63 @@ function show_main(JD){
 
         return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
     }
+
+    function cal_Parabola(planet, JD) {
+        var tp = planet[0];
+        var q = planet[1];
+        var peri = planet[3] * pi / 180; //ω
+        var i = planet[4] * pi / 180;
+        var node = planet[5] * pi / 180; //Ω
+    
+        var Ax =     q * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
+        var Bx = 2 * q * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
+        var Ay =     q * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
+        var By = 2 * q * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
+        var Az =     q * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
+        var Bz = 2 * q * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
+        
+        var b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (JD - tp));
+        if (Math.tan(b/2) >= 0) {
+            var g = Math.atan(Math.pow(Math.tan(b/2), 1/3));
+        } else {
+            var g = -Math.atan(Math.pow(-Math.tan(b/2), 1/3));
+        }
+        var tanv2 = 2 / Math.tan(2*g);
+
+        var x = Ax * (1 - tanv2**2) + Bx * tanv2;
+        var y = Ay * (1 - tanv2**2) + By * tanv2;
+        var z = Az * (1 - tanv2**2) + Bz * tanv2;
+        
+        return [x, y, z];
+    }
 }
 
+/*function fetch() {
+    console.log('fetch');
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('resolved');
+      }, 2000);
+    });
+  }
+  
+
 async function search () {
-    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
+    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=31416&full-prec=true&phys-par=true";
+    //var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
     var xhr = new XMLHttpRequest();
 
     const res = await fetch(url);
-    console.log(res)
+    console.log(res, 'resres')
 
-    /*xhr.open('GET', url, true);
+    xhr.open('GET', url, true);
     xhr.responseType = 'json';
     console.log(url);
     xhr.onload = function () {
         var res = this.response;
         console.log(res);
     };
-    xhr.send();*/
+    xhr.send();
 
     function addplenet () {
         var Name = document.getElementById('addname').value;
@@ -1066,6 +1383,6 @@ async function search () {
         }
     }
 
-}
+}*/
 
 document.body.appendChild(canvas);
