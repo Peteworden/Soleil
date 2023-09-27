@@ -162,15 +162,9 @@ xhrX.onreadystatechange = function() {
                         break;
                     }
                 }
-                /*var indexNum = ENGplanets.indexOf(url.searchParams.get('observer'));
-                if (indexNum != -1) {
-                    document.getElementById("observer").value = JPNplanets[indexNum];
-                }*/
                 defaultcheck++;
-                //show_initial();
             } else {
                 defaultcheck++;
-                //show_initial();
             }
 
             if (url.searchParams.has('target')) {
@@ -180,16 +174,9 @@ xhrX.onreadystatechange = function() {
                         break;
                     }
                 }
-                /*var indexNum = ENGplanets.indexOf(url.searchParams.get('target'));
-                console.log(url.searchParams.get('target'));
-                if (indexNum != -1) {
-                    document.getElementById("target").value = JPNplanets[indexNum];
-                }*/
                 defaultcheck++;
-                //show_initial();
             } else {
                 defaultcheck++;
-                //show_initial();
             }
         }
 
@@ -857,13 +844,13 @@ function show_main(JD){
     ctx.stroke();
 
    //分断
-    ctx.fillStyle = '#FFF';
+    ctx.fillStyle = separationColor;
     ctx.fillRect(canvas.height, 0, Math.max(canvas.width-canvas.height, canvas.height), canvas.height);
     ctx.fillStyle = '#003';
     ctx.fillRect(canvas.width-canvas.height, 0, canvas.height, canvas.height);
 
     //HIP
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = starColor;
     for (i=0; i<num_of_stars; i++){
         var RA = HIPRAary[i];
         var Dec = HIPDecary[i];
@@ -1353,21 +1340,32 @@ function show_main(JD){
     }
 }
 
+/*function fetch() {
+    console.log('fetch');
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve('resolved');
+      }, 2000);
+    });
+  }
+  
+
 async function search () {
-    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
+    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=31416&full-prec=true&phys-par=true";
+    //var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
     var xhr = new XMLHttpRequest();
 
     const res = await fetch(url);
-    console.log(res)
+    console.log(res, 'resres')
 
-    /*xhr.open('GET', url, true);
+    xhr.open('GET', url, true);
     xhr.responseType = 'json';
     console.log(url);
     xhr.onload = function () {
         var res = this.response;
         console.log(res);
     };
-    xhr.send();*/
+    xhr.send();
 
     function addplenet () {
         var Name = document.getElementById('addname').value;
@@ -1380,6 +1378,6 @@ async function search () {
         }
     }
 
-}
+}*/
 
 document.body.appendChild(canvas);
