@@ -279,7 +279,7 @@ if (url.searchParams.has('lon')) {
 }
 
 if (url.searchParams.has('zengo')) {
-    document.getElementsByName("zengo")[0].checked;
+    document.getElementsByName("zengo")[0].checked = true;
     defaultcheck++;
     show_initial();
 } else {
