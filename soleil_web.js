@@ -1,3 +1,11 @@
+//分断の色と星の色を変える
+const separationColor = '#FFF'
+const starColor = '#FFF'
+const yellowColor = 'yellow'
+//'yellow'は全部yellowColorにする
+
+
+
 const canvas = document.createElement('canvas');
 
 canvas.width = 1100;
@@ -907,7 +915,7 @@ function show_main(JD){
         if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgW && Math.abs(Declist[i]-cenDec) < rgW) {
             var [x, y] = coordW(RAlist[i], Declist[i]);
             if (i == 0){ // 太陽
-                ctx.fillStyle = 'yellow';
+                ctx.fillStyle = yellowColor;
                 ctx.beginPath();
                 ctx.arc(x, y, 13, 0, 2 * pi, false);
                 ctx.fill();
@@ -925,7 +933,7 @@ function show_main(JD){
 
                     ctx.beginPath();
                     if (k < 0.5) {
-                        ctx.fillStyle = 'yellow';
+                        ctx.fillStyle = yellowColor;
                         ctx.arc(x, y, 16, 0, 2*pi, false);
                         ctx.fill();
                         ctx.fillStyle = '#333';
@@ -937,7 +945,7 @@ function show_main(JD){
                         ctx.fillStyle = '#333';
                         ctx.arc(x, y, 16, 0, 2*pi, false);
                         ctx.fill();
-                        ctx.fillStyle = 'yellow';
+                        ctx.fillStyle = yellowColor;
                         ctx.beginPath();
                         ctx.arc(x, y, 16, -P, pi-P);
                         ctx.ellipse(x, y, 16, 16*(2*k-1), pi-P, 0, pi);
@@ -961,7 +969,7 @@ function show_main(JD){
                 var [x, y] = coordN(RAlist[i], Declist[i]);
                 if (i == 0){
                     var  R = canvas.height * (Math.max(0.267 / Distlist[0], 0.1)) / rgN / 2;
-                    ctx.fillStyle = 'yellow';
+                    ctx.fillStyle = yellowColor;
                     ctx.beginPath();
                     ctx.arc(x, y, R, 0, 2 * pi, false);
                     ctx.fill();
@@ -973,7 +981,7 @@ function show_main(JD){
                         var r = canvas.height * (0.259 / (dist_Moon / 384400)) / rgN / 2;
                         ctx.beginPath();
                         if (k < 0.5) {
-                            ctx.fillStyle = 'yellow';
+                            ctx.fillStyle = yellowColor;
                             ctx.arc(x, y, r, 0, 2*pi, false);
                             ctx.fill();
                             ctx.fillStyle = '#333';
@@ -985,7 +993,7 @@ function show_main(JD){
                             ctx.fillStyle = '#333';
                             ctx.arc(x, y, r, 0, 2*pi, false);
                             ctx.fill();
-                            ctx.fillStyle = 'yellow';
+                            ctx.fillStyle = yellowColor;
                             ctx.beginPath();
                             ctx.arc(x, y, r, -P, pi-P);
                             ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
