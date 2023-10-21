@@ -15,7 +15,7 @@ canvas.height = window.innerHeight;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 2;
+var rgEW = 50;
 var rgNS = rgEW * canvas.height / canvas.width;
 
 var magLim = 10.5 - 1.8 * Math.log(rgEW);
@@ -25,7 +25,7 @@ if (magLim > 10) {
     magLim = 4;
 }
 
-const zerosize = 9;
+const zerosize = 13 - 2.4 * Math.log(rgEW + 3);
 
 var xhrcheck = 0;
 
@@ -381,8 +381,8 @@ canvas.ontouchmove = function ( event ) {
     var touches = event.changedTouches;
     document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
 	// 2本以上の指の場合だけ処理
-    //if (touches.length.toString() != '1') {
-	if (touches.length > 1) {
+    if (touches.length.toString() != '1') {
+	//if (touches.length > 1) {
         clearTimeout(timeoutId);
         var x1 = touches[0].offsetX ;
         var y1 = touches[0].offsetY ;
@@ -400,7 +400,7 @@ canvas.ontouchmove = function ( event ) {
                 var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
                 var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
                 var scale = movedDistance / baseDistance;
-                if ( scale && scale != Infinity ) {
+                if (scale && scale != Infinity && rgEW * scale > 0.3) {
                     rgNS *= scale;
                     rgEW *= scale;
                     cenRA = pinchRA + (cenRA - pinchRA) / scale;
@@ -419,6 +419,331 @@ canvas.ontouchmove = function ( event ) {
 	} else {
         document.getElementById("title").innerHTML = "not in";
     }
+}
+
+var planets;
+
+function calc_planet(JD) {
+    const eps = 0.4090926; //黄道傾斜角
+    const sine = sin(eps);
+    const cose = cos(eps);
+    const pi = Math.PI;
+
+    const Sun = ['Sun'];
+    const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
+    const Venus   = [2451545.0,  0.723336, 0.006777,  54.922625,  3.394676,  76.679843,  50.376632,  0.000004, -0.000041,  0.280377, -0.000789, -0.277694];
+    const Earth   = [2451545.0,  1.000003, 0.016711, 102.937682, -0.000015,   0       ,  -2.473110,  0.000006, -0.000044,  0.323274, -0.012947,  0       ];
+    const Mars    = [2451545.0,  1.523710, 0.093394, 286.496832,  1.849691,  49.559539,  19.390198,  0.000018,  0.000079,  0.736984, -0.008131, -0.292573];
+    const Jupiter = [2451545.0,  5.202887, 0.048386, 274.254571,  1.304397, 100.473909,  19.667961, -0.000116, -0.000133,  0.007836, -0.001837,  0.204691];
+    const Saturn  = [2451545.0,  9.536676, 0.053862, -21.063546,  2.485992, 113.662424, 317.355366, -0.001251, -0.000510, -0.130294,  0.001936, -0.288678];
+    const Uranus  = [2451545.0, 19.189165, 0.047257,  96.937351,  0.772638,  74.016925, 142.283828, -0.001962, -0.000044,  0.365647, -0.002429,  0.042406];
+    const Neptune = [2451545.0, 30.069923, 0.008590, 273.180537,  1.770043, 131.784226, 259.915208,  0.000263,  0.000051, -0.317328,  0.000354, -0.005087];
+    const Moon    = ['Moon'];
+    const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
+    const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
+
+    const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
+    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+
+    const OriginalNumOfPlanets = planets.length;
+
+    var y = document.getElementById('yearText').value;
+    var m = document.getElementById('monthText').value;
+    var d = document.getElementById('dateText').value;
+    if (document.getElementById('hourText').value.split('.').length == 1) {
+        var h = document.getElementById('hourText').value;
+        var h_min = 0;
+    } else {
+        var [h, h_min] = document.getElementById('hourText').value.split('.');
+    }
+    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
+
+    if (extra.length != 0) {
+        var name = extra[1];
+        for (var i=2; i<parseInt(extra[0])+1; i++) {
+            name += ' ' + extra[i];
+        }
+        console.log(name);
+        JPNplanets.push(name);
+        ENGplanets.push(name);
+        var New = [];
+        for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
+            New.push(parseFloat(extra[i]));
+        }
+        planets.push(New);
+    }
+
+    // 視点
+    const ObsPlanet = document.getElementById("observer").value;
+    const Obs_num = JPNplanets.indexOf(ObsPlanet);
+
+    // 観測対象
+    var Name = document.getElementById("target").value;
+    var Selected_number = JPNplanets.indexOf(Name);
+
+    if (Obs_num == Selected_number) {
+        if (Obs_num != 3) {
+            alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
+            Name = "地球";
+            Selected_number = 3;
+            document.getElementById("target").options[3].selected = true;
+        } else {
+            alert("観測地点と対象天体は別にしてください。\n代わりに月を表示します。");
+            Name = "月";
+            Selected_number = 9;
+            document.getElementById("target").options[9].selected = true;
+        }
+    }
+    if (Obs_num != 3 && Obs_num != 9 && Name == "月") {
+        Name = "地球";
+        Selected_number = 3;
+        alert("代わりに地球を表示します");
+        document.getElementById("target").options[3].selected = true;
+    }
+
+    if (Obs_num == 3) {
+        if (url.searchParams.has('observer')) {
+            url.searchParams.delete('observer');
+        }   
+    } else {
+        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
+    }
+
+    if (Selected_number == 9) {
+        if (url.searchParams.has('target')) {
+            url.searchParams.delete('target');
+        }   
+    } else {
+        url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
+    }
+
+    if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
+        if (url.searchParams.has('lat')) {
+            url.searchParams.delete('lat');
+        }
+    } else {
+        if (document.getElementById("NSCombo").value == '北緯') {
+            url.searchParams.set('lat', document.getElementById('lat').value);
+        } else {
+            url.searchParams.set('lat', -document.getElementById('lat').value);
+        }
+    }
+
+    if (document.getElementById("EWCombo").value == '東経' && document.getElementById('lon').value == '135') {
+        if (url.searchParams.has('lon')) {
+            url.searchParams.delete('lon');
+        }
+    } else {
+        if (document.getElementById("EWCombo").value == '東経') {
+            url.searchParams.set('lon', document.getElementById('lon').value);
+        } else {
+            url.searchParams.set('lon', -document.getElementById('lon').value);
+        }
+    }
+        
+    history.replaceState('', '', url.href);
+
+    var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
+    var lon_obs = parseInt(document.getElementById('lon').value) * pi/180;
+    if (document.getElementById("NSCombo").value == '南緯') {lat_obs *= -1}
+    if (document.getElementById("EWCombo").value == '西経') {lon_obs *= -1}
+    var t = (JD - 2451545.0) / 36525;
+    var theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
+
+    var Xlist = new Array(20);
+    var Ylist = new Array(20);
+    var Zlist = new Array(20);
+    var RAlist = new Array(20);
+    var Declist = new Array(20);
+    var Distlist = new Array(20);
+    var Vlist = new Array(20);
+
+    var [X, Y, Z] = calc(planets[Obs_num], JD);
+    var [RA_Sun, Dec_Sun, dist] = xyz_to_RADec(-X, -Y, -Z);
+    Xlist[0] = X;
+    Ylist[0] = Y;
+    Zlist[0] = Z;
+    RAlist[0] = RA_Sun;
+    Declist[0] = Dec_Sun;
+    Distlist[0] = dist;
+
+    for (i=1; i<planets.length; i++) {
+        var planet = planets[i];
+        if (i == 12) {console.log(planet)}
+        if (i == 9) {
+            var [x, y, z] = calc(Earth, JD);
+            var [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist_Moon, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta);
+            Xlist[9] = x+Xe;
+            Ylist[9] = y+Ye;
+            Zlist[9] = z+Ze;
+            RAlist[9] = RA_Moon;
+            Declist[9] = Dec_Moon;
+            Distlist[9] = dist_Moon;
+            console.log("9 OK");
+        } else {
+            var [x, y, z] = calc(planet, JD);
+            if (i==12) {console.log(384)};
+            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            if (i==12) {console.log(386)};
+            Xlist[i] = x;
+            Ylist[i] = y;
+            Zlist[i] = z;
+            RAlist[i] = RA;
+            Declist[i] = Dec;
+            Distlist[i] = dist;
+            console.log(i, "OK");
+        }
+    }
+
+    //明るさを計算
+    const ES_2 = X**2 + Y**2 + Z**2;
+    for (n=0; n<planets.length; n++) {
+        var x = Xlist[n];
+        var y = Ylist[n];
+        var z = Zlist[n];
+        var dist = Distlist[n];
+        var PS_2 = 1;
+        var i = 0;
+        var V = 10;
+        if (n != Obs_num){
+            if (n == 0) {
+                Vlist[0] = -26.7
+            }
+            else if (n==1) {
+                PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else {i = 0}
+                V = -0.613 + 0.06328*i - 0.0016336 * i**2 + 0.000033644 * i**3 - 3.4565e-7 * i**4 +1.6893e-9 * i**5 - 3.0334e-12 * i**6+ 5 * Math.log10(dist * Math.sqrt(PS_2));
+                Vlist[1] = V;
+            }
+            else if (n == 2) {
+                PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else{i = 0}
+                if (i <= 163.7) {V = -4.384 - 0.001044 * i + 0.0003687 * i**2 - 2.814e-6 * i**3 + 8.938e-9 * i**4 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else {V = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                Vlist[2] = V;
+            }    
+            else if (n == 3) {
+                Vlist[3] = 1
+            }
+            else if (n == 4) {
+                PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else{i = 0}
+                if (i<= 50) {V = -1.601 + 0.002267 * i - 0.0001302 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else if (50 < i <= 120) {V = -1.601 + 1.234 - 0.02573 * i + 0.0003445 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else{V = 1}
+                Vlist[4] = V;
+            }
+            else if (n == 5) {
+                PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else{i = 0}
+                if(i <= 12){V = -9.395 - 0.00037 * i + 0.000616 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else{V = -9.395 - 0.033 - 2.5*Math.log10(1 - 1.507*(i/180) - 0.363*(i/180)**2 - 0.062*(i/180)**3 + 2.809*(i/180)**4 - 1.876*(i/180)**5) + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                Vlist[5] = V;
+            }
+            else if (n == 6) {
+                PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else{i = 0}
+                if (i <= 6.5) {V = -8.914 + 1.825*sin(15*pi/180) + 0.026 * i - 0.378*sin(15*pi/180) + Math.exp(-2.25*i) + 5 * Math.log10(dist * Math.sqrt(PS_2))} //勝手にリングの傾きβ=15°とした
+                else if (6 < i < 150) {V = -8.914 + 0.026 + 0.0002446 * i + 0.0002672 * i**2 - 1.505e-6 * i**3 + 4.767e-9 * i**4 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else{V = 0.6}
+                Vlist[6] = V;
+            }
+            else if (n == 7) {
+                PS_2 = x**2 + y**2 + z**2;                
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else{i = 0}
+                if (i < 3.1) {V = -7.110 + 0.00009617 * i**2 + 0.0001045 * i**2+ 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else{V = 5.6}
+                Vlist[7] = V;
+            }    
+            else if (n == 8) {
+                PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
+                else{i = 0}
+                if (i < 133) {V = -7.00 + 0.007944 * i**3 + 0.00009617 * i**2+ 5 * Math.log10(dist * Math.sqrt(PS_2))}
+                else{V = 7.8}
+                Vlist[8] = V;
+            }
+            else if (planets[n].length == 14 && planets[n][13] != 100.0){ //ちゃんとしたH,GがPlanetに入っているとき
+                var planet = planets[n];
+                var H = planet[12];
+                var G = planet[13];
+                var PS_2 = x**2 + y**2 + z**2;
+                if (Obs_num != 0) {a = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2)))}
+                else{a = 0}
+                var phi1 = Math.exp(-3.33 * (Math.tan(a/2))**0.63);
+                var phi2 = Math.exp(-1.87 * (Math.tan(a/2))**1.22);
+                V = H - 2.5 * Math.log10((1-G) * phi1 + G * phi2) + 5 * Math.log10(dist * Math.sqrt(PS_2));
+                Vlist[n] = V;
+            }
+            else{Vlist[n] = 100}  //n=9（月）を含む
+        }        
+        else{ //観測地自体
+            Vlist[n] = 0;
+        }
+    }
+
+    //星座線
+    ctx.strokeStyle = 'red';
+    ctx.beginPath();
+    const num_of_lines = lines.length / 5;
+    for (var i=0; i<num_of_lines; i++) {
+        var RA1 = parseFloat(lines[5*i+1]);
+        var Dec1 = parseFloat(lines[5*i+2]);
+        var RA2 = parseFloat(lines[5*i+3]);
+        var Dec2 = parseFloat(lines[5*i+4]);
+        if (cenRA - rgEW < 0) {
+            if (Math.min(RA1, RA2) < cenRA+rgEW && Math.max(RA1, RA2) > cenRA-rgEW) {
+                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                    var [x1, y1] = coordW(RA1, Dec1);
+                    var [x2, y2] = coordW(RA2, Dec2);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+            }
+            if (Math.min(RA1, RA2)-360 < cenRA+rgEW && Math.max(RA1, RA2)-360 > cenRA-rgEW) {
+                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                    var [x1, y1] = coordW(RA1-360, Dec1);
+                    var [x2, y2] = coordW(RA2-360, Dec2);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+            }
+        } else if (cenRA + rgEW >= 360) {
+            if (Math.min(RA1, RA2) < cenRA+rgEW && Math.max(RA1, RA2) > cenRA-rgEW) {
+                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                    var [x1, y1] = coordW(RA1, Dec1);
+                    var [x2, y2] = coordW(RA2, Dec2);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+            }
+            if (Math.min(RA1, RA2)+360 < cenRA+rgEW && Math.max(RA1, RA2)+360 > cenRA-rgEW) {
+                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                    var [x1, y1] = coordW(RA1+360, Dec1);
+                    var [x2, y2] = coordW(RA2+360, Dec2);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+            }
+        } else {
+            if (Math.min(RA1, RA2) < cenRA+rgEW && Math.max(RA1, RA2) > cenRA-rgEW) {
+                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                    var [x1, y1] = coordW(RA1, Dec1);
+                    var [x2, y2] = coordW(RA2, Dec2);
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+            }
+        }
+    }
+    ctx.stroke();
 }
 
 function show_main(JD){
@@ -615,17 +940,15 @@ function show_main(JD){
     }
 
     //星座判定
-    var RA = RAlist[Selected_number];
-    var Dec = Declist[Selected_number];
     var A = Array(89).fill(0);
     const num_of_boundary = boundary.length / 5;
     for (var i=0; i<num_of_boundary; i++) {
         var Dec1 = parseFloat(boundary[5*i+2]);
         var Dec2 = parseFloat(boundary[5*i+4]);
-        if (Math.min(Dec1, Dec2) <= Dec && Dec < Math.max(Dec1, Dec2)) {
+        if (Math.min(Dec1, Dec2) <= cenDec && cenDec < Math.max(Dec1, Dec2)) {
             var RA1 = parseFloat(boundary[5*i+1]);
             var RA2 = parseFloat(boundary[5*i+3]);
-            if (RA >= (Dec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
+            if (cenRA >= (Dec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
                 var No = parseInt(boundary[5*i]) - 1;
                 A[No] = (A[No] + 1) % 2;
             }
@@ -638,9 +961,6 @@ function show_main(JD){
             constellation = CLnames[i] + "座  ";
         }
     }
-
-    //var cenRA = 0;
-    //var cenDec = 0;
 
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
