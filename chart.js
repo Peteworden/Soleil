@@ -15,12 +15,17 @@ canvas.height = window.innerHeight;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 8;
+var rgEW = 2;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-var magLim = 8;
+var magLim = 10.5 - 1.8 * Math.log(rgEW);
+if (magLim > 10) {
+    magLim = 10;
+} else if (magLim < 4) {
+    magLim = 4;
+}
 
-const zerosize = 5;
+const zerosize = 9;
 
 var xhrcheck = 0;
 
@@ -383,8 +388,8 @@ canvas.ontouchmove = function ( event ) {
         var y1 = touches[0].offsetY ;
         var x2 = touches[1].offsetX ;
         var y2 = touches[1].offsetY ;
-        document.getElementById("title2").innerHTML = "in! " + (Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2)).toString();
-        distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+        document.getElementById("title2").innerHTML = "in! " + x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + Math.pow(x2-x1, 2).toString();
+        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
         document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
         //document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
