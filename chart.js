@@ -365,62 +365,44 @@ canvas.addEventListener("touchmove", function(e) {
     }
 });
 
-// 基本の距離
 var baseDistance = 0 ;
 var movedDistance = 0;
 
-// 距離を測る関数
-function getDistance (event) {
-    // リロードをストップ
-	event.preventDefault();
-	var touches = event.changedTouches;
-	// 2本以上の指の場合だけ処理
-	if ( touches.length > 1 ) {
-        //document.getElementById("title").innerHTML = touches[0].pageX + ", " + touches[0].pageY + ", " + touches[1].pageX + ", " + touches[1].pageY;
-		// 座標1 (1本目の指)
-		var x1 = touches[0].pageX ;
-		var y1 = touches[0].pageY ;
-		// 座標2 (2本目の指)
-		var x2 = touches[1].pageX ;
-		var y2 = touches[1].pageY ;
-		// 2点間の距離
-		//return Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) ) ;
-        return touches;
-	}
-	return 0 ;
-}
-
+var timeoutId ;
 canvas.ontouchmove = function ( event ) {
+    // リロードをストップ
+    event.preventDefault();
     document.getElementById("title").innerHTML = baseDistance.toString() + ", " + movedDistance.toString();
-    //baseDistance = getDistance( event ) ;
-	if (baseDistance) {
-		// 変化後の距離
-        touches = getDistance(event);
-        //document.getElementById("title").innerHTML = touches.toString();
-        if (touches != 0) {
-            var x1 = touches[0].pageX ;
-            var y1 = touches[0].pageY ;
-            var x2 = touches[1].pageX ;
-            var y2 = touches[1].pageY ;
-            movedDistance = Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) );
-            if (Math.abs(movedDistance - baseDistance) > dist) {
-                rgNS *= movedDistance / baseDistance;
-                rgEW *= movedDistance / baseDistance;
-                cenRA = 2;
+    var touches = event.changedTouches;
+	// 2本以上の指の場合だけ処理
+	if (touches.length > 1) {
+        clearTimeout(timeoutId);
+        var x1 = touches[0].offsetX ;
+        var y1 = touches[0].offsetY ;
+        var x2 = touches[1].offsetX ;
+        var y2 = touches[1].offsetY ;
+        var distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+        if (baseDistance) {
+            movedDistance = distance;
+            if (true) {
+            //if (Math.abs(movedDistance - baseDistance) > dist) {
+                var x3 = (x1 + x2) / 2;
+                var y3 = (y1 + y2) / 2;
+                var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
+                var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
+                var scale = movedDistance / baseDistance
+                rgNS *= scale;
+                rgEW *= scale;
+                cenRA = pinchRA + (cenRA - pinchRA) / scale;
+                cenDec = pinchDec + (cenDec - pinchDec) / scale;
                 show(JD);
-                baseDistance = movedDistance;
+                //baseDistance = movedDistance;
             }
+            timeoutId = setTimeout(function(){beseDistance = 0;}, 100);
+        } else {
+            // 基本の距離
+            baseDistance = distance;
         }
-	} else {
-		// 基本の距離
-        touches = getDistance(event);
-        if (touches != 0) {
-            var x1 = touches[0].pageX ;
-            var y1 = touches[0].pageY ;
-            var x2 = touches[1].pageX ;
-            var y2 = touches[1].pageY ;
-            baseDistance = Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) ) ;
-        }     
 	}
 }
 
