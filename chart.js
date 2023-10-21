@@ -379,8 +379,6 @@ canvas.ontouchmove = function ( event ) {
 	}
 }
 
-var scale = movedDistance / baseDistance ;
-
 function show_main(JD){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = '#003';
