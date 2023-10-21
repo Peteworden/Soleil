@@ -15,12 +15,12 @@ canvas.height = window.innerHeight;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 20;
+var rgEW = 8;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-var magLim = 5;
+var magLim = 8;
 
-const zerosize = 7;
+const zerosize = 5;
 
 var xhrcheck = 0;
 
@@ -374,9 +374,10 @@ canvas.ontouchmove = function ( event ) {
     // リロードをストップ
     event.preventDefault();
     var touches = event.changedTouches;
-    document.getElementById("title2").innerHTML = touches.length.toString();
+    document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
 	// 2本以上の指の場合だけ処理
-	if (touches.length > 1) {
+    if (touches.length.toString() != '1') {
+	//if (touches.length > 1) {
         clearTimeout(timeoutId);
         var x1 = touches[0].offsetX ;
         var y1 = touches[0].offsetY ;
