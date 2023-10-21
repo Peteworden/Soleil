@@ -365,14 +365,14 @@ canvas.addEventListener("touchmove", function(e) {
     }
 });
 
-var baseDistance = 0 ;
+var baseDistance = 0;
 var movedDistance = 0;
+var distance = 0;
 
 var timeoutId ;
 canvas.ontouchmove = function ( event ) {
     // リロードをストップ
     event.preventDefault();
-    document.getElementById("title").innerHTML = baseDistance.toString() + ", " + movedDistance.toString();
     var touches = event.changedTouches;
 	// 2本以上の指の場合だけ処理
 	if (touches.length > 1) {
@@ -381,24 +381,24 @@ canvas.ontouchmove = function ( event ) {
         var y1 = touches[0].offsetY ;
         var x2 = touches[1].offsetX ;
         var y2 = touches[1].offsetY ;
-        var distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
-        if (baseDistance) {
+        distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+        document.getElementById("title").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        if (baseDistance > 0) {
             movedDistance = distance;
-            if (true) {
             //if (Math.abs(movedDistance - baseDistance) > dist) {
                 var x3 = (x1 + x2) / 2;
                 var y3 = (y1 + y2) / 2;
                 var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
                 var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-                var scale = movedDistance / baseDistance
+                var scale = movedDistance / baseDistance;
                 rgNS *= scale;
                 rgEW *= scale;
                 cenRA = pinchRA + (cenRA - pinchRA) / scale;
                 cenDec = pinchDec + (cenDec - pinchDec) / scale;
                 show(JD);
                 //baseDistance = movedDistance;
-            }
-            timeoutId = setTimeout(function(){beseDistance = 0;}, 100);
+            
+            timeoutId = setTimeout(function(){beseDistance = 0;}, 400);
         } else {
             // 基本の距離
             baseDistance = distance;
@@ -554,7 +554,6 @@ function show_main(JD){
     RAlist[0] = RA_Sun;
     Declist[0] = Dec_Sun;
     Distlist[0] = dist;
-    console.log("check368", planets.length);
 
     for (i=1; i<planets.length; i++) {
         var planet = planets[i];
@@ -584,16 +583,14 @@ function show_main(JD){
         }
     }
 
-    console.log("check393");
-
     var RA = RAlist[Selected_number];
     var Dec = Declist[Selected_number];
 
     var Astr = "";
     var hstr = "";
     if (ObsPlanet == "地球") {
-        var Dec_rad = Dec * pi/180;
-        var RA_rad = RA * pi/180;
+        var Dec_rad = cenDec * pi/180;
+        var RA_rad = cenRA * pi/180;
         var A = (Math.atan2(-cos(Dec_rad)*sin(theta-RA_rad), sin(Dec_rad)*cos(lat_obs)-cos(Dec_rad)*sin(lat_obs)*cos(theta-RA_rad)) * 180/pi + 360) % 360;
         const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
@@ -778,13 +775,6 @@ function show_main(JD){
         }
     }
     ctx.stroke();
-    /*
-   //分断
-    ctx.fillStyle = separationColor;
-    ctx.fillRect(canvas.height, 0, Math.max(canvas.width-canvas.height, canvas.height), canvas.height);
-    ctx.fillStyle = '#003';
-    ctx.fillRect(canvas.width-canvas.height, 0, canvas.height, canvas.height);
-    */
 
     //HIP
     ctx.fillStyle = starColor;
@@ -799,14 +789,7 @@ function show_main(JD){
                 ctx.arc(x, y, size(mag), 0, 2 * pi, false);
                 ctx.fill();
             }
-            /*
-            if (Math.abs(RApos(RA)) < rgN && Math.abs(Dec-cenDec) < rgN && mag < maglimN) {
-                var [x, y] = coordN(RA, Dec);
-                ctx.beginPath();
-                ctx.arc(x, y, sizeN(mag), 0, 2 * pi, false);
-                ctx.fill();
-            }*/
-        }
+         }
     }
 /*
     //Tycho
@@ -946,32 +929,17 @@ function show_main(JD){
             */
         }
     }
-    
-/*
-    // 枠
-    var [x0, y0] = coordW(cenRA-rgN, cenDec-rgN);
-    var [x0, y1] = coordW(cenRA-rgN, cenDec+rgN);
-    var [x1, y1] = coordW(cenRA+rgN, cenDec+rgN);
-    var [x1, y0] = coordW(cenRA+rgN, cenDec-rgN);
-    ctx.strokeStyle = 'white';
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x0, y1);
-    ctx.lineTo(x1, y1);
-    ctx.lineTo(x1, y0);
-    ctx.lineTo(x0, y0);
-    ctx.stroke();*/
 
     var RA = RAlist[Selected_number];
-    var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m  ";
+    var RAtext = "赤経 " + Math.floor(cenRA/15) + "h " + Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10 + "m  ";
     
     var Dec = Declist[Selected_number];
     if (Dec >= 0) {
-        var Dectext = "赤緯 +" + Math.floor(Dec) + "° " + Math.round((Dec-Math.floor(Dec))*60) + "'(J2000.0)  ";
+        var Dectext = "赤緯 +" + Math.floor(cenDec) + "° " + Math.round((cenDec-Math.floor(cenDec))*60) + "'(J2000.0)  ";
     } else {
-        var Dectext = "赤緯 -" + Math.floor(-Dec) + "° " + Math.round((-Dec-Math.floor(-Dec))*60) + "'(J2000.0)  ";
+        var Dectext = "赤緯 -" + Math.floor(-cenDec) + "° " + Math.round((-cenDec-Math.floor(-cenDec))*60) + "'(J2000.0)  ";
     }
-
+/*
     if (Selected_number == 9) {
         var Disttext = "距離 " + Math.round(Distlist[Selected_number]/1000)/10 + "万km  ";
     } else {
@@ -982,10 +950,11 @@ function show_main(JD){
     if (Vlist[Selected_number] != 100) {
         var Vtext = Math.round(Vlist[Selected_number]*10)/10 + "等級  ";
     }
-
+*/
     
     
-    var coordtext = constellation + "__" + RAtext + Dectext + "__" + Disttext + "__" + Vtext + "__" + Astr + hstr;
+    //var coordtext = constellation + "__" + RAtext + Dectext + "__" + Disttext + "__" + Vtext + "__" + Astr + hstr;
+    var coordtext = constellation + "__" + RAtext + Dectext + "__" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
 
@@ -1026,13 +995,7 @@ function show_main(JD){
         var y = canvas.height * (0.5 - (Dec - cenDec) / rgNS / 2);
         return [x, y];
     }
-/*
-    function coordN (RA, Dec) {
-        var x = canvas.width - canvas.height * (RApos(RA) / rgN / 2 + 0.5);
-        var y = canvas.height * (0.5 - (Dec - cenDec) / rgN / 2);
-        return [x, y];
-    }
-*/
+
     function size (mag) {
         if (mag > magLim) {
             return zerosize / (magLim + 1);
@@ -1040,15 +1003,7 @@ function show_main(JD){
             return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
-/*
-    function sizeN (mag) {
-        if (mag > maglimN) {
-            return zerosizeN / (maglimN + 1);
-        } else {
-            return zerosizeN * (maglimN + 1 - mag) / (maglimN + 1);
-        }
-    }
-    */
+
 /*
     function DrawStars(skyareas){
         for (var arearange of skyareas) {
@@ -1224,45 +1179,5 @@ function show_main(JD){
         return [x, y, z];
     }
 }
-
-/*function fetch() {
-    console.log('fetch');
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve('resolved');
-      }, 2000);
-    });
-  }
-  
-
-async function search () {
-    var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=31416&full-prec=true&phys-par=true";
-    //var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=" + document.getElementById('addname').value + "&full-prec=true&phys-par=true";
-    var xhr = new XMLHttpRequest();
-
-    const res = await fetch(url);
-    console.log(res, 'resres')
-
-    xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-    console.log(url);
-    xhr.onload = function () {
-        var res = this.response;
-        console.log(res);
-    };
-    xhr.send();
-
-    function addplenet () {
-        var Name = document.getElementById('addname').value;
-
-        var x_eles = [];
-        var s_time = [];
-
-        for (var i=0; i<6; i++) {
-            s_eles.push(document.getElementById('ele' + String(i)).value);
-        }
-    }
-
-}*/
 
 document.body.appendChild(canvas);
