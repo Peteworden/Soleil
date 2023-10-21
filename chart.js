@@ -398,8 +398,8 @@ canvas.ontouchmove = function ( event ) {
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
-            var scale = 1 + (movedDistance / baseDistance - 1) * 0.3;
-            //document.getElementById("title2").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
+            var scale = 1 + (movedDistance / baseDistance - 1) * 1;
+            document.getElementById("title").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
             //document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
@@ -501,31 +501,6 @@ function calculation(JD) {
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
 
-    // 観測対象
-    //var Name = document.getElementById("target").value;
-    //var Selected_number = JPNplanets.indexOf(Name);
-
-/*
-    if (Obs_num == Selected_number) {
-        if (Obs_num != 3) {
-            alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
-            Name = "地球";
-            Selected_number = 3;
-            document.getElementById("target").options[3].selected = true;
-        } else {
-            alert("観測地点と対象天体は別にしてください。\n代わりに月を表示します。");
-            Name = "月";
-            Selected_number = 9;
-            document.getElementById("target").options[9].selected = true;
-        }
-    }
-    if (Obs_num != 3 && Obs_num != 9 && Name == "月") {
-        Name = "地球";
-        Selected_number = 3;
-        alert("代わりに地球を表示します");
-        document.getElementById("target").options[3].selected = true;
-    }
-*/
 
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
