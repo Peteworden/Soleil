@@ -383,8 +383,10 @@ canvas.ontouchmove = function ( event ) {
 	// 2本以上の指の場合だけ処理
     if (touches.length.toString() != '1') {
 	//if (touches.length > 1) {
+        document.getElementById("title2").innerHTML = "in! ";
         clearTimeout(timeoutId);
         var x1 = touches[0].offsetX ;
+        document.getElementById("title2").innerHTML = "in! " + x1.toString() + (typeof x1);
         var y1 = touches[0].offsetY ;
         var x2 = touches[1].offsetX ;
         var y2 = touches[1].offsetY ;
@@ -421,9 +423,13 @@ canvas.ontouchmove = function ( event ) {
     }
 }
 
-var planets;
+var RAlist = new Array(20);
+var Declist = new Array(20);
+var Distlist = new Array(20);
+var Vlist = new Array(20);
 
-function calc_planet(JD) {
+//位置推算とURLの書き換え
+function calculation(JD) {
     const eps = 0.4090926; //黄道傾斜角
     const sine = sin(eps);
     const cose = cos(eps);
@@ -689,61 +695,163 @@ function calc_planet(JD) {
         }
     }
 
-    //星座線
-    ctx.strokeStyle = 'red';
-    ctx.beginPath();
-    const num_of_lines = lines.length / 5;
-    for (var i=0; i<num_of_lines; i++) {
-        var RA1 = parseFloat(lines[5*i+1]);
-        var Dec1 = parseFloat(lines[5*i+2]);
-        var RA2 = parseFloat(lines[5*i+3]);
-        var Dec2 = parseFloat(lines[5*i+4]);
-        if (cenRA - rgEW < 0) {
-            if (Math.min(RA1, RA2) < cenRA+rgEW && Math.max(RA1, RA2) > cenRA-rgEW) {
-                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                    var [x1, y1] = coordW(RA1, Dec1);
-                    var [x2, y2] = coordW(RA2, Dec2);
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                }
-            }
-            if (Math.min(RA1, RA2)-360 < cenRA+rgEW && Math.max(RA1, RA2)-360 > cenRA-rgEW) {
-                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                    var [x1, y1] = coordW(RA1-360, Dec1);
-                    var [x2, y2] = coordW(RA2-360, Dec2);
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                }
-            }
-        } else if (cenRA + rgEW >= 360) {
-            if (Math.min(RA1, RA2) < cenRA+rgEW && Math.max(RA1, RA2) > cenRA-rgEW) {
-                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                    var [x1, y1] = coordW(RA1, Dec1);
-                    var [x2, y2] = coordW(RA2, Dec2);
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                }
-            }
-            if (Math.min(RA1, RA2)+360 < cenRA+rgEW && Math.max(RA1, RA2)+360 > cenRA-rgEW) {
-                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                    var [x1, y1] = coordW(RA1+360, Dec1);
-                    var [x2, y2] = coordW(RA2+360, Dec2);
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                }
-            }
+    function sin(a){return Math.sin(a)}
+    function cos(a){return Math.cos(a)}
+
+    function calc(planet, JD) {
+        if (planet == Sun) {
+            return [0, 0, 0]
+        } else if (planet == Moon) {
+            var [x, y, z] = cal_Ellipse(Earth, JD)
+            var [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta)
+            return [x+Xe, y+Ye, z+Ze]
         } else {
-            if (Math.min(RA1, RA2) < cenRA+rgEW && Math.max(RA1, RA2) > cenRA-rgEW) {
-                if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                    var [x1, y1] = coordW(RA1, Dec1);
-                    var [x2, y2] = coordW(RA2, Dec2);
-                    ctx.moveTo(x1, y1);
-                    ctx.lineTo(x2, y2);
-                }
+            var e = planet[2];
+            if (e <= 0.99) {
+                return cal_Ellipse(planet, JD);
+            } else {
+                return cal_Parabola(planet, JD);
             }
+            
         }
     }
-    ctx.stroke();
+
+    function cal_Ellipse(planet, JD) {
+        var T = planet[0];
+        var a = planet[1] + planet[7] * (JD - T) / 36525;
+        var e = planet[2] + planet[8] * (JD - T) / 36525;
+        var peri = (planet[3] + planet[9] * (JD - T) / 36525) * pi / 180; //ω
+        var i = (planet[4] + planet[10] * (JD - T) / 36525) * pi / 180;
+        var node = (planet[5] + planet[11] * (JD - T) / 36525) * pi / 180; //Ω
+        var M0 = planet[6] * pi / 180;
+    
+        var Ax = a *                     ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
+        var Bx = a * Math.sqrt(1-e**2) * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
+        var Ay = a *                     ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
+        var By = a * Math.sqrt(1-e**2) * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
+        var Az = a *                     ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
+        var Bz = a * Math.sqrt(1-e**2) * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
+        var n = 0.01720209895 / Math.pow(a, 1.5); //平均日日運動(rad)
+        var M = (M0 + n * (JD - T)) % (2 * pi);
+        var E = M + e * sin(M);
+        if (Math.abs(E - M) > 0.000001){
+            var newE = M + e * sin(E);
+            while (Math.abs(newE - E) > 0.000001){
+                E = newE;
+                newE = M + e * sin(E);
+            }
+            E = newE;
+        }
+        
+        var cE_e = cos(E) - e;
+        var sE = sin(E);
+        
+        var x = Ax * cE_e + Bx * sE;
+        var y = Ay * cE_e + By * sE;
+        var z = Az * cE_e + Bz * sE;
+        
+        return [x, y, z];
+    }
+
+    function calculate_Moon(JD, lat_obs, theta) {
+        var d = JD - 2451543.5;
+        var Ms = (356.0470 + 0.9856002585 * d) % 360 * pi/180;
+        var Mm = (115.3654 + 13.0649929509 * d) % 360 * pi/180;
+        var Nm = (125.1228 - 0.0529538083 * d) % 360 * pi/180;
+        var ws = (282.9404 + 0.0000470935 * d) * pi/180;
+        var wm = (318.0634 + 0.1643573223 * d) % 360 * pi/180;
+        var e = 0.054900;
+        var a = 60.2666;
+        var i = 5.1454 * pi/180;
+        var D = Mm + wm + Nm - Ms - ws;
+        var F = Mm + wm;
+        
+        var E = Mm + e * sin(Mm);
+        if (Math.abs(E - Mm) > 0.000001) {
+            var newE = Mm + e * sin(E);
+            while (Math.abs(newE - E) > 0.000001){
+                E = newE;
+                newE = Mm + e * sin(E);
+            }
+            E = newE;
+        }
+        var xv = a * (cos(E) - e);
+        var yv = a * Math.sqrt(1 - e**2) * sin(E);
+
+        var v = Math.atan2(yv, xv);
+        var dist = Math.sqrt(xv**2 + yv**2);
+        
+        var xh = dist * (cos(Nm) * cos(v+wm) - sin(Nm) * sin(v+wm) * cos(i));
+        var yh = dist * (sin(Nm) * cos(v+wm) + cos(Nm) * sin(v+wm) * cos(i));
+        var zh = dist * sin(v+wm) * sin(i);
+        
+        var lon = Math.atan2(yh, xh);
+        var lat = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
+        
+        lon +=(- 1.274*sin(Mm - 2*D)
+            + 0.658*sin(2*D)
+            - 0.186*sin(Ms)
+            - 0.059*sin(2*Mm - 2*D)
+            - 0.057*sin(Mm - 2*D + Ms)
+            + 0.053*sin(Mm + 2*D)
+            + 0.046*sin(2*D - Ms)
+            + 0.041*sin(Mm - Ms)
+            - 0.035*sin(D)
+            - 0.031*sin(Mm + Ms)
+            - 0.015*sin(2*F - 2*D)
+            + 0.011*sin(Mm - 4*D))* pi/180; //rad
+        lat += (- 0.173*sin(F - 2*D)
+                - 0.055*sin(Mm - F - 2*D)
+                - 0.046*sin(Mm + F - 2*D)
+                + 0.033*sin(F + 2*D)
+                + 0.017*sin(2*Mm + F)) * pi/180; //rad
+        dist += -0.58*cos(Mm - 2*D) - 0.46*cos(2*D); //地球半径
+
+        lon -= 0.0002437 * (JD - 2451545.0) / 365.25; //lon, latはJ2000.0
+        
+        var Xe = cos(lat) * cos(lon)                             * dist * 6378.14 / 1.49598e8; //au
+        var Ye = (-sin(lat) * sine + cos(lat) * sin(lon) * cose) * dist * 6378.14 / 1.49598e8; //au
+        var Ze = (sin(lat) * cose + cos(lat) * sin(lon) * sine)  * dist * 6378.14 / 1.49598e8; //au
+
+        var xe = Xe - cos(lat_obs) * cos(theta) * 6378.14 / 1.49598e8; //au
+        var ye = Ye - cos(lat_obs) * sin(theta) * 6378.14 / 1.49598e8; //au
+        var ze = Ze - sin(lat_obs)              * 6378.14 / 1.49598e8; //au
+        var RA = (Math.atan2(ye, xe) * 180/pi + 360) % 360; //deg
+        var Dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * 180/pi; //deg
+
+        dist *= 6378.14;
+
+        return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
+    }
+
+    function cal_Parabola(planet, JD) {
+        var tp = planet[0];
+        var q = planet[1];
+        var peri = planet[3] * pi / 180; //ω
+        var i = planet[4] * pi / 180;
+        var node = planet[5] * pi / 180; //Ω
+    
+        var Ax =     q * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
+        var Bx = 2 * q * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
+        var Ay =     q * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
+        var By = 2 * q * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
+        var Az =     q * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
+        var Bz = 2 * q * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
+        
+        var b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (JD - tp));
+        if (Math.tan(b/2) >= 0) {
+            var g = Math.atan(Math.pow(Math.tan(b/2), 1/3));
+        } else {
+            var g = -Math.atan(Math.pow(-Math.tan(b/2), 1/3));
+        }
+        var tanv2 = 2 / Math.tan(2*g);
+
+        var x = Ax * (1 - tanv2**2) + Bx * tanv2;
+        var y = Ay * (1 - tanv2**2) + By * tanv2;
+        var z = Az * (1 - tanv2**2) + Bz * tanv2;
+        
+        return [x, y, z];
+    }
 }
 
 function show_main(JD){
@@ -962,99 +1070,6 @@ function show_main(JD){
         }
     }
 
-    //明るさを計算
-    const ES_2 = X**2 + Y**2 + Z**2;
-    for (n=0; n<planets.length; n++) {
-        var x = Xlist[n];
-        var y = Ylist[n];
-        var z = Zlist[n];
-        var dist = Distlist[n];
-        var PS_2 = 1;
-        var i = 0;
-        var V = 10;
-        if (n != Obs_num){
-            if (n == 0) {
-                Vlist[0] = -26.7
-            }
-            else if (n==1) {
-                PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else {i = 0}
-                V = -0.613 + 0.06328*i - 0.0016336 * i**2 + 0.000033644 * i**3 - 3.4565e-7 * i**4 +1.6893e-9 * i**5 - 3.0334e-12 * i**6+ 5 * Math.log10(dist * Math.sqrt(PS_2));
-                Vlist[1] = V;
-            }
-            else if (n == 2) {
-                PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else{i = 0}
-                if (i <= 163.7) {V = -4.384 - 0.001044 * i + 0.0003687 * i**2 - 2.814e-6 * i**3 + 8.938e-9 * i**4 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else {V = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                Vlist[2] = V;
-            }    
-            else if (n == 3) {
-                Vlist[3] = 1
-            }
-            else if (n == 4) {
-                PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else{i = 0}
-                if (i<= 50) {V = -1.601 + 0.002267 * i - 0.0001302 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else if (50 < i <= 120) {V = -1.601 + 1.234 - 0.02573 * i + 0.0003445 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else{V = 1}
-                Vlist[4] = V;
-            }
-            else if (n == 5) {
-                PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else{i = 0}
-                if(i <= 12){V = -9.395 - 0.00037 * i + 0.000616 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else{V = -9.395 - 0.033 - 2.5*Math.log10(1 - 1.507*(i/180) - 0.363*(i/180)**2 - 0.062*(i/180)**3 + 2.809*(i/180)**4 - 1.876*(i/180)**5) + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                Vlist[5] = V;
-            }
-            else if (n == 6) {
-                PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else{i = 0}
-                if (i <= 6.5) {V = -8.914 + 1.825*sin(15*pi/180) + 0.026 * i - 0.378*sin(15*pi/180) + Math.exp(-2.25*i) + 5 * Math.log10(dist * Math.sqrt(PS_2))} //勝手にリングの傾きβ=15°とした
-                else if (6 < i < 150) {V = -8.914 + 0.026 + 0.0002446 * i + 0.0002672 * i**2 - 1.505e-6 * i**3 + 4.767e-9 * i**4 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else{V = 0.6}
-                Vlist[6] = V;
-            }
-            else if (n == 7) {
-                PS_2 = x**2 + y**2 + z**2;                
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else{i = 0}
-                if (i < 3.1) {V = -7.110 + 0.00009617 * i**2 + 0.0001045 * i**2+ 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else{V = 5.6}
-                Vlist[7] = V;
-            }    
-            else if (n == 8) {
-                PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
-                else{i = 0}
-                if (i < 133) {V = -7.00 + 0.007944 * i**3 + 0.00009617 * i**2+ 5 * Math.log10(dist * Math.sqrt(PS_2))}
-                else{V = 7.8}
-                Vlist[8] = V;
-            }
-            else if (planets[n].length == 14 && planets[n][13] != 100.0){ //ちゃんとしたH,GがPlanetに入っているとき
-                var planet = planets[n];
-                var H = planet[12];
-                var G = planet[13];
-                var PS_2 = x**2 + y**2 + z**2;
-                if (Obs_num != 0) {a = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2)))}
-                else{a = 0}
-                var phi1 = Math.exp(-3.33 * (Math.tan(a/2))**0.63);
-                var phi2 = Math.exp(-1.87 * (Math.tan(a/2))**1.22);
-                V = H - 2.5 * Math.log10((1-G) * phi1 + G * phi2) + 5 * Math.log10(dist * Math.sqrt(PS_2));
-                Vlist[n] = V;
-            }
-            else{Vlist[n] = 100}  //n=9（月）を含む
-        }        
-        else{ //観測地自体
-            Vlist[n] = 0;
-        }
-    }
-
     //星座線
     ctx.strokeStyle = 'red';
     ctx.beginPath();
@@ -1268,30 +1283,13 @@ function show_main(JD){
         }
     }
 
-    var RA = RAlist[Selected_number];
     var RAtext = "赤経 " + Math.floor(cenRA/15) + "h " + Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10 + "m  ";
-    
-    var Dec = Declist[Selected_number];
-    if (Dec >= 0) {
+    if (cenDec >= 0) {
         var Dectext = "赤緯 +" + Math.floor(cenDec) + "° " + Math.round((cenDec-Math.floor(cenDec))*60) + "'(J2000.0)  ";
     } else {
         var Dectext = "赤緯 -" + Math.floor(-cenDec) + "° " + Math.round((-cenDec-Math.floor(-cenDec))*60) + "'(J2000.0)  ";
     }
-/*
-    if (Selected_number == 9) {
-        var Disttext = "距離 " + Math.round(Distlist[Selected_number]/1000)/10 + "万km  ";
-    } else {
-        var Disttext = "距離 " + Math.round(Distlist[Selected_number]*100)/100 + "au  ";
-    }
-
-    var Vtext = ""
-    if (Vlist[Selected_number] != 100) {
-        var Vtext = Math.round(Vlist[Selected_number]*10)/10 + "等級  ";
-    }
-*/
     
-    
-    //var coordtext = constellation + "__" + RAtext + Dectext + "__" + Disttext + "__" + Vtext + "__" + Astr + hstr;
     var coordtext = constellation + "__" + RAtext + Dectext + "__" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
