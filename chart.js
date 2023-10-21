@@ -366,8 +366,8 @@ canvas.addEventListener("touchmove", function(e) {
     moveX = e.changedTouches[0].pageX;
     moveY = e.changedTouches[0].pageY;
     if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
-        cenRA  += 2 * rgEW * (moveX - startX) / canvas.width;
-        cenDec += 2 * rgNS * (moveY - startY) / canvas.height;
+        cenRA  = (cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360;
+        cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
         show_main();
         startX = moveX;
         startY = moveY;
@@ -402,17 +402,22 @@ canvas.ontouchmove = function ( event ) {
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-            var scale = movedDistance / baseDistance;
-            document.getElementById("title2").innerHTML = "scale = " + scale.toString();
+            // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
+            var scale = 1 + (movedDistance / baseDistance - 1) * 0.3;
+            document.getElementById("title2").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
             document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
             if (scale && scale != Infinity) {
-                rgNS *= scale;
-                rgEW *= scale;
+                rgNS /= scale;
+                rgEW /= scale;
                 cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
                 cenDec = (pinchDec + (cenDec - pinchDec) / scale) % 360;
                 if (rgEW < 0.3) {
                     rgNS = 0.3 * canvas.height / canvas.width;
                     rgEW = 0.3;
+                }
+                if (rgNS > 90) {
+                    rgNS = 90;
+                    rgEW = 90 * canvas.width / canvas.height;
                 }
                 if (cenDec > 90) {
                     cenDec = 90;
