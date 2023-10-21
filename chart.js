@@ -15,7 +15,7 @@ canvas.height = window.innerHeight;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 50;
+var rgEW = 10;
 var rgNS = rgEW * canvas.height / canvas.width;
 
 var magLim = 10.5 - 1.8 * Math.log(rgEW);
@@ -273,6 +273,7 @@ function now() {
     console.log(url.href);
     history.replaceState('', '', url.href);*/
     showingJD = YMDH_to_JD(y, m, d, h);
+    calculation(showingJD);
     show_main(showingJD);
 }
 
@@ -323,6 +324,7 @@ function show() {
     let date = parseInt(document.getElementById('dateText').value);
     let hour = parseFloat(document.getElementById('hourText').value);
     showingJD = YMDH_to_JD(year, month, date, hour);
+    calculation(showingJD);
     show_main(showingJD);
 }
 
@@ -359,6 +361,7 @@ canvas.addEventListener("touchstart", function(e) {
 // スワイプ中： xy座標を取得
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
+    console.log(e.changedTouches[0].pageX);
     moveX = e.changedTouches[0].pageX;
     moveY = e.changedTouches[0].pageY;
     if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
@@ -385,11 +388,11 @@ canvas.ontouchmove = function ( event ) {
 	//if (touches.length > 1) {
         document.getElementById("title2").innerHTML = "in! ";
         clearTimeout(timeoutId);
-        var x1 = touches[0].offsetX ;
+        var x1 = touches[0].pageX ;
         document.getElementById("title2").innerHTML = "in! " + x1.toString() + (typeof x1);
-        var y1 = touches[0].offsetY ;
-        var x2 = touches[1].offsetX ;
-        var y2 = touches[1].offsetY ;
+        var y1 = touches[0].pageY ;
+        var x2 = touches[1].pageX ;
+        var y2 = touches[1].pageY ;
         document.getElementById("title2").innerHTML = "in! " + x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + Math.pow(x2-x1, 2).toString();
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
         document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
@@ -698,6 +701,18 @@ function calculation(JD) {
     function sin(a){return Math.sin(a)}
     function cos(a){return Math.cos(a)}
 
+    function xyz_to_RADec(x, y, z) {  //deg
+        dist = Math.sqrt(x*x + y*y + z*z);
+        if (dist  < 0.00000001){
+            var RA = 0;
+            var Dec = 200;
+        } else {
+            RA = (Math.atan2(y, x) * 180/pi + 360) % 360; //deg
+            Dec = Math.atan(z / Math.sqrt(x*x + y*y)) * 180/pi; //deg
+        }
+        return [RA, Dec, dist];
+    }
+
     function calc(planet, JD) {
         if (planet == Sun) {
             return [0, 0, 0]
@@ -859,11 +874,11 @@ function show_main(JD){
     ctx.fillStyle = '#003';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    const eps = 0.4090926; //黄道傾斜角
-    const sine = sin(eps);
-    const cose = cos(eps);
+    //const eps = 0.4090926; //黄道傾斜角
+    //const sine = sin(eps);
+    //const cose = cos(eps);
     const pi = Math.PI;
-
+/*
     const Sun = ['Sun'];
     const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
     const Venus   = [2451545.0,  0.723336, 0.006777,  54.922625,  3.394676,  76.679843,  50.376632,  0.000004, -0.000041,  0.280377, -0.000789, -0.277694];
@@ -878,10 +893,10 @@ function show_main(JD){
     const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+*/    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
     const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
-    const OriginalNumOfPlanets = planets.length;
+    //const OriginalNumOfPlanets = planets.length;
 
     var y = document.getElementById('yearText').value;
     var m = document.getElementById('monthText').value;
@@ -893,7 +908,7 @@ function show_main(JD){
         var [h, h_min] = document.getElementById('hourText').value.split('.');
     }
     url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
-
+/*
     if (extra.length != 0) {
         var name = extra[1];
         for (var i=2; i<parseInt(extra[0])+1; i++) {
@@ -908,7 +923,7 @@ function show_main(JD){
         }
         planets.push(New);
     }
-
+*/
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
@@ -985,7 +1000,7 @@ function show_main(JD){
     if (document.getElementById("EWCombo").value == '西経') {lon_obs *= -1}
     var t = (JD - 2451545.0) / 36525;
     var theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
-
+/*
     var Xlist = new Array(20);
     var Ylist = new Array(20);
     var Zlist = new Array(20);
@@ -1030,10 +1045,7 @@ function show_main(JD){
             console.log(i, "OK");
         }
     }
-
-    var RA = RAlist[Selected_number];
-    var Dec = Declist[Selected_number];
-
+*/
     var Astr = "";
     var hstr = "";
     if (ObsPlanet == "地球") {
@@ -1176,7 +1188,7 @@ function show_main(JD){
     ctx.textBaseline = 'bottom';
 	ctx.textAlign = 'left';
 
-    for (i=0; i<planets.length; i++){
+    for (i=0; i<JPNplanets.length; i++){
         // 枠内に入っていて
         if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgEW && Math.abs(Declist[i]-cenDec) < rgNS) {
             var [x, y] = coordW(RAlist[i], Declist[i]);
@@ -1230,56 +1242,6 @@ function show_main(JD){
                 ctx.fillStyle = '#FF8';
                 ctx.fillText(JPNplanets[i], x, y);
             }
-            /*
-            if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgN && Math.abs(Declist[i]-cenDec) < rgN) {
-                var [x, y] = coordN(RAlist[i], Declist[i]);
-                if (i == 0){
-                    var  R = canvas.height * (Math.max(0.267 / Distlist[0], 0.1)) / rgN / 2;
-                    ctx.fillStyle = yellowColor;
-                    ctx.beginPath();
-                    ctx.arc(x, y, R, 0, 2 * pi, false);
-                    ctx.fill();
-                    ctx.fillStyle = '#FF8';
-                    ctx.fillText(JPNplanets[i], x+0.8*R, y-0.8*R);
-                }
-                else if (i == 9) {
-                    if (Obs_num == 3) {
-                        var r = canvas.height * (0.259 / (dist_Moon / 384400)) / rgN / 2;
-                        ctx.beginPath();
-                        if (k < 0.5) {
-                            ctx.fillStyle = yellowColor;
-                            ctx.arc(x, y, r, 0, 2*pi, false);
-                            ctx.fill();
-                            ctx.fillStyle = '#333';
-                            ctx.beginPath();
-                            ctx.arc(x, y, r, pi-P, 2*pi-P);
-                            ctx.ellipse(x, y, r, r*(1-2*k), -P, 0, pi);
-                            ctx.fill()
-                        } else {
-                            ctx.fillStyle = '#333';
-                            ctx.arc(x, y, r, 0, 2*pi, false);
-                            ctx.fill();
-                            ctx.fillStyle = yellowColor;
-                            ctx.beginPath();
-                            ctx.arc(x, y, r, -P, pi-P);
-                            ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
-                            ctx.fill()
-                        }
-
-                        ctx.fillStyle = '#FF8';
-                        ctx.fillText(JPNplanets[i], x+0.8*r, y-0.8*r);
-                    }
-                } else if (i != 9) {
-                    var mag = Vlist[i];
-                    ctx.fillStyle = '#F33'
-                    ctx.beginPath();
-                    ctx.arc(x, y, Math.max(sizeN(mag), 0.5), 0, 2 * pi, false);
-                    ctx.fill();
-                    ctx.fillStyle = '#FF8';
-                    ctx.fillText(JPNplanets[i], x, y);
-                }
-            }
-            */
         }
     }
 
