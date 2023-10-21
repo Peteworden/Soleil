@@ -12,7 +12,10 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-var rgEW = 30;
+var cenRA = 50;
+var cenDec = 0;
+
+var rgEW = 20;
 var rgNS = rgEW * canvas.height / canvas.width;
 
 const maglimW = 6.5;
@@ -341,15 +344,39 @@ function show_JD_minus1(){
     show_main(showingJD);
 }
 
+let startX, startY, moveX, moveY, dist = 30;// distはスワイプを感知する最低距離（ピクセル単位）
+
+// タッチ開始時： xy座標を取得
+canvas.addEventListener("touchstart", function(e) {
+    e.preventDefault();
+    startX = e.touches[0].pageX;
+    startY = e.touches[0].pageY;
+});
+
+// スワイプ中： xy座標を取得
+canvas.addEventListener("touchmove", function(e) {
+    e.preventDefault();
+    moveX = e.changedTouches[0].pageX;
+    moveY = e.changedTouches[0].pageY;
+    if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
+        cenRA  += 2 * rgEW * (moveX - startX) / canvas.width;
+        cenDec += 2 * rgNS * (moveY - startY) / canvas.height;
+        show();
+        startX = moveX;
+        startY = moveY;
+    }
+});
+
 // 基本の距離
 var baseDistance = 0 ;
 
 // 距離を測る関数
-function getDistance ( event ) {
-	event.preventDefault() ;
-	var touches = event.changedTouches ;
+function getDistance (event) {
+	event.preventDefault();
+	var touches = event.changedTouches;
 	// 2本以上の指の場合だけ処理
 	if ( touches.length > 1 ) {
+        document.getElementById("title").innerHTML = touches[0].pageX + ", " + touches[0].pageY + ", " + touches[1].pageX + ", " + touches[1].pageY;
 		// 座標1 (1本目の指)
 		var x1 = touches[0].pageX ;
 		var y1 = touches[0].pageY ;
@@ -358,12 +385,16 @@ function getDistance ( event ) {
 		var y2 = touches[1].pageY ;
 		// 2点間の距離
 		return Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) ) ;
-	}
+	} else {
+        document.getElementById("title").innerHTML = "one finger";
+    }
 	return 0 ;
 }
 
 canvas.ontouchmove = function ( event ) {
     console.log(baseDistance);
+    document.getElementById("title").innerHTML = baseDistance.toString();
+    baseDistance = getDistance( event ) ;
 	if ( baseDistance ) {
 		// 変化後の距離
 		var movedDistance = getDistance( event ) ;
@@ -600,8 +631,8 @@ function show_main(JD){
         }
     }
 
-    var cenRA = 0;
-    var cenDec = 0;
+    //var cenRA = 0;
+    //var cenDec = 0;
 
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
