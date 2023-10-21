@@ -274,7 +274,7 @@ function now() {
     history.replaceState('', '', url.href);*/
     showingJD = YMDH_to_JD(y, m, d, h);
     calculation(showingJD);
-    show_main(showingJD);
+    show_main();
 }
 
 //基本的にYMDHはJST, JDはTT
@@ -325,7 +325,7 @@ function show() {
     let hour = parseFloat(document.getElementById('hourText').value);
     showingJD = YMDH_to_JD(year, month, date, hour);
     calculation(showingJD);
-    show_main(showingJD);
+    show_main();
 }
 
 function show_JD_plus1(){
@@ -336,7 +336,8 @@ function show_JD_plus1(){
     document.getElementById('dateText').value = D;
     document.getElementById('hourText').value = H;
     console.log("check236");
-    show_main(showingJD);
+    calculation(showingJD);
+    show_main();
 }
 
 function show_JD_minus1(){
@@ -346,7 +347,8 @@ function show_JD_minus1(){
     document.getElementById('monthText').value = M;
     document.getElementById('dateText').value = D;
     document.getElementById('hourText').value = H;
-    show_main(showingJD);
+    calculation(showingJD);
+    show_main();
 }
 
 let startX, startY, moveX, moveY, dist = 30;// distはスワイプを感知する最低距離（ピクセル単位）
@@ -361,13 +363,12 @@ canvas.addEventListener("touchstart", function(e) {
 // スワイプ中： xy座標を取得
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
-    console.log(e.changedTouches[0].pageX);
     moveX = e.changedTouches[0].pageX;
     moveY = e.changedTouches[0].pageY;
     if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
         cenRA  += 2 * rgEW * (moveX - startX) / canvas.width;
         cenDec += 2 * rgNS * (moveY - startY) / canvas.height;
-        show();
+        show_main();
         startX = moveX;
         startY = moveY;
     }
@@ -387,33 +388,41 @@ canvas.ontouchmove = function ( event ) {
 	// 2本以上の指の場合だけ処理
     if (touches.length.toString() != '1') {
 	//if (touches.length > 1) {
-        document.getElementById("title2").innerHTML = "in! ";
         clearTimeout(timeoutId);
         var x1 = touches[0].pageX ;
-        document.getElementById("title2").innerHTML = "in! " + x1.toString() + (typeof x1);
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
         var y2 = touches[1].pageY ;
-        document.getElementById("title2").innerHTML = "in! " + x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + Math.pow(x2-x1, 2).toString();
-        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
-        document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
-        //document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
             //if (Math.abs(movedDistance - baseDistance) > dist) {
-                var x3 = (x1 + x2) / 2;
-                var y3 = (y1 + y2) / 2;
-                var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
-                var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-                var scale = movedDistance / baseDistance / 20;
-                if (scale && scale != Infinity && rgEW * scale > 0.3 && rgEW * scale < 90) {
-                    rgNS *= scale;
-                    rgEW *= scale;
-                    cenRA = pinchRA + (cenRA - pinchRA) / scale;
-                    cenDec = pinchDec + (cenDec - pinchDec) / scale;
-                    show(JD);
+                //var elem = document.getElementById('canvas');
+            var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
+            var y3 = (y1 + y2) / 2 - canvas.offsetTop;
+            var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
+            var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
+            var scale = movedDistance / baseDistance / 20;
+            document.getElementById("title2").innerHTML = "scale = " + scale.toString();
+            document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
+            if (scale && scale != Infinity) {
+                rgNS *= scale;
+                rgEW *= scale;
+                cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
+                cenDec = (pinchDec + (cenDec - pinchDec) / scale) % 360;
+                if (rgEW < 0.3) {
+                    rgNS = 0.3 * canvas.height / canvas.width;
+                    rgEW = 0.3;
                 }
-                //baseDistance = movedDistance;
+                if (cenDec > 90) {
+                    cenDec = 90;
+                }
+                if (cenDec < -90) {
+                    cenDec = -90;
+                }
+                show_main();
+            }
+            //baseDistance = movedDistance;
             //}
             timeoutId = setTimeout(function(){
                 baseDistance = 0;
@@ -431,6 +440,7 @@ var RAlist = new Array(20);
 var Declist = new Array(20);
 var Distlist = new Array(20);
 var Vlist = new Array(20);
+var Ms, ws, lon, lat;
 
 //位置推算とURLの書き換え
 function calculation(JD) {
@@ -872,7 +882,7 @@ function calculation(JD) {
     }
 }
 
-function show_main(JD){
+function show_main(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = '#003';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -881,6 +891,8 @@ function show_main(JD){
     //const sine = sin(eps);
     //const cose = cos(eps);
     const pi = Math.PI;
+
+    var JD = showingJD;
 /*
     const Sun = ['Sun'];
     const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
@@ -930,6 +942,7 @@ function show_main(JD){
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
+
 /*
     // 観測対象
     var Name = document.getElementById("target").value;
@@ -955,6 +968,7 @@ function show_main(JD){
         document.getElementById("target").options[3].selected = true;
     }
 */
+
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
             url.searchParams.delete('observer');
@@ -1204,10 +1218,10 @@ function show_main(JD){
                 ctx.fillText(JPNplanets[i], x+10, y-10);
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
-                    var rs = RA_Sun * pi/180;
-                    var ds = Dec_Sun * pi/180;
-                    var rm = RA_Moon * pi/180;
-                    var dm = Dec_Moon * pi/180;
+                    var rs = RAlist[0] * pi/180;
+                    var ds = Declist[0] * pi/180;
+                    var rm = RAlist[9] * pi/180;
+                    var dm = Declist[9] * pi/180;
                     var lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
                     k = (1 - cos(lons-lon) * cos(lat)) / 2;
                     P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
@@ -1324,7 +1338,7 @@ function show_main(JD){
         }
     }
 
-
+/*
     function calc(planet, JD) {
         if (planet == Sun) {
             return [0, 0, 0]
@@ -1479,6 +1493,7 @@ function show_main(JD){
         
         return [x, y, z];
     }
+*/
 }
 
 document.body.appendChild(canvas);
