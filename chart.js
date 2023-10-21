@@ -376,14 +376,14 @@ canvas.ontouchmove = function ( event ) {
     var touches = event.changedTouches;
     document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
 	// 2本以上の指の場合だけ処理
-    if (touches.length.toString() != '1') {
-        document.getElementById("title2").innerHTML = "in!";
-	//if (touches.length > 1) {
+    //if (touches.length.toString() != '1') {
+	if (touches.length > 1) {
         clearTimeout(timeoutId);
         var x1 = touches[0].offsetX ;
         var y1 = touches[0].offsetY ;
         var x2 = touches[1].offsetX ;
         var y2 = touches[1].offsetY ;
+        document.getElementById("title2").innerHTML = "in! " + (Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2)).toString();
         distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
         document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
         //document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
