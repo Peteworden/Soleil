@@ -402,7 +402,7 @@ canvas.ontouchmove = function ( event ) {
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-            var scale = movedDistance / baseDistance / 20;
+            var scale = movedDistance / baseDistance;
             document.getElementById("title2").innerHTML = "scale = " + scale.toString();
             document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
             if (scale && scale != Infinity) {
