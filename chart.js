@@ -101,6 +101,30 @@ xhrH.onreadystatechange = function() {
     }
 }
 
+// メシエ天体
+var messier = [];
+var messierurl = "https://peteworden.github.io/Soleil/messier.txt";
+var xhrM = new XMLHttpRequest();
+
+xhrM.open('GET', messierurl);
+xhrM.send();
+xhrM.onreadystatechange = function() {
+    if(xhrM.readyState === 4 && xhrM.status === 200) {
+        const MessierAry = xhrM.responseText.split(',');
+        for (i=0; i<110; i++){
+            messier[3*i] = 15*parseFloat(MessierAry[8*i+1]) + parseFloat(MessierAry[8*i+2])/4 + parseFloat(MessierAry[8*i+3])/240;
+            messier[3*+1] = parseFloat(MessierAry[3*i+5]) + parseFloat(MessierAry[8*i+6])/60;
+            if (MessierAry[3*i+4] == '0') {
+                messier[3*+1] *= -1;
+            }
+            messier[3*i+2] = parseInt(DataAry[8*i+7]);
+        }
+        console.log("Messier ready");
+        xhrcheck++;
+        show_initial();
+    }
+}
+
 //星座名
 var CLnames = [];
 var CLurl = "https://peteworden.github.io/Soleil/ConstellationList.txt";
@@ -305,7 +329,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 7 && defaultcheck == 7){
+    if (xhrcheck == 8 && defaultcheck == 7){
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -403,7 +427,6 @@ canvas.ontouchmove = function ( event ) {
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
             var scale = 1 + (movedDistance / baseDistance - 1) * 0.5;
             document.getElementById("title").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
-            //document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
                 rgEW /= scale;
@@ -427,11 +450,9 @@ canvas.ontouchmove = function ( event ) {
                 zerosize = find_zerosize(rgEW);
                 show_main();
             }
-            //baseDistance = movedDistance;
-            //}
             timeoutId = setTimeout(function(){
                 baseDistance = 0;
-            }, 1000);
+            }, 200);
         } else {
             // 基本の距離
             baseDistance = distance;
@@ -1249,6 +1270,10 @@ function show_main(){
                 }
             }
         }
+    }
+
+    function DrawMessir(n) {
+        1+1;
     }
 }
 
