@@ -377,6 +377,7 @@ canvas.ontouchmove = function ( event ) {
     document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
 	// 2本以上の指の場合だけ処理
     if (touches.length.toString() != '1') {
+        document.getElementById("title2").innerHTML = "in!";
 	//if (touches.length > 1) {
         clearTimeout(timeoutId);
         var x1 = touches[0].offsetX ;
@@ -385,7 +386,7 @@ canvas.ontouchmove = function ( event ) {
         var y2 = touches[1].offsetY ;
         distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
         document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
-        document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        //document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
             //if (Math.abs(movedDistance - baseDistance) > dist) {
@@ -410,7 +411,9 @@ canvas.ontouchmove = function ( event ) {
             // 基本の距離
             baseDistance = distance;
         }
-	}
+	} else {
+        document.getElementById("title").innerHTML = "not in";
+    }
 }
 
 function show_main(JD){
