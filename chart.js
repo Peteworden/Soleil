@@ -431,7 +431,7 @@ canvas.ontouchmove = function ( event ) {
             //}
             timeoutId = setTimeout(function(){
                 baseDistance = 0;
-            }, 30);
+            }, 1000);
         } else {
             // 基本の距離
             baseDistance = distance;
@@ -917,15 +917,7 @@ function show_main(){
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
-/*
-    if (Selected_number == 9) {
-        if (url.searchParams.has('target')) {
-            url.searchParams.delete('target');
-        }   
-    } else {
-        url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
-    }
-*/
+
     if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
         if (url.searchParams.has('lat')) {
             url.searchParams.delete('lat');
@@ -1217,27 +1209,6 @@ function show_main(){
 
     function sin(a){return Math.sin(a)}
     function cos(a){return Math.cos(a)}
-
-    function YMDH_to_JD(Y, M, D, H){
-        if (M <= 2) {
-            M += 12;
-            Y--;
-        }
-        var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
-        return JD;
-    }
-
-    function xyz_to_RADec(x, y, z) {  //deg
-        dist = Math.sqrt(x*x + y*y + z*z);
-        if (dist  < 0.00000001){
-            var RA = 0;
-            var Dec = 200;
-        } else {
-            RA = (Math.atan2(y, x) * 180/pi + 360) % 360; //deg
-            Dec = Math.atan(z / Math.sqrt(x*x + y*y)) * 180/pi; //deg
-        }
-        return [RA, Dec, dist];
-    }
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec / 10 + 9) + Math.floor(RA));
