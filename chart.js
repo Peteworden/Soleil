@@ -11,9 +11,8 @@ const ctx = canvas.getContext('2d');
 
 //canvas.width = canvas.clientWidth;
 canvas.width = window.innerWidth;
-console.log(canvas.clientWidth);
-canvas.height = window.innerHeight - document.getElementById('title').offsetLeft - document.getElementById('setting').offsetLeft
-                - document.getElementById('showBtn').offsetLeft - document.getElementById('coordtext').offsetLeft;
+console.log(canvas.clientWidth, canvas.offsetTop);
+canvas.height = window.innerHeight - document.getElementById('showBtn').offsetTop - document.getElementById('showBtn').offsetHeight;
 
 var cenRA = 270;
 var cenDec = -25;
@@ -361,8 +360,14 @@ canvas.addEventListener("touchmove", function(e) {
     moveX = e.changedTouches[0].pageX;
     moveY = e.changedTouches[0].pageY;
     if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
-        cenRA  = (cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360;
+        cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
         cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
+        if (cenDec > 90) {
+            cenDec = 90;
+        }
+        if (cenDec < -90) {
+            cenDec = -90;
+        }
         show_main();
         startX = moveX;
         startY = moveY;
@@ -391,21 +396,19 @@ canvas.ontouchmove = function ( event ) {
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
-            //if (Math.abs(movedDistance - baseDistance) > dist) {
-                //var elem = document.getElementById('canvas');
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
-            var scale = 1 + (movedDistance / baseDistance - 1) * 1;
+            var scale = 1 + (movedDistance / baseDistance - 1) * 0.5;
             document.getElementById("title").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
             //document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
                 rgEW /= scale;
                 cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
-                cenDec = (pinchDec + (cenDec - pinchDec) / scale) % 360;
+                cenDec =  pinchDec + (cenDec - pinchDec) / scale;
                 if (rgEW < 0.3) {
                     rgNS = 0.3 * canvas.height / canvas.width;
                     rgEW = 0.3;
@@ -428,7 +431,7 @@ canvas.ontouchmove = function ( event ) {
             //}
             timeoutId = setTimeout(function(){
                 baseDistance = 0;
-            }, 300);
+            }, 30);
         } else {
             // 基本の距離
             baseDistance = distance;
@@ -871,22 +874,8 @@ function show_main(){
     const pi = Math.PI;
 
     var JD = showingJD;
-/*
-    const Sun = ['Sun'];
-    const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
-    const Venus   = [2451545.0,  0.723336, 0.006777,  54.922625,  3.394676,  76.679843,  50.376632,  0.000004, -0.000041,  0.280377, -0.000789, -0.277694];
-    const Earth   = [2451545.0,  1.000003, 0.016711, 102.937682, -0.000015,   0       ,  -2.473110,  0.000006, -0.000044,  0.323274, -0.012947,  0       ];
-    const Mars    = [2451545.0,  1.523710, 0.093394, 286.496832,  1.849691,  49.559539,  19.390198,  0.000018,  0.000079,  0.736984, -0.008131, -0.292573];
-    const Jupiter = [2451545.0,  5.202887, 0.048386, 274.254571,  1.304397, 100.473909,  19.667961, -0.000116, -0.000133,  0.007836, -0.001837,  0.204691];
-    const Saturn  = [2451545.0,  9.536676, 0.053862, -21.063546,  2.485992, 113.662424, 317.355366, -0.001251, -0.000510, -0.130294,  0.001936, -0.288678];
-    const Uranus  = [2451545.0, 19.189165, 0.047257,  96.937351,  0.772638,  74.016925, 142.283828, -0.001962, -0.000044,  0.365647, -0.002429,  0.042406];
-    const Neptune = [2451545.0, 30.069923, 0.008590, 273.180537,  1.770043, 131.784226, 259.915208,  0.000263,  0.000051, -0.317328,  0.000354, -0.005087];
-    const Moon    = ['Moon'];
-    const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
-    const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
-    const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-*/    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
     const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
     //const OriginalNumOfPlanets = planets.length;
@@ -920,31 +909,6 @@ function show_main(){
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
-
-    // 観測対象
-/*    var Name = document.getElementById("target").value;
-    var Selected_number = JPNplanets.indexOf(Name);
-
-    if (Obs_num == Selected_number) {
-        if (Obs_num != 3) {
-            alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
-            Name = "地球";
-            Selected_number = 3;
-            document.getElementById("target").options[3].selected = true;
-        } else {
-            alert("観測地点と対象天体は別にしてください。\n代わりに月を表示します。");
-            Name = "月";
-            Selected_number = 9;
-            document.getElementById("target").options[9].selected = true;
-        }
-    }
-    if (Obs_num != 3 && Obs_num != 9 && Name == "月") {
-        Name = "地球";
-        Selected_number = 3;
-        alert("代わりに地球を表示します");
-        document.getElementById("target").options[3].selected = true;
-    }
-*/
 
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
@@ -1315,163 +1279,6 @@ function show_main(){
             }
         }
     }
-
-/*
-    function calc(planet, JD) {
-        if (planet == Sun) {
-            return [0, 0, 0]
-        } else if (planet == Moon) {
-            var [x, y, z] = cal_Ellipse(Earth, JD)
-            var [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta)
-            return [x+Xe, y+Ye, z+Ze]
-        } else {
-            var e = planet[2];
-            if (e <= 0.99) {
-                return cal_Ellipse(planet, JD);
-            } else {
-                return cal_Parabola(planet, JD);
-            }
-            
-        }
-    }
-
-    function cal_Ellipse(planet, JD) {
-        var T = planet[0];
-        var a = planet[1] + planet[7] * (JD - T) / 36525;
-        var e = planet[2] + planet[8] * (JD - T) / 36525;
-        var peri = (planet[3] + planet[9] * (JD - T) / 36525) * pi / 180; //ω
-        var i = (planet[4] + planet[10] * (JD - T) / 36525) * pi / 180;
-        var node = (planet[5] + planet[11] * (JD - T) / 36525) * pi / 180; //Ω
-        var M0 = planet[6] * pi / 180;
-    
-        var Ax = a *                     ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
-        var Bx = a * Math.sqrt(1-e**2) * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
-        var Ay = a *                     ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
-        var By = a * Math.sqrt(1-e**2) * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
-        var Az = a *                     ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
-        var Bz = a * Math.sqrt(1-e**2) * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
-        var n = 0.01720209895 / Math.pow(a, 1.5); //平均日日運動(rad)
-        var M = (M0 + n * (JD - T)) % (2 * pi);
-        var E = M + e * sin(M);
-        if (Math.abs(E - M) > 0.000001){
-            var newE = M + e * sin(E);
-            while (Math.abs(newE - E) > 0.000001){
-                E = newE;
-                newE = M + e * sin(E);
-            }
-            E = newE;
-        }
-        
-        var cE_e = cos(E) - e;
-        var sE = sin(E);
-        
-        var x = Ax * cE_e + Bx * sE;
-        var y = Ay * cE_e + By * sE;
-        var z = Az * cE_e + Bz * sE;
-        
-        return [x, y, z];
-    }
-
-    function calculate_Moon(JD, lat_obs, theta) {
-        var d = JD - 2451543.5;
-        var Ms = (356.0470 + 0.9856002585 * d) % 360 * pi/180;
-        var Mm = (115.3654 + 13.0649929509 * d) % 360 * pi/180;
-        var Nm = (125.1228 - 0.0529538083 * d) % 360 * pi/180;
-        var ws = (282.9404 + 0.0000470935 * d) * pi/180;
-        var wm = (318.0634 + 0.1643573223 * d) % 360 * pi/180;
-        var e = 0.054900;
-        var a = 60.2666;
-        var i = 5.1454 * pi/180;
-        var D = Mm + wm + Nm - Ms - ws;
-        var F = Mm + wm;
-        
-        var E = Mm + e * sin(Mm);
-        if (Math.abs(E - Mm) > 0.000001) {
-            var newE = Mm + e * sin(E);
-            while (Math.abs(newE - E) > 0.000001){
-                E = newE;
-                newE = Mm + e * sin(E);
-            }
-            E = newE;
-        }
-        var xv = a * (cos(E) - e);
-        var yv = a * Math.sqrt(1 - e**2) * sin(E);
-
-        var v = Math.atan2(yv, xv);
-        var dist = Math.sqrt(xv**2 + yv**2);
-        
-        var xh = dist * (cos(Nm) * cos(v+wm) - sin(Nm) * sin(v+wm) * cos(i));
-        var yh = dist * (sin(Nm) * cos(v+wm) + cos(Nm) * sin(v+wm) * cos(i));
-        var zh = dist * sin(v+wm) * sin(i);
-        
-        var lon = Math.atan2(yh, xh);
-        var lat = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
-        
-        lon +=(- 1.274*sin(Mm - 2*D)
-            + 0.658*sin(2*D)
-            - 0.186*sin(Ms)
-            - 0.059*sin(2*Mm - 2*D)
-            - 0.057*sin(Mm - 2*D + Ms)
-            + 0.053*sin(Mm + 2*D)
-            + 0.046*sin(2*D - Ms)
-            + 0.041*sin(Mm - Ms)
-            - 0.035*sin(D)
-            - 0.031*sin(Mm + Ms)
-            - 0.015*sin(2*F - 2*D)
-            + 0.011*sin(Mm - 4*D))* pi/180; //rad
-        lat += (- 0.173*sin(F - 2*D)
-                - 0.055*sin(Mm - F - 2*D)
-                - 0.046*sin(Mm + F - 2*D)
-                + 0.033*sin(F + 2*D)
-                + 0.017*sin(2*Mm + F)) * pi/180; //rad
-        dist += -0.58*cos(Mm - 2*D) - 0.46*cos(2*D); //地球半径
-
-        lon -= 0.0002437 * (JD - 2451545.0) / 365.25; //lon, latはJ2000.0
-        
-        var Xe = cos(lat) * cos(lon)                             * dist * 6378.14 / 1.49598e8; //au
-        var Ye = (-sin(lat) * sine + cos(lat) * sin(lon) * cose) * dist * 6378.14 / 1.49598e8; //au
-        var Ze = (sin(lat) * cose + cos(lat) * sin(lon) * sine)  * dist * 6378.14 / 1.49598e8; //au
-
-        var xe = Xe - cos(lat_obs) * cos(theta) * 6378.14 / 1.49598e8; //au
-        var ye = Ye - cos(lat_obs) * sin(theta) * 6378.14 / 1.49598e8; //au
-        var ze = Ze - sin(lat_obs)              * 6378.14 / 1.49598e8; //au
-        var RA = (Math.atan2(ye, xe) * 180/pi + 360) % 360; //deg
-        var Dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * 180/pi; //deg
-
-        dist *= 6378.14;
-
-        return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
-    }
-
-    function cal_Parabola(planet, JD) {
-        var tp = planet[0];
-        var q = planet[1];
-        var peri = planet[3] * pi / 180; //ω
-        var i = planet[4] * pi / 180;
-        var node = planet[5] * pi / 180; //Ω
-    
-        var Ax =     q * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
-        var Bx = 2 * q * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
-        var Ay =     q * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
-        var By = 2 * q * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
-        var Az =     q * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
-        var Bz = 2 * q * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
-        
-        var b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (JD - tp));
-        if (Math.tan(b/2) >= 0) {
-            var g = Math.atan(Math.pow(Math.tan(b/2), 1/3));
-        } else {
-            var g = -Math.atan(Math.pow(-Math.tan(b/2), 1/3));
-        }
-        var tanv2 = 2 / Math.tan(2*g);
-
-        var x = Ax * (1 - tanv2**2) + Bx * tanv2;
-        var y = Ay * (1 - tanv2**2) + By * tanv2;
-        var z = Az * (1 - tanv2**2) + Bz * tanv2;
-        
-        return [x, y, z];
-    }
-*/
 }
 
 document.body.appendChild(canvas);
