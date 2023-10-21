@@ -13,14 +13,14 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 var cenRA = 270;
-var cenDec = 0;
+var cenDec = -25;
 
-var rgEW = 10;
+var rgEW = 20;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-var magLim = 8.5;
+var magLim = 5;
 
-const zerosize = 5;
+const zerosize = 7;
 
 var xhrcheck = 0;
 
@@ -351,29 +351,64 @@ canvas.addEventListener("touchstart", function(e) {
     startY = e.touches[0].pageY;
 });
 
-// スワイプ中： xy座標を取得
-canvas.addEventListener("touchmove", function(e) {
-    e.preventDefault();
-    moveX = e.changedTouches[0].pageX;
-    moveY = e.changedTouches[0].pageY;
-    if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
-        cenRA  += 2 * rgEW * (moveX - startX) / canvas.width;
-        cenDec += 2 * rgNS * (moveY - startY) / canvas.height;
-        show();
-        startX = moveX;
-        startY = moveY;
-    }
-});
-
+var timeoutId;
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
+// スワイプ中： xy座標を取得
+canvas.addEventListener("touchmove", function(e) {
+    e.preventDefault();
+    var touches = e.changedTouches;
+    if (touches.length == 1) {
+        moveX = e.changedTouches[0].offsetX;
+        moveY = e.changedTouches[0].offsetY;
+        if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
+            cenRA  += 2 * rgEW * (moveX - startX) / canvas.width;
+            cenDec += 2 * rgNS * (moveY - startY) / canvas.height;
+            show();
+            startX = moveX;
+            startY = moveY;
+        }
+    } else {
+        var x1 = touches[0].offsetX ;
+        var y1 = touches[0].offsetY ;
+        var x2 = touches[1].offsetX ;
+        var y2 = touches[1].offsetY ;
+        distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
+        document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
+        document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        clearTimeout( timeoutId ) ;
+        if (baseDistance) {
+            movedDistance = distance;
+            var x3 = (x1 + x2) / 2;
+            var y3 = (y1 + y2) / 2;
+            var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
+            var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
+            var scale = movedDistance / baseDistance;
+            if ( scale && scale != Infinity ) {
+                rgNS *= scale;
+                rgEW *= scale;
+                cenRA = pinchRA + (cenRA - pinchRA) / scale;
+                cenDec = pinchDec + (cenDec - pinchDec) / scale;
+                show(JD);
+                //baseDistance = movedDistance;
+            }
+            timeoutId = setTimeout( function () {
+				baseDistance = 0;
+			}, 100 ) ;
+        } else {
+            baseDistance = distance;
+        }
+    }
+    
+});
 
-var timeoutId ;
+/*
 canvas.ontouchmove = function ( event ) {
     // リロードをストップ
     event.preventDefault();
     var touches = event.changedTouches;
+    document.getElementById("title2").innerHTML = touches.length.toString();
 	// 2本以上の指の場合だけ処理
 	if (touches.length > 1) {
         clearTimeout(timeoutId);
@@ -401,13 +436,13 @@ canvas.ontouchmove = function ( event ) {
                 }
                 //baseDistance = movedDistance;
             //}
-            timeoutId = setTimeout(function(){beseDistance = 0;}, 400);
+            timeoutId = setTimeout(function(){beseDistance = 0;}, 100);
         } else {
             // 基本の距離
             baseDistance = distance;
         }
 	}
-}
+}*/
 
 function show_main(JD){
     ctx.clearRect(0,0,canvas.width,canvas.height);
