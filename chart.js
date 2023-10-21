@@ -12,13 +12,13 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-var cenRA = 50;
+var cenRA = 270;
 var cenDec = 0;
 
-var rgEW = 20;
+var rgEW = 10;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-var magLim = 5.5;
+var magLim = 8.5;
 
 const zerosize = 5;
 
@@ -382,8 +382,9 @@ canvas.ontouchmove = function ( event ) {
         var x2 = touches[1].offsetX ;
         var y2 = touches[1].offsetY ;
         distance = Math.sqrt(Math.pow(x2-x1, 2) + Math.pow(y2-y1, 2));
-        document.getElementById("title").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
-        if (baseDistance > 0) {
+        document.getElementById("title").innerHTML = x1.toString() + ", " + y1.toString() + ", " + x2.toString() + ", " + y2.toString() + ", " + baseDistance.toString();
+        document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        if (baseDistance) {
             movedDistance = distance;
             //if (Math.abs(movedDistance - baseDistance) > dist) {
                 var x3 = (x1 + x2) / 2;
@@ -391,13 +392,15 @@ canvas.ontouchmove = function ( event ) {
                 var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
                 var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
                 var scale = movedDistance / baseDistance;
-                rgNS *= scale;
-                rgEW *= scale;
-                cenRA = pinchRA + (cenRA - pinchRA) / scale;
-                cenDec = pinchDec + (cenDec - pinchDec) / scale;
-                show(JD);
+                if ( scale && scale != Infinity ) {
+                    rgNS *= scale;
+                    rgEW *= scale;
+                    cenRA = pinchRA + (cenRA - pinchRA) / scale;
+                    cenDec = pinchDec + (cenDec - pinchDec) / scale;
+                    show(JD);
+                }
                 //baseDistance = movedDistance;
-            
+            //}
             timeoutId = setTimeout(function(){beseDistance = 0;}, 400);
         } else {
             // 基本の距離
@@ -414,7 +417,7 @@ function show_main(JD){
     const eps = 0.4090926; //黄道傾斜角
     const sine = sin(eps);
     const cose = cos(eps);
-    pi = Math.PI;
+    const pi = Math.PI;
 
     const Sun = ['Sun'];
     const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
@@ -791,33 +794,36 @@ function show_main(JD){
             }
          }
     }
-/*
+
     //Tycho
-    if (cenRA - rgN < 0) {
+    if (cenRA - rgEW < 0) {
         //skyareasは[[a, b]]のaの領域とbの領域を両方含む
-        var skyareas = [[SkyArea(0,             cenDec-rgN), SkyArea(cenRA+rgN, cenDec-rgN)],
-                        [SkyArea(cenRA-rgN+360, cenDec-rgN), SkyArea(359.9,     cenDec-rgN)]];
-        if (Math.floor((cenDec+rgN)/10) > Math.floor((cenDec-rgN)/10)){
+        var skyareas = [[SkyArea(0,             cenDec-rgNS), SkyArea(cenRA+rgNS, cenDec-rgNS)],
+                        [SkyArea(cenRA-rgN+360, cenDec-rgNS), SkyArea(359.9,     cenDec-rgNS)]];
+        if (Math.floor((cenDec+rgNS)/10) > Math.floor((cenDec-rgNS)/10)){
             skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
             skyareas.push([skyareas[1][0]+360, skyareas[1][1]+360]);
         }
         DrawStars(skyareas);
-    } else if (cenRA + rgN >= 360) {
-        var skyareas = [[SkyArea(0,         cenDec-rgN), SkyArea(cenRA+rgN-360, cenDec-rgN)],
-                        [SkyArea(cenRA-rgN, cenDec-rgN), SkyArea(359.9,         cenDec-rgN)]];
-        if (Math.floor((cenDec+rgN)/10) > Math.floor((cenDec-rgN)/10)){
+    } else if (cenRA + rgEW >= 360) {
+        var skyareas = [[SkyArea(0,         cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
+                        [SkyArea(cenRA-rgN, cenDec-rgNS), SkyArea(359.9,         cenDec-rgNS)]];
+        if (Math.floor((cenDec+rgNS)/10) > Math.floor((cenDec-rgNS)/10)){
             skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
             skyareas.push([skyareas[1][0]+360, skyareas[1][1]+360]);
         }
         DrawStars(skyareas);
     } else {
-        var skyareas = [[SkyArea(cenRA-rgN, cenDec-rgN), SkyArea(cenRA+rgN, cenDec-rgN)]];
-        if (Math.floor((cenDec+rgN)/10) > Math.floor((cenDec-rgN)/10)){
-            skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
+        var skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
+        for (var i=1; i<=Math.floor((cenDec+rgNS)/10)-Math.floor((cenDec-rgNS)/10); i++) {
+            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
         }
+        //if (Math.floor((cenDec+rgNS)/10) > Math.floor((cenDec-rgNS)/10)){
+        //    skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
+        //}
         DrawStars(skyareas);
     }
-*/
+
     //惑星、惑星の名前
     ctx.font = '20px serif';
     ctx.textBaseline = 'bottom';
@@ -1004,7 +1010,7 @@ function show_main(JD){
         }
     }
 
-/*
+
     function DrawStars(skyareas){
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
@@ -1013,16 +1019,16 @@ function show_main(JD){
                 var RA = parseFloat(Tycho[3*i]);
                 var Dec = parseFloat(Tycho[3*i+1]);
                 var mag = parseFloat(Tycho[3*i+2]);
-                if (Math.abs(Dec-cenDec) < rgN && Math.abs(RApos(RA)) < rgN && mag < 10) {
-                    var [x, y] = coordN(RA, Dec);
+                if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW && mag < magLim) {
+                    var [x, y] = coordW(RA, Dec);
                     ctx.beginPath();
-                    ctx.arc(x, y, sizeN(mag), 0, 2 * pi, false);
+                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
                     ctx.fill();
                 }
             }
         }
     }
-*/
+
 
     function calc(planet, JD) {
         if (planet == Sun) {
