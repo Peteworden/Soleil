@@ -18,11 +18,9 @@ var cenDec = 0;
 var rgEW = 20;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-const maglimW = 6.5;
-const maglimN = 10;
+var magLim = 5.5;
 
-const zerosizeW = 5;
-const zerosizeN = 10;
+const zerosize = 5;
 
 var xhrcheck = 0;
 
@@ -369,14 +367,16 @@ canvas.addEventListener("touchmove", function(e) {
 
 // 基本の距離
 var baseDistance = 0 ;
+var movedDistance = 0;
 
 // 距離を測る関数
 function getDistance (event) {
+    // リロードをストップ
 	event.preventDefault();
 	var touches = event.changedTouches;
 	// 2本以上の指の場合だけ処理
 	if ( touches.length > 1 ) {
-        document.getElementById("title").innerHTML = touches[0].pageX + ", " + touches[0].pageY + ", " + touches[1].pageX + ", " + touches[1].pageY;
+        //document.getElementById("title").innerHTML = touches[0].pageX + ", " + touches[0].pageY + ", " + touches[1].pageX + ", " + touches[1].pageY;
 		// 座標1 (1本目の指)
 		var x1 = touches[0].pageX ;
 		var y1 = touches[0].pageY ;
@@ -384,29 +384,43 @@ function getDistance (event) {
 		var x2 = touches[1].pageX ;
 		var y2 = touches[1].pageY ;
 		// 2点間の距離
-		return Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) ) ;
-	} else {
-        document.getElementById("title").innerHTML = "one finger";
-    }
+		//return Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) ) ;
+        return touches;
+	}
 	return 0 ;
 }
 
 canvas.ontouchmove = function ( event ) {
-    console.log(baseDistance);
-    document.getElementById("title").innerHTML = baseDistance.toString();
-    baseDistance = getDistance( event ) ;
-	if ( baseDistance ) {
+    document.getElementById("title").innerHTML = baseDistance.toString() + ", " + movedDistance.toString();
+    //baseDistance = getDistance( event ) ;
+	if (baseDistance) {
 		// 変化後の距離
-		var movedDistance = getDistance( event ) ;
-        //rgNS *= movedDistance / baseDistance;
-        //rgEW *= movedDistance / baseDistance;
-        //show(JD);
+        touches = getDistance(event);
+        //document.getElementById("title").innerHTML = touches.toString();
+        if (touches != 0) {
+            var x1 = touches[0].pageX ;
+            var y1 = touches[0].pageY ;
+            var x2 = touches[1].pageX ;
+            var y2 = touches[1].pageY ;
+            movedDistance = Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) );
+            if (Math.abs(movedDistance - baseDistance) > dist) {
+                rgNS *= movedDistance / baseDistance;
+                rgEW *= movedDistance / baseDistance;
+                cenRA = 2;
+                show(JD);
+                baseDistance = movedDistance;
+            }
+        }
 	} else {
 		// 基本の距離
-		baseDistance = getDistance( event ) ;
-        //rgNS *= movedDistance / baseDistance;
-        //rgEW *= movedDistance / baseDistance;
-        //show(JD);
+        touches = getDistance(event);
+        if (touches != 0) {
+            var x1 = touches[0].pageX ;
+            var y1 = touches[0].pageY ;
+            var x2 = touches[1].pageX ;
+            var y2 = touches[1].pageY ;
+            baseDistance = Math.sqrt( Math.pow( x2-x1, 2 ) + Math.pow( y2-y1, 2 ) ) ;
+        }     
 	}
 }
 
@@ -797,10 +811,10 @@ function show_main(JD){
         var Dec = HIPDecary[i];
         var mag = HIPmagary[i];
         if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-            if (mag < maglimW) {
+            if (mag < magLim) {
                 var [x, y] = coordW(RA, Dec);
                 ctx.beginPath();
-                ctx.arc(x, y, sizeW(mag), 0, 2 * pi, false);
+                ctx.arc(x, y, size(mag), 0, 2 * pi, false);
                 ctx.fill();
             }
             /*
@@ -893,7 +907,7 @@ function show_main(JD){
                 var mag = Vlist[i];
                 ctx.fillStyle = '#F33'
                 ctx.beginPath();
-                ctx.arc(x, y, Math.max(sizeW(mag), 0.5), 0, 2 * pi, false);
+                ctx.arc(x, y, Math.max(size(mag), 0.5), 0, 2 * pi, false);
                 ctx.fill();
                 ctx.fillStyle = '#FF8';
                 ctx.fillText(JPNplanets[i], x, y);
@@ -1037,14 +1051,14 @@ function show_main(JD){
         return [x, y];
     }
 */
-    function sizeW (mag) {
-        if (mag > maglimW) {
-            return zerosizeW / (maglimW + 1);
+    function size (mag) {
+        if (mag > magLim) {
+            return zerosize / (magLim + 1);
         } else {
-            return zerosizeW * (maglimW + 1 - mag) / (maglimW + 1);
+            return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
-
+/*
     function sizeN (mag) {
         if (mag > maglimN) {
             return zerosizeN / (maglimN + 1);
@@ -1052,6 +1066,7 @@ function show_main(JD){
             return zerosizeN * (maglimN + 1 - mag) / (maglimN + 1);
         }
     }
+    */
 /*
     function DrawStars(skyareas){
         for (var arearange of skyareas) {
