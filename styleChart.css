@@ -1,4 +1,8 @@
 input {
-    width: 4em;
+    width: 3em;
     max-width: 100%;
+}
+
+canvas {
+    width: 100%;
 }

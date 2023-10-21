@@ -9,8 +9,11 @@ const yellowColor = 'yellow'
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
+//canvas.width = canvas.clientWidth;
 canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+console.log(canvas.clientWidth);
+canvas.height = window.innerHeight - document.getElementById('title').offsetLeft - document.getElementById('setting').offsetLeft
+                - document.getElementById('showBtn').offsetLeft - document.getElementById('coordtext').offsetLeft;
 
 var cenRA = 270;
 var cenDec = -25;
@@ -18,14 +21,21 @@ var cenDec = -25;
 var rgEW = 30;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-var magLim = 10.5 - 1.8 * Math.log(rgEW);
-if (magLim > 10) {
-    magLim = 10;
-} else if (magLim < 4) {
-    magLim = 4;
+function find_magLim(rgEW) {
+    var magLim = 10.5 - 1.8 * Math.log(rgEW);
+    if (magLim > 10) {
+        magLim = 10;
+    } else if (magLim < 4) {
+        magLim = 4;
+    }
+    return magLim;
 }
+var magLim = find_magLim(rgEW);
 
-const zerosize = 13 - 2.4 * Math.log(rgEW + 3);
+function find_zerosize(EW) {
+    return 13 - 2.4 * Math.log(rgEW + 3)
+}
+var zerosize = find_zerosize(rgEW);
 
 var xhrcheck = 0;
 
@@ -164,26 +174,11 @@ xhrX.onreadystatechange = function() {
             const option1 = document.createElement('option');
             option1.innerHTML = name;
             document.getElementById('observer').appendChild(option1);
-            const option2 = document.createElement('option');
-            option2.innerHTML = name;
-            document.getElementById('target').appendChild(option2);
                         
             if (url.searchParams.has('observer') && xhrcheck == 7) {
                 for (var i=0; i<ENGplanets.length; i++) {
                     if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
                         document.getElementById("observer").value = JPNplanets[i];
-                        break;
-                    }
-                }
-                defaultcheck++;
-            } else {
-                defaultcheck++;
-            }
-
-            if (url.searchParams.has('target')) {
-                for (var i=0; i<ENGplanets.length; i++) {
-                    if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                        document.getElementById("target").value = JPNplanets[i];
                         break;
                     }
                 }
@@ -311,7 +306,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 7 && defaultcheck == 8){
+    if (xhrcheck == 7 && defaultcheck == 7){
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -384,7 +379,7 @@ canvas.ontouchmove = function ( event ) {
     // リロードをストップ
     event.preventDefault();
     var touches = event.changedTouches;
-    document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
+    //document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
 	// 2本以上の指の場合だけ処理
     if (touches.length.toString() != '1') {
 	//if (touches.length > 1) {
@@ -404,8 +399,8 @@ canvas.ontouchmove = function ( event ) {
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
             var scale = 1 + (movedDistance / baseDistance - 1) * 0.3;
-            document.getElementById("title2").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
-            document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
+            //document.getElementById("title2").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
+            //document.getElementById("title").innerHTML = cenRA.toString() + ", " + cenDec.toString() + ", " + pinchRA.toString() + ", " + pinchDec.toString() + ", " + baseDistance.toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
                 rgEW /= scale;
@@ -425,19 +420,22 @@ canvas.ontouchmove = function ( event ) {
                 if (cenDec < -90) {
                     cenDec = -90;
                 }
+                magLim = find_magLim(rgEW);
+                zerosize = find_zerosize(rgEW);
                 show_main();
             }
             //baseDistance = movedDistance;
             //}
             timeoutId = setTimeout(function(){
                 baseDistance = 0;
-            }, 100);
+            }, 300);
         } else {
             // 基本の距離
             baseDistance = distance;
         }
 	} else {
-        document.getElementById("title").innerHTML = "not in";
+        1+1;
+        //document.getElementById("title").innerHTML = "not in";
     }
 }
 
@@ -948,9 +946,8 @@ function show_main(){
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
 
-/*
     // 観測対象
-    var Name = document.getElementById("target").value;
+/*    var Name = document.getElementById("target").value;
     var Selected_number = JPNplanets.indexOf(Name);
 
     if (Obs_num == Selected_number) {
@@ -1090,7 +1087,7 @@ function show_main(){
         if (Math.min(Dec1, Dec2) <= cenDec && cenDec < Math.max(Dec1, Dec2)) {
             var RA1 = parseFloat(boundary[5*i+1]);
             var RA2 = parseFloat(boundary[5*i+3]);
-            if (cenRA >= (Dec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
+            if (cenRA >= (cenDec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
                 var No = parseInt(boundary[5*i]) - 1;
                 A[No] = (A[No] + 1) % 2;
             }
@@ -1098,6 +1095,7 @@ function show_main(){
     }
     
     var constellation = "";
+    console.log(A);
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
             constellation = CLnames[i] + "座  ";
@@ -1274,7 +1272,7 @@ function show_main(){
         var Dectext = "赤緯 -" + Math.floor(-cenDec) + "° " + Math.round((-cenDec-Math.floor(-cenDec))*60) + "'(J2000.0)  ";
     }
     
-    var coordtext = constellation + "__" + RAtext + Dectext + "__" + Astr + hstr;
+    var coordtext = constellation + "__" + RAtext + Dectext + "\n" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
 
