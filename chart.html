@@ -1,0 +1,90 @@
+<!--2023/3/31~-->
+<html>
+    <head>
+        <title>Soleil Web</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="styleChart.css">
+    </head>
+    <body>
+        <h3>星図</h3>
+        <div class="setting">
+            <div class="settingBlock">
+                <div class="mainSettingRows">
+                    <label><input type="text" id="yearText">年</label>
+                    <label><input type="text" id="monthText">月</label>
+                    <label><input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">時</label>
+                    <script>
+                        var ymdhm = new Date();
+                        document.getElementById('yearText').value = ymdhm.getFullYear();
+                        document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+                        document.getElementById('dateText').value = ymdhm.getDate();
+                        document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+                    </script>
+                    <button type="button" onclick="now()">現在時刻</button>
+                </div>
+                
+                <div class="mainSettingRows">
+                    <select id="observer">
+                        <option>太陽</option>
+                        <option>水星</option>
+                        <option>金星</option>
+                        <option selected>地球</option>
+                        <option>火星</option>
+                        <option>木星</option>
+                        <option>土星</option>
+                        <option>天王星</option>
+                        <option>海王星</option>
+                        <option>月</option>
+                        <option>Ceres</option>
+                        <option>Vesta</option>
+                    </select>
+                    <label>から</label>
+                    <select id="target">
+                        <option>太陽</option>
+                        <option>水星</option>
+                        <option>金星</option>
+                        <option>地球</option>
+                        <option>火星</option>
+                        <option>木星</option>
+                        <option>土星</option>
+                        <option>天王星</option>
+                        <option>海王星</option>
+                        <option selected>月</option>
+                        <option>Ceres</option>
+                        <option>Vesta</option>
+                    </select>
+                </div>
+                
+                <div class="mainSettingRows">
+                    <select id="NSCombo">
+                        <option selected>北緯</option>
+                        <option>南緯</option>
+                    </select>
+                    <label><input type="text" id="lat" size="1" value="35">°</label>
+                    <select id="EWCombo">
+                        <option selected>東経</option>
+                        <option>西経</option>
+                    </select>
+                    <label><input type="text" id="lon" size="1" value="135">°</label>
+                </div>
+            </div>
+
+            <div class="settingBlock">
+                <br>
+                <button type="button" onclick="show_JD_plus1()">１日進む</button>
+                <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+            </div>
+
+        </div>
+
+        <button class="showBtn" type="button" onclick="show()">表示</button>
+        <a href="SoleilWhole.html">全天バージョンもあります</a>
+        <label>____</label>
+        <a href="PeteHOME.html">PeteHOMEに戻る</a>
+        <div id="coordtext"></div>
+        <div class="result">
+            <script src="chart.js"></script>
+        </div>
+</html>
