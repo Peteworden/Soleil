@@ -15,7 +15,7 @@ canvas.height = window.innerHeight;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 10;
+var rgEW = 30;
 var rgNS = rgEW * canvas.height / canvas.width;
 
 var magLim = 10.5 - 1.8 * Math.log(rgEW);
@@ -378,6 +378,7 @@ var movedDistance = 0;
 var distance = 0;
 
 var timeoutId ;
+//ズーム
 canvas.ontouchmove = function ( event ) {
     // リロードをストップ
     event.preventDefault();
@@ -404,8 +405,8 @@ canvas.ontouchmove = function ( event ) {
                 var y3 = (y1 + y2) / 2;
                 var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
                 var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-                var scale = movedDistance / baseDistance;
-                if (scale && scale != Infinity && rgEW * scale > 0.3) {
+                var scale = movedDistance / baseDistance / 20;
+                if (scale && scale != Infinity && rgEW * scale > 0.3 && rgEW * scale < 90) {
                     rgNS *= scale;
                     rgEW *= scale;
                     cenRA = pinchRA + (cenRA - pinchRA) / scale;
@@ -488,9 +489,10 @@ function calculation(JD) {
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
 
     // 観測対象
-    var Name = document.getElementById("target").value;
-    var Selected_number = JPNplanets.indexOf(Name);
+    //var Name = document.getElementById("target").value;
+    //var Selected_number = JPNplanets.indexOf(Name);
 
+/*
     if (Obs_num == Selected_number) {
         if (Obs_num != 3) {
             alert("観測地点と対象天体は別にしてください。\n代わりに地球を表示します。");
@@ -510,6 +512,7 @@ function calculation(JD) {
         alert("代わりに地球を表示します");
         document.getElementById("target").options[3].selected = true;
     }
+*/
 
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
@@ -518,7 +521,7 @@ function calculation(JD) {
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
-
+/*
     if (Selected_number == 9) {
         if (url.searchParams.has('target')) {
             url.searchParams.delete('target');
@@ -526,7 +529,7 @@ function calculation(JD) {
     } else {
         url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
     }
-
+*/
     if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
         if (url.searchParams.has('lat')) {
             url.searchParams.delete('lat');
@@ -563,10 +566,10 @@ function calculation(JD) {
     var Xlist = new Array(20);
     var Ylist = new Array(20);
     var Zlist = new Array(20);
-    var RAlist = new Array(20);
-    var Declist = new Array(20);
-    var Distlist = new Array(20);
-    var Vlist = new Array(20);
+//    var RAlist = new Array(20);
+//    var Declist = new Array(20);
+//    var Distlist = new Array(20);
+//    var Vlist = new Array(20);
 
     var [X, Y, Z] = calc(planets[Obs_num], JD);
     var [RA_Sun, Dec_Sun, dist] = xyz_to_RADec(-X, -Y, -Z);
@@ -927,7 +930,7 @@ function show_main(JD){
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
-
+/*
     // 観測対象
     var Name = document.getElementById("target").value;
     var Selected_number = JPNplanets.indexOf(Name);
@@ -951,7 +954,7 @@ function show_main(JD){
         alert("代わりに地球を表示します");
         document.getElementById("target").options[3].selected = true;
     }
-
+*/
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
             url.searchParams.delete('observer');
@@ -959,7 +962,7 @@ function show_main(JD){
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
-
+/*
     if (Selected_number == 9) {
         if (url.searchParams.has('target')) {
             url.searchParams.delete('target');
@@ -967,7 +970,7 @@ function show_main(JD){
     } else {
         url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
     }
-
+*/
     if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
         if (url.searchParams.has('lat')) {
             url.searchParams.delete('lat');
@@ -1157,16 +1160,16 @@ function show_main(JD){
     //Tycho
     if (cenRA - rgEW < 0) {
         //skyareasは[[a, b]]のaの領域とbの領域を両方含む
-        var skyareas = [[SkyArea(0,             cenDec-rgNS), SkyArea(cenRA+rgNS, cenDec-rgNS)],
-                        [SkyArea(cenRA-rgN+360, cenDec-rgNS), SkyArea(359.9,     cenDec-rgNS)]];
+        var skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgNS, cenDec-rgNS)],
+                        [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
         if (Math.floor((cenDec+rgNS)/10) > Math.floor((cenDec-rgNS)/10)){
             skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
             skyareas.push([skyareas[1][0]+360, skyareas[1][1]+360]);
         }
         DrawStars(skyareas);
     } else if (cenRA + rgEW >= 360) {
-        var skyareas = [[SkyArea(0,         cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
-                        [SkyArea(cenRA-rgN, cenDec-rgNS), SkyArea(359.9,         cenDec-rgNS)]];
+        var skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
+                        [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
         if (Math.floor((cenDec+rgNS)/10) > Math.floor((cenDec-rgNS)/10)){
             skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
             skyareas.push([skyareas[1][0]+360, skyareas[1][1]+360]);
