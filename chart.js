@@ -13,8 +13,7 @@ const ctx = canvas.getContext('2d');
 
 //canvas.width = canvas.clientWidth;
 canvas.width = window.innerWidth;
-console.log(canvas.clientWidth, canvas.offsetTop);
-canvas.height = window.innerHeight - document.getElementById('title').offsetTop - document.getElementById('title').offsetHeight;
+canvas.height = window.innerHeight - 30;
 
 var cenRA = 270;
 var cenDec = -25;
