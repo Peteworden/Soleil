@@ -1,6 +1,15 @@
+h3 {
+    margin: 2px;
+    height: 50px;
+}
+
 input {
     width: 3em;
     max-width: 100%;
+}
+
+.coordtext {
+    height: 50px;
 }
 
 canvas {

@@ -381,6 +381,7 @@ var timeoutId ;
 // タッチ開始時： xy座標を取得
 canvas.addEventListener("touchstart", function(e) {
     e.preventDefault();
+    document.getElementById("title").innerHTML = e.touches.length.toString() + " 000000000000000000000000000000000";
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
 });
@@ -389,7 +390,7 @@ canvas.addEventListener("touchstart", function(e) {
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
-    document.getElementById("title").innerHTML = touches.length.toString() + " 1111111111111111111111111111111";
+    document.getElementById("title").innerHTML = touches.length.toString() + " 1111 11111 11111 11111 11111 111 1111";
     if (touches.length.toString() == '1') {
         moveX = touches[0].pageX;
         moveY = touches[0].pageY;
