@@ -446,7 +446,7 @@ canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
-        if (pinchFrag == 0) {
+        //if (pinchFrag == 0) {
             moveX = touches[0].pageX;
             moveY = touches[0].pageY;
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
@@ -462,9 +462,9 @@ canvas.addEventListener("touchmove", function(e) {
                 startX = moveX;
                 startY = moveY;
             }
-        }
+        //}
     } else {
-        pinchFrag = 1;
+        //pinchFrag = 1;
         var x1 = touches[0].pageX ;
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
@@ -511,12 +511,12 @@ canvas.addEventListener("touchmove", function(e) {
 })
 
 canvas.addEventListener('touchend', function(e) {
-    pinchFrag = 0;
+    //pinchFrag = 0;
     baseDistance = 0;
 });
 
 canvas.addEventListener('touchcancel', function(e) {
-    pinchFrag = 0;
+    //pinchFrag = 0;
     baseDistance = 0;
 });
 
