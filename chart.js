@@ -416,10 +416,10 @@ canvas.addEventListener("touchmove", function(e) {
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
-            if (Math.abs(movedDistance - baseDistance) < dist_detect / 2) {
-                document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString() + "wait";
-                return;
-            }
+            //if (Math.abs(movedDistance - baseDistance) < dist_detect / 2) {
+            //    document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString() + " wait";
+            //    return;
+            //}
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
@@ -461,6 +461,11 @@ canvas.addEventListener("touchmove", function(e) {
             document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString();
         }
     }
+});
+
+canvas.addEventListener('touchend', function(e) {
+    baseDistance = 0;
+    document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
 });
 
 canvas.addEventListener('touchcancel', function(e) {
