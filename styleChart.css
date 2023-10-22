@@ -1,12 +1,14 @@
 body {
-    background-color: gray;
+    background-color: black;
     color: white;
     margin: 0px;
     position: relative;
 }
 
 h3 {
-    margin: 5px 0px 0px 20px;
+    background-color: gray;
+    padding: 5px 0px 0px 20px;
+    margin: 0px;
     height: 30px;
 }
 
@@ -24,14 +26,32 @@ h3 {
 
 .setting {
     position: absolute;
-    background-color: #c1cc9a;
+    color: rgb(242, 192, 192);
+    background-color: #8b321c;
+    padding: 20px;
     margin: auto;
     top: 50%;
     left: 50%;
     -webkit-transform : translate(-50%,-50%);
     transform : translate(-50%,-50%);
+    border-radius: 1rem;
     width: 300px;
     text-align: center;
+}
+
+input {
+    color: whitesmoke;
+    background-color: #c22424;
+}
+
+button {
+    color: #e6c0c0;
+    background-color: #c22424;
+}
+
+select {
+    color: whitesmoke;
+    background-color: #c22424;
 }
 
 .showBtn {

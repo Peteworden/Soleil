@@ -21,8 +21,9 @@ var cenDec = -25;
 var rgEW = 10;
 var rgNS = rgEW * canvas.height / canvas.width;
 
-document.getElementById('title').innerHTML = "星図　左右の視野角：" + Math.round(rgEW * 20) / 10 + "°";
+var rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
 
+var magLimtext;
 function find_magLim(rgEW) {
     var magLim = 10.5 - 1.8 * Math.log(rgEW);
     if (magLim > 10) {
@@ -30,6 +31,7 @@ function find_magLim(rgEW) {
     } else if (magLim < 4) {
         magLim = 4;
     }
+    magLimtext = "~" + Math.round(magLim * 10) / 10 + "等級";
     return magLim;
 }
 var magLim = find_magLim(rgEW);
@@ -312,9 +314,9 @@ function now() {
     /*url.searchParams.set('time', `${y}-${m}-${d}-${ymdhm.getHours()}-${Math.round(ymdhm.getMinutes()*10/60)}`);
     console.log(url.href);
     history.replaceState('', '', url.href);*/
-    showingJD = YMDH_to_JD(y, m, d, h);
-    calculation(showingJD);
-    show_main();
+    //showingJD = YMDH_to_JD(y, m, d, h);
+    //calculation(showingJD);
+    //show_main();
 }
 
 //基本的にYMDHはJST, JDはTT
@@ -352,6 +354,7 @@ function YMDH_to_JD(Y, M, D, H){
 
 function show_initial(){
     if (xhrcheck == 9 && defaultcheck == 4){
+        now();
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -409,7 +412,7 @@ function show_JD_minus1(){
     show_main();
 }
 
-var startX, startY, moveX, moveY, dist_detect = 30;// distはスワイプを感知する最低距離（ピクセル単位）
+var startX, startY, moveX, moveY, dist_detect = 15;// distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
@@ -475,7 +478,7 @@ canvas.addEventListener("touchmove", function(e) {
                 if (cenDec < -90) {
                     cenDec = -90;
                 }
-                document.getElementById('title').innerHTML = "星図　左右の視野角：" + Math.round(rgEW * 20) / 10 + "°";
+                rgtext = "左右の視野角：" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim(rgEW);
                 zerosize = find_zerosize(rgEW);
                 show_main();
@@ -1107,13 +1110,14 @@ function show_main(){
     }
 
     // 星座名
-    ctx.font = '18px serif';
+    ctx.font = '20px times new roman';
     if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = 'white';
         for (i=0; i<88; i++){
-            var RA = constPos[2*i];
-            var Dec = constPos[2*i+1];
-            var constName = CLNames[i];
+            var RA = 1.0 * constPos[2*i];
+            var Dec = 1.0 * constPos[2*i+1];
+            var constName = CLnames[i];
+            console.log(RA, Dec, constName);
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                 var [x, y] = coordW(RA, Dec);
                 ctx.fillText(constName, x-40, y-10);
@@ -1133,7 +1137,16 @@ function show_main(){
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                 var [x, y] = coordW(RA, Dec);
                 ctx.beginPath();
-                ctx.arc(x, y, 5, 0, 2 * pi, false);
+                if (type == "1") { //銀河
+                    ctx.strokeRect(x-8, y-4, 16, 8);
+                } else if (type == "3") { //星雲
+                    ctx.arc(x, y, 5, 0, 2 * pi, false);
+                } else { //星団、M40:二重星、M73
+                    ctx.moveTo(x  , y-6);
+                    ctx.lineTo(x-5, y+3);
+                    ctx.lineTo(x+5, y+3);
+                    ctx.lineTo(x  , y-6);
+                }
                 ctx.stroke();
                 ctx.fillText("M" + (i+1), x+5, y-5);
             }
@@ -1212,7 +1225,7 @@ function show_main(){
         var Dectext = "赤緯 -" + Math.floor(-cenDec) + "° " + Math.round((-cenDec-Math.floor(-cenDec))*60) + "' (J2000.0)  ";
     }
     
-    var coordtext = constellation + "<br>" + RAtext + Dectext + "<br>" + Astr + hstr;
+    var coordtext = constellation + "　" + rgtext + "　" + magLimtext + "<br>" + RAtext + Dectext + "<br>" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
 
