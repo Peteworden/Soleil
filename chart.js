@@ -434,6 +434,8 @@ var movedDistance = 0;
 var distance = 0;
 var pinchFrag = 0;
 
+document.getElementById("title").innerHTML = "1";
+
 // タッチ開始
 canvas.addEventListener("touchstart", function(e) {
     e.preventDefault();
@@ -447,7 +449,9 @@ canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
+        document.getElementById("title").innerHTML = "1 1";
         if (pinchFrag == 0) {
+            document.getElementById("title").innerHTML = "1 1 valid";
             moveX = touches[0].pageX;
             moveY = touches[0].pageY;
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
@@ -465,12 +469,14 @@ canvas.addEventListener("touchmove", function(e) {
             }
         }
     } else {
+        document.getElementById("title").innerHTML = "1 2";
         pinchFrag = 1;
         var x1 = touches[0].pageX ;
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
         var y2 = touches[1].pageY ;
-        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
+        //document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
@@ -512,6 +518,7 @@ canvas.addEventListener("touchmove", function(e) {
 })
 
 canvas.addEventListener('touchend', function(e) {
+    document.getElementById("title").innerHTML = "1 end";
     //pinchFrag = 0;
     baseDistance = 0;
 });
