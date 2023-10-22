@@ -432,36 +432,39 @@ var startX, startY, moveX, moveY, dist_detect = 15;// distはスワイプを感�
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
-var timeoutId ;
+var pinchFrag;
 
-// タッチ開始時： xy座標を取得
+// タッチ開始
 canvas.addEventListener("touchstart", function(e) {
     e.preventDefault();
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
 });
 
-// スワイプ中： xy座標を取得
+// スワイプ中またはピンチイン・ピンチアウト中
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
-        moveX = touches[0].pageX;
-        moveY = touches[0].pageY;
-        if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
-            cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
-            cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
-            if (cenDec > 90) {
-                cenDec = 90;
+        if (pinchFrag == 0) {
+            moveX = touches[0].pageX;
+            moveY = touches[0].pageY;
+            if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
+                cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
+                cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
+                if (cenDec > 90) {
+                    cenDec = 90;
+                }
+                if (cenDec < -90) {
+                    cenDec = -90;
+                }
+                show_main();
+                startX = moveX;
+                startY = moveY;
             }
-            if (cenDec < -90) {
-                cenDec = -90;
-            }
-            show_main();
-            startX = moveX;
-            startY = moveY;
         }
     } else {
+        pinchFrag = 1;
         var x1 = touches[0].pageX ;
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
@@ -505,15 +508,79 @@ canvas.addEventListener("touchmove", function(e) {
             baseDistance = distance;
         }
     }
-});
+})
 
 canvas.addEventListener('touchend', function(e) {
+    pinchFrag = 0;
     baseDistance = 0;
 });
 
 canvas.addEventListener('touchcancel', function(e) {
+    pinchFrag = 0;
     baseDistance = 0;
 });
+
+
+canvas.onmousedown = function(event){
+    startX = event.pageX;
+    startY = event.pageY;
+    canvas.addEventListener("mousemove", onMouseMove);
+}
+
+//canvas.addEventListener("mousemove", onMouseMove);
+var onMouseMove = function(e) {
+    //e.preventDefault();
+    moveX = e.pageX;
+    moveY = e.pageY;
+    if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
+        cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
+        cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
+        if (cenDec > 90) {
+            cenDec = 90;
+        }
+        if (cenDec < -90) {
+            cenDec = -90;
+        }
+        show_main();
+        startX = moveX;
+        startY = moveY;
+    }
+}
+
+canvas.onmouseup = function(event){
+    canvas.removeEventListener("mousemove",onMouseMove);
+}
+
+canvas.onwheel = function zoom(event) {
+    event.preventDefault();
+    var x3 = event.pageX - canvas.offsetLeft;
+    var y3 = event.pageY - canvas.offsetTop;
+    var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
+    var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
+    var scale = 1 - event.deltaY * 0.0005;
+    rgNS /= scale;
+    rgEW /= scale;
+    cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
+    cenDec =  pinchDec + (cenDec - pinchDec) / scale;
+    if (rgEW < 0.3) {
+        rgNS = 0.3 * canvas.height / canvas.width;
+        rgEW = 0.3;
+    }
+    if (rgNS > 90) {
+        rgNS = 90;
+        rgEW = 90 * canvas.width / canvas.height;
+    }
+    if (cenDec > 90) {
+        cenDec = 90;
+    }
+    if (cenDec < -90) {
+        cenDec = -90;
+    }
+    rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
+    magLim = find_magLim(rgEW);
+    zerosize = find_zerosize(rgEW);
+    show_main();
+}
 
 //位置推算とURLの書き換え
 function calculation(JD) {
