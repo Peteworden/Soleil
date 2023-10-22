@@ -447,6 +447,7 @@ canvas.addEventListener("touchmove", function(e) {
                 magLim = find_magLim(rgEW);
                 zerosize = find_zerosize(rgEW);
                 show_main();
+                baseDistance = distance;
             }
             //var outtime= parseFloat(document.getElementById('outtime').value);
             //timeoutId = setTimeout(function(){
@@ -455,15 +456,17 @@ canvas.addEventListener("touchmove", function(e) {
         } else {
             // 基本の距離
             baseDistance = distance;
-            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString()
+            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString();
         }
     }
 });
 
 canvas.addEventListener('touchcancel', function(e) {
     baseDistance = 0;
+    document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
 });
 
+/*
 //ズーム
 canvas.ontouchmove = function (event) {
     // リロードをストップ
@@ -525,7 +528,7 @@ canvas.ontouchmove = function (event) {
         //document.getElementById("title").innerHTML = "not in";
     }
 }
-
+*/
 //位置推算とURLの書き換え
 function calculation(JD) {
     const eps = 0.4090926; //黄道傾斜角
