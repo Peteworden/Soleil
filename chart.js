@@ -115,7 +115,6 @@ xhrM.send();
 xhrM.onreadystatechange = function() {
     if(xhrM.readyState === 4 && xhrM.status === 200) {
         const MessierAry = xhrM.responseText.split(',');
-        console.log(MessierAry);
         for (i=0; i<110; i++){
             messier[3*i] = 15.0 * MessierAry[8*i+1] + (1.0 * MessierAry[8*i+2] + MessierAry[8*i+3] / 10.0) / 4.0;
             messier[3*i+1] = 1.0 * MessierAry[8*i+5] + MessierAry[8*i+6] / 60.0;
@@ -125,7 +124,6 @@ xhrM.onreadystatechange = function() {
             messier[3*i+2] = parseInt(MessierAry[8*i+7]);
         }
         console.log("Messier ready");
-        console.log(messier);
         xhrcheck++;
         show_initial();
     }
@@ -142,6 +140,22 @@ xhrCL.onreadystatechange = function() {
     if(xhrCL.readyState === 4 && xhrCL.status === 200) {
         CLnames = xhrCL.responseText.split('\r\n');
         console.log("constellations' names ready");
+        xhrcheck++;
+        show_initial();
+    }
+}
+
+//星座の位置
+var constPos = [];
+var constPosurl = "https://peteworden.github.io/Soleil/ConstellationPositionNew_forJS.txt";
+var xhrconstPos = new XMLHttpRequest();
+
+xhrconstPos.open('GET', constPosurl);
+xhrconstPos.send();
+xhrconstPos.onreadystatechange = function() {
+    if(xhrconstPos.readyState === 4 && xhrconstPos.status === 200) {
+        constPos = xhrconstPos.responseText.split(',');
+        console.log("constellations' positions ready");
         xhrcheck++;
         show_initial();
     }
@@ -337,7 +351,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 8 && defaultcheck == 4){
+    if (xhrcheck == 9 && defaultcheck == 4){
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -1092,6 +1106,21 @@ function show_main(){
         DrawStars(skyareas);
     }
 
+    // 星座名
+    ctx.font = '18px serif';
+    if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
+        ctx.fillStyle = 'white';
+        for (i=0; i<88; i++){
+            var RA = constPos[2*i];
+            var Dec = constPos[2*i+1];
+            var constName = CLNames[i];
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                var [x, y] = coordW(RA, Dec);
+                ctx.fillText(constName, x-40, y-10);
+            }
+        }
+    }
+
     //メシエ天体
     ctx.font = '16px serif';
     if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
@@ -1107,7 +1136,6 @@ function show_main(){
                 ctx.arc(x, y, 5, 0, 2 * pi, false);
                 ctx.stroke();
                 ctx.fillText("M" + (i+1), x+5, y-5);
-                console.log(i, RA, Dec);
             }
         }
     }
