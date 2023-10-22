@@ -7,11 +7,11 @@ const yellowColor = 'yellow'
 //'yellow'は全部yellowColorにする
 
 document.getElementById('setting').style.visibility = "hidden";
+document.getElementById('description').style.visibility = "hidden";
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 
-//canvas.width = canvas.clientWidth;
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight - 30;
 
@@ -362,11 +362,27 @@ function show_initial(){
 }
 
 function showSetting() {
+    document.getElementById("descriptionBtn").setAttribute("disabled", true);
     document.getElementById('setting').style.visibility = "visible";
 }
 
-function show() {
+function finishSetting() {
+    document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
+    show();
+}
+
+function descriptionFunc() {
+    if (document.getElementById('description').style.visibility == "visible") {
+        document.getElementById("settingBtn").removeAttribute("disabled");
+        document.getElementById('description').style.visibility = "hidden";
+    } else {
+        document.getElementById("settingBtn").setAttribute("disabled", true);
+        document.getElementById('description').style.visibility = "visible";
+    }
+}
+
+function show() {
     let year = parseInt(document.getElementById('yearText').value);
     let month = parseInt(document.getElementById('monthText').value);
     let date = parseInt(document.getElementById('dateText').value);
@@ -478,7 +494,7 @@ canvas.addEventListener("touchmove", function(e) {
                 if (cenDec < -90) {
                     cenDec = -90;
                 }
-                rgtext = "左右の視野角：" + Math.round(rgEW * 20) / 10 + "°";
+                rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim(rgEW);
                 zerosize = find_zerosize(rgEW);
                 show_main();
@@ -1117,7 +1133,6 @@ function show_main(){
             var RA = 1.0 * constPos[2*i];
             var Dec = 1.0 * constPos[2*i+1];
             var constName = CLnames[i];
-            console.log(RA, Dec, constName);
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                 var [x, y] = coordW(RA, Dec);
                 ctx.fillText(constName, x-40, y-10);
@@ -1152,7 +1167,6 @@ function show_main(){
             }
         }
     }
-    
 
     //惑星、惑星の名前
     ctx.font = '20px serif';

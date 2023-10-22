@@ -14,7 +14,6 @@ h3 {
 
 .settingBtn {
     position: absolute;
-    font-size: 18px;
     border-radius: 2rem;
     border: 0;
     top: 10px;
@@ -37,9 +36,12 @@ h3 {
     border-radius: 1rem;
     width: 300px;
     text-align: center;
+    z-index: 2;
 }
 
 input {
+    width: 3em;
+    max-width: 100%;
     color: whitesmoke;
     background-color: #c22424;
 }
@@ -66,14 +68,38 @@ select {
     padding: 0px 20px;
 }
 
-input {
-    width: 3em;
-    max-width: 100%;
+.descriptionBtn {
+    position: absolute;
+    border-radius: 2rem;
+    border: 0;
+    bottom: 10px;
+    right: 5px;
+    width: 50px;
+    height: 50px;
+    text-align: center;
+}
+
+.description {
+    position: absolute;
+    color: rgb(242, 192, 192);
+    background-color: #8b321c;
+    padding: 20px 10px;
+    margin: auto;
+    top: 50%;
+    left: 50%;
+    -webkit-transform : translate(-50%,-50%);
+    transform : translate(-50%,-50%);
+    border-radius: 1rem;
+    width: 300px;
+    height: 450px;
+    overflow: scroll;
+    z-index: 2;
 }
 
 canvas {
     margin: 0px;
     width: 100%;
+    z-index: 0;
 }
 
 .coordtext {
@@ -84,6 +110,7 @@ canvas {
     height: 20px;
     top: 40px;
     left: 6px;
+    z-index: 1;
 }
 
 .showingData {
@@ -94,4 +121,5 @@ canvas {
     width: 100%;
     height: 20px;
     bottom: 6px;
+    z-index: 1;
 }

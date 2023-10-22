@@ -17,6 +17,10 @@
 
         <div id="setting" class="setting">
             <div class="settingBlock">
+                <div>
+                    <button id="showBtn" class="showBtn" type="button" onclick="finishSetting()">OK</button>
+                </div>
+
                 <div class="mainSettingRows">
                     <label><input type="text" id="yearText">年</label>
                     <label><input type="text" id="monthText">月</label>
@@ -76,11 +80,41 @@
                     </label><br>
 
                 </div>
-
-                <div>
-                    <button id="showBtn" class="showBtn" type="button" onclick="show()">OK</button>
-                </div>
             </div>
+        </div>
+
+        <div>
+            <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()">
+                <img src="descriptionBtn.png" alt="説明"  width="70%" height="70%">
+            </button>
+        </div>
+
+        <div id="description" class="description">
+            <p>説明など　これを開いた右下のボタンで閉じる</p>
+            <p>メシエ天体のマーク
+                <ul>
+                    <li>〇：星雲</li>
+                    <li>△：星団(ただの星の集まりを含む)</li>
+                    <li>□：銀河</li>
+                </ul>
+            </p>
+            <p>
+                見たことがある中でおすすめのメシエ天体<br>
+                肉眼~双眼鏡
+                <ul>
+                    <li>M42 オリオン大星雲</li>
+                    <li>M45 プレアデス星団、すばる</li>
+                    <li>M31 アンドロメダ銀河</li>
+                    <li>M44 プレセぺ星団(かに座。初めて見た散開星団)</li>
+                </ul>
+                望遠鏡
+                <ul>
+                    <li>M22 いて座の球状星団。見つけやすい</li>
+                    <li>M13 ヘルクレス座の球状星団。大きい</li>
+                    <li>M57 環状星雲(リング星雲) 惑星状星雲。こと座。小さい</li>
+                    <li>M27 亜鈴状星雲 惑星状星雲。夏の大三角の中</li>
+                </ul>
+            </p>
         </div>
         
         <!--<a href="SoleilWhole.html">全天バージョンもあります</a>
