@@ -37,6 +37,7 @@ function find_zerosize(EW) {
 var zerosize = find_zerosize(rgEW);
 
 var xhrcheck = 0;
+var defaultcheck = 0;
 
 //HIP
 var num_of_stars = 0;
@@ -117,7 +118,7 @@ xhrM.onreadystatechange = function() {
             if (MessierAry[3*i+4] == '0') {
                 messier[3*+1] *= -1;
             }
-            messier[3*i+2] = parseInt(DataAry[8*i+7]);
+            messier[3*i+2] = parseInt(MessierAry[8*i+7]);
         }
         console.log("Messier ready");
         xhrcheck++;
@@ -176,6 +177,11 @@ xhrB.onreadystatechange = function() {
 //追加天体
 const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+var RAlist = new Array(20);
+var Declist = new Array(20);
+var Distlist = new Array(20);
+var Vlist = new Array(20);
+var Ms, ws, lon, lat, dist_Moon, dist_Sun;
 
 var extra = [];
 var extraurl = "https://peteworden.github.io/Soleil/ExtraPlanet.txt";
@@ -216,9 +222,6 @@ xhrX.onreadystatechange = function() {
         show_initial();
     }
 }
-
-
-var defaultcheck = 0;
 
 var showingJD = 0;
 
@@ -305,7 +308,7 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
     var E = Math.floor((C + 1) / 365.25025);
     var F = C - Math.floor(365.25 * E) + 31;
     var G = Math.floor(F / 30.59);
-    D = F - Math.floor(30.59 * G);
+    var D = F - Math.floor(30.59 * G);
     var H = Math.floor(G / 11);
     var M = G - 12 * H + 2;
     var Y = 100 * (B -49) + E + H;
@@ -329,7 +332,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 8 && defaultcheck == 7){
+    if (xhrcheck == 8 && defaultcheck == 4){
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -369,7 +372,11 @@ function show_JD_minus1(){
     show_main();
 }
 
-let startX, startY, moveX, moveY, dist = 30;// distはスワイプを感知する最低距離（ピクセル単位）
+var startX, startY, moveX, moveY, dist_detect = 30;// distはスワイプを感知する最低距離（ピクセル単位）
+var baseDistance = 0;
+var movedDistance = 0;
+var distance = 0;
+var timeoutId ;
 
 // タッチ開始時： xy座標を取得
 canvas.addEventListener("touchstart", function(e) {
@@ -381,38 +388,26 @@ canvas.addEventListener("touchstart", function(e) {
 // スワイプ中： xy座標を取得
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
-    moveX = e.changedTouches[0].pageX;
-    moveY = e.changedTouches[0].pageY;
-    if (Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2) > dist * dist) {
-        cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
-        cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
-        if (cenDec > 90) {
-            cenDec = 90;
+    var touches = e.changedTouches;
+    document.getElementById("title").innerHTML = touches.length.toString()
+    if (touches.length.toString() == '1') {
+        moveX = touches[0].pageX;
+        moveY = touches[0].pageY;
+        if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
+            cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
+            cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
+            if (cenDec > 90) {
+                cenDec = 90;
+            }
+            if (cenDec < -90) {
+                cenDec = -90;
+            }
+            show_main();
+            startX = moveX;
+            startY = moveY;
         }
-        if (cenDec < -90) {
-            cenDec = -90;
-        }
-        show_main();
-        startX = moveX;
-        startY = moveY;
-    }
-});
-
-var baseDistance = 0;
-var movedDistance = 0;
-var distance = 0;
-
-var timeoutId ;
-//ズーム
-canvas.ontouchmove = function ( event ) {
-    // リロードをストップ
-    event.preventDefault();
-    var touches = event.changedTouches;
-    //document.getElementById("title2").innerHTML = touches.length.toString() + ", " + (typeof touches.length);
-	// 2本以上の指の場合だけ処理
-    if (touches.length.toString() != '1') {
-	//if (touches.length > 1) {
-        clearTimeout(timeoutId);
+    } else {
+        //clearTimeout(timeoutId);
         var x1 = touches[0].pageX ;
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
@@ -420,13 +415,16 @@ canvas.ontouchmove = function ( event ) {
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
+            if (Math.abs(movedDistance - baseDistance) < dist_detect / 2) {
+                return;
+            }
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
-            var scale = 1 + (movedDistance / baseDistance - 1) * 0.5;
-            document.getElementById("title").innerHTML = "scale = " + scale.toString() + ", rgEW = " + rgEW.toString();
+            var scale = 1 + (movedDistance / baseDistance - 1) * 1;
+            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
                 rgEW /= scale;
@@ -450,24 +448,83 @@ canvas.ontouchmove = function ( event ) {
                 zerosize = find_zerosize(rgEW);
                 show_main();
             }
-            timeoutId = setTimeout(function(){
-                baseDistance = 0;
-            }, 200);
+            //var outtime= parseFloat(document.getElementById('outtime').value);
+            //timeoutId = setTimeout(function(){
+            //    baseDistance = 0;
+            //}, outtime);
         } else {
             // 基本の距離
             baseDistance = distance;
+            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString()
+        }
+    }
+});
+
+canvas.addEventListener('touchcancel', function(e) {
+    baseDistance = 0;
+});
+
+//ズーム
+canvas.ontouchmove = function (event) {
+    // リロードをストップ
+    event.preventDefault();
+    var touches = event.changedTouches;
+    document.getElementById("title").innerHTML = touches.length.toString()
+	// 2本以上の指の場合だけ処理
+    if (touches.length.toString() != '1') {
+	//if (touches.length > 1) {
+        clearTimeout(timeoutId);
+        var x1 = touches[0].pageX ;
+        var y1 = touches[0].pageY ;
+        var x2 = touches[1].pageX ;
+        var y2 = touches[1].pageY ;
+        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
+        if (baseDistance) {
+            movedDistance = distance;
+            var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
+            var y3 = (y1 + y2) / 2 - canvas.offsetTop;
+            var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
+            var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
+            // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
+            var scale = 1 + (movedDistance / baseDistance - 1) * 0.5;
+            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString();
+            if (scale && scale != Infinity) {
+                rgNS /= scale;
+                rgEW /= scale;
+                cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
+                cenDec =  pinchDec + (cenDec - pinchDec) / scale;
+                if (rgEW < 0.3) {
+                    rgNS = 0.3 * canvas.height / canvas.width;
+                    rgEW = 0.3;
+                }
+                if (rgNS > 90) {
+                    rgNS = 90;
+                    rgEW = 90 * canvas.width / canvas.height;
+                }
+                if (cenDec > 90) {
+                    cenDec = 90;
+                }
+                if (cenDec < -90) {
+                    cenDec = -90;
+                }
+                magLim = find_magLim(rgEW);
+                zerosize = find_zerosize(rgEW);
+                show_main();
+            }
+            var outtime= parseInt(document.getElementById('outtime').value);
+            timeoutId = setTimeout(function(){
+                baseDistance = 0;
+            }, outtime);
+        } else {
+            // 基本の距離
+            baseDistance = distance;
+            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString()
         }
 	} else {
         1+1;
         //document.getElementById("title").innerHTML = "not in";
     }
 }
-
-var RAlist = new Array(20);
-var Declist = new Array(20);
-var Distlist = new Array(20);
-var Vlist = new Array(20);
-var Ms, ws, lon, lat;
 
 //位置推算とURLの書き換え
 function calculation(JD) {
@@ -533,15 +590,7 @@ function calculation(JD) {
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
-/*
-    if (Selected_number == 9) {
-        if (url.searchParams.has('target')) {
-            url.searchParams.delete('target');
-        }   
-    } else {
-        url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
-    }
-*/
+
     if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
         if (url.searchParams.has('lat')) {
             url.searchParams.delete('lat');
@@ -591,19 +640,21 @@ function calculation(JD) {
     RAlist[0] = RA_Sun;
     Declist[0] = Dec_Sun;
     Distlist[0] = dist;
+    dist_Sun = dist;
 
     for (i=1; i<planets.length; i++) {
         var planet = planets[i];
         if (i == 12) {console.log(planet)}
         if (i == 9) {
             var [x, y, z] = calc(Earth, JD);
-            var [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist_Moon, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta);
+            var [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta);
             Xlist[9] = x+Xe;
             Ylist[9] = y+Ye;
             Zlist[9] = z+Ze;
             RAlist[9] = RA_Moon;
             Declist[9] = Dec_Moon;
-            Distlist[9] = dist_Moon;
+            Distlist[9] = dist;
+            dist_Moon = dist;
             console.log("9 OK");
         } else {
             var [x, y, z] = calc(planet, JD);
@@ -619,7 +670,7 @@ function calculation(JD) {
             console.log(i, "OK");
         }
     }
-
+    
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
     for (n=0; n<planets.length; n++) {
@@ -971,52 +1022,7 @@ function show_main(){
     if (document.getElementById("EWCombo").value == '西経') {lon_obs *= -1}
     var t = (JD - 2451545.0) / 36525;
     var theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
-/*
-    var Xlist = new Array(20);
-    var Ylist = new Array(20);
-    var Zlist = new Array(20);
-    var RAlist = new Array(20);
-    var Declist = new Array(20);
-    var Distlist = new Array(20);
-    var Vlist = new Array(20);
 
-    var [X, Y, Z] = calc(planets[Obs_num], JD);
-    var [RA_Sun, Dec_Sun, dist] = xyz_to_RADec(-X, -Y, -Z);
-    Xlist[0] = X;
-    Ylist[0] = Y;
-    Zlist[0] = Z;
-    RAlist[0] = RA_Sun;
-    Declist[0] = Dec_Sun;
-    Distlist[0] = dist;
-
-    for (i=1; i<planets.length; i++) {
-        var planet = planets[i];
-        if (i == 12) {console.log(planet)}
-        if (i == 9) {
-            var [x, y, z] = calc(Earth, JD);
-            var [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist_Moon, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta);
-            Xlist[9] = x+Xe;
-            Ylist[9] = y+Ye;
-            Zlist[9] = z+Ze;
-            RAlist[9] = RA_Moon;
-            Declist[9] = Dec_Moon;
-            Distlist[9] = dist_Moon;
-            console.log("9 OK");
-        } else {
-            var [x, y, z] = calc(planet, JD);
-            if (i==12) {console.log(384)};
-            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (i==12) {console.log(386)};
-            Xlist[i] = x;
-            Ylist[i] = y;
-            Zlist[i] = z;
-            RAlist[i] = RA;
-            Declist[i] = Dec;
-            Distlist[i] = dist;
-            console.log(i, "OK");
-        }
-    }
-*/
     var Astr = "";
     var hstr = "";
     if (ObsPlanet == "地球") {
@@ -1047,7 +1053,6 @@ function show_main(){
     }
     
     var constellation = "";
-    console.log(A);
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
             constellation = CLnames[i] + "座  ";
@@ -1165,14 +1170,16 @@ function show_main(){
         if (i != Obs_num && Math.abs(RApos(RAlist[i])) < rgEW && Math.abs(Declist[i]-cenDec) < rgNS) {
             var [x, y] = coordW(RAlist[i], Declist[i]);
             if (i == 0){ // 太陽
+                var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
                 ctx.fillStyle = yellowColor;
                 ctx.beginPath();
-                ctx.arc(x, y, 13, 0, 2 * pi, false);
+                ctx.arc(x, y, r, 0, 2 * pi, false);
                 ctx.fill();
                 ctx.fillStyle = '#FF8';
-                ctx.fillText(JPNplanets[i], x+10, y-10);
+                ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
+                    var r = Math.max(canvas.width * (0.259 / (dist_Moon / 384400)) / rgEW / 2, 13);
                     var rs = RAlist[0] * pi/180;
                     var ds = Declist[0] * pi/180;
                     var rm = RAlist[9] * pi/180;
@@ -1184,26 +1191,26 @@ function show_main(){
                     ctx.beginPath();
                     if (k < 0.5) {
                         ctx.fillStyle = yellowColor;
-                        ctx.arc(x, y, 16, 0, 2*pi, false);
+                        ctx.arc(x, y, r, 0, 2*pi, false);
                         ctx.fill();
                         ctx.fillStyle = '#333';
                         ctx.beginPath();
-                        ctx.arc(x, y, 16, pi-P, 2*pi-P);
-                        ctx.ellipse(x, y, 16, 16*(1-2*k), -P, 0, pi);
+                        ctx.arc(x, y, r, pi-P, 2*pi-P);
+                        ctx.ellipse(x, y, r, r*(1-2*k), -P, 0, pi);
                         ctx.fill()
                     } else {
                         ctx.fillStyle = '#333';
-                        ctx.arc(x, y, 16, 0, 2*pi, false);
+                        ctx.arc(x, y, r, 0, 2*pi, false);
                         ctx.fill();
                         ctx.fillStyle = yellowColor;
                         ctx.beginPath();
-                        ctx.arc(x, y, 16, -P, pi-P);
-                        ctx.ellipse(x, y, 16, 16*(2*k-1), pi-P, 0, pi);
+                        ctx.arc(x, y, r, -P, pi-P);
+                        ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
                         ctx.fill()
                     }
 
                     ctx.fillStyle = '#FF8';
-                    ctx.fillText(JPNplanets[i], x+10, y-10);
+                    ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                 }
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
