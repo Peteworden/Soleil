@@ -18,7 +18,7 @@ canvas.height = window.innerHeight - 30;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 30;
+var rgEW = 10;
 var rgNS = rgEW * canvas.height / canvas.width;
 
 function find_magLim(rgEW) {
@@ -104,8 +104,8 @@ xhrH.onreadystatechange = function() {
 }
 
 // メシエ天体
-var messier = [];
-var messierurl = "https://peteworden.github.io/Soleil/messier.txt";
+var messier = Array(3 * 110);
+var messierurl = "https://peteworden.github.io/Soleil/messier_forJS.txt";
 var xhrM = new XMLHttpRequest();
 
 xhrM.open('GET', messierurl);
@@ -113,15 +113,17 @@ xhrM.send();
 xhrM.onreadystatechange = function() {
     if(xhrM.readyState === 4 && xhrM.status === 200) {
         const MessierAry = xhrM.responseText.split(',');
+        console.log(MessierAry);
         for (i=0; i<110; i++){
-            messier[3*i] = 15*parseFloat(MessierAry[8*i+1]) + parseFloat(MessierAry[8*i+2])/4 + parseFloat(MessierAry[8*i+3])/240;
-            messier[3*+1] = parseFloat(MessierAry[3*i+5]) + parseFloat(MessierAry[8*i+6])/60;
+            messier[3*i] = 15.0*MessierAry[8*i+1] + MessierAry[8*i+2]/4.0 + MessierAry[8*i+3]/240.0;
+            messier[3*+1] = MessierAry[3*i+5] + MessierAry[8*i+6]/60.0;
             if (MessierAry[3*i+4] == '0') {
                 messier[3*+1] *= -1;
             }
             messier[3*i+2] = parseInt(MessierAry[8*i+7]);
         }
         console.log("Messier ready");
+        console.log(messier);
         xhrcheck++;
         show_initial();
     }
@@ -176,8 +178,8 @@ xhrB.onreadystatechange = function() {
 }
 
 //追加天体
-const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
 var RAlist = new Array(20);
 var Declist = new Array(20);
 var Distlist = new Array(20);
@@ -400,7 +402,6 @@ var timeoutId ;
 // タッチ開始時： xy座標を取得
 canvas.addEventListener("touchstart", function(e) {
     e.preventDefault();
-    //document.getElementById("title").innerHTML = e.touches.length.toString() + " 000000000000000000000000000000000";
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
 });
@@ -409,7 +410,6 @@ canvas.addEventListener("touchstart", function(e) {
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
-    //document.getElementById("title").innerHTML = touches.length.toString() + " 1111 11111 11111 11111 11111 111 1111";
     if (touches.length.toString() == '1') {
         moveX = touches[0].pageX;
         moveY = touches[0].pageY;
@@ -427,7 +427,6 @@ canvas.addEventListener("touchmove", function(e) {
             startY = moveY;
         }
     } else {
-        //clearTimeout(timeoutId);
         var x1 = touches[0].pageX ;
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
@@ -435,17 +434,12 @@ canvas.addEventListener("touchmove", function(e) {
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
         if (baseDistance) {
             movedDistance = distance;
-            //if (Math.abs(movedDistance - baseDistance) < dist_detect / 2) {
-            //    document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString() + " wait";
-            //    return;
-            //}
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
             var scale = 1 + (movedDistance / baseDistance - 1) * 1;
-            //document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
                 rgEW /= scale;
@@ -470,91 +464,21 @@ canvas.addEventListener("touchmove", function(e) {
                 show_main();
                 baseDistance = distance;
             }
-            //var outtime= parseFloat(document.getElementById('outtime').value);
-            //timeoutId = setTimeout(function(){
-            //    baseDistance = 0;
-            //}, outtime);
         } else {
             // 基本の距離
             baseDistance = distance;
-            //document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString();
         }
     }
 });
 
 canvas.addEventListener('touchend', function(e) {
     baseDistance = 0;
-    //document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
 });
 
 canvas.addEventListener('touchcancel', function(e) {
     baseDistance = 0;
-    //document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
 });
 
-/*
-//ズーム
-canvas.ontouchmove = function (event) {
-    // リロードをストップ
-    event.preventDefault();
-    var touches = event.changedTouches;
-    document.getElementById("title").innerHTML = touches.length.toString()
-	// 2本以上の指の場合だけ処理
-    if (touches.length.toString() != '1') {
-	//if (touches.length > 1) {
-        clearTimeout(timeoutId);
-        var x1 = touches[0].pageX ;
-        var y1 = touches[0].pageY ;
-        var x2 = touches[1].pageX ;
-        var y2 = touches[1].pageY ;
-        distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));//document.getElementById("title2").innerHTML = baseDistance.toString() + ", " + movedDistance.toString() + ", " + distance.toString();
-        if (baseDistance) {
-            movedDistance = distance;
-            var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
-            var y3 = (y1 + y2) / 2 - canvas.offsetTop;
-            var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
-            var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-            // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
-            var scale = 1 + (movedDistance / baseDistance - 1) * 0.5;
-            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString();
-            if (scale && scale != Infinity) {
-                rgNS /= scale;
-                rgEW /= scale;
-                cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
-                cenDec =  pinchDec + (cenDec - pinchDec) / scale;
-                if (rgEW < 0.3) {
-                    rgNS = 0.3 * canvas.height / canvas.width;
-                    rgEW = 0.3;
-                }
-                if (rgNS > 90) {
-                    rgNS = 90;
-                    rgEW = 90 * canvas.width / canvas.height;
-                }
-                if (cenDec > 90) {
-                    cenDec = 90;
-                }
-                if (cenDec < -90) {
-                    cenDec = -90;
-                }
-                magLim = find_magLim(rgEW);
-                zerosize = find_zerosize(rgEW);
-                show_main();
-            }
-            var outtime= parseInt(document.getElementById('outtime').value);
-            timeoutId = setTimeout(function(){
-                baseDistance = 0;
-            }, outtime);
-        } else {
-            // 基本の距離
-            baseDistance = distance;
-            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString()
-        }
-	} else {
-        1+1;
-        //document.getElementById("title").innerHTML = "not in";
-    }
-}
-*/
 //位置推算とURLの書き換え
 function calculation(JD) {
     const eps = 0.4090926; //黄道傾斜角
@@ -576,8 +500,8 @@ function calculation(JD) {
     const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-    const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+    //const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    //const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
     const OriginalNumOfPlanets = planets.length;
 
@@ -656,10 +580,6 @@ function calculation(JD) {
     var Xlist = new Array(20);
     var Ylist = new Array(20);
     var Zlist = new Array(20);
-//    var RAlist = new Array(20);
-//    var Declist = new Array(20);
-//    var Distlist = new Array(20);
-//    var Vlist = new Array(20);
 
     var [X, Y, Z] = calc(planets[Obs_num], JD);
     var [RA_Sun, Dec_Sun, dist] = xyz_to_RADec(-X, -Y, -Z);
@@ -969,17 +889,12 @@ function show_main(){
     ctx.fillStyle = '#003';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    //const eps = 0.4090926; //黄道傾斜角
-    //const sine = sin(eps);
-    //const cose = cos(eps);
     const pi = Math.PI;
 
     var JD = showingJD;
 
-    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-    const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-
-    //const OriginalNumOfPlanets = planets.length;
+    //const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    //const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
     var y = document.getElementById('yearText').value;
     var m = document.getElementById('monthText').value;
@@ -991,22 +906,7 @@ function show_main(){
         var [h, h_min] = document.getElementById('hourText').value.split('.');
     }
     url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
-/*
-    if (extra.length != 0) {
-        var name = extra[1];
-        for (var i=2; i<parseInt(extra[0])+1; i++) {
-            name += ' ' + extra[i];
-        }
-        console.log(name);
-        JPNplanets.push(name);
-        ENGplanets.push(name);
-        var New = [];
-        for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
-            New.push(parseFloat(extra[i]));
-        }
-        planets.push(New);
-    }
-*/
+
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
     const Obs_num = JPNplanets.indexOf(ObsPlanet);
@@ -1189,6 +1089,24 @@ function show_main(){
         DrawStars(skyareas);
     }
 
+    //メシエ天体
+    if (rgEW < 20) {
+        ctx.strokeStyle = 'orange';
+        for (i=0; i<110; i++){
+            var RA = messier[3*i];
+            var Dec = messier[3*i+1];
+            var type = messier[3*i+2];
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                var [x, y] = coordW(RA, Dec);
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, 2 * pi, true);
+                console.log(i);
+            }
+        }
+        ctx.stroke();
+    }
+    
+
     //惑星、惑星の名前
     ctx.font = '20px serif';
     ctx.textBaseline = 'bottom';
@@ -1308,7 +1226,7 @@ function show_main(){
         }
     }
 
-    function DrawMessir(n) {
+    function DrawMessier(n) {
         1+1;
     }
 }
