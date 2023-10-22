@@ -389,7 +389,7 @@ canvas.addEventListener("touchstart", function(e) {
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
-    document.getElementById("title").innerHTML = touches.length.toString()
+    document.getElementById("title").innerHTML = touches.length.toString() + " 1111111111111111111111111111111";
     if (touches.length.toString() == '1') {
         moveX = touches[0].pageX;
         moveY = touches[0].pageY;
@@ -416,6 +416,7 @@ canvas.addEventListener("touchmove", function(e) {
         if (baseDistance) {
             movedDistance = distance;
             if (Math.abs(movedDistance - baseDistance) < dist_detect / 2) {
+                document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString() + "wait";
                 return;
             }
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
