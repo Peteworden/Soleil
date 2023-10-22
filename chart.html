@@ -64,10 +64,17 @@
                     </select>
                     <label><input type="text" id="lon" size="1" value="135">°</label>
                 </div>
-            </div>
 
-            <div>
-                <button id="showBtn" class="showBtn" type="button" onclick="show()">OK</button>
+                <div class="mainSettingRows">
+                    <label>
+                        <input type="checkbox" id="MessierCheck" checked>メシエ天体を表示する<br>
+                        （視野が<input type="text" id="MessierFrom" size="1" value="40">°より小さいとき）
+                    </label>
+                </div>
+
+                <div>
+                    <button id="showBtn" class="showBtn" type="button" onclick="show()">OK</button>
+                </div>
             </div>
         </div>
         

@@ -21,6 +21,8 @@ var cenDec = -25;
 var rgEW = 10;
 var rgNS = rgEW * canvas.height / canvas.width;
 
+document.getElementById('title').innerHTML = "星図　左右の視野角：" + Math.round(rgEW * 20) / 10 + "°";
+
 function find_magLim(rgEW) {
     var magLim = 10.5 - 1.8 * Math.log(rgEW);
     if (magLim > 10) {
@@ -115,10 +117,10 @@ xhrM.onreadystatechange = function() {
         const MessierAry = xhrM.responseText.split(',');
         console.log(MessierAry);
         for (i=0; i<110; i++){
-            messier[3*i] = 15.0*MessierAry[8*i+1] + MessierAry[8*i+2]/4.0 + MessierAry[8*i+3]/240.0;
-            messier[3*+1] = MessierAry[3*i+5] + MessierAry[8*i+6]/60.0;
-            if (MessierAry[3*i+4] == '0') {
-                messier[3*+1] *= -1;
+            messier[3*i] = 15.0 * MessierAry[8*i+1] + (1.0 * MessierAry[8*i+2] + MessierAry[8*i+3] / 10.0) / 4.0;
+            messier[3*i+1] = 1.0 * MessierAry[8*i+5] + MessierAry[8*i+6] / 60.0;
+            if (MessierAry[8*i+4] == '0') {
+                messier[3*i+1] *= -1;
             }
             messier[3*i+2] = parseInt(MessierAry[8*i+7]);
         }
@@ -459,6 +461,7 @@ canvas.addEventListener("touchmove", function(e) {
                 if (cenDec < -90) {
                     cenDec = -90;
                 }
+                document.getElementById('title').innerHTML = "星図　左右の視野角：" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim(rgEW);
                 zerosize = find_zerosize(rgEW);
                 show_main();
@@ -1090,8 +1093,10 @@ function show_main(){
     }
 
     //メシエ天体
-    if (rgEW < 20) {
+    ctx.font = '16px serif';
+    if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
         ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
         for (i=0; i<110; i++){
             var RA = messier[3*i];
             var Dec = messier[3*i+1];
@@ -1099,11 +1104,12 @@ function show_main(){
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                 var [x, y] = coordW(RA, Dec);
                 ctx.beginPath();
-                ctx.arc(x, y, 5, 0, 2 * pi, true);
-                console.log(i);
+                ctx.arc(x, y, 5, 0, 2 * pi, false);
+                ctx.stroke();
+                ctx.fillText("M" + (i+1), x+5, y-5);
+                console.log(i, RA, Dec);
             }
         }
-        ctx.stroke();
     }
     
 
