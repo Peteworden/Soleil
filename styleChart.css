@@ -1,6 +1,48 @@
+body {
+    background-color: gray;
+    color: white;
+    margin: 0px;
+    position: relative;
+}
+
 h3 {
-    margin: 2px;
-    height: 50px;
+    margin: 2px 5px;
+    height: 30px;
+}
+
+.settingBtn {
+    position: absolute;
+    font-size: 18px;
+    border-radius: 1rem;
+    border: 0;
+    top: 10px;
+    right: 5px;
+    width: 60px;
+    height: 60px;
+}
+
+.setting {
+    position: absolute;
+    background-color: #c1cc9a;
+    margin: auto;
+    top: 50%;
+    left: 50%;
+    -webkit-transform : translate(-50%,-50%);
+    transform : translate(-50%,-50%);
+    width: 300px;
+    text-align: center;
+}
+
+.showBtn {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background-color: gray;
+    line-height: 3em;
+    border-radius: 1rem;
+    border: 0;
+    margin: 10px auto;
+    padding: 0px 20px;
 }
 
 input {
@@ -8,10 +50,27 @@ input {
     max-width: 100%;
 }
 
-.coordtext {
-    height: 50px;
+canvas {
+    margin: 0px;
+    width: 100%;
 }
 
-canvas {
+.coordtext {
+    position: absolute;
+    font-size: 16px;
+    color: #fff;
     width: 100%;
+    height: 20px;
+    top: 40px;
+    left: 6px;
+}
+
+.showingData {
+    position: absolute;
+    font-size: 16px;
+    font-weight: 100;
+    color: #fff;
+    width: 100%;
+    height: 20px;
+    bottom: 6px;
 }

@@ -1,10 +1,12 @@
+//2023/10/21 ~ 
+
 //分断の色と星の色を変える
 const separationColor = '#FFF'
 const starColor = '#FFF'
 const yellowColor = 'yellow'
 //'yellow'は全部yellowColorにする
 
-
+document.getElementById('setting').style.visibility = "hidden";
 
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
@@ -12,7 +14,7 @@ const ctx = canvas.getContext('2d');
 //canvas.width = canvas.clientWidth;
 canvas.width = window.innerWidth;
 console.log(canvas.clientWidth, canvas.offsetTop);
-canvas.height = window.innerHeight - document.getElementById('showBtn').offsetTop - document.getElementById('showBtn').offsetHeight;
+canvas.height = window.innerHeight - document.getElementById('title').offsetTop - document.getElementById('title').offsetHeight;
 
 var cenRA = 270;
 var cenDec = -25;
@@ -339,11 +341,29 @@ function show_initial(){
     }
 }
 
+function showSetting() {
+    document.getElementById('setting').style.visibility = "visible";
+}
+
 function show() {
+    document.getElementById('setting').style.visibility = "hidden";
     let year = parseInt(document.getElementById('yearText').value);
     let month = parseInt(document.getElementById('monthText').value);
     let date = parseInt(document.getElementById('dateText').value);
     let hour = parseFloat(document.getElementById('hourText').value);
+
+    if (document.getElementById("NSCombo").value == '北緯') {
+        var lattext = document.getElementById('lat').value + "°N";
+    } else {
+        var lattext = document.getElementById('lat').value + "°S";
+    }
+    if (document.getElementById("EWCombo").value == '東経') {
+        var lontext = document.getElementById('lon').value + "°E";
+    } else {
+        var lontext = document.getElementById('lon').value + "°W";
+    }
+    document.getElementById('showingData').innerHTML = year + "/" + month + "/" + date + "/" + hour + "時JST " + lattext + " " + lontext;
+
     showingJD = YMDH_to_JD(year, month, date, hour);
     calculation(showingJD);
     show_main();
@@ -381,7 +401,7 @@ var timeoutId ;
 // タッチ開始時： xy座標を取得
 canvas.addEventListener("touchstart", function(e) {
     e.preventDefault();
-    document.getElementById("title").innerHTML = e.touches.length.toString() + " 000000000000000000000000000000000";
+    //document.getElementById("title").innerHTML = e.touches.length.toString() + " 000000000000000000000000000000000";
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
 });
@@ -390,7 +410,7 @@ canvas.addEventListener("touchstart", function(e) {
 canvas.addEventListener("touchmove", function(e) {
     e.preventDefault();
     var touches = e.changedTouches;
-    document.getElementById("title").innerHTML = touches.length.toString() + " 1111 11111 11111 11111 11111 111 1111";
+    //document.getElementById("title").innerHTML = touches.length.toString() + " 1111 11111 11111 11111 11111 111 1111";
     if (touches.length.toString() == '1') {
         moveX = touches[0].pageX;
         moveY = touches[0].pageY;
@@ -426,7 +446,7 @@ canvas.addEventListener("touchmove", function(e) {
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
             // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
             var scale = 1 + (movedDistance / baseDistance - 1) * 1;
-            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString();
+            //document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString() + ", scale = " + (Math.round(scale*100)/100).toString() + ", rgEW = " + (Math.round(rgEW*100)/100).toString();
             if (scale && scale != Infinity) {
                 rgNS /= scale;
                 rgEW /= scale;
@@ -458,19 +478,19 @@ canvas.addEventListener("touchmove", function(e) {
         } else {
             // 基本の距離
             baseDistance = distance;
-            document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString();
+            //document.getElementById("title").innerHTML = "2 base = " + Math.round(baseDistance).toString();
         }
     }
 });
 
 canvas.addEventListener('touchend', function(e) {
     baseDistance = 0;
-    document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
+    //document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
 });
 
 canvas.addEventListener('touchcancel', function(e) {
     baseDistance = 0;
-    document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
+    //document.getElementById("title").innerHTML = "0 base = " + Math.round(baseDistance).toString();
 });
 
 /*
@@ -1236,12 +1256,12 @@ function show_main(){
 
     var RAtext = "赤経 " + Math.floor(cenRA/15) + "h " + Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10 + "m  ";
     if (cenDec >= 0) {
-        var Dectext = "赤緯 +" + Math.floor(cenDec) + "° " + Math.round((cenDec-Math.floor(cenDec))*60) + "'(J2000.0)  ";
+        var Dectext = "赤緯 +" + Math.floor(cenDec) + "° " + Math.round((cenDec-Math.floor(cenDec))*60) + "' (J2000.0)  ";
     } else {
-        var Dectext = "赤緯 -" + Math.floor(-cenDec) + "° " + Math.round((-cenDec-Math.floor(-cenDec))*60) + "'(J2000.0)  ";
+        var Dectext = "赤緯 -" + Math.floor(-cenDec) + "° " + Math.round((-cenDec-Math.floor(-cenDec))*60) + "' (J2000.0)  ";
     }
     
-    var coordtext = constellation + "__" + RAtext + Dectext + "\n" + Astr + hstr;
+    var coordtext = constellation + "<br>" + RAtext + Dectext + "<br>" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
 
