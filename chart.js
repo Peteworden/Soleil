@@ -136,7 +136,7 @@ var NGC;
 var NGCurl = "https://peteworden.github.io/Soleil/NGC_forJS.txt";
 var xhrNGC = new XMLHttpRequest();
 
-xhrNGC.open('GET', messierurl);
+xhrNGC.open('GET', NGCurl);
 xhrNGC.send();
 xhrNGC.onreadystatechange = function() {
     if(xhrNGC.readyState === 4 && xhrNGC.status === 200) {
@@ -1257,11 +1257,12 @@ function show_main(){
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
         for (i=0; i<NGC.length/4; i++){
-            var NGCnum = NGC[4*i];
-            var RA = NGC[4*i+1];
-            var Dec = NGC[4*i+2];
+            var NGCname = NGC[4*i];
+            var RA = parseFloat(NGC[4*i+1]);
+            var Dec = parseFloat(NGC[4*i+2]);
             var type = NGC[4*i+3];
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                console.log("NGC in");
                 var [x, y] = coordW(RA, Dec);
                 ctx.beginPath();
                 if (type == "1") { //銀河
@@ -1275,7 +1276,7 @@ function show_main(){
                     ctx.lineTo(x  , y-6);
                 }
                 ctx.stroke();
-                ctx.fillText("NGC" + (i+1), x+5, y-5);
+                ctx.fillText(NGCname, x+5, y-5);
             }
         }
     }
