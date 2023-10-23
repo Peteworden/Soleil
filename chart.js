@@ -131,6 +131,22 @@ xhrM.onreadystatechange = function() {
     }
 }
 
+// NGC天体
+var NGC;
+var NGCurl = "https://peteworden.github.io/Soleil/NGC_forJS.txt";
+var xhrNGC = new XMLHttpRequest();
+
+xhrNGC.open('GET', messierurl);
+xhrNGC.send();
+xhrNGC.onreadystatechange = function() {
+    if(xhrNGC.readyState === 4 && xhrNGC.status === 200) {
+        NGC = xhrNGC.responseText.split(',');
+        console.log("NGC ready");
+        xhrcheck++;
+        show_initial();
+    }
+}
+
 //星座名
 var CLnames = [];
 var CLurl = "https://peteworden.github.io/Soleil/ConstellationList.txt";
@@ -353,7 +369,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 9 && defaultcheck == 4){
+    if (xhrcheck == 10 && defaultcheck == 4){
         now();
         show();
     } else {
@@ -1231,6 +1247,35 @@ function show_main(){
                 }
                 ctx.stroke();
                 ctx.fillText("M" + (i+1), x+5, y-5);
+            }
+        }
+    }
+
+    //NGC天体
+    ctx.font = '16px serif';
+    if (document.getElementById('NGCCheck').checked && rgEW < 0.5 * document.getElementById('NGCFrom').value) {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<NGC.length/4; i++){
+            var NGCnum = NGC[4*i];
+            var RA = NGC[4*i+1];
+            var Dec = NGC[4*i+2];
+            var type = NGC[4*i+3];
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                var [x, y] = coordW(RA, Dec);
+                ctx.beginPath();
+                if (type == "1") { //銀河
+                    ctx.strokeRect(x-8, y-4, 16, 8);
+                } else if (type == "3") { //星雲
+                    ctx.arc(x, y, 5, 0, 2 * pi, false);
+                } else { //星団
+                    ctx.moveTo(x  , y-6);
+                    ctx.lineTo(x-5, y+3);
+                    ctx.lineTo(x+5, y+3);
+                    ctx.lineTo(x  , y-6);
+                }
+                ctx.stroke();
+                ctx.fillText("NGC" + (i+1), x+5, y-5);
             }
         }
     }
