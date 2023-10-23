@@ -270,7 +270,8 @@ function link(obj) {
         url.searchParams.set('RA', cenRA);
         url.searchParams.set('Dec', cenDec);
     } else {
-        for (var i; i<NGC.length/4; i++) {
+        for (var i=0; i<NGC.length/4; i++) {
+            console.log(obj, NGC[4*i]);
             if (obj == NGC[4*i]) {
                 cenRA = parseFloat(NGC[4*i+1]);
                 cenDec = parseFloat(NGC[4*i+2]);
@@ -279,6 +280,8 @@ function link(obj) {
             }
         }
     }
+    document.getElementById("settingBtn").removeAttribute("disabled");
+    document.getElementById('description').style.visibility = "hidden";
     show_main();
 }
 
@@ -1245,8 +1248,8 @@ function show_main(){
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
         for (i=0; i<110; i++){
-            var RA = messier[3*i];
-            var Dec = messier[3*i+1];
+            var RA = parseFloat(messier[3*i]);
+            var Dec = parseFloat(messier[3*i+1]);
             var type = messier[3*i+2];
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                 var [x, y] = coordW(RA, Dec);
