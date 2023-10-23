@@ -262,24 +262,24 @@ console.log(url.href);
 url.searchParams.set('RA', Math.round(cenRA*100)/100);
 url.searchParams.set('Dec', Math.round(cenDec*100)/100);
 
-function OnLinkClick(obj) {
-    if (obj[0] == 'M' && isNaN(obj.substr(1))) {
-        var i = parseInt(obj.substr(1));
-        var RA = parseFloat(messier[3*i]);
-        var Dec = parseFloat(messier[3*i+1]);
-        url.searchParams.set('RA', RA);
-        url.searchParams.set('Dec', Dec);
+function link(obj) {
+    if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) {
+        var i = parseInt(obj.substr(1)) - 1;
+        cenRA = parseFloat(messier[3*i]);
+        cenDec = parseFloat(messier[3*i+1]);
+        url.searchParams.set('RA', cenRA);
+        url.searchParams.set('Dec', cenDec);
     } else {
         for (var i; i<NGC.length/4; i++) {
             if (obj == NGC[4*i]) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                url.searchParams.set('RA', RA);
-                url.searchParams.set('Dec', Dec);
+                cenRA = parseFloat(NGC[4*i+1]);
+                cenDec = parseFloat(NGC[4*i+2]);
+                url.searchParams.set('RA', cenRA);
+                url.searchParams.set('Dec', cenDec);
             }
         }
     }
-    show();
+    show_main();
 }
 
 // キーを指定し、クエリパラメータを取得
@@ -405,10 +405,6 @@ function descriptionFunc() {
         document.getElementById("settingBtn").setAttribute("disabled", true);
         document.getElementById('description').style.visibility = "visible";
     }
-}
-
-function link() {
-
 }
 
 function show() {
