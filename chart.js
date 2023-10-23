@@ -116,15 +116,7 @@ xhrM.open('GET', messierurl);
 xhrM.send();
 xhrM.onreadystatechange = function() {
     if(xhrM.readyState === 4 && xhrM.status === 200) {
-        const MessierAry = xhrM.responseText.split(',');
-        for (i=0; i<110; i++){
-            messier[3*i] = 15.0 * MessierAry[8*i+1] + (1.0 * MessierAry[8*i+2] + MessierAry[8*i+3] / 10.0) / 4.0;
-            messier[3*i+1] = 1.0 * MessierAry[8*i+5] + MessierAry[8*i+6] / 60.0;
-            if (MessierAry[8*i+4] == '0') {
-                messier[3*i+1] *= -1;
-            }
-            messier[3*i+2] = parseInt(MessierAry[8*i+7]);
-        }
+        messier = xhrM.responseText.split(',');
         console.log("Messier ready");
         xhrcheck++;
         show_initial();
@@ -265,22 +257,39 @@ var showingJD = 0;
 const url = new URL(window.location.href);
 
 // キーを指定し、クエリパラメータを付与
-// url.searchParams.set('time', '2023-8-22-13');
-// url.searchParams.set('observer', 'Earth');
-// url.searchParams.set('target', 'Mars');
-console.log(url.href); // https://example.com?addParam=test
-// history.replaceState('', '', url.href);
+
+console.log(url.href);
+url.searchParams.set('RA', Math.round(cenRA*100)/100);
+url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+
+function OnLinkClick(obj) {
+    if (obj[0] == 'M' && isNaN(obj.substr(1))) {
+        var i = parseInt(obj.substr(1));
+        var RA = parseFloat(messier[3*i]);
+        var Dec = parseFloat(messier[3*i+1]);
+        url.searchParams.set('RA', RA);
+        url.searchParams.set('Dec', Dec);
+    } else {
+        for (var i; i<NGC.length/4; i++) {
+            if (obj == NGC[4*i]) {
+                var RA = parseFloat(NGC[4*i+1]);
+                var Dec = parseFloat(NGC[4*i+2]);
+                url.searchParams.set('RA', RA);
+                url.searchParams.set('Dec', Dec);
+            }
+        }
+    }
+    show();
+}
 
 // キーを指定し、クエリパラメータを取得
-// const addParam = url.searchParams.get('time');
-// console.log(addParam); // test
 if (url.searchParams.has('time')) {
-    var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
-    console.log(y, m, d, h, h_min);
+    var [y, m, d, h] = url.searchParams.get('time').split('-');
+    console.log(y, m, d, h);
     document.getElementById('yearText').value = parseInt(y).toString();
     document.getElementById('monthText').value = parseInt(m).toString();
     document.getElementById('dateText').value = parseInt(d).toString();
-    document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
+    document.getElementById('hourText').value = parseFloat(h).toString();
     defaultcheck++;
     show_initial();
 } else {
@@ -398,11 +407,19 @@ function descriptionFunc() {
     }
 }
 
+function link() {
+
+}
+
 function show() {
     let year = parseInt(document.getElementById('yearText').value);
     let month = parseInt(document.getElementById('monthText').value);
     let date = parseInt(document.getElementById('dateText').value);
     let hour = parseFloat(document.getElementById('hourText').value);
+
+    url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
+    console.log(url.href);
+    history.replaceState('', '', url.href);
 
     if (document.getElementById("NSCombo").value == '北緯') {
         var lattext = document.getElementById('lat').value + "°N";
@@ -475,6 +492,8 @@ canvas.addEventListener("touchmove", function(e) {
                 if (cenDec < -90) {
                     cenDec = -90;
                 }
+                url.searchParams.set('RA', Math.round(cenRA*100)/100);
+                url.searchParams.set('Dec', Math.round(cenDec*100)/100);
                 show_main();
                 startX = moveX;
                 startY = moveY;
@@ -517,6 +536,8 @@ canvas.addEventListener("touchmove", function(e) {
                 rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim(rgEW);
                 zerosize = find_zerosize(rgEW);
+                url.searchParams.set('RA', Math.round(cenRA*100)/100);
+                url.searchParams.set('Dec', Math.round(cenDec*100)/100);
                 show_main();
                 baseDistance = distance;
             }
@@ -557,6 +578,8 @@ var onMouseMove = function(e) {
         if (cenDec < -90) {
             cenDec = -90;
         }
+        url.searchParams.set('RA', Math.round(cenRA*100)/100);
+        url.searchParams.set('Dec', Math.round(cenDec*100)/100);
         show_main();
         startX = moveX;
         startY = moveY;
@@ -595,6 +618,8 @@ canvas.onwheel = function zoom(event) {
     rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
     magLim = find_magLim(rgEW);
     zerosize = find_zerosize(rgEW);
+    url.searchParams.set('RA', Math.round(cenRA*100)/100);
+    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
     show_main();
 }
 
@@ -623,7 +648,7 @@ function calculation(JD) {
     //const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 
     const OriginalNumOfPlanets = planets.length;
-
+/*
     var y = document.getElementById('yearText').value;
     var m = document.getElementById('monthText').value;
     var d = document.getElementById('dateText').value;
@@ -633,8 +658,8 @@ function calculation(JD) {
     } else {
         var [h, h_min] = document.getElementById('hourText').value.split('.');
     }
-    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
-
+    //url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
+*/
     if (extra.length != 0) {
         var name = extra[1];
         for (var i=2; i<parseInt(extra[0])+1; i++) {
@@ -1018,13 +1043,8 @@ function show_main(){
     var y = document.getElementById('yearText').value;
     var m = document.getElementById('monthText').value;
     var d = document.getElementById('dateText').value;
-    if (document.getElementById('hourText').value.split('.').length == 1) {
-        var h = document.getElementById('hourText').value;
-        var h_min = 0;
-    } else {
-        var [h, h_min] = document.getElementById('hourText').value.split('.');
-    }
-    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
+    var h = document.getElementById('hourText').value;
+    url.searchParams.set('time', `${y}-${m}-${d}-${h}`);
 
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
