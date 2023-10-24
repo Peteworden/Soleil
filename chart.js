@@ -46,6 +46,8 @@ function find_zerosize(EW) {
 }
 var zerosize = find_zerosize(rgEW);
 
+var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
+
 var xhrcheck = 0;
 var defaultcheck = 0;
 
@@ -438,20 +440,49 @@ function show() {
     let date = parseInt(document.getElementById('dateText').value);
     let hour = parseFloat(document.getElementById('hourText').value);
 
+    // 視点
+    if (Obs_num == 3) {
+        if (url.searchParams.has('observer')) {
+            url.searchParams.delete('observer');
+        }   
+    } else {
+        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
+    }
+
+    if (document.getElementById("NSCombo").value == '北緯') {
+        lat_obs = document.getElementById('lat').value * pi/180;
+        lattext = document.getElementById('lat').value + "°N";
+        if (document.getElementById('lat').value == '35' && url.searchParams.has('lat')) {
+            url.searchParams.delete('lat');
+        } else {
+            url.searchParams.set('lat', document.getElementById('lat').value);
+        }
+    } else {
+        lat_obs = -document.getElementById('lat').value * pi/180;
+        lattext = document.getElementById('lat').value + "°S";
+        url.searchParams.set('lat', -document.getElementById('lat').value);
+    }
+
+    if (document.getElementById("EWCombo").value == '東経') {
+        lon_obs = document.getElementById('lon').value * pi/180;
+        lontext = document.getElementById('lon').value + "°E";
+        if (document.getElementById('lon').value == '135') {
+            if (url.searchParams.has('lon')) {
+                url.searchParams.delete('lon');
+            }
+        } else {
+            url.searchParams.set('lon', document.getElementById('lon').value);
+        }
+    } else {
+        lon_obs = -document.getElementById('lon').value * pi/180;
+        lontext = document.getElementById('lon').value + "°W";
+        url.searchParams.set('lon', -document.getElementById('lon').value);
+    }
+        
     url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
     console.log(url.href);
     history.replaceState('', '', url.href);
 
-    if (document.getElementById("NSCombo").value == '北緯') {
-        var lattext = document.getElementById('lat').value + "°N";
-    } else {
-        var lattext = document.getElementById('lat').value + "°S";
-    }
-    if (document.getElementById("EWCombo").value == '東経') {
-        var lontext = document.getElementById('lon').value + "°E";
-    } else {
-        var lontext = document.getElementById('lon').value + "°W";
-    }
     document.getElementById('showingData').innerHTML = year + "/" + month + "/" + date + "/" + hour + "時JST " + lattext + " " + lontext;
 
     showingJD = YMDH_to_JD(year, month, date, hour);
@@ -666,48 +697,6 @@ function calculation(JD) {
         planets.push(New);
     }
 
-    // 視点
-    const ObsPlanet = document.getElementById("observer").value;
-    const Obs_num = JPNplanets.indexOf(ObsPlanet);
-
-    if (Obs_num == 3) {
-        if (url.searchParams.has('observer')) {
-            url.searchParams.delete('observer');
-        }   
-    } else {
-        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
-    }
-
-    if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
-        if (url.searchParams.has('lat')) {
-            url.searchParams.delete('lat');
-        }
-    } else {
-        if (document.getElementById("NSCombo").value == '北緯') {
-            url.searchParams.set('lat', document.getElementById('lat').value);
-        } else {
-            url.searchParams.set('lat', -document.getElementById('lat').value);
-        }
-    }
-
-    if (document.getElementById("EWCombo").value == '東経' && document.getElementById('lon').value == '135') {
-        if (url.searchParams.has('lon')) {
-            url.searchParams.delete('lon');
-        }
-    } else {
-        if (document.getElementById("EWCombo").value == '東経') {
-            url.searchParams.set('lon', document.getElementById('lon').value);
-        } else {
-            url.searchParams.set('lon', -document.getElementById('lon').value);
-        }
-    }
-        
-    history.replaceState('', '', url.href);
-
-    var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
-    var lon_obs = parseInt(document.getElementById('lon').value) * pi/180;
-    if (document.getElementById("NSCombo").value == '南緯') {lat_obs *= -1}
-    if (document.getElementById("EWCombo").value == '西経') {lon_obs *= -1}
     var t = (JD - 2451545.0) / 36525;
     var theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
@@ -1016,67 +1005,19 @@ function calculation(JD) {
 function show_main(){
     document.getElementById('title').innerHTML = "星図 1";
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    document.getElementById('title').innerHTML = "星図 1008";
     ctx.fillStyle = '#003';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('title').innerHTML = "星図 1011";
     
     const pi = Math.PI;
 
     var JD = showingJD;
 
-    var y = document.getElementById('yearText').value;
-    var m = document.getElementById('monthText').value;
-    var d = document.getElementById('dateText').value;
-    var h = document.getElementById('hourText').value;
-    url.searchParams.set('time', `${y}-${m}-${d}-${h}`);
-
-    // 視点
-    const ObsPlanet = document.getElementById("observer").value;
-    const Obs_num = JPNplanets.indexOf(ObsPlanet);
-
-    if (Obs_num == 3) {
-        if (url.searchParams.has('observer')) {
-            url.searchParams.delete('observer');
-        }   
-    } else {
-        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
-    }
-
-    if (document.getElementById("NSCombo").value == '北緯' && document.getElementById('lat').value == '35') {
-        if (url.searchParams.has('lat')) {
-            url.searchParams.delete('lat');
-        }
-    } else {
-        if (document.getElementById("NSCombo").value == '北緯') {
-            url.searchParams.set('lat', document.getElementById('lat').value);
-        } else {
-            url.searchParams.set('lat', -document.getElementById('lat').value);
-        }
-    }
-
-    if (document.getElementById("EWCombo").value == '東経' && document.getElementById('lon').value == '135') {
-        if (url.searchParams.has('lon')) {
-            url.searchParams.delete('lon');
-        }
-    } else {
-        if (document.getElementById("EWCombo").value == '東経') {
-            url.searchParams.set('lon', document.getElementById('lon').value);
-        } else {
-            url.searchParams.set('lon', -document.getElementById('lon').value);
-        }
-    }
-        
-    history.replaceState('', '', url.href);
-
-    var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
-    var lon_obs = parseInt(document.getElementById('lon').value) * pi/180;
-    if (document.getElementById("NSCombo").value == '南緯') {
-        lat_obs *= -1;
-    }
-    if (document.getElementById("EWCombo").value == '西経') {
-        lon_obs *= -1;
-    }
     var t = (JD - 2451545.0) / 36525;
     var theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
+
+    document.getElementById('title').innerHTML = "星図 1020";
 
     var Astr = "";
     var hstr = "";
@@ -1090,6 +1031,8 @@ function show_main(){
         Astr = '方位角  ' + Math.round(A*10)/10 + '°(' + direc + ')   ';
         hstr = '高度  ' + Math.round(h*10)/10 + '°  ';
     }
+
+    document.getElementById('title').innerHTML = "星図 1033";
 
     //星座判定
     var A = Array(89).fill(0);
