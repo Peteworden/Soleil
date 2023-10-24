@@ -46,6 +46,7 @@ var zerosize = find_zerosize(rgEW);
 
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
 
+
 var xhrcheck = 0;
 var defaultcheck = 0;
 
@@ -64,6 +65,7 @@ function loadFile(filename, func) {
     }
 }
 
+//HIP
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
@@ -80,59 +82,14 @@ function xhrHIP(data) {
         HIPmagary[i] = parseFloat(DataAry[3*i+2]);
     }
 }
-//HIP
-/*
-var num_of_stars = 0;
-var HIPRAary = Array(1);
-var HIPDecary = Array(1);
-var HIPmagary = Array(1);
 
-var HIPurl = "https://peteworden.github.io/Soleil/StarsNewHIP_to6_5_set.txt";
-var xhr = new XMLHttpRequest();
-
-xhr.open('GET', HIPurl);
-xhr.send();
-xhr.onreadystatechange = function() {
-    if(xhr.readyState === 4 && xhr.status === 200) {
-        const DataAry = xhr.responseText.split(',');
-        
-        num_of_stars = DataAry.length / 3;
-
-        HIPRAary = Array(num_of_stars);
-        HIPDecary = Array(num_of_stars);
-        HIPmagary = Array(num_of_stars);
-        for (i=0; i<num_of_stars; i++){
-            HIPRAary[i] = parseFloat(DataAry[3*i]);
-            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
-        }
-        console.log("HIP ready");
-        xhrcheck++;
-        show_initial();
-    }
-}
-*/
 //Tycho
 var Tycho = [];
 loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho);
 function xhrTycho(data) {
     Tycho = data.split(',');
 }
-/*
-var Tycho = [];
-var Tychourl = "https://peteworden.github.io/Soleil/StarsNew-Tycho-to10-2nd_forJS.txt";
-var xhrT = new XMLHttpRequest();
 
-xhrT.open('GET', Tychourl);
-xhrT.send();
-xhrT.onreadystatechange = function() {
-    if(xhrT.readyState === 4 && xhrT.status === 200) {
-        Tycho = xhrT.responseText.split(',');
-        console.log("Tycho2 ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 //Tycho helper
 
@@ -141,21 +98,6 @@ loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
 function xhrHelp(data) {
     Help = data.split(',');
 }
-/*
-var Help = [];
-var TychoHelpurl = "https://peteworden.github.io/Soleil/TychoSearchHelper2nd_forJS.txt";
-var xhrH = new XMLHttpRequest();
-
-xhrH.open('GET', TychoHelpurl);
-xhrH.send();
-xhrH.onreadystatechange = function() {
-    if(xhrH.readyState === 4 && xhrH.status === 200) {
-        Help = xhrH.responseText.split(',');
-        console.log("helper ready")
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 // メシエ天体
 var messier  = Array(3 * 110);
@@ -163,21 +105,6 @@ loadFile("messier_forJS", xhrMessier);
 function xhrMessier(data) {
     messier = data.split(',');
 }
-/*
-var messier = Array(3 * 110);
-var messierurl = "https://peteworden.github.io/Soleil/messier_forJS.txt";
-var xhrM = new XMLHttpRequest();
-
-xhrM.open('GET', messierurl);
-xhrM.send();
-xhrM.onreadystatechange = function() {
-    if(xhrM.readyState === 4 && xhrM.status === 200) {
-        messier = xhrM.responseText.split(',');
-        console.log("Messier ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 // NGC天体
 var NGC = [];
@@ -185,21 +112,6 @@ loadFile("NGC_forJS", xhrNGC);
 function xhrNGC(data) {
     NGC = data.split(',');
 }
-/*
-var NGC;
-var NGCurl = "https://peteworden.github.io/Soleil/NGC_forJS.txt";
-var xhrNGC = new XMLHttpRequest();
-
-xhrNGC.open('GET', NGCurl);
-xhrNGC.send();
-xhrNGC.onreadystatechange = function() {
-    if(xhrNGC.readyState === 4 && xhrNGC.status === 200) {
-        NGC = xhrNGC.responseText.split(',');
-        console.log("NGC ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 //星座名
 var CLnames = [];
@@ -207,20 +119,6 @@ loadFile("ConstellationList", xhrCLnames);
 function xhrCLnames(data) {
     CLnames = data.split('\r\n');
 }
-/*
-var CLurl = "https://peteworden.github.io/Soleil/ConstellationList.txt";
-var xhrCL = new XMLHttpRequest();
-
-xhrCL.open('GET', CLurl);
-xhrCL.send();
-xhrCL.onreadystatechange = function() {
-    if(xhrCL.readyState === 4 && xhrCL.status === 200) {
-        CLnames = xhrCL.responseText.split('\r\n');
-        console.log("constellations' names ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 //星座の位置
 var constPos = [];
@@ -228,20 +126,6 @@ loadFile("ConstellationPositionNew_forJS", xhrCLpos);
 function xhrCLpos(data) {
     constPos = data.split(',');
 }
-/*
-var constPosurl = "https://peteworden.github.io/Soleil/ConstellationPositionNew_forJS.txt";
-var xhrconstPos = new XMLHttpRequest();
-
-xhrconstPos.open('GET', constPosurl);
-xhrconstPos.send();
-xhrconstPos.onreadystatechange = function() {
-    if(xhrconstPos.readyState === 4 && xhrconstPos.status === 200) {
-        constPos = xhrconstPos.responseText.split(',');
-        console.log("constellations' positions ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 //星座線
 var lines = [];
@@ -249,20 +133,6 @@ loadFile("Lines_light_forJS", xhrCLlines);
 function xhrCLlines(data) {
     lines = data.split(',');
 }
-/*
-var lineurl = "https://peteworden.github.io/Soleil/Lines_light_forJS.txt";
-var xhrL = new XMLHttpRequest();
-
-xhrL.open('GET', lineurl);
-xhrL.send();
-xhrL.onreadystatechange = function() {
-    if(xhrL.readyState === 4 && xhrL.status === 200) {
-        lines = xhrL.responseText.split(',');
-        console.log("lines ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 //星座境界線
 var boundary = [];
@@ -270,20 +140,6 @@ loadFile("boundary_light_forJS", xhrCLboundary);
 function xhrCLboundary(data) {
     boundary = data.split(',');
 }
-/*
-var boundaryurl = "https://peteworden.github.io/Soleil/boundary_light_forJS.txt";
-var xhrB = new XMLHttpRequest();
-
-xhrB.open('GET', boundaryurl);
-xhrB.send();
-xhrB.onreadystatechange = function() {
-    if(xhrB.readyState === 4 && xhrB.status === 200) {
-        boundary = xhrB.responseText.split(',');
-        console.log("constellation boundarys ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 //追加天体
 var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
@@ -301,7 +157,7 @@ function xhrExtra(data) {
     extra = data.split(' ');
     if (extra.length != 0) {
         var name = extra[1];
-        for (var i=2; i<extra[0]+1; i++) {
+        for (var i=2; i<parseInt(extra[0])+1; i++) {
             name += ' ' + extra[i];
         }
         ENGplanets.push(name);
@@ -323,45 +179,6 @@ function xhrExtra(data) {
         }
     }
 }
-/*
-var extraurl = "https://peteworden.github.io/Soleil/ExtraPlanet.txt";
-var xhrX = new XMLHttpRequest();
-
-xhrX.open('GET', extraurl);
-xhrX.send();
-xhrX.onreadystatechange = function() {
-    if(xhrX.readyState === 4 && xhrX.status === 200) {
-        extra = xhrX.responseText.split(' ');
-
-        if (extra.length != 0) {
-            var name = extra[1];
-            for (var i=2; i<parseInt(extra[0])+1; i++) {
-                name += ' ' + extra[i];
-            }
-            ENGplanets.push(name);
-            JPNplanets.push(name);
-            const option1 = document.createElement('option');
-            option1.innerHTML = name;
-            document.getElementById('observer').appendChild(option1);
-                        
-            if (url.searchParams.has('observer') && xhrcheck == 7) {
-                for (var i=0; i<ENGplanets.length; i++) {
-                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                        document.getElementById("observer").value = JPNplanets[i];
-                        break;
-                    }
-                }
-                defaultcheck++;
-            } else {
-                defaultcheck++;
-            }
-        }
-
-        console.log("extra ready");
-        xhrcheck++;
-        show_initial();
-    }
-}*/
 
 var showingJD = 0;
 
@@ -379,7 +196,6 @@ function link(obj) {
         url.searchParams.set('Dec', cenDec);
     } else { //その他
         for (var i=0; i<NGC.length/4; i++) {
-            console.log(obj, NGC[4*i]);
             if (obj == NGC[4*i]) {
                 cenRA = parseFloat(NGC[4*i+1]);
                 cenDec = parseFloat(NGC[4*i+2]);
