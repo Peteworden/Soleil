@@ -18,6 +18,8 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight - 30;
 
+document.getElementById('title').innerHTML = "星図　w=" + Math.round(window.innerWidth*100)/100 + " h=" + Math.round(window.innerHeight*100)/100;
+
 var cenRA = 270;
 var cenDec = -25;
 
