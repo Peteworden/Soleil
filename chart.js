@@ -475,7 +475,7 @@ function show_JD_minus1(){
     show_main();
 }
 
-var startX, startY, moveX, moveY, dist_detect = 15;// distはスワイプを感知する最低距離（ピクセル単位）
+var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 25);// distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
