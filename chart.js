@@ -1014,6 +1014,7 @@ function calculation(JD) {
 }
 
 function show_main(){
+    document.getElementById('title').innerHTML = "星図 1";
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = '#003';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1113,6 +1114,8 @@ function show_main(){
         }
     }
 
+    document.getElementById('title').innerHTML = "星図 1117";
+
     //星座線
     ctx.strokeStyle = 'red';
     ctx.beginPath();
@@ -1166,6 +1169,8 @@ function show_main(){
          }
     }
 
+    document.getElementById('title').innerHTML = "星図 1172";
+
     //Tycho
     if (magLim > 6.5) {
         if (cenRA - rgEW < 0) {
@@ -1194,6 +1199,8 @@ function show_main(){
         }
     }
 
+    document.getElementById('title').innerHTML = "星図 1200";
+
     // 星座名
     ctx.font = '20px times new roman';
     if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
@@ -1220,6 +1227,8 @@ function show_main(){
     if (document.getElementById('NGCCheck').checked && rgEW < 0.5 * document.getElementById('NGCFrom').value) {
         DrawNGC();
     }
+
+    document.getElementById('title').innerHTML = "星図 1229";
 
     //惑星、惑星の名前
     ctx.font = '20px serif';
@@ -1284,6 +1293,8 @@ function show_main(){
             }
         }
     }
+
+    document.getElementById('title').innerHTML = "星図 1295";
 
     var RAtext = "赤経 " + Math.floor(cenRA/15) + "h " + Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10 + "m  ";
     if (cenDec >= 0) {
@@ -1394,6 +1405,8 @@ function show_main(){
             }
         }
     }
+
+    document.getElementById('title').innerHTML = "星図 finish";
 }
 
 function sin(a){return Math.sin(a)}
