@@ -103,6 +103,11 @@ select {
     text-align: center;
 }
 
+.description a {
+    color: rgb(242, 192, 192);
+    text-decoration: underline;
+}
+
 canvas {
     margin: 0px;
     width: 100%;

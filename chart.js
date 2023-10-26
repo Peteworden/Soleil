@@ -196,6 +196,7 @@ function link(obj) {
         url.searchParams.set('Dec', cenDec);
     } else { //その他
         for (var i=0; i<NGC.length/4; i++) {
+            console.log(NGC[4*i]);
             if (obj == NGC[4*i]) {
                 cenRA = parseFloat(NGC[4*i+1]);
                 cenDec = parseFloat(NGC[4*i+2]);
@@ -1047,16 +1048,37 @@ function show_main(){
         }
     }
 
-    //メシエ天体
     ctx.font = '16px serif';
+    ctx.strokeStyle = 'orange';
+    ctx.fillStyle = 'orange';
+
+    const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
+
+    //メシエ天体とポピュラー天体
     if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
         DrawMessier();
+        for (i=0; i<NGC.length/4; i++){
+            var name = NGC[4*i];
+            if (popularList.indexOf(name) != -1) {
+                var RA = parseFloat(NGC[4*i+1]);
+                var Dec = parseFloat(NGC[4*i+2]);
+                var type = NGC[4*i+3];
+                DrawObjects(name, RA, Dec, type)
+            }
+        }
     }
 
     // メシエ以外
-    ctx.font = '16px serif';
     if (document.getElementById('NGCCheck').checked && rgEW < 0.5 * document.getElementById('NGCFrom').value) {
-        DrawNGC();
+        for (i=0; i<NGC.length/4; i++){
+            var name = NGC[4*i];
+            if (popularList.indexOf(name) == -1) {
+                var RA = parseFloat(NGC[4*i+1]);
+                var Dec = parseFloat(NGC[4*i+2]);
+                var type = NGC[4*i+3];
+                DrawObjects(name, RA, Dec, type)
+            }
+        }
     }
 
     //惑星、惑星の名前
@@ -1187,22 +1209,7 @@ function show_main(){
             var RA = parseFloat(messier[3*i]);
             var Dec = parseFloat(messier[3*i+1]);
             var type = messier[3*i+2];
-            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                var [x, y] = coord(RA, Dec);
-                ctx.beginPath();
-                if (type == "1") { //銀河
-                    ctx.strokeRect(x-8, y-4, 16, 8);
-                } else if (type == "3") { //星雲
-                    ctx.arc(x, y, 5, 0, 2 * pi, false);
-                } else { //星団、M40:二重星、M73
-                    ctx.moveTo(x  , y-6);
-                    ctx.lineTo(x-5, y+3);
-                    ctx.lineTo(x+5, y+3);
-                    ctx.lineTo(x  , y-6);
-                }
-                ctx.stroke();
-                ctx.fillText("M" + (i+1), x+5, y-5);
-            }
+            DrawObjects("M" + (i+1).toString(), RA, Dec, type)
         }
     }
 
@@ -1214,22 +1221,26 @@ function show_main(){
             var RA = parseFloat(NGC[4*i+1]);
             var Dec = parseFloat(NGC[4*i+2]);
             var type = NGC[4*i+3];
-            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                var [x, y] = coord(RA, Dec);
-                ctx.beginPath();
-                if (type == "1") { //銀河
-                    ctx.strokeRect(x-8, y-4, 16, 8);
-                } else if (type == "3") { //星雲
-                    ctx.arc(x, y, 5, 0, 2 * pi, false);
-                } else { //星団、M40:二重星、M73
-                    ctx.moveTo(x  , y-6);
-                    ctx.lineTo(x-5, y+3);
-                    ctx.lineTo(x+5, y+3);
-                    ctx.lineTo(x  , y-6);
-                }
-                ctx.stroke();
-                ctx.fillText(name, x+5, y-5);
+            DrawObjects(name, RA, Dec, type)
+        }
+    }
+
+    function DrawObjects(name, RA, Dec, type) {
+        if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+            var [x, y] = coord(RA, Dec);
+            ctx.beginPath();
+            if (type == "1") { //銀河
+                ctx.strokeRect(x-8, y-4, 16, 8);
+            } else if (type == "3") { //星雲
+                ctx.arc(x, y, 5, 0, 2 * pi, false);
+            } else { //星団、M40:二重星、M73
+                ctx.moveTo(x  , y-6);
+                ctx.lineTo(x-5, y+3);
+                ctx.lineTo(x+5, y+3);
+                ctx.lineTo(x  , y-6);
             }
+            ctx.stroke();
+            ctx.fillText(name, x+5, y-5);
         }
     }
 }

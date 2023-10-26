@@ -75,11 +75,11 @@
                         （視野が<input type="text" id="constNameFrom" size="1" value="50">°より小さいとき）
                     </label><br>
                     <label>
-                        <input type="checkbox" id="MessierCheck" checked>メシエ天体<br>
+                        <input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体<br>
                         （視野が<input type="text" id="MessierFrom" size="1" value="40">°より小さいとき）
                     </label><br>
                     <label>
-                        <input type="checkbox" id="NGCCheck" checked>NGC天体<br>
+                        <input type="checkbox" id="NGCCheck" checked>その他、NGC天体など<br>
                         （視野が<input type="text" id="NGCFrom" size="1" value="30">°より小さいとき）
                     </label><br>
 
@@ -95,27 +95,31 @@
 
         <div id="description" class="description">
             <p>説明など<br>これを開いた右下のボタンで閉じる</p>
-            <p>土日ほんまにこればっかりやってた<br>あとはぼちぼち改良してこ<br>作戦成功！ズームが滑らかになった</p>
-            <p>下半分が黒いなどうまく表示されない場合はリロードしてください、それで無理なら直したいので教えてください</p>
+            <p>入れてほしい天体募集中～<br>ほしい機能とかも言ってもらえればやります<br>不具合も教えてください</p>
             <p>星雲・星団・銀河のマーク
                 <ul>
                     <li>〇：星雲</li>
-                    <li>△：星団(ただの星の集まりを含む)</li>
+                    <li>△：星団、二重星など</li>
                     <li>□：銀河</li>
                 </ul>
             </p>
             <p>
-                肉眼~双眼鏡で見やすい天体
+                リンクには観測地点と日時、見ている方向の情報が入っているので、それを共有できます<br>
+                以下の少し色が違うところはその天体へのリンクになっています<br>
+                インターネットにアクセスするのは最初の読み込み時だけです
+            </p>
+            <p>
+                双眼鏡向けの天体(上から３つは暗いところなら肉眼でも見やすい)
                 <ul>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M42')">M42</button> オリオン大星雲</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M45')">M45</button> プレアデス星団、すばる</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M31')">M31</button> アンドロメダ銀河</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M44')">M44</button> プレセぺ星団(かに座。初めて見た散開星団)</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC869')">NGC869</button>, 884 二重星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M44')">M44</button>(かに座) プレセぺ星団。初めて見た散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC869')">NGC869</button>, 884(カシオペヤ座) 二重星団</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('コリンダー399')">コリンダー399</button> 夏の大三角の中にあるきれいなハンガー</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M41')">M41</button> 双眼鏡だとシリウスと同時に視野に入れられる散開星団</li>
                 </ul>
-                望遠鏡がいる・見つけにくい・見てみたい・名前がついてるものなど
+                望遠鏡が必要だったり見つけにくかったりするが、比較的見やすいものや個人的に好きなもの
                 <ul>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('アルビレオ')">アルビレオ</button>(はくちょう座) きれいな二重星</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M22')">M22</button>(いて座) 球状星団。わりと見つけやすい</li>
@@ -126,30 +130,55 @@
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M33')">M33</button>(さんかく座) 銀河。明るいが広がっているので暗い空+双眼鏡向け</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2264')">NGC2264</button>(いっかくじゅう座) クリスマスツリー星団、コーン星雲</li>
                 </ul>
-                その他収録したもの。上級(写真向けなど)
+                その他収録したもの。暗い天体、写真向けなど
                 <ul>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M8')">M8</button>(いて座) 干潟星雲</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC55')">NGC55</button>(ちょうこくしつ座) 銀河。7.9等</li>
-                    <Li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M104')">M104</button>(おとめ座) ソンブレロ銀河</Li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M101')">M101</button>(おおぐま座) 回転花火銀河。7.9等</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2237')">NGC2237</button>(いっかくじゅう座) ばら星雲</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M20')">M20</button>(いて座) 三裂星雲</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('馬頭星雲')">馬頭星雲</button>(オリオン座)</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC1851')">NGC1851</button>(はと座) 球状星団</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC288')">NGC288</button>(ちょうこくしつ座) 球状星団</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC5128')">NGC5128</button>(ケンタウルス座) ケンタウルス座A</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペア座) 球状星団。イチオシらしい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M51')">M51</button>(おおぐま座) 子持ち銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M101')">M101</button>(おおぐま座) 回転花火銀河</li>
+                    <Li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M104')">M104</button>(おとめ座) ソンブレロ銀河</Li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC55')">NGC55</button>(ちょうこくしつ座) 銀河</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC253')">NGC253</button>(ちょうこくしつ座) 銀河。明るいらしい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC288')">NGC288</button>(ちょうこくしつ座) 球状星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC457')">NGC457</button>(カシオペヤ座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC663')">NGC663</button>(カシオペヤ座) 散開星団。明るいっぽい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC752')">NGC752</button>(アンドロメダ座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC1528')">NGC1528</button>(ペルセウス座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC1851')">NGC1851</button>(はと座) 球状星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2237')">NGC2237</button>(いっかくじゅう座) ばら星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2403')">NGC2403</button>(きりん座) 銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2477')">NGC2477</button>(とも座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2903')">NGC2903</button>(しし座) 銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC3242')">NGC3242</button>(うみへび座) 木星状星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC3628')">NGC3628</button>(しし座) 銀河。３つ子の１つ</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC4565')">NGC4565</button>(かみのけ座) 銀河。ちょうど真横</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC5128')">NGC5128</button>(ケンタウルス座) ケンタウルス座A</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6124')">NGC6124</button>(さそり座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6231')">NGC6231</button>(さそり座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6940')">NGC6940</button>(こぎつね座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7009')">NGC7009</button>(みずがめ座) 土星状星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペヤ座) 球状星団。イチオシらしい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('馬頭星雲')">馬頭星雲</button>(オリオン座)</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('大マゼラン雲')">大マゼラン雲</button>(かじき座、テーブルさん座)</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('小マゼラン雲')">小マゼラン雲</button>(きょしちょう座)</li>
                 </ul>
             </p>
             <p>
-                ほか、入れてほしい天体あればなんでも入れるので言ってください
+                星を見ているときによく使っているリンク<br>
+                <ul>
+                    <li><a href="http://www.ncsm.city.nagoya.jp/astro/jupiter/">木星の衛星の位置</a>(名古屋市科学館)</li>
+                    <li><a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html">土星の衛星の位置</a>(SKY & TELESCOPE)</li>
+                    <li><a href="https://www.heavens-above.com/Asteroids.aspx?lat=35&lng=135.8&loc=Unnamed&alt=0&tz=JapST&cul=ja">Heavens-Above 小惑星</a></li>
+                    <li><a href="https://www.heavens-above.com/Comets.aspx?lat=35&lng=135.8&loc=Unnamed&alt=0&tz=JapST&cul=ja">Heavens-Above 彗星</a></li>
+                </ul>
+            </p>
+            <p>
+                12等星ぐらいまで星増やそうかなぁ、正距方位図法に対応させようかなぁ<br>
+                天体を挙げるのや不具合修正に協力してくれた人たちありがとう！　画面一番上にリンク貼ってるSoleil WebとHOMEも見てね<br>
+                「ぴーと」というのは私のことですが、特に深い意味はありません。本名はまずいからさ 
             </p>
         </div>
         
-        <!--<a href="SoleilWhole.html">全天バージョンもあります</a>
-        <label>____</label>
-        <a href="PeteHOME.html">PeteHOMEに戻る</a>-->
         <div id="coordtext" class="coordtext"></div>
         <div class="result">
             <script src="chart.js"></script>
