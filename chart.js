@@ -27,6 +27,9 @@ if (canvas.width < canvas.height) {
 } else {
     var rgNS = 10;
     var rgEW = rgNS * canvas.width / canvas.height;
+    document.getElementById('constNameFrom').value = "180";
+    document.getElementById('MessierFrom').value = "100";
+    document.getElementById('NGCFrom').value = "80";
 }
 
 var rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
@@ -92,7 +95,6 @@ function xhrTycho(data) {
 
 
 //Tycho helper
-
 var Help = [];
 loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
 function xhrHelp(data) {
@@ -462,29 +464,6 @@ function onMouseMove(e) {
                 rgEW /= scale;
                 cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
                 cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
-                /*rgNS /= scale;
-                rgEW /= scale;
-                if (canvas.width < canvas.height) {
-                    if (rgEW < 0.3) {
-                        rgNS = 0.3 * canvas.height / canvas.width;
-                        rgEW = 0.3;
-                    }
-                    if (rgNS > 90) {
-                        rgNS = 90;
-                        rgEW = 90 * canvas.width / canvas.height;
-                    }
-                } else {
-                    if (rgNS < 0.3) {
-                        rgEW = 0.3 * canvas.width / canvas.height;
-                        rgNS = 0.3;
-                    }
-                    if (rgEW > 90) {
-                        rgEW = 90;
-                        rgNS = 90 * canvas.height / canvas.width;
-                    }
-                }
-                cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
-                cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);*/
                 rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim();
                 zerosize = find_zerosize();
@@ -524,13 +503,6 @@ var onMouseMove = function(e) {
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
         cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
         cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
-        /*cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
-        if (cenDec > 90) {
-            cenDec = 90;
-        }
-        if (cenDec < -90) {
-            cenDec = -90;
-        }*/
         url.searchParams.set('RA', Math.round(cenRA*100)/100);
         url.searchParams.set('Dec', Math.round(cenDec*100)/100);
         show_main();
