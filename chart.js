@@ -32,12 +32,12 @@ if (canvas.width < canvas.height) {
 var rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
 
 var magLimtext;
-function find_magLim(rgEW) {
+function find_magLim() {
     var magLim = Math.min(Math.max(10.5 - 1.8 * Math.log(Math.min(rgEW, rgNS)), 4), 10);
     magLimtext = "~" + Math.round(magLim * 10) / 10 + "等級";
     return magLim;
 }
-var magLim = find_magLim(rgEW);
+var magLim = find_magLim();
 
 function find_zerosize() {
     return 13 - 2.4 * Math.log(Math.min(rgEW, rgNS) + 3);
@@ -462,6 +462,29 @@ function onMouseMove(e) {
                 rgEW /= scale;
                 cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
                 cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
+                /*rgNS /= scale;
+                rgEW /= scale;
+                if (canvas.width < canvas.height) {
+                    if (rgEW < 0.3) {
+                        rgNS = 0.3 * canvas.height / canvas.width;
+                        rgEW = 0.3;
+                    }
+                    if (rgNS > 90) {
+                        rgNS = 90;
+                        rgEW = 90 * canvas.width / canvas.height;
+                    }
+                } else {
+                    if (rgNS < 0.3) {
+                        rgEW = 0.3 * canvas.width / canvas.height;
+                        rgNS = 0.3;
+                    }
+                    if (rgEW > 90) {
+                        rgEW = 90;
+                        rgNS = 90 * canvas.height / canvas.width;
+                    }
+                }
+                cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
+                cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);*/
                 rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim();
                 zerosize = find_zerosize();
@@ -501,6 +524,13 @@ var onMouseMove = function(e) {
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
         cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
         cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
+        /*cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
+        if (cenDec > 90) {
+            cenDec = 90;
+        }
+        if (cenDec < -90) {
+            cenDec = -90;
+        }*/
         url.searchParams.set('RA', Math.round(cenRA*100)/100);
         url.searchParams.set('Dec', Math.round(cenDec*100)/100);
         show_main();
@@ -560,7 +590,9 @@ function calculation(JD) {
     const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-    
+    //const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    //const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+
     const OriginalNumOfPlanets = planets.length;
 
     if (extra.length != 0) {
