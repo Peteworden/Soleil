@@ -21,28 +21,28 @@ canvas.height = window.innerHeight - 30;
 var cenRA = 270;
 var cenDec = -25;
 
-var rgEW = 10;
-var rgNS = rgEW * canvas.height / canvas.width;
+if (canvas.width < canvas.height) {
+    var rgEW = 10;
+    var rgNS = rgEW * canvas.height / canvas.width;
+} else {
+    var rgNS = 10;
+    var rgEW = rgNS * canvas.width / canvas.height;
+}
 
 var rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
 
 var magLimtext;
 function find_magLim(rgEW) {
-    var magLim = 10.5 - 1.8 * Math.log(rgEW);
-    if (magLim > 10) {
-        magLim = 10;
-    } else if (magLim < 4) {
-        magLim = 4;
-    }
+    var magLim = Math.min(Math.max(10.5 - 1.8 * Math.log(Math.min(rgEW, rgNS)), 4), 10);
     magLimtext = "~" + Math.round(magLim * 10) / 10 + "等級";
     return magLim;
 }
 var magLim = find_magLim(rgEW);
 
-function find_zerosize(EW) {
-    return 13 - 2.4 * Math.log(rgEW + 3)
+function find_zerosize() {
+    return 13 - 2.4 * Math.log(Math.min(rgEW, rgNS) + 3);
 }
-var zerosize = find_zerosize(rgEW);
+var zerosize = find_zerosize();
 
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
 
@@ -451,24 +451,20 @@ function onMouseMove(e) {
             var y3 = (y1 + y2) / 2 - canvas.offsetTop;
             var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
             var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-            // scaleの調整はmoved=baseならばscale=1をキープするようscaleの1からのずれを定数倍する!
-            var scale = 1 + (movedDistance / baseDistance - 1) * 1;
+            var scale = movedDistance / baseDistance;
             if (scale && scale != Infinity) {
+                if (canvas.width < canvas.height) {
+                    scale = Math.max(Math.min(scale, rgEW/0.3), rgNS/90);
+                } else {
+                    scale = Math.max(Math.min(scale, rgNS/0.3), rgEW/90);
+                }
                 rgNS /= scale;
                 rgEW /= scale;
-                if (rgEW < 0.3) {
-                    rgNS = 0.3 * canvas.height / canvas.width;
-                    rgEW = 0.3;
-                }
-                if (rgNS > 90) {
-                    rgNS = 90;
-                    rgEW = 90 * canvas.width / canvas.height;
-                }
                 cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
                 cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
                 rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
-                magLim = find_magLim(rgEW);
-                zerosize = find_zerosize(rgEW);
+                magLim = find_magLim();
+                zerosize = find_zerosize();
                 url.searchParams.set('RA', Math.round(cenRA*100)/100);
                 url.searchParams.set('Dec', Math.round(cenDec*100)/100);
                 show_main();
@@ -504,13 +500,7 @@ var onMouseMove = function(e) {
     moveY = e.pageY;
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
         cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
-        cenDec =  cenDec + 2 * rgNS * (moveY - startY) / canvas.height;
-        if (cenDec > 90) {
-            cenDec = 90;
-        }
-        if (cenDec < -90) {
-            cenDec = -90;
-        }
+        cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
         url.searchParams.set('RA', Math.round(cenRA*100)/100);
         url.searchParams.set('Dec', Math.round(cenDec*100)/100);
         show_main();
@@ -530,22 +520,19 @@ canvas.onwheel = function zoom(event) {
     var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
     var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
     var scale = 1 - event.deltaY * 0.0005;
+    if (canvas.width < canvas.height) {
+        scale = Math.max(Math.min(scale, rgEW/0.3), rgNS/90);
+    } else {
+        scale = Math.max(Math.min(scale, rgNS/0.3), rgEW/90);
+    }
     rgNS /= scale;
     rgEW /= scale;
     cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
     cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
-    if (rgEW < 0.3) {
-        rgNS = 0.3 * canvas.height / canvas.width;
-        rgEW = 0.3;
-    }
-    if (rgNS > 90) {
-        rgNS = 90;
-        rgEW = 90 * canvas.width / canvas.height;
-    }
-
+    
     rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
     magLim = find_magLim(rgEW);
-    zerosize = find_zerosize(rgEW);
+    zerosize = find_zerosize();
 
     url.searchParams.set('RA', Math.round(cenRA*100)/100);
     url.searchParams.set('Dec', Math.round(cenDec*100)/100);
@@ -573,9 +560,7 @@ function calculation(JD) {
     const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
     const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-    //const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-    //const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-
+    
     const OriginalNumOfPlanets = planets.length;
 
     if (extra.length != 0) {
@@ -756,7 +741,6 @@ function calculation(JD) {
             } else {
                 return cal_Parabola(planet, JD);
             }
-            
         }
     }
 
