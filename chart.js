@@ -165,7 +165,7 @@ var RAlist = new Array(20);
 var Declist = new Array(20);
 var Distlist = new Array(20);
 var Vlist = new Array(20);
-var Ms, ws, lon, lat, dist_Moon, dist_Sun;
+var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
 
 var extra = [];
 
@@ -239,13 +239,13 @@ if (url.searchParams.has('time')) {
 }
 
 if (url.searchParams.has('lat')) {
-    var lat = url.searchParams.get('lat');
-    if (lat >= 0) {
+    var lat_obs = url.searchParams.get('lat');
+    if (lat_obs >= 0) {
         document.getElementById("NSCombo").value = '北緯';
-        document.getElementById('lat').value = lat;
+        document.getElementById('lat').value = lat_obs;
     } else {
         document.getElementById("NSCombo").value = '南緯';
-        document.getElementById('lat').value = -lat;
+        document.getElementById('lat').value = -lat_obs;
     }
     defaultcheck++;
     show_initial();
@@ -255,13 +255,13 @@ if (url.searchParams.has('lat')) {
 }
 
 if (url.searchParams.has('lon')) {
-    var lon = url.searchParams.get('lon');
-    if (lon >= 0) {
+    var lon_obs = url.searchParams.get('lon');
+    if (lon_obs >= 0) {
         document.getElementById("EWCombo").value = '東経';
-        document.getElementById('lon').value = lon;
+        document.getElementById('lon').value = lon_obs;
     } else {
         document.getElementById("EWCombo").value = '西経';
-        document.getElementById('lon').value = -lon;
+        document.getElementById('lon').value = -lon_obs;
     }
     defaultcheck++;
     show_initial();
@@ -317,7 +317,7 @@ function YMDH_to_JD(Y, M, D, H){
 }
 
 function show_initial(){
-    if (xhrcheck == 10 && defaultcheck == 4){
+    if (xhrcheck == 12 && defaultcheck == 4){
         now();
         newSetting();
         show_main();
@@ -619,14 +619,14 @@ function calculation(JD) {
         if (i == 12) {console.log(planet)}
         if (i == 9) {
             var [x, y, z] = calc(Earth, JD);
-            var [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta);
+            var Xe, Ye, Ze, RA_Moon, Dec_Moon;
+            [Xe, Ye, Ze, RA_Moon, Dec_Moon, dist_Moon, Ms, ws, lon_moon, lat_moon] = calculate_Moon(JD, lat_obs, theta);
             Xlist[9] = x+Xe;
             Ylist[9] = y+Ye;
             Zlist[9] = z+Ze;
             RAlist[9] = RA_Moon;
             Declist[9] = Dec_Moon;
-            Distlist[9] = dist;
-            dist_Moon = dist;
+            Distlist[9] = dist_Moon;
             console.log("9 OK");
         } else {
             var [x, y, z] = calc(planet, JD);
@@ -751,7 +751,8 @@ function calculation(JD) {
             return [0, 0, 0]
         } else if (planet == Moon) {
             var [x, y, z] = cal_Ellipse(Earth, JD)
-            var [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] = calculate_Moon(JD, lat_obs, theta)
+            var Xe, Ye, Ze, RA, Dec
+            [Xe, Ye, Ze, RA, Dec, dist_Moon, Ms, ws, lon_moon, lat_moon] = calculate_Moon(JD, lat_obs, theta);
             return [x+Xe, y+Ye, z+Ze]
         } else {
             var e = planet[2];
@@ -832,33 +833,33 @@ function calculation(JD) {
         var yh = dist * (sin(Nm) * cos(v+wm) + cos(Nm) * sin(v+wm) * cos(i));
         var zh = dist * sin(v+wm) * sin(i);
         
-        var lon = Math.atan2(yh, xh);
-        var lat = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
+        var lon_moon = Math.atan2(yh, xh);
+        var lat_moon = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
         
-        lon +=(- 1.274*sin(Mm - 2*D)
-            + 0.658*sin(2*D)
-            - 0.186*sin(Ms)
-            - 0.059*sin(2*Mm - 2*D)
-            - 0.057*sin(Mm - 2*D + Ms)
-            + 0.053*sin(Mm + 2*D)
-            + 0.046*sin(2*D - Ms)
-            + 0.041*sin(Mm - Ms)
-            - 0.035*sin(D)
-            - 0.031*sin(Mm + Ms)
-            - 0.015*sin(2*F - 2*D)
-            + 0.011*sin(Mm - 4*D))* pi/180; //rad
-        lat += (- 0.173*sin(F - 2*D)
-                - 0.055*sin(Mm - F - 2*D)
-                - 0.046*sin(Mm + F - 2*D)
-                + 0.033*sin(F + 2*D)
-                + 0.017*sin(2*Mm + F)) * pi/180; //rad
+        lon_obs +=(- 1.274*sin(Mm - 2*D)
+                    + 0.658*sin(2*D)
+                    - 0.186*sin(Ms)
+                    - 0.059*sin(2*Mm - 2*D)
+                    - 0.057*sin(Mm - 2*D + Ms)
+                    + 0.053*sin(Mm + 2*D)
+                    + 0.046*sin(2*D - Ms)
+                    + 0.041*sin(Mm - Ms)
+                    - 0.035*sin(D)
+                    - 0.031*sin(Mm + Ms)
+                    - 0.015*sin(2*F - 2*D)
+                    + 0.011*sin(Mm - 4*D))* pi/180; //rad
+        lat_moon += (- 0.173*sin(F - 2*D)
+                    - 0.055*sin(Mm - F - 2*D)
+                    - 0.046*sin(Mm + F - 2*D)
+                    + 0.033*sin(F + 2*D)
+                    + 0.017*sin(2*Mm + F)) * pi/180; //rad
         dist += -0.58*cos(Mm - 2*D) - 0.46*cos(2*D); //地球半径
 
-        lon -= 0.0002437 * (JD - 2451545.0) / 365.25; //lon, latはJ2000.0
+        lon_moon -= 0.0002437 * (JD - 2451545.0) / 365.25; //lon, latはJ2000.0
         
-        var Xe = cos(lat) * cos(lon)                             * dist * 6378.14 / 1.49598e8; //au
-        var Ye = (-sin(lat) * sine + cos(lat) * sin(lon) * cose) * dist * 6378.14 / 1.49598e8; //au
-        var Ze = (sin(lat) * cose + cos(lat) * sin(lon) * sine)  * dist * 6378.14 / 1.49598e8; //au
+        var Xe = cos(lat_moon) * cos(lon_moon)                             * dist * 6378.14 / 1.49598e8; //au
+        var Ye = (-sin(lat_moon) * sine + cos(lat_moon) * sin(lon_moon) * cose) * dist * 6378.14 / 1.49598e8; //au
+        var Ze = (sin(lat_moon) * cose + cos(lat_moon) * sin(lon_moon) * sine)  * dist * 6378.14 / 1.49598e8; //au
 
         var xe = Xe - cos(lat_obs) * cos(theta) * 6378.14 / 1.49598e8; //au
         var ye = Ye - cos(lat_obs) * sin(theta) * 6378.14 / 1.49598e8; //au
@@ -868,7 +869,7 @@ function calculation(JD) {
 
         dist *= 6378.14;
 
-        return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon, lat] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
+        return [Xe, Ye, Ze, RA, Dec, dist, Ms, ws, lon_moon, lat_moon] //au, au, au, deg, deg, km, rad瞬時, rad瞬時, radJ2000.0, radJ2000.0
     }
 
     function cal_Parabola(planet, JD) {
@@ -1111,8 +1112,8 @@ function show_main(){
                     var ds = Declist[0] * pi/180;
                     var rm = RAlist[9] * pi/180;
                     var dm = Declist[9] * pi/180;
-                    var lons = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
-                    k = (1 - cos(lons-lon) * cos(lat)) / 2;
+                    var lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
+                    k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
                     P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
 
                     ctx.beginPath();
