@@ -106,6 +106,7 @@ var Tycho1011 = [];
 loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011);
 function xhrTycho1011(data) {
     Tycho1011 = data.split(',');
+console.log(Tycho1011[0]);
 }
 
 
@@ -1020,7 +1021,9 @@ function show_main(){
                 skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
             }
             DrawStars(skyareas);
-            DrawStars1011(skyareas);
+            if (magLim > 10) {
+                DrawStars1011(skyareas);
+            }
         } else if (cenRA + rgEW >= 360) {
             var skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
                             [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
@@ -1029,14 +1032,18 @@ function show_main(){
                 skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
             }
             DrawStars(skyareas);
-            DrawStars1011(skyareas);
+            if (magLim > 10) {
+                DrawStars1011(skyareas);
+            }
         } else {
             var skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
             for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                 skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
             }
             DrawStars(skyareas);
-            DrawStars1011(skyareas);
+            if (magLim > 10) {
+                DrawStars1011(skyareas);
+            }
         }
     }
 
