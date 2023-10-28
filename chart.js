@@ -36,7 +36,7 @@ var rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
 
 var magLimtext;
 function find_magLim() {
-    var magLim = Math.min(Math.max(10.5 - 1.8 * Math.log(Math.min(rgEW, rgNS)), 4), 10);
+    var magLim = Math.min(Math.max(10.5 - 1.8 * Math.log(Math.min(rgEW, rgNS)), 4), 11);
     magLimtext = "~" + Math.round(magLim * 10) / 10 + "等級";
     return magLim;
 }
@@ -99,6 +99,21 @@ var Help = [];
 loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
 function xhrHelp(data) {
     Help = data.split(',');
+}
+
+//Tycho 10~11 mag
+var Tycho1011 = [];
+loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011);
+function xhrTycho1011(data) {
+    Tycho1011 = data.split(',');
+}
+
+
+//Tycho helper 10~11 mag
+var Help1011 = [];
+loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011);
+function xhrHelp1011(data) {
+    Help1011 = data.split(',');
 }
 
 // メシエ天体
@@ -1004,6 +1019,7 @@ function show_main(){
                 skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
             }
             DrawStars(skyareas);
+            DrawStars1011(skyareas);
         } else if (cenRA + rgEW >= 360) {
             var skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
                             [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
@@ -1012,12 +1028,14 @@ function show_main(){
                 skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
             }
             DrawStars(skyareas);
+            DrawStars1011(skyareas);
         } else {
             var skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
             for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                 skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
             }
             DrawStars(skyareas);
+            DrawStars1011(skyareas);
         }
     }
 
@@ -1180,6 +1198,24 @@ function show_main(){
                 var RA = parseFloat(Tycho[3*i]);
                 var Dec = parseFloat(Tycho[3*i+1]);
                 var mag = parseFloat(Tycho[3*i+2]);
+                if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW && mag < magLim) {
+                    var [x, y] = coord(RA, Dec);
+                    ctx.beginPath();
+                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+
+    function DrawStars1011(skyareas){
+        for (var arearange of skyareas) {
+            var st = parseInt(Help1011[arearange[0]]);
+            var fi = parseInt(Help1011[arearange[1]+1]);
+            for (i=st; i<fi; i++) {
+                var RA = parseFloat(Tycho1011[3*i]);
+                var Dec = parseFloat(Tycho1011[3*i+1]);
+                var mag = parseFloat(Tycho1011[3*i+2]);
                 if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW && mag < magLim) {
                     var [x, y] = coord(RA, Dec);
                     ctx.beginPath();
