@@ -1,6 +1,5 @@
 #ソレイユ（Soleil）
 #Since 2021/8
-#programmed by ぴーとうぉーでん@Peteworden31416
 
 #好きな緯度経度に書き換える
 LATITUDE = 35 #緯度（北緯が正）
@@ -150,7 +149,7 @@ def searchW(a): #はじめて赤経がaを超える行数（0始まり）を返�
     return n
 
 def SkyArea(RA, Dec): #(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
-    return int(360 * floor(Dec / 10 + 9) + floor(RA))
+    return int(360 * floor(Dec + 90) + floor(RA))
 
 shiftRA = 0
 shiftDec = 0
@@ -491,7 +490,6 @@ def show_base(JD):
             if alpha_center >= (RA2 - RA1) / (Dec2 - Dec1) * (delta_center - Dec1) + RA1:
                 No = int(data[0])
                 A[No-1] = (A[No-1] + 1) % 2
-            
     for i in range(0, 89):
         if A[i] == 1:
             Const = ConstList[i].strip()
@@ -827,9 +825,9 @@ def show_base(JD):
         if piccenRA - rg < 0:   #恒星
             #skyareasは[[a, b]]のaの領域とbの領域を両方含む
             skyareas = [[SkyArea(0, piccenDec-rg), SkyArea(piccenRA+rg, piccenDec-rg)], [SkyArea(piccenRA-rg+360, piccenDec - rg), SkyArea(359.9, piccenDec - rg)]]
-            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-                skyareas.append([skyareas[1][0]+360, skyareas[1][1]+360])
+            for i in range(1, floor(piccenDec+rg) - floor(piccenDec-rg) + 1):
+                skyareas.append([skyareas[0][0]+360*i, skyareas[0][1]+360*i])
+                skyareas.append([skyareas[1][0]+360*i, skyareas[1][1]+360*i])
             DrawStars(skyareas)
 
             DrawStarsHIPforNarrow(0, searchW(piccenRA + rg), 0)
@@ -841,9 +839,9 @@ def show_base(JD):
             
         elif piccenRA + rg >= 360:
             skyareas = [[SkyArea(0, piccenDec-rg), SkyArea(piccenRA+rg-360, piccenDec-rg)], [SkyArea(piccenRA-rg, piccenDec - rg), SkyArea(359.9, piccenDec - rg)]]
-            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
-                skyareas.append([skyareas[1][0]+360, skyareas[1][1]+360])
+            for i in range(1, floor(piccenDec+rg) - floor(piccenDec-rg) + 1):
+                skyareas.append([skyareas[0][0]+360*i, skyareas[0][1]+360*i])
+                skyareas.append([skyareas[1][0]+360*i, skyareas[1][1]+360*i])
             DrawStars(skyareas)
             
             DrawStarsHIPforNarrow(searchW(piccenRA - rg), 8874, 0)
@@ -857,8 +855,8 @@ def show_base(JD):
             DrawStars2(search2(piccenRA - rg), search2(piccenRA + rg), 0)
 
             skyareas = [[SkyArea(piccenRA-rg, piccenDec - rg), SkyArea(piccenRA+rg, piccenDec - rg)]]
-            if floor((piccenDec+rg)/10) > floor((piccenDec-rg)/10):
-                skyareas.append([skyareas[0][0]+360, skyareas[0][1]+360])
+            for i in range(1, floor(piccenDec+rg) - floor(piccenDec-rg) + 1):
+                skyareas.append([skyareas[0][0]+360*i, skyareas[0][1]+360*i])
             DrawStars(skyareas)
                 
         for n in range(len(planets)):
@@ -1651,11 +1649,11 @@ view_reset_btn.place(x=690, y=50)
 
 def cal_Ellipse(planet, JD): #[T, a, e, ω, i, Ω, M0]
     T = planet[0]
-    a = planet[1] + planet[7] * (JD - T) / 36525
-    e = planet[2] + planet[8] * (JD - T) / 36525
-    peri = (planet[3] + planet[9] * (JD - T) / 36525) * pi / 180 #ω
-    i = (planet[4] + planet[10] * (JD - T) / 36525) * pi / 180
-    node = (planet[5] + planet[11] * (JD - T) / 36525) * pi / 180 #Ω
+    a = planet[1] #+ planet[7] * (JD - T) / 36525
+    e = planet[2] #+ planet[8] * (JD - T) / 36525
+    peri = (planet[3] + 0*planet[9] * (JD - T) / 36525) * pi / 180 #ω
+    i = (planet[4] + 0*planet[10] * (JD - T) / 36525) * pi / 180
+    node = (planet[5] + 0*planet[11] * (JD - T) / 36525) * pi / 180 #Ω
     M0 = planet[6] * pi / 180
 
     Ax = a *                ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node))
@@ -1664,7 +1662,7 @@ def cal_Ellipse(planet, JD): #[T, a, e, ω, i, Ω, M0]
     By = a * sqrt(1-e**2) * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine)
     Az = a *                ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose)
     Bz = a * sqrt(1-e**2) * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose)
-    
+
     n = 0.01720209895 / a**1.5 #平均日日運動(rad)
     M = (M0 + n * (JD - T)) % (2 * pi)
     E = M + e * sin(M)
@@ -1674,13 +1672,18 @@ def cal_Ellipse(planet, JD): #[T, a, e, ω, i, Ω, M0]
             E = newE
             newE = M + e * sin(E)
         E = newE
-    
+            
     cE_e = cos(E) - e
     sE = sin(E)
     
     x = Ax * cE_e + Bx * sE
     y = Ay * cE_e + By * sE
     z = Az * cE_e + Bz * sE
+    
+    if planet[1] == 9.536676:
+        print(x, y,z)
+    if planet[1] == 1.000003:
+        print(x, y,z)
     
     return x, y, z
 

@@ -999,7 +999,7 @@ function show_main(){
             //skyareasは[[a, b]]のaの領域とbの領域を両方含む
             var skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgNS, cenDec-rgNS)],
                             [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
-            for (var i=1; i<=Math.floor((cenDec+rgNS)/10)-Math.floor((cenDec-rgNS)/10); i++) {
+            for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                 skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                 skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
             }
@@ -1007,14 +1007,14 @@ function show_main(){
         } else if (cenRA + rgEW >= 360) {
             var skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
                             [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
-            for (var i=1; i<=Math.floor((cenDec+rgNS)/10)-Math.floor((cenDec-rgNS)/10); i++) {
+            for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                 skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                 skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
             }
             DrawStars(skyareas);
         } else {
             var skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
-            for (var i=1; i<=Math.floor((cenDec+rgNS)/10)-Math.floor((cenDec-rgNS)/10); i++) {
+            for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                 skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
             }
             DrawStars(skyareas);
@@ -1144,7 +1144,7 @@ function show_main(){
     document.getElementById("coordtext").innerHTML = coordtext;
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
-        return parseInt(360 * Math.floor(Dec / 10 + 9) + Math.floor(RA));
+        return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
     function RApos(RA) { //PythonでのadjustRA(RA)-piccenRAに相当
