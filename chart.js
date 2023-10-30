@@ -1,6 +1,6 @@
 //2023/10/21 ~ 10/24
 
-// 入力をURLに反映するのは
+// 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
 //分断の色と星の色を変える
@@ -1069,14 +1069,17 @@ function show_main(){
             var [RA2_SH, Dec2_SH] = angleSH(RA2, Dec2);
             if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
                 if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
-                    if (RA1_SH*RA1_SH + Dec1_SH*Dec1_SH < Math.pow(Math.min(Math.max(2*rgEW, 2*rgNS, 20), 150), 2)) {
-                        if (RA2_SH*RA2_SH + Dec2_SH*Dec2_SH < Math.pow(Math.min(Math.max(2*rgEW, 2*rgNS, 20), 150), 2)) {
-                            var [x1, y1] = coordSH(RA1_SH, Dec1_SH);
-                            var [x2, y2] = coordSH(RA2_SH, Dec2_SH);
-                            ctx.moveTo(x1, y1);
-                            ctx.lineTo(x2, y2);
-                        }
+                    if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
+                        var [x1, y1] = coordSH(RA1_SH, Dec1_SH);
+                        var [x2, y2] = coordSH(RA2_SH, Dec2_SH);
+                        ctx.moveTo(x1, y1);
+                        ctx.lineTo(x2, y2);
                     }
+                    /*if (RA1_SH*RA1_SH + Dec1_SH*Dec1_SH < Math.pow(Math.min(Math.max(2*rgEW, 2*rgNS, 25), 150), 2)) {
+                        if (RA2_SH*RA2_SH + Dec2_SH*Dec2_SH < Math.pow(Math.min(Math.max(2*rgEW, 2*rgNS, 30), 150), 2)) {
+                        
+                        }
+                    }*/
                 }
             }
         }
@@ -1098,17 +1101,48 @@ function show_main(){
         }
 
         //Tycho
+        var skyareas = [];
         if (magLim > 6.5) {
+            var edgeDec1 = SHtoRADec(rgEW, -rgNS)[1];
+            var edgeDec2 = SHtoRADec(rgEW,  rgNS)[1];
             var minDec = Math.max(-90, Math.min(SHtoRADec(rgEW, -rgNS)[1], cenDec-rgNS));
             var maxDec = Math.min( 90, Math.max(SHtoRADec(rgEW,  rgNS)[1], cenDec+rgNS));
 
             if (minDec == -90 || maxDec == 90) {
-                var skyareas = [[SkyArea(0, minDec), SkyArea(359.9, maxDec)]];
+                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, maxDec)]];
             } else {
-                var RArange1 = ((SHtoRADec(rgEW,  rgNS)[0] - cenRA) % 360 + 360) % 360;
-                var RArange2 = ((SHtoRADec(rgEW,     0)[0] - cenRA) % 360 + 360) % 360;
-                var RArange3 = ((SHtoRADec(rgEW, -rgNS)[0] - cenRA) % 360 + 360) % 360;
+                var RArange1 = ((SHtoRADec(rgEW,  rgNS)[0] - cenRA) % 360 + 180) % 360 - 180;
+                var RArange2 = ((SHtoRADec(rgEW,     0)[0] - cenRA) % 360 + 180) % 360 - 180;
+                var RArange3 = ((SHtoRADec(rgEW, -rgNS)[0] - cenRA) % 360 + 180) % 360 - 180;
                 var RArange = Math.max(RArange1, RArange2, RArange3);
+                /*for (var i=Math.floor(minDec); i<=Math.ceil(maxDec); i++) {
+                    if (i < edgeDec1 || i > edgeDec2) {
+                        if (cenRA - RArange < 0) {
+                            skyareas.push([SkyArea(                0, i), SkyArea(cenRA+RArange, i)]);
+                            skyareas.push([SkyArea(cenRA-RArange+359, i), SkyArea(        359.9, i)]);
+                        } else if (cenRA + RArange > 360) {
+                            skyareas.push([SkyArea(            0, i), SkyArea(cenRA+RArange-360, i)]);
+                            skyareas.push([SkyArea(cenRA-RArange, i), SkyArea(            359.9, i)]);
+                        } else {
+                            skyareas.push([SkyArea(cenRA-RArange, i), SkyArea(cenRA+RArange, i)]);
+                        }
+                    } else {
+                        var [RA, Dec] = SHtoRADec(rgEW,  i-cenDec);
+                        var RArangei = ((RA - cenRA) % 360 + 180) % 360 - 180;
+                        console.log(i, Dec, RArangei);
+                        if (cenRA - RArange < 0) {
+                            skyareas.push([SkyArea(                0, Dec), SkyArea( RA+1, Dec)]);
+                            skyareas.push([SkyArea(cenRA-RArangei+359, Dec), SkyArea(359.9, Dec)]);
+                        } else if (cenRA + RArange > 360) {
+                            skyareas.push([SkyArea(              0, Dec), SkyArea(cenRA+RArangei-359, Dec)]);
+                            skyareas.push([SkyArea(cenRA-RArangei-1, Dec), SkyArea(            359.9, Dec)]);
+                        } else {
+                            skyareas.push([SkyArea(cenRA-RArangei-1, Dec), SkyArea(RA+1, Dec)]);
+                        }
+                    }
+                
+                }
+            }*/
                 if (cenRA - RArange < 0) {
                     var skyareas = [[SkyArea(0,              minDec), SkyArea(cenRA+RArange, minDec)],
                                     [SkyArea(cenRA-RArange+360, minDec), SkyArea(359.9,      minDec)]];
@@ -1130,7 +1164,6 @@ function show_main(){
                     }
                 }
             }
-
             DrawStars_SH(skyareas);
             if (magLim > 10) {
                 DrawStars1011_SH(skyareas);
@@ -1405,8 +1438,8 @@ function show_main(){
 
     function angleSH (RA, Dec) { //deg
         if (RA == cenRA && Dec == cenDec) {
-            var x = 0;
-            var y = 0;
+            var RA_SH = 0;
+            var Dec_SH = 0;
         } else {
             RA *= pi/180;
             Dec *= pi/180;
@@ -1426,23 +1459,23 @@ function show_main(){
         return [RA_SH, Dec_SH];
     }
 
-    function SHtoRADec (RA_SH, Dec_SH) { //deg
+    function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
         if (RA_SH == 0 && Dec_SH == 0) {
             var RA = cenRA;
             var Dec = cenDec;
         } else {
-            var thetaSH = Math.atan2(RA_SH, Dec_SH);
+            var thetaSH = Math.atan2(RA_SH, -Dec_SH);
             var r = Math.sqrt(RA_SH*RA_SH + Dec_SH*Dec_SH) * pi / 180;
             
             var cenRA_rad = cenRA * pi/180;
             var cenDec_rad = cenDec * pi/180;
             
-            var a = -sin(cenDec_rad)*sin(r)*sin(thetaSH) - cos(cenDec_rad)*cos(r);
-            var b =                  sin(r)*cos(thetaSH);
-            var c =  cos(cenDec_rad)*sin(r)*sin(thetaSH) - sin(cenDec_rad)*cos(r);
+            var a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
+            var b =                  sin(r)*sin(thetaSH);
+            var c = -cos(cenDec_rad)*sin(r)*cos(thetaSH) + sin(cenDec_rad)*cos(r);
 
             var Dec = Math.asin(c) * 180/pi;
-            var RA = ((Math.atan2(b / cos(Dec), a / cos(Dec)) * 180/pi + cenRA) % 360 + 360) % 360;
+            var RA = ((Math.atan2(b, a) * 180/pi + cenRA) % 360 + 360) % 360;
         }
         return [RA, Dec];
     }
