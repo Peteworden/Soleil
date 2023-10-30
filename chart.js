@@ -1129,7 +1129,6 @@ function show_main(){
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     }
                 }
-                var skyareas = [[SkyArea(0, minDec), SkyArea(359.9, maxDec)]];
             }
 
             DrawStars_SH(skyareas);
@@ -1419,7 +1418,7 @@ function show_main(){
             var b =                 cos(Dec)*sin(RA-cenRA_rad);
             var c = cos(cenDec_rad)*cos(Dec)*cos(RA-cenRA_rad) + sin(cenDec_rad)*sin(Dec);
 
-            var r = Math.acos(c) * 180/pi; //distance, deg
+            var r = Math.acos(c) * 180/pi; //中心からの角距離, deg
             var thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
             var RA_SH = r * sin(thetaSH);
             var Dec_SH = - r * cos(thetaSH);
