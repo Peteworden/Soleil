@@ -209,8 +209,7 @@ function xhrExtra(data) {
 }
 
 function show_initial(){
-    if (xhrcheck == 10 && defaultcheck == 4){
-        now();
+    if (xhrcheck == 10 && defaultcheck == 7){
         newSetting();
         show_main();
     } else {
@@ -224,38 +223,79 @@ var showingJD = 0;
 
 const url = new URL(window.location.href);
 console.log(url.href);
-url.searchParams.set('RA', Math.round(cenRA*100)/100);
-url.searchParams.set('Dec', Math.round(cenDec*100)/100);
 
 function link(obj) {
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
         var i = parseInt(obj.substr(1)) - 1;
         cenRA = parseFloat(messier[3*i]);
         cenDec = parseFloat(messier[3*i+1]);
-        url.searchParams.set('RA', cenRA);
-        url.searchParams.set('Dec', cenDec);
     } else { //その他
         for (var i=0; i<NGC.length/4; i++) {
             if (obj == NGC[4*i]) {
                 cenRA = parseFloat(NGC[4*i+1]);
                 cenDec = parseFloat(NGC[4*i+2]);
-                url.searchParams.set('RA', cenRA);
-                url.searchParams.set('Dec', cenDec);
             }
         }
     }
+    url.searchParams.set('RA', cenRA);
+    url.searchParams.set('Dec', cenDec);
+    history.replaceState('', '', url.href);
     document.getElementById("settingBtn").removeAttribute("disabled");
     document.getElementById('description').style.visibility = "hidden";
     show_main();
 }
 
 // キーを指定し、クエリパラメータを取得
-if (url.searchParams.has('time')) {
-    var [y, m, d, h] = url.searchParams.get('time').split('-');
-    setYMDH(y, m, d, h)
+if (url.searchParams.has('RA')) {
+    cenRA = parseFloat(url.searchParams.get('RA'));
     defaultcheck++;
     show_initial();
 } else {
+    cenRA = 270;
+    url.searchParams.set('RA', cenRA);
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('Dec')) {
+    cenDec = parseFloat(url.searchParams.get('Dec'));
+    defaultcheck++;
+    show_initial();
+} else {
+    cenDec = -25;
+    url.searchParams.set('Dec', cenDec);
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('time')) {
+    var [y, m, d, h] = url.searchParams.get('time').split('-');
+    console.log(url.searchParams.get('time').split('-'));
+    setYMDH(y, m, d, h);
+    showingJD = YMDH_to_JD(y, m, d, h);
+    defaultcheck++;
+    show_initial();
+} else {
+    now();
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('SH')) {
+    console.log(url.searchParams.get('SH'));
+    if (url.searchParams.get('SH') == 1) {
+        SHmode = true;
+        document.getElementById('SHzuhoCheck').checked;
+    } else {
+        SHmode = false;
+        document.getElementById('SHzuhoCheck').checked = false;
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    SHmode = true;
+    document.getElementById('SHzuhoCheck').checked;
+    url.searchParams.set('SH', 0);
     defaultcheck++;
     show_initial();
 }
@@ -295,7 +335,8 @@ if (url.searchParams.has('lon')) {
 function now() {
     var ymdhm = new Date();
     var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
-    setYMDH(y, m, d, h)
+    setYMDH(y, m, d, h);
+    showingJD = YMDH_to_JD(y, m, d, h);
 }
 
 function setYMDH(y, m, d, h) {
@@ -403,7 +444,7 @@ function newSetting() {
     console.log(url.href);
     history.replaceState('', '', url.href);
 
-    document.getElementById('showingData').innerHTML = year + "/" + month + "/" + date + "/" + hour + "時JST " + lattext + " " + lontext;
+    document.getElementById('showingData').innerHTML = year + "/" + month + "/" + date + " " + hour + "時JST " + lattext + " " + lontext;
 
     if (document.getElementById('to11Check').checked) {
         if (xhrcheck == 10) {
@@ -420,8 +461,10 @@ function newSetting() {
 
     if (document.getElementById('SHzuhoCheck').checked) {
         SHmode = true;
+        url.searchParams.set('SH', 1);
     } else {
         SHmode = false;
+        url.searchParams.set('SH', 0);
     }
 
     showingJD = YMDH_to_JD(year, month, date, hour);
@@ -477,8 +520,6 @@ function onMouseMove(e) {
                 canvas.removeEventListener("touchmove", onMouseMove);
                 cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
                 cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - startY) / canvas.height), 90);
-                url.searchParams.set('RA', Math.round(cenRA*100)/100);
-                url.searchParams.set('Dec', Math.round(cenDec*100)/100);
                 show_main();
                 startX = moveX;
                 startY = moveY;
@@ -513,8 +554,6 @@ function onMouseMove(e) {
                 rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim();
                 zerosize = find_zerosize();
-                url.searchParams.set('RA', Math.round(cenRA*100)/100);
-                url.searchParams.set('Dec', Math.round(cenDec*100)/100);
                 show_main();
                 baseDistance = distance;
                 canvas.addEventListener("touchmove", onMouseMove);
@@ -527,6 +566,9 @@ function onMouseMove(e) {
 }
 
 canvas.addEventListener('touchend', function(e) {
+    url.searchParams.set('RA', Math.round(cenRA*100)/100);
+    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    history.replaceState('', '', url.href);
     baseDistance = 0;
 });
 
@@ -555,11 +597,10 @@ var onMouseMove = function(e) {
             cenRA = (cenRA % 360 + 360) % 360;
             cenDec = Math.min(Math.max(cenDec, -90), 90);
         } else {
+            console.log(SHmode, cenRA, cenDec, rgEW, rgNS, startX, startY, moveX, moveY);
             cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
             cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
         }
-        url.searchParams.set('RA', Math.round(cenRA*100)/100);
-        url.searchParams.set('Dec', Math.round(cenDec*100)/100);
         show_main();
         startX = moveX;
         startY = moveY;
@@ -567,6 +608,9 @@ var onMouseMove = function(e) {
 }
 
 canvas.onmouseup = function(event){
+    url.searchParams.set('RA', Math.round(cenRA*100)/100);
+    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    history.replaceState('', '', url.href);
     canvas.removeEventListener("mousemove", onMouseMove);
 }
 
@@ -592,8 +636,6 @@ canvas.onwheel = function zoom(event) {
     magLim = find_magLim(rgEW);
     zerosize = find_zerosize();
 
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
     show_main();
 }
 
