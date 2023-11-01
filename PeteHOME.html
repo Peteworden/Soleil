@@ -3,45 +3,126 @@
   <head>
     <title>Pete HOME</title>
     <meta charset="UTF-8">
+    <script type="text/javascript" nonce="f995dbb5c9ed47528971ee58740" src="//local.adguard.org?ts=1698529438160&amp;type=content-script&amp;dmn=peteworden.github.io&amp;url=https%3A%2F%2Fpeteworden.github.io%2FSoleil%2FPeteHOME.html&amp;app=com.android.chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=0"></script>
     <link rel="stylesheet" href="stylePeteHome.css">
   </head>
+  
   <body>
+    <!-- ヘッダー -->
     <header>
       <h1>ぴーと<span class="no">の</span><span class="he">部</span>屋</h1>
     </header>
-
+    
+    <!-- メイン -->
     <main>
-      <div class="pages">
+     <div class="lay_pages">
+      <div class="pages"> 
+          
+        <!-- ページイントロ① -->
         <div class="pageIntro">
-          <a href="SoleilTop.html">ソレイユ</a><br>
-          <img class="imgWide" src="2022091002_2月.png" alt="" title="うさぎうさぎ　何見て跳ねる　十五夜お月様　見て跳ねる">
-          <p>太陽系の惑星、小惑星、彗星の位置を調べる</p>  
+          <!-- ページイントロのタイトル(リンク)と紹介部分とを分け、それぞれdivで囲む -->
+          <div class="box_title_pageIntro">
+            <a class="link_title_pageIntro" href="SoleilTop.html">
+              <div>
+              ソレイユ<span>▶</span>
+              </div>
+            </a>
+          </div>
+          <!-- ページイントロの紹介部分 -->
+          <div class="description_pageIntro">
+            <img id="imgWide" class="imgWide" src="2022091002_2月.png" alt="" title="うさぎうさぎ　何見て跳ねる　十五夜お月様　見て跳ねる">
+            <p>太陽系の惑星、小惑星、彗星の位置を調べる</p>
+          </div>
         </div>
+        
+        <!-- ページイントロ② -->
         <div class="pageIntro">
-          <a href="SoleilWeb.html">ソレイユWeb</a><br>
-          <a href="SoleilWebDark.html">↑のダークモード</a><br>
-          <p>左の一部をブラウザですぐに試せます<br>とりあえずクリック</p>
+          <div class="box_title_pageIntro">
+            <a class="link_title_pageIntro" href="SoleilWeb.html">
+              <div>
+              ソレイユWeb<span>▶</span>
+              </div>
+            </a>
+          </div>
+          <div class="box_title_pageIntro">
+            <a class="link_title_pageIntro" href="SoleilWebDark.html">
+              <div>
+              ⬆のダークモード<span>▶</span>
+              </div>
+            </a>
+          </div>
+          <div class="description_pageIntro">
+            <p>ソレイユの一部をブラウザですぐに試せます<br>とりあえずクリック</p>
+          </div>
         </div>
+        
+        <!-- ページイントロ③ -->
         <div class="pageIntro">
-          <a href="ConstQuiz.html">星座クイズ</a><br>
-          <img class="imgTall" src="ConstQuizImage.png" alt="" title="これはわかるよね？？">
-          <p>星座当てクイズ　難易度高</p>
+          <div class="box_title_pageIntro">
+            <a class="link_title_pageIntro" href="ConstQuiz.html">
+              <div>星座クイズ<span>▶</span></div>
+            </a>
+          </div>
+          <div class="description_pageIntro">
+            <img id="imgTall" class="imgTall" src="ConstQuizImage.png" alt="" title="これはわかるよね？？">
+            <p>星座当てクイズ　難易度高</p>
+          </div>
         </div>
+      
+        <!-- ページイントロ④ -->
         <div class="pageIntro">
-          <a href="chart.html">New! 星図</a><br>
-          <img class="imgTall" src="chartImg.jpg" alt="" title="星はすばる。">
-          <p>星図を作りました!</p>
+          <div class="box_title_pageIntro">
+            <a class="link_title_pageIntro" href="chart.html">
+              <div>New! 星図<span>▶</span></div>
+            </a>
+          </div>
+          <div class="description_pageIntro">
+            <img id="imgTall" class="imgTall" src="chartImg.jpg" alt="" title="星はすばる。">
+            <p>星図を作りました！</p>
+          </div>
+        </div>
+       </div>
+       <script>
+        if (window.innerWidth < window.innerHeight) {
+          console.log();
+          document.getElementById("imgTall").style.width = "80%";
+          document.getElementById("imgWide").style.width = "80%";
+        }
+      </script>
+      </div>
+      
+      <!-- 境界線(グラデーションを使うためにわざわざ設けている) -->
+      <div class="borderLine_over_comments"></div>
+      
+      <!-- コメント -->
+      <!-- pタグからdivタグに置き換えた -->
+      <div class="comments">
+        <div>中高の友人がデザインとCSSを作ってくれました、ありがとう！！</div>
+        <div>「ぴーと」というのは私（作者）のことですが、特に深い意味はありません。本名はまずいからさ</div>
+        <div>プログラミング経験ある人とつながりたい！　言語は何でも。私が特に多く使うのはPythonとJavaScriptです。独学はきつい～</div>
+        <div>これらのソースコードは
+          <a href="https://github.com/Peteworden/Soleil">
+            <div class="btn_link_github"><span>ここ</span></div>
+          </a>
+          から見れます
         </div>
       </div>
     </main>
-
+    
+    <!-- フッター -->
     <footer>
-      <p>色使いなんとかしたいけどよくわからない</p>
-      <p>「ぴーと」というのは私（作者）のことですが、特に深い意味はありません。本名はまずいからさ。詮索はやめましょう</p>
-      <p>プログラミング経験ある人とつながりたい！　言語はJava、HTML、JavaScript、Kotlin、Python、C++など何でも　私が特に使えるのはPythonとJavaScriptです　知識が偏ってる気がするけど聞かれたらわかる範囲で答えます　独学はきつい～</p>
-      <p>これらのソースコードは右のリンクから見れます 
-        <a href="https://github.com/Peteworden/Soleil">https://github.com/Peteworden/Soleil</a>
-      </p>
+      <div class="box_sns_footer">
+        <p>ぴーとのSNS</p>
+        <!-- SNSのアイコンを並べる -->
+        <div class="icons_sns_footer">
+          <!-- GitHub -->
+          <a href="https://github.com/Peteworden">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+              <path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
+            </svg>
+          </a>
+        </div>
+      </div>
     </footer>
   </body>
 </html>
