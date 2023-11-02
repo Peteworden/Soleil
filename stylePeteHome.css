@@ -27,7 +27,6 @@ body {
     display: flex;
     flex-direction: column;
     min-height:100vh;
-    text-align: center;
 }
 
 
@@ -61,6 +60,7 @@ main {
 
 
 .pages {
+    text-align: center;
     /* レスポンシブ対応が難しいので、ページイントロをflexで横一列にするのをやめた(縦に並べた)。その結果div.pagesにあてるスタイルはなくなった */
 }
 
@@ -141,12 +141,14 @@ main {
 
 .imgWide {
     margin: 10px;
-    width: 50%;
+    max-width: 80%;
+    height: auto;
 }
 
 .imgTall {
     margin: 10px;
-    width: 25%;
+    max-width: 30%;
+    height: auto;
 }
 
 /* 境界を独立させた */

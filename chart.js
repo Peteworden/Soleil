@@ -1,4 +1,4 @@
-//2023/10/21 ~ 10/24
+//2023/10/21 ~ 11/2
 
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
@@ -8,6 +8,8 @@ const separationColor = '#FFF'
 const starColor = '#FFF'
 const yellowColor = 'yellow'
 //'yellow'は全部yellowColorにする
+
+const pi = Math.PI;
 
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
@@ -70,7 +72,6 @@ function loadFile(filename, func, go) {
             func(xhr.responseText);
             console.log(filename + " ready");
             xhrcheck++;
-            console.log(xhrcheck);
             if (go == 1) {
                 show_initial();
             } else {
@@ -213,7 +214,7 @@ function xhrExtra(data) {
 }
 
 function show_initial(){
-    if (xhrcheck == 10 && defaultcheck == 7){
+    if (xhrcheck == 10 && defaultcheck == 9){
         newSetting();
         show_main();
     } else {
@@ -274,7 +275,7 @@ if (url.searchParams.has('Dec')) {
 
 if (url.searchParams.has('time')) {
     var [y, m, d, h] = url.searchParams.get('time').split('-');
-    console.log(url.searchParams.get('time').split('-'));
+    console.log('time', url.searchParams.get('time').split('-'));
     setYMDH(y, m, d, h);
     showingJD = YMDH_to_JD(y, m, d, h);
     defaultcheck++;
@@ -286,20 +287,55 @@ if (url.searchParams.has('time')) {
 }
 
 if (url.searchParams.has('SH')) {
-    console.log(url.searchParams.get('SH'));
+    console.log('SH', url.searchParams.get('SH'));
     if (url.searchParams.get('SH') == 1) {
         SHmode = true;
-        document.getElementById('SHzuhoCheck').checked;
+        document.getElementById('SHzuhoCheck').checked = true;
     } else {
         SHmode = false;
+        url.searchParams.set('SH', 0);
         document.getElementById('SHzuhoCheck').checked = false;
     }
     defaultcheck++;
     show_initial();
 } else {
-    SHmode = true;
-    document.getElementById('SHzuhoCheck').checked;
+    SHmode = false;
+    document.getElementById('SHzuhoCheck').checked = false;
     url.searchParams.set('SH', 0);
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('to11')) {
+    if (url.searchParams.get('to11') == 1) {
+        document.getElementById('to11Check').checked = true;
+        magLimLim = 11;
+        magLim = find_magLim();
+        if (xhrcheck == 10) {
+            loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 2),
+            loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 2);
+        }
+    } else {
+        document.getElementById('to11Check').checked = false;
+        url.searchParams.set('to11', 0);
+    }
+    defaultcheck++;
+    show_initial();
+} else {
+    document.getElementById('to11Check').checked = false;
+    url.searchParams.set('to11', 0);
+    defaultcheck++;
+    show_initial();
+}
+
+if (url.searchParams.has('area')) {
+    console.log('area', url.searchParams.get('area'));
+    rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
+    rgNS = rgEW * canvas.height / canvas.width;
+    defaultcheck++;
+    show_initial();
+} else {
+    url.searchParams.set('area', (Math.round(2*rgEW*100)/100).toString());
     defaultcheck++;
     show_initial();
 }
@@ -414,6 +450,28 @@ function newSetting() {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
 
+    if (document.getElementById('to11Check').checked) {
+        url.searchParams.set('to11', 1);
+        if (xhrcheck == 10) {
+            loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 2),
+            loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 2);
+        }
+        magLimLim = 11;
+        magLim = find_magLim();
+    } else {
+        url.searchParams.set('to11', 0);
+        magLimLim = 10;
+        magLim = find_magLim();
+    }
+
+    if (document.getElementById('SHzuhoCheck').checked) {
+        SHmode = true;
+        url.searchParams.set('SH', 1);
+    } else {
+        SHmode = false;
+        url.searchParams.set('SH', 0);
+    }
+
     if (document.getElementById("NSCombo").value == '北緯') {
         lat_obs = document.getElementById('lat').value * Math.PI/180;
         lattext = document.getElementById('lat').value + "°N";
@@ -449,26 +507,6 @@ function newSetting() {
     history.replaceState('', '', url.href);
 
     document.getElementById('showingData').innerHTML = year + "/" + month + "/" + date + " " + hour + "時JST " + lattext + " " + lontext;
-
-    if (document.getElementById('to11Check').checked) {
-        if (xhrcheck == 10) {
-            loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 2),
-            loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 2);
-        }
-        magLimLim = 11;
-        magLim = find_magLim();
-    } else {
-        magLimLim = 10;
-        magLim = find_magLim();
-    }
-
-    if (document.getElementById('SHzuhoCheck').checked) {
-        SHmode = true;
-        url.searchParams.set('SH', 1);
-    } else {
-        SHmode = false;
-        url.searchParams.set('SH', 0);
-    }
 
     showingJD = YMDH_to_JD(year, month, date, hour);
     calculation(showingJD);
@@ -511,8 +549,8 @@ canvas.addEventListener("touchstart", function(e) {
 });
 
 // スワイプ中またはピンチイン・ピンチアウト中
-canvas.addEventListener("touchmove", onMouseMove);
-function onMouseMove(e) {
+canvas.addEventListener("touchmove", onTouchMove);
+function onTouchMove(e) {
     e.preventDefault();
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
@@ -520,13 +558,24 @@ function onMouseMove(e) {
             moveX = touches[0].pageX;
             moveY = touches[0].pageY;
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
-                canvas.removeEventListener("touchmove", onMouseMove);
-                cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width) % 360 + 360) % 360;
-                cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - startY) / canvas.height), 90);
+                //canvas.removeEventListener("touchmove", onMouseMove);
+                if (SHmode) {
+                    var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var startDec_SH = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [startRA, startDec] = SHtoRADec(startRA_SH, startDec_SH);
+                    var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [moveRA, moveDec] = SHtoRADec(moveRA_SH, moveDec_SH);
+                    cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
+                    cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
+                } else {
+                    cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width) % 360 + 360) % 360;
+                    cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - startY) / canvas.height), 90);
+                }
                 show_main();
                 startX = moveX;
                 startY = moveY;
-                canvas.addEventListener("touchmove", onMouseMove);
+                //canvas.addEventListener("touchmove", onMouseMove);
             }
         }
     } else {
@@ -537,12 +586,10 @@ function onMouseMove(e) {
         var y2 = touches[1].pageY ;
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
         if (baseDistance) {
-            canvas.removeEventListener("touchmove", onMouseMove);
+            //canvas.removeEventListener("touchmove", onTouchMove);
             movedDistance = distance;
-            var x3 = (x1 + x2) / 2 - canvas.offsetLeft;
-            var y3 = (y1 + y2) / 2 - canvas.offsetTop;
-            var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
-            var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
+            var x3 = (x1 + x2) / 2 - canvas.offsetLeft - canvas.width / 2;
+            var y3 = (y1 + y2) / 2 - canvas.offsetTop - canvas.height / 2;
             var scale = movedDistance / baseDistance;
             if (scale && scale != Infinity) {
                 if (canvas.width < canvas.height) {
@@ -552,14 +599,22 @@ function onMouseMove(e) {
                 }
                 rgNS /= scale;
                 rgEW /= scale;
-                cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
-                cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
+                if (SHmode) {
+                    var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
+                    var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
+                    [cenRA, cenDec] = SHtoRADec(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
+                } else {
+                    var pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
+                    var pinchDec = cenDec - rgNS * y3 / (canvas.height / 2);
+                    cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
+                    cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
+                }
                 rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
                 magLim = find_magLim();
                 zerosize = find_zerosize();
                 show_main();
                 baseDistance = distance;
-                canvas.addEventListener("touchmove", onMouseMove);
+                //canvas.addEventListener("touchmove", onTouchMove);
             }
         } else {
             // 基本の距離
@@ -571,6 +626,7 @@ function onMouseMove(e) {
 canvas.addEventListener('touchend', function(e) {
     url.searchParams.set('RA', Math.round(cenRA*100)/100);
     url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    url.searchParams.set('area', (Math.round(2*rgEW*100)/100).toString());
     history.replaceState('', '', url.href);
     baseDistance = 0;
 });
@@ -586,21 +642,21 @@ canvas.onmousedown = function(event){
     canvas.addEventListener("mousemove", onMouseMove);
 }
 
-//canvas.addEventListener("mousemove", onMouseMove);
 var onMouseMove = function(e) {
     //e.preventDefault();
     moveX = e.pageX;
     moveY = e.pageY;
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
         if (SHmode) {
-            var heldRA_SH = cenRA - rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var heldDec_SH = cenDec - rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            cenRA = heldRA_SH + rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            cenDec = heldDec_SH + rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            cenRA = (cenRA % 360 + 360) % 360;
-            cenDec = Math.min(Math.max(cenDec, -90), 90);
+            var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var startDec_SH = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [startRA, startDec] = SHtoRADec(startRA_SH, startDec_SH);
+            var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [moveRA, moveDec] = SHtoRADec(moveRA_SH, moveDec_SH);
+            cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
+            cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
         } else {
-            console.log(SHmode, cenRA, cenDec, rgEW, rgNS, startX, startY, moveX, moveY);
             cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
             cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
         }
@@ -626,25 +682,43 @@ canvas.addEventListener('mousemove', function(e) {
 canvas.onmouseup = function(event){
     url.searchParams.set('RA', Math.round(cenRA*100)/100);
     url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    url.searchParams.set('area', (Math.round(2*rgEW*100)/100).toString());
     history.replaceState('', '', url.href);
     canvas.removeEventListener("mousemove", onMouseMove);
 }
 
 canvas.onwheel = function zoom(event) {
-    console.log(xhrcheck);
     event.preventDefault();
-    var x3 = event.pageX - canvas.offsetLeft;
-    var y3 = event.pageY - canvas.offsetTop;
+    var x3 = event.pageX - canvas.offsetLeft - canvas.width / 2;
+    var y3 = event.pageY - canvas.offsetTop - canvas.height / 2;
+    var scale = 1 - event.deltaY * 0.0005;
+    if (scale && scale != Infinity) {
+        if (canvas.width < canvas.height) {
+            scale = Math.max(Math.min(scale, rgEW/minrg), rgNS/maxrg);
+        } else {
+            scale = Math.max(Math.min(scale, rgNS/minrg), rgEW/maxrg);
+        }
+        rgNS /= scale;
+        rgEW /= scale;
+        if (SHmode) {
+            var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
+            var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
+            [cenRA, cenDec] = SHtoRADec(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
+        } else {
+            var pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
+            var pinchDec = cenDec - rgNS * y3 / (canvas.height / 2);
+            cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
+            cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
+        }
+        rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
+        magLim = find_magLim();
+        zerosize = find_zerosize();
+        show_main();
+        baseDistance = distance;
+        //canvas.addEventListener("touchmove", onTouchMove);
+    }
     var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
     var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-    var scale = 1 - event.deltaY * 0.0005;
-    if (canvas.width < canvas.height) {
-        scale = Math.max(Math.min(scale, rgEW/minrg), rgNS/maxrg);
-    } else {
-        scale = Math.max(Math.min(scale, rgNS/minrg), rgEW/maxrg);
-    }
-    rgNS /= scale;
-    rgEW /= scale;
     cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
     cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
     
@@ -1686,6 +1760,27 @@ function show_main(){
         }
         return r;
     }
+}
+
+function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+    if (RA_SH == 0 && Dec_SH == 0) {
+        var RA = cenRA;
+        var Dec = cenDec;
+    } else {
+        var thetaSH = Math.atan2(RA_SH, -Dec_SH);
+        var r = Math.sqrt(RA_SH*RA_SH + Dec_SH*Dec_SH) * pi / 180;
+        
+        var cenRA_rad = cenRA * pi/180;
+        var cenDec_rad = cenDec * pi/180;
+        
+        var a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
+        var b =                  sin(r)*sin(thetaSH);
+        var c = -cos(cenDec_rad)*sin(r)*cos(thetaSH) + sin(cenDec_rad)*cos(r);
+
+        var Dec = Math.asin(c) * 180/pi;
+        var RA = ((Math.atan2(b, a) * 180/pi + cenRA) % 360 + 360) % 360;
+    }
+    return [RA, Dec];
 }
 
 function sin(a){return Math.sin(a)}
