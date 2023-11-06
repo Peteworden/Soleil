@@ -1580,9 +1580,9 @@ function show_main(){
             var st = parseInt(Help[arearange[0]]);
             var fi = parseInt(Help[arearange[1]+1]);
             for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho[3*i]);
-                var Dec = parseFloat(Tycho[3*i+1]);
-                var mag = parseFloat(Tycho[3*i+2]);
+                var RA = parseFloat(Tycho[3*(i-1)]);
+                var Dec = parseFloat(Tycho[3*(i-1)+1]);
+                var mag = parseFloat(Tycho[3*(i-1)+2]);
                 if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW && mag < magLim) {
                     var [x, y] = coord(RA, Dec);
                     ctx.beginPath();
@@ -1598,9 +1598,9 @@ function show_main(){
             var st = parseInt(Help1011[arearange[0]]);
             var fi = parseInt(Help1011[arearange[1]+1]);
             for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho1011[3*i]);
-                var Dec = parseFloat(Tycho1011[3*i+1]);
-                var mag = parseFloat(Tycho1011[3*i+2]);
+                var RA = parseFloat(Tycho1011[3*(i-1)]);
+                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
+                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
                 if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW && mag < magLim) {
                     var [x, y] = coord(RA, Dec);
                     ctx.beginPath();
@@ -1615,10 +1615,11 @@ function show_main(){
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
             var fi = parseInt(Help[arearange[1]+1]);
+            console.log(st, fi);
             for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho[3*i]);
-                var Dec = parseFloat(Tycho[3*i+1]);
-                var mag = parseFloat(Tycho[3*i+2]);
+                var RA = parseFloat(Tycho[3*(i-1)]);
+                var Dec = parseFloat(Tycho[3*(i-1)+1]);
+                var mag = parseFloat(Tycho[3*(i-1)+2]);
                 var [RA_SH, Dec_SH] = angleSH(RA, Dec);
                 if (mag < magLim && Math.abs(Dec_SH) < rgNS && Math.abs(RA_SH) < rgEW) {
                     var [x, y] = coordSH(RA_SH, Dec_SH);
@@ -1635,9 +1636,9 @@ function show_main(){
             var st = parseInt(Help1011[arearange[0]]);
             var fi = parseInt(Help1011[arearange[1]+1]);
             for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho1011[3*i]);
-                var Dec = parseFloat(Tycho1011[3*i+1]);
-                var mag = parseFloat(Tycho1011[3*i+2]);
+                var RA = parseFloat(Tycho1011[3*(i-1)]);
+                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
+                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
                 var [RA_SH, Dec_SH] = angleSH(RA, Dec);
                 if (mag < magLim && Math.abs(Dec_SH) < rgNS && Math.abs(RA_SH) < rgEW) {
                     var [x, y] = coordSH(RA_SH, Dec_SH);
