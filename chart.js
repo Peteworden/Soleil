@@ -299,9 +299,9 @@ if (url.searchParams.has('SH')) {
     defaultcheck++;
     show_initial();
 } else {
-    SHmode = false;
-    document.getElementById('SHzuhoCheck').checked = false;
-    url.searchParams.set('SH', 0);
+    SHmode = true;
+    document.getElementById('SHzuhoCheck').checked = true;
+    url.searchParams.set('SH', 1);
     defaultcheck++;
     show_initial();
 }
@@ -717,15 +717,9 @@ canvas.onwheel = function zoom(event) {
         baseDistance = distance;
         //canvas.addEventListener("touchmove", onTouchMove);
     }
-    var pinchRA  = cenRA  - rgEW * (x3 - canvas.width  / 2) / (canvas.width  / 2);
-    var pinchDec = cenDec - rgNS * (y3 - canvas.height / 2) / (canvas.height / 2);
-    cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
-    cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
-    
     rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
     magLim = find_magLim(rgEW);
     zerosize = find_zerosize();
-
     show_main();
 }
 
@@ -1149,11 +1143,6 @@ function show_main(){
                         ctx.moveTo(x1, y1);
                         ctx.lineTo(x2, y2);
                     }
-                    /*if (RA1_SH*RA1_SH + Dec1_SH*Dec1_SH < Math.pow(Math.min(Math.max(2*rgEW, 2*rgNS, 25), 150), 2)) {
-                        if (RA2_SH*RA2_SH + Dec2_SH*Dec2_SH < Math.pow(Math.min(Math.max(2*rgEW, 2*rgNS, 30), 150), 2)) {
-                        
-                        }
-                    }*/
                 }
             }
         }
@@ -1177,56 +1166,27 @@ function show_main(){
         //Tycho
         var skyareas = [];
         if (magLim > 6.5) {
-            var edgeDec1 = SHtoRADec(rgEW, -rgNS)[1];
-            var edgeDec2 = SHtoRADec(rgEW,  rgNS)[1];
             var minDec = Math.max(-90, Math.min(SHtoRADec(rgEW, -rgNS)[1], cenDec-rgNS));
             var maxDec = Math.min( 90, Math.max(SHtoRADec(rgEW,  rgNS)[1], cenDec+rgNS));
 
             if (minDec == -90 || maxDec == 90) {
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, maxDec)]];
             } else {
-                var RArange1 = ((SHtoRADec(rgEW,  rgNS)[0] - cenRA) % 360 + 180) % 360 - 180;
-                var RArange2 = ((SHtoRADec(rgEW,     0)[0] - cenRA) % 360 + 180) % 360 - 180;
-                var RArange3 = ((SHtoRADec(rgEW, -rgNS)[0] - cenRA) % 360 + 180) % 360 - 180;
+                var RArange1 = (SHtoRADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
+                var RArange2 = (SHtoRADec(rgEW,     0)[0] - cenRA + 360) % 360;
+                var RArange3 = (SHtoRADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
                 var RArange = Math.max(RArange1, RArange2, RArange3);
-                /*for (var i=Math.floor(minDec); i<=Math.ceil(maxDec); i++) {
-                    if (i < edgeDec1 || i > edgeDec2) {
-                        if (cenRA - RArange < 0) {
-                            skyareas.push([SkyArea(                0, i), SkyArea(cenRA+RArange, i)]);
-                            skyareas.push([SkyArea(cenRA-RArange+359, i), SkyArea(        359.9, i)]);
-                        } else if (cenRA + RArange > 360) {
-                            skyareas.push([SkyArea(            0, i), SkyArea(cenRA+RArange-360, i)]);
-                            skyareas.push([SkyArea(cenRA-RArange, i), SkyArea(            359.9, i)]);
-                        } else {
-                            skyareas.push([SkyArea(cenRA-RArange, i), SkyArea(cenRA+RArange, i)]);
-                        }
-                    } else {
-                        var [RA, Dec] = SHtoRADec(rgEW,  i-cenDec);
-                        var RArangei = ((RA - cenRA) % 360 + 180) % 360 - 180;
-                        console.log(i, Dec, RArangei);
-                        if (cenRA - RArange < 0) {
-                            skyareas.push([SkyArea(                0, Dec), SkyArea( RA+1, Dec)]);
-                            skyareas.push([SkyArea(cenRA-RArangei+359, Dec), SkyArea(359.9, Dec)]);
-                        } else if (cenRA + RArange > 360) {
-                            skyareas.push([SkyArea(              0, Dec), SkyArea(cenRA+RArangei-359, Dec)]);
-                            skyareas.push([SkyArea(cenRA-RArangei-1, Dec), SkyArea(            359.9, Dec)]);
-                        } else {
-                            skyareas.push([SkyArea(cenRA-RArangei-1, Dec), SkyArea(RA+1, Dec)]);
-                        }
-                    }
-                
-                }
-            }*/
+
                 if (cenRA - RArange < 0) {
-                    var skyareas = [[SkyArea(0,              minDec), SkyArea(cenRA+RArange, minDec)],
-                                    [SkyArea(cenRA-RArange+360, minDec), SkyArea(359.9,      minDec)]];
+                    var skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
+                                    [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
                     for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else if (cenRA + RArange > 360) {
-                    var skyareas = [[SkyArea(0,             minDec), SkyArea(cenRA+RArange-360, minDec)],
-                                    [SkyArea(cenRA-RArange, minDec), SkyArea(359.9,      minDec)]];
+                    var skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
+                                    [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
                     for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
@@ -1615,7 +1575,6 @@ function show_main(){
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
             var fi = parseInt(Help[arearange[1]+1]);
-            console.log(st, fi);
             for (i=st; i<fi; i++) {
                 var RA = parseFloat(Tycho[3*(i-1)]);
                 var Dec = parseFloat(Tycho[3*(i-1)+1]);
