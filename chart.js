@@ -1168,9 +1168,13 @@ function show_main(){
         if (magLim > 6.5) {
             var minDec = Math.max(-90, Math.min(SHtoRADec(rgEW, -rgNS)[1], cenDec-rgNS));
             var maxDec = Math.min( 90, Math.max(SHtoRADec(rgEW,  rgNS)[1], cenDec+rgNS));
+            console.log(minDec, maxDec);
 
-            if (minDec == -90 || maxDec == 90) {
-                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, maxDec)]];
+            if (minDec == -90) {
+                skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
+            } else if (maxDec == 90) {
+                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
+                console.log(skyareas);
             } else {
                 var RArange1 = (SHtoRADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
                 var RArange2 = (SHtoRADec(rgEW,     0)[0] - cenRA + 360) % 360;
