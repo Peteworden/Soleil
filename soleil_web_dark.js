@@ -1,7 +1,10 @@
 //分断の色と星の色を変える
-const separationColor = '#000'
-const starColor = '#F33'
-const yellowColor = '#990'
+const separationColor = '#000' //darkは'#000'
+const starColor = '#F33' //darkは'#F33'
+const yellowColor = '#990' //darkは'#990'
+//'yellow'は全部yellowColorにする
+
+
 
 const canvas = document.createElement('canvas');
 
@@ -14,180 +17,169 @@ const rgW = 30;
 const rgN = 2.5;
 
 const maglimW = 6.5;
-const maglimN = 10;
+const maglimN = 11;
 
 const zerosizeW = 5;
 const zerosizeN = 10;
 
 var xhrcheck = 0;
 
+function loadFile(filename, func, go) {
+    var url = "https://peteworden.github.io/Soleil/" + filename + ".txt";
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.send();
+    xhr.onreadystatechange = function() {
+        if(xhr.readyState === 4 && xhr.status === 200) {
+            func(xhr.responseText);
+            console.log(filename + " ready");
+            xhrcheck++;
+            show_initial();
+            return 0;
+        }
+    }
+}
+
 //HIP
-var num_of_stars = 0;
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
-
-var HIPurl = "https://peteworden.github.io/Soleil/StarsNewHIP_to6_5_set.txt";
-var xhr = new XMLHttpRequest();
-
-xhr.open('GET', HIPurl);
-xhr.send();
-xhr.onreadystatechange = function() {
-    if(xhr.readyState === 4 && xhr.status === 200) {
-        const DataAry = xhr.responseText.split(',');
-        
-        num_of_stars = DataAry.length / 3;
-
-        HIPRAary = Array(num_of_stars);
-        HIPDecary = Array(num_of_stars);
-        HIPmagary = Array(num_of_stars);
-        for (i=0; i<num_of_stars; i++){
-            HIPRAary[i] = parseFloat(DataAry[3*i]);
-            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
-        }
-        console.log("HIP ready");
-        xhrcheck++;
-        show_initial();
+loadFile("StarsNewHIP_to6_5_set", xhrHIP, 1);
+function xhrHIP(data) {
+    const DataAry = data.split(',');
+    var num_of_stars = DataAry.length / 3;
+    HIPRAary = Array(num_of_stars);
+    HIPDecary = Array(num_of_stars);
+    HIPmagary = Array(num_of_stars);
+    for (i=0; i<num_of_stars; i++){
+        HIPRAary[i] = parseFloat(DataAry[3*i]);
+        HIPDecary[i] = parseFloat(DataAry[3*i+1]);
+        HIPmagary[i] = parseFloat(DataAry[3*i+2]);
     }
 }
 
 //Tycho
 var Tycho = [];
-var Tychourl = "https://peteworden.github.io/Soleil/StarsNew-Tycho-to10-2nd_forJS.txt";
-var xhrT = new XMLHttpRequest();
-
-xhrT.open('GET', Tychourl);
-xhrT.send();
-xhrT.onreadystatechange = function() {
-    if(xhrT.readyState === 4 && xhrT.status === 200) {
-        Tycho = xhrT.responseText.split(',');
-        console.log("Tycho2 ready");
-        xhrcheck++;
-        show_initial();
-    }
+loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
+function xhrTycho(data) {
+    Tycho = data.split(',');
 }
+
 
 //Tycho helper
 var Help = [];
-var TychoHelpurl = "https://peteworden.github.io/Soleil/TychoSearchHelper2nd_forJS.txt";
-var xhrH = new XMLHttpRequest();
+loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
+function xhrHelp(data) {
+    Help = data.split(',');
+}
 
-xhrH.open('GET', TychoHelpurl);
-xhrH.send();
-xhrH.onreadystatechange = function() {
-    if(xhrH.readyState === 4 && xhrH.status === 200) {
-        Help = xhrH.responseText.split(',');
-        console.log("helper ready")
-        xhrcheck++;
-        show_initial();
-    }
+//Tycho 10~11 mag
+var Tycho1011 = [];
+loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
+function xhrTycho1011(data) {
+    Tycho1011 = data.split(',');
+}
+
+//Tycho helper 10~11 mag
+var Help1011 = [];
+loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
+function xhrHelp1011(data) {
+    Help1011 = data.split(',');
+}
+
+// メシエ天体
+var messier  = Array(3 * 110);
+loadFile("messier_forJS", xhrMessier, 1);
+function xhrMessier(data) {
+    messier = data.split(',');
+}
+
+// NGC天体
+var NGC = [];
+loadFile("NGC_forJS", xhrNGC, 1);
+function xhrNGC(data) {
+    NGC = data.split(',');
 }
 
 //星座名
 var CLnames = [];
-var CLurl = "https://peteworden.github.io/Soleil/ConstellationList.txt";
-var xhrCL = new XMLHttpRequest();
+loadFile("ConstellationList", xhrCLnames, 1);
+function xhrCLnames(data) {
+    CLnames = data.split('\r\n');
+}
 
-xhrCL.open('GET', CLurl);
-xhrCL.send();
-xhrCL.onreadystatechange = function() {
-    if(xhrCL.readyState === 4 && xhrCL.status === 200) {
-        CLnames = xhrCL.responseText.split('\r\n');
-        console.log("constellations' names ready");
-        xhrcheck++;
-        show_initial();
-    }
+//星座の位置
+var constPos = [];
+loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
+function xhrCLpos(data) {
+    constPos = data.split(',');
 }
 
 //星座線
 var lines = [];
-var lineurl = "https://peteworden.github.io/Soleil/Lines_light_forJS.txt";
-var xhrL = new XMLHttpRequest();
-
-xhrL.open('GET', lineurl);
-xhrL.send();
-xhrL.onreadystatechange = function() {
-    if(xhrL.readyState === 4 && xhrL.status === 200) {
-        lines = xhrL.responseText.split(',');
-        console.log("lines ready");
-        xhrcheck++;
-        show_initial();
-    }
+loadFile("Lines_light_forJS", xhrCLlines, 1);
+function xhrCLlines(data) {
+    lines = data.split(',');
 }
 
 //星座境界線
 var boundary = [];
-var boundaryurl = "https://peteworden.github.io/Soleil/boundary_light_forJS.txt";
-var xhrB = new XMLHttpRequest();
-
-xhrB.open('GET', boundaryurl);
-xhrB.send();
-xhrB.onreadystatechange = function() {
-    if(xhrB.readyState === 4 && xhrB.status === 200) {
-        boundary = xhrB.responseText.split(',');
-        console.log("constellation boundarys ready");
-        xhrcheck++;
-        show_initial();
-    }
+loadFile("boundary_light_forJS", xhrCLboundary, 1);
+function xhrCLboundary(data) {
+    boundary = data.split(',');
 }
 
 //追加天体
-const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+var RAlist = new Array(20);
+var Declist = new Array(20);
+var Distlist = new Array(20);
+var Vlist = new Array(20);
+var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
 
 var extra = [];
-var extraurl = "https://peteworden.github.io/Soleil/ExtraPlanet.txt";
-var xhrX = new XMLHttpRequest();
 
-xhrX.open('GET', extraurl);
-xhrX.send();
-xhrX.onreadystatechange = function() {
-    if(xhrX.readyState === 4 && xhrX.status === 200) {
-        extra = xhrX.responseText.split(' ');
-
-        if (extra.length != 0) {
-            var name = extra[1];
-            for (var i=2; i<parseInt(extra[0])+1; i++) {
-                name += ' ' + extra[i];
-            }
-            ENGplanets.push(name);
-            JPNplanets.push(name);
-            const option1 = document.createElement('option');
-            option1.innerHTML = name;
-            document.getElementById('observer').appendChild(option1);
-            const option2 = document.createElement('option');
-            option2.innerHTML = name;
-            document.getElementById('target').appendChild(option2);
-                        
-            if (url.searchParams.has('observer') && xhrcheck == 7) {
-                for (var i=0; i<ENGplanets.length; i++) {
-                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                        document.getElementById("observer").value = JPNplanets[i];
-                        break;
-                    }
+loadFile("ExtraPlanet", xhrExtra, 1);
+function xhrExtra(data) {
+    extra = data.split(' ');
+    if (extra.length != 0) {
+        var name = extra[1];
+        for (var i=2; i<parseInt(extra[0])+1; i++) {
+            name += ' ' + extra[i];
+        }
+        ENGplanets.push(name);
+        JPNplanets.push(name);
+        const option1 = document.createElement('option');
+        option1.innerHTML = name;
+        document.getElementById('observer').appendChild(option1);
+        const option2 = document.createElement('option');
+        option2.innerHTML = name;
+        document.getElementById('target').appendChild(option2);
+                    
+        if (url.searchParams.has('observer') && xhrcheck == 7) {
+            for (var i=0; i<ENGplanets.length; i++) {
+                if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                    document.getElementById("observer").value = JPNplanets[i];
+                    break;
                 }
-                defaultcheck++;
-            } else {
-                defaultcheck++;
             }
-
-            if (url.searchParams.has('target')) {
-                for (var i=0; i<ENGplanets.length; i++) {
-                    if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                        document.getElementById("target").value = JPNplanets[i];
-                        break;
-                    }
-                }
-                defaultcheck++;
-            } else {
-                defaultcheck++;
-            }
+            defaultcheck++;
+        } else {
+            defaultcheck++;
         }
 
-        console.log("extra ready");
-        xhrcheck++;
-        show_initial();
+        if (url.searchParams.has('target')) {
+            for (var i=0; i<ENGplanets.length; i++) {
+                if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                    document.getElementById("target").value = JPNplanets[i];
+                    break;
+                }
+            }
+            defaultcheck++;
+        } else {
+            defaultcheck++;
+        }
     }
 }
 
@@ -216,17 +208,8 @@ var shiftDec = 0;
 var showingJD = 0;
 
 const url = new URL(window.location.href);
+console.log(url.href); 
 
-// キーを指定し、クエリパラメータを付与
-// url.searchParams.set('time', '2023-8-22-13');
-// url.searchParams.set('observer', 'Earth');
-// url.searchParams.set('target', 'Mars');
-console.log(url.href); // https://example.com?addParam=test
-// history.replaceState('', '', url.href);
-
-// キーを指定し、クエリパラメータを取得
-// const addParam = url.searchParams.get('time');
-// console.log(addParam); // test
 if (url.searchParams.has('time')) {
     var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
     console.log(y, m, d, h, h_min);
@@ -240,8 +223,6 @@ if (url.searchParams.has('time')) {
     defaultcheck++;
     show_initial();
 }
-
-
 
 if (url.searchParams.has('lat')) {
     var lat = url.searchParams.get('lat');
@@ -276,7 +257,7 @@ if (url.searchParams.has('lon')) {
 }
 
 if (url.searchParams.has('zengo')) {
-    document.getElementsByName("zengo")[0].checked;
+    document.getElementsByName("zengo")[0].checked = true;
     defaultcheck++;
     show_initial();
 } else {
@@ -318,6 +299,14 @@ if (url.searchParams.has('shiftDec')) {
     show_initial();
 }
 
+function show_initial(){
+    if (xhrcheck == 12 && defaultcheck == 8){
+        show();
+    } else {
+        console.log(xhrcheck, defaultcheck);
+    }
+}
+
 function now() {
     var ymdhm = new Date();
     var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
@@ -342,7 +331,7 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
     var E = Math.floor((C + 1) / 365.25025);
     var F = C - Math.floor(365.25 * E) + 31;
     var G = Math.floor(F / 30.59);
-    D = F - Math.floor(30.59 * G);
+    var D = F - Math.floor(30.59 * G);
     var H = Math.floor(G / 11);
     var M = G - 12 * H + 2;
     var Y = 100 * (B -49) + E + H;
@@ -363,14 +352,6 @@ function YMDH_to_JD(Y, M, D, H){
     }
     var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
     return JD;
-}
-
-function show_initial(){
-    if (xhrcheck == 7 && defaultcheck == 8){
-        show();
-    } else {
-        console.log(xhrcheck, defaultcheck);
-    }
 }
 
 function show() {
@@ -856,7 +837,7 @@ function show_main(JD){
 
     //HIP
     ctx.fillStyle = starColor;
-    for (i=0; i<num_of_stars; i++){
+    for (i=0; i<HIPRAary.length; i++){
         var RA = HIPRAary[i];
         var Dec = HIPDecary[i];
         var mag = HIPmagary[i];
@@ -881,26 +862,25 @@ function show_main(JD){
         //skyareasは[[a, b]]のaの領域とbの領域を両方含む
         var skyareas = [[SkyArea(0,             cenDec-rgN), SkyArea(cenRA+rgN, cenDec-rgN)],
                         [SkyArea(cenRA-rgN+360, cenDec-rgN), SkyArea(359.9,     cenDec-rgN)]];
-        if (Math.floor((cenDec+rgN)/10) > Math.floor((cenDec-rgN)/10)){
-            skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
-            skyareas.push([skyareas[1][0]+360, skyareas[1][1]+360]);
+        for (var i=1; i<=Math.floor(cenDec+rgN)-Math.floor(cenDec-rgN); i++) {
+            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+            skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
         }
-        DrawStars(skyareas);
     } else if (cenRA + rgN >= 360) {
         var skyareas = [[SkyArea(0,         cenDec-rgN), SkyArea(cenRA+rgN-360, cenDec-rgN)],
                         [SkyArea(cenRA-rgN, cenDec-rgN), SkyArea(359.9,         cenDec-rgN)]];
-        if (Math.floor((cenDec+rgN)/10) > Math.floor((cenDec-rgN)/10)){
-            skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
-            skyareas.push([skyareas[1][0]+360, skyareas[1][1]+360]);
+        for (var i=1; i<=Math.floor(cenDec+rgN)-Math.floor(cenDec-rgN); i++) {
+            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+            skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
         }
-        DrawStars(skyareas);
     } else {
         var skyareas = [[SkyArea(cenRA-rgN, cenDec-rgN), SkyArea(cenRA+rgN, cenDec-rgN)]];
-        if (Math.floor((cenDec+rgN)/10) > Math.floor((cenDec-rgN)/10)){
-            skyareas.push([skyareas[0][0]+360, skyareas[0][1]+360]);
+        for (var i=1; i<=Math.floor(cenDec+rgN)-Math.floor(cenDec-rgN); i++) {
+            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
         }
-        DrawStars(skyareas);
     }
+    DrawStars(skyareas);
+    DrawStars1011(skyareas);
 
     //惑星、惑星の名前
     ctx.font = '20px serif';
@@ -1105,8 +1085,6 @@ function show_main(JD){
         var Vtext = Math.round(Vlist[Selected_number]*10)/10 + "等級  ";
     }
 
-    
-    
     var coordtext = constellation + "__" + RAtext + Dectext + "__" + Disttext + "__" + Vtext + "__" + Astr + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
@@ -1136,7 +1114,7 @@ function show_main(JD){
     }
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
-        return parseInt(360 * Math.floor(Dec / 10 + 9) + Math.floor(RA));
+        return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
     function RApos(RA) {
@@ -1180,6 +1158,24 @@ function show_main(JD){
                 var Dec = parseFloat(Tycho[3*i+1]);
                 var mag = parseFloat(Tycho[3*i+2]);
                 if (Math.abs(Dec-cenDec) < rgN && Math.abs(RApos(RA)) < rgN && mag < 10) {
+                    var [x, y] = coordN(RA, Dec);
+                    ctx.beginPath();
+                    ctx.arc(x, y, sizeN(mag), 0, 2 * pi, false);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+
+    function DrawStars1011(skyareas){
+        for (var arearange of skyareas) {
+            var st = parseInt(Help1011[arearange[0]]);
+            var fi = parseInt(Help1011[arearange[1]+1]);
+            for (i=st; i<fi; i++) {
+                var RA = parseFloat(Tycho1011[3*(i-1)]);
+                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
+                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
+                if (Math.abs(Dec-cenDec) < rgN && Math.abs(RApos(RA)) < rgN && mag < maglimN) {
                     var [x, y] = coordN(RA, Dec);
                     ctx.beginPath();
                     ctx.arc(x, y, sizeN(mag), 0, 2 * pi, false);
