@@ -1,0 +1,31 @@
+<!--2023/12/08-->
+<html>
+    <head>
+        <title>星図</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="styleFindConst.css">
+    </head>
+    <body>
+        <h3 id="title">星座探し　<a href="PeteHOME.html">HOME</a>　<a href="SoleilWebDark.html">Soleil Web</a> </h3>
+
+        <div>
+            <button id="answerBtn" class="answerBtn" type="button" onclick="showAnswer()">
+                <img src="settingBtn.png" alt="答え">
+            </button>
+        </div>
+
+        <div>
+            <button id="nextBtn" class="nextBtn" type="button" onclick="showNext()">
+                <img src="descriptionBtn.png" alt="次"  width="70%" height="70%">
+            </button>
+        </div>
+
+        <div id="coordtext" class="coordtext"></div>
+        <div class="result">
+            <script src="findConst.js"></script>
+        </div>
+
+
+        <div id="showingData" class="showingData"></div>
+</html>
