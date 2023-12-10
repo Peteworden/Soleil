@@ -18,8 +18,8 @@ document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
 
-const BIGWIDTH = window.outerWidth;
-const BIGHEIGHT = window.outerHeight - 30;
+const BIGWIDTH = window.screen.width;
+const BIGHEIGHT = window.screen.height - 30;
 const NORMALWIDTH = window.innerWidth;
 const NORMALHEIGHT = window.innerHeight - 30;
 
