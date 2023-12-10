@@ -18,8 +18,8 @@ document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
 
-const BIGWIDTH = window.screen.width;
-const BIGHEIGHT = window.screen.height - 30;
+const BIGWIDTH = window.outerWidth;
+const BIGHEIGHT = window.outerHeight - 30;
 const NORMALWIDTH = window.innerWidth;
 const NORMALHEIGHT = window.innerHeight - 30;
 
@@ -27,18 +27,15 @@ function setCanvas (fullBool) {
     if (fullBool) {
         canvas.width = BIGWIDTH;
         canvas.height = BIGHEIGHT;
-        ctx = canvas.getContext('2d');
-        document.getElementById('title').innerHTML = `true, ${window.outerWidth}, ${BIGWIDTH}, ${canvas.width}, ${canvas.height}`;
     } else {
         canvas.width = NORMALWIDTH;
         canvas.height = NORMALHEIGHT;
-        ctx = canvas.getContext('2d');
-    document.getElementById('title').innerHTML = `false, ${window.innerWidth}, ${NORMALWIDTH}, ${canvas.width}, ${canvas.height}`;
     }
+    ctx = canvas.getContext('2d');
     if (rgEW != null && rgNS != null) {
         rgNS = rgEW * canvas.height / canvas.width;
     }
-    if (xhrcheck != null && defaultcheck != null && xhrcheck == 10 && defaultcheck == 9) {
+    if (xhrcheck != null && defaultcheck != null && xhrcheck >= 10 && defaultcheck == 9) {
         show_main();
     }
 }
