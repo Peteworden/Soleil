@@ -351,9 +351,9 @@ function ontouchmove(e) {
             var scale = movedDistance / baseDistance;
             if (scale && scale != Infinity) {
                 if (canvas.width < canvas.height) {
-                    scale = Math.max(Math.min(scale, rgLR/minrg), rgTS/maxrg);
+                    scale = Math.max(Math.min(scale, rgLR/minrg), rgTB/maxrg);
                 } else {
-                    scale = Math.max(Math.min(scale, rgTS/minrg), rgLR/maxrg);
+                    scale = Math.max(Math.min(scale, rgTB/minrg), rgLR/maxrg);
                 }
                 rgTB /= scale;
                 rgLR /= scale;
@@ -505,7 +505,6 @@ function movePoint(e){
         ctx.lineWidth = defSize * 2;
         ctx.strokeStyle = defColor;
         ctx.stroke();
-        console.log('Move', Xpoint, Ypoint);
     }
 }
  
@@ -842,42 +841,6 @@ function show_main(){
         } else {
             return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
-    }       
-
-    function DrawStars(skyareas){
-        for (var arearange of skyareas) {
-            var st = parseInt(Help[arearange[0]]);
-            var fi = parseInt(Help[arearange[1]+1]);
-            for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho[3*(i-1)]);
-                var Dec = parseFloat(Tycho[3*(i-1)+1]);
-                var mag = parseFloat(Tycho[3*(i-1)+2]);
-                if (Math.abs(Dec-cenDec) < rgTB && Math.abs(RApos(RA)) < rgLR && mag < magLim) {
-                    var [x, y] = coord(RA, Dec);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-                    ctx.fill();
-                }
-            }
-        }
-    }
-
-    function DrawStars1011(skyareas){
-        for (var arearange of skyareas) {
-            var st = parseInt(Help1011[arearange[0]]);
-            var fi = parseInt(Help1011[arearange[1]+1]);
-            for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho1011[3*(i-1)]);
-                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
-                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
-                if (Math.abs(Dec-cenDec) < rgTB && Math.abs(RApos(RA)) < rgLR && mag < magLim) {
-                    var [x, y] = coord(RA, Dec);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-                    ctx.fill();
-                }
-            }
-        }
     }
 
     function DrawStars_SH(skyareas){
@@ -914,35 +877,6 @@ function show_main(){
                     ctx.arc(x, y, size(mag), 0, 2 * pi, false);
                     ctx.fill();
                 }
-            }
-        }
-    }
-
-    function DrawMessier() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
-        for (i=0; i<110; i++){
-            var RA = parseFloat(messier[3*i]);
-            var Dec = parseFloat(messier[3*i+1]);
-            var type = messier[3*i+2];
-            if (Math.abs(RApos(RA)) < rgLR && Math.abs(Dec-cenDec) < rgTB) {
-                var [x, y] = coord(RA, Dec);
-                DrawObjects(`M${i+1}`, x, y, type);
-            }
-        }
-    }
-
-    function DrawNGC() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
-            if (popularList.indexOf(name) == -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
-                var [x, y] = coord(RA, Dec);
-                DrawObjects(name, x, y, type);
             }
         }
     }
@@ -997,40 +931,6 @@ function show_main(){
         ctx.stroke();
         ctx.fillText(name, x+5, y-5);
     }
-    /*
-    function DrawMoon () {
-        var r = Math.max(canvas.width * (0.259 / (dist_Moon / 384400)) / rgEW / 2, 13);
-        var rs = RAlist[0] * pi/180;
-        var ds = Declist[0] * pi/180;
-        var rm = RAlist[9] * pi/180;
-        var dm = Declist[9] * pi/180;
-        var lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
-        var k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
-        var P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
-
-        ctx.beginPath();
-        if (k < 0.5) {
-            ctx.fillStyle = yellowColor;
-            ctx.arc(x, y, r, 0, 2*pi, false);
-            ctx.fill();
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(x, y, r, pi-P, 2*pi-P);
-            ctx.ellipse(x, y, r, r*(1-2*k), -P, 0, pi);
-            ctx.fill()
-        } else {
-            ctx.fillStyle = '#333';
-            ctx.arc(x, y, r, 0, 2*pi, false);
-            ctx.fill();
-            ctx.fillStyle = yellowColor;
-            ctx.beginPath();
-            ctx.arc(x, y, r, -P, pi-P);
-            ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
-            ctx.fill()
-        }
-        return r;
-    }
-    */
 }
 
 function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
