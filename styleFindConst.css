@@ -31,13 +31,37 @@ button {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
-    -webkit-transition: all 0.2s;
-    transition: all 0.2s;
+    -webkit-transition: all 0.05s;
+    transition: all 0.05s;
     text-align: center;
     vertical-align: middle;
     text-decoration: none;
     letter-spacing: 0.0em;
     border-radius: 0.5rem;
+}
+
+.drawBtn button{
+    color: #000;
+    background-color: #eeeeee;
+    border-bottom: 5px solid #eeeeee;
+    position: absolute;
+    border: 0;
+    top: 40px;
+    width: 100px;
+    height: 30px;
+    text-align: center;
+}
+
+.drawBtn1 {
+    left: 5px;
+}
+
+.drawBtn2 {
+    left: 115px;
+}
+
+.drawBtn3 {
+    left: 225px;
 }
 
 .answerBtn {

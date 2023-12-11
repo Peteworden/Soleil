@@ -43,7 +43,7 @@ var rgtext = `視野(左右):${Math.round(rgLR * 20) / 10}°`;
 var magLimtext;
 var magLimLim = 11;
 function find_magLim() {
-    var magLim = Math.min(Math.max(13.5 - 1.8 * Math.log(Math.min(rgLR, rgTB)), 4), magLimLim);
+    var magLim = Math.min(Math.max(12.5 - 1.8 * Math.log(Math.min(rgLR, rgTB)), 4), magLimLim);
     //var magLim = 11;
     magLimtext = `~${Math.round(magLim * 10) / 10}等級`;
     return magLim;
@@ -293,7 +293,6 @@ function showNext() {
     show_main();
 }
 
-
 var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 25);// distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
 var movedDistance = 0;
@@ -481,22 +480,32 @@ canvas.addEventListener('touchend', endPoint, false);
 function startPoint(e){
     e.preventDefault();
     ctx.beginPath();
-    Xpoint = e.pageX - canvas.offsetLeft;
-    Ypoint = e.pageY - canvas.offsetTop;
+    if (e.pageX) {
+        Xpoint = e.pageX - canvas.offsetLeft;
+        Ypoint = e.pageY - canvas.offsetTop;
+    } else {
+        Xpoint = e.touches[0].pageX - canvas.offsetLeft;
+        Ypoint = e.touches[0].pageY - canvas.offsetTop;
+    }
     ctx.moveTo(Xpoint, Ypoint);
-    console.log(e.pageX);
 }
  
 function movePoint(e){
     if(e.buttons === 1 || e.witch === 1 || e.type == 'touchmove'){
-        Xpoint = e.pageX - canvas.offsetLeft;
-        Ypoint = e.pageY - canvas.offsetTop;
+        if (e.pageX) {
+            Xpoint = e.pageX - canvas.offsetLeft;
+            Ypoint = e.pageY - canvas.offsetTop;
+        } else {
+            Xpoint = e.touches[0].pageX - canvas.offsetLeft;
+            Ypoint = e.touches[0].pageY - canvas.offsetTop;
+        }
         moveflg = 1;
         ctx.lineTo(Xpoint, Ypoint);
         ctx.lineCap = "round";
         ctx.lineWidth = defSize * 2;
         ctx.strokeStyle = defColor;
-        ctx.stroke();  
+        ctx.stroke();
+        console.log('Move', Xpoint, Ypoint);
     }
 }
  
@@ -528,7 +537,6 @@ function setLocalStoreage(){
     var logs = JSON.parse(myStorage.getItem("__log"));
  
     setTimeout(function(){
-        console.log({png:png});
         logs.unshift({png:png});
         myStorage.setItem("__log", JSON.stringify(logs));
         temp = [];
