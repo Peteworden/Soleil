@@ -608,6 +608,7 @@ function ontouchstart(e) {
 
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
+    document.getElementById('title').innerHTML = `move ${e.changedTouches[0].pageX}`;
     e.preventDefault();
     var touches = e.changedTouches;
     console.log(touches.length);
@@ -616,7 +617,6 @@ function ontouchmove(e) {
             moveX = touches[0].pageX;
             moveY = touches[0].pageY;
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
-                //canvas.removeEventListener("touchmove", onMouseMove);
                 if (SHmode) {
                     var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     var startDec_SH = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
@@ -633,7 +633,6 @@ function ontouchmove(e) {
                 show_main();
                 startX = moveX;
                 startY = moveY;
-                //canvas.addEventListener("touchmove", onMouseMove);
             }
         }
     } else {
@@ -644,16 +643,15 @@ function ontouchmove(e) {
         var y2 = touches[1].pageY ;
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
         if (baseDistance) {
-            //canvas.removeEventListener("touchmove", onTouchMove);
             movedDistance = distance;
             var x3 = (x1 + x2) / 2 - canvas.offsetLeft - canvas.width / 2;
             var y3 = (y1 + y2) / 2 - canvas.offsetTop - canvas.height / 2;
             var scale = movedDistance / baseDistance;
             if (scale && scale != Infinity) {
                 if (canvas.width < canvas.height) {
-                    scale = Math.max(Math.min(scale, rgEW/minrg), rgTS/maxrg);
+                    scale = Math.max(Math.min(scale, rgEW/minrg), rgNS/maxrg);
                 } else {
-                    scale = Math.max(Math.min(scale, rgTS/minrg), rgEW/maxrg);
+                    scale = Math.max(Math.min(scale, rgNS/minrg), rgEW/maxrg);
                 }
                 rgNS /= scale;
                 rgEW /= scale;
@@ -672,7 +670,6 @@ function ontouchmove(e) {
                 zerosize = find_zerosize();
                 show_main();
                 baseDistance = distance;
-                //canvas.addEventListener("touchmove", onTouchMove);
             }
         } else {
             // 基本の距離
