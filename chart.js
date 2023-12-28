@@ -608,7 +608,6 @@ function ontouchstart(e) {
 
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
-    document.getElementById('title').innerHTML = `move ${e.changedTouches[0].pageX}`;
     e.preventDefault();
     var touches = e.changedTouches;
     console.log(touches.length);
