@@ -4,7 +4,6 @@
 // URLを表示に反映するのは最初のみ
 
 //分断の色と星の色を変える
-const separationColor = '#FFF'
 const starColor = '#FFF'
 const yellowColor = 'yellow'
 //'yellow'は全部yellowColorにする
@@ -84,9 +83,9 @@ var xhrcheck = 0;
 var defaultcheck = 0;
 
 function loadFile(filename, func, go) {
-    var url = "https://peteworden.github.io/Soleil/" + filename + ".txt";
+    var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
+    xhr.open('GET', url_load);
     xhr.send();
     xhr.onreadystatechange = function() {
         if(xhr.readyState === 4 && xhr.status === 200) {
@@ -343,8 +342,8 @@ if (url.searchParams.has('to11')) {
     defaultcheck++;
     show_initial();
 } else {
-    document.getElementById('to11Check').checked = false;
-    url.searchParams.set('to11', 0);
+    document.getElementById('to11Check').checked = true;
+    url.searchParams.set('to11', 1);
     defaultcheck++;
     show_initial();
 }
@@ -356,7 +355,7 @@ if (url.searchParams.has('area')) {
     defaultcheck++;
     show_initial();
 } else {
-    url.searchParams.set('area', (Math.round(2*rgEW*100)/100).toString());
+    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
     defaultcheck++;
     show_initial();
 }
@@ -679,9 +678,16 @@ function ontouchmove(e) {
 
 function ontouchend(e) {
     baseDistance = 0;
+    url.searchParams.set('RA', Math.round(cenRA*100)/100);
+    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    history.replaceState('', '', url.href);
 };
 
 function ontouchcancel(e) {
+    url.searchParams.set('RA', Math.round(cenRA*100)/100);
+    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
     baseDistance = 0;
 };
 
@@ -716,6 +722,10 @@ function onmousemove(e) {
 }
 
 function onmouseup(e){
+    url.searchParams.set('RA', Math.round(cenRA*100)/100);
+    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    history.replaceState('', '', url.href);
     canvas.removeEventListener("mousemove", onmousemove);
 }
 
@@ -747,6 +757,11 @@ function onwheel(event) {
         zerosize = find_zerosize();
         show_main();
         baseDistance = distance;
+
+        url.searchParams.set('RA', Math.round(cenRA*100)/100);
+        url.searchParams.set('Dec', Math.round(cenDec*100)/100);
+        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        history.replaceState('', '', url.href);
         //canvas.addEventListener("touchmove", onTouchMove);
     }
     //rgtext = "視野(左右):" + Math.round(rgEW * 20) / 10 + "°";
@@ -1103,7 +1118,7 @@ function calculation(JD) {
 
 function show_main(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = '#003';
+    ctx.fillStyle = '#001';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     const pi = Math.PI;
