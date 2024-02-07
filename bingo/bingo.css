@@ -1,0 +1,73 @@
+html {
+    background-color: rgb(132, 132, 237);
+}
+
+#top {
+    height: 40px;
+}
+
+#current {
+    height: 500px;
+    display: flex;
+}
+
+#currentLeft {
+    width: 600px;
+}
+
+#imagediv {
+    height: 480px;
+    text-align: center;
+}
+
+#imagediv img {
+    width: 460px;
+    height: 460px;
+    margin: 20px 70px 0px 70px;
+    object-fit: contain;
+    object-position: 50% 50%;
+    border: 0px;
+}
+
+#creditdiv {
+    height: 20px;
+    text-align: right;
+}
+
+#currentRight {
+    text-align: center
+}
+
+#numberdiv {
+    width: 500px;
+    height: 400px;
+    margin-bottom: 0px;
+    font-size: 250px;
+    text-align: center;
+}
+
+#number {
+    vertical-align: middle;
+}
+
+#captiondiv {
+    height: 100px;
+    font-size: 30px;
+}
+
+#caption {
+    font-weight: 1000;
+    vertical-align: middle;
+}
+
+#nextBtn {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background-color: #eb7000;
+    padding: 0rem 2rem;
+    line-height: 3em;
+    margin: 0px 100px 6px 10px;
+    border-radius: 1rem;
+    border: 0;
+}
