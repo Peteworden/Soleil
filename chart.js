@@ -51,7 +51,7 @@ if (canvas.width < canvas.height) {
     var rgEW = rgNS * canvas.width / canvas.height;
     document.getElementById('constNameFrom').value = "180";
     document.getElementById('MessierFrom').value = "100";
-    document.getElementById('NGCFrom').value = "80";
+    document.getElementById('choiceFrom').value = "80";
 }
 
 const minrg = 0.3;
@@ -108,7 +108,7 @@ function loadFile(filename, func, go) {
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
-loadFile("StarsNewHIP_to6_5_set", xhrHIP, 1);
+loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
 function xhrHIP(data) {
     const DataAry = data.split(',');
     var num_of_stars = DataAry.length / 3;
@@ -128,7 +128,6 @@ loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
 function xhrTycho(data) {
     Tycho = data.split(',');
 }
-
 
 //Tycho helper
 var Help = [];
@@ -159,11 +158,11 @@ function xhrMessier(data) {
     messier = data.split(',');
 }
 
-// NGC天体
-var NGC = [];
-loadFile("NGC_forJS", xhrNGC, 1);
-function xhrNGC(data) {
-    NGC = data.split(',');
+// choice天体
+var choice = [];
+loadFile("choice_forJS", xhrChoice, 1);
+function xhrChoice(data) {
+    choice = data.split(',');
 }
 
 //星座名
@@ -255,10 +254,10 @@ function link(obj) {
         cenRA = parseFloat(messier[3*i]);
         cenDec = parseFloat(messier[3*i+1]);
     } else { //その他
-        for (var i=0; i<NGC.length/4; i++) {
-            if (obj == NGC[4*i]) {
-                cenRA = parseFloat(NGC[4*i+1]);
-                cenDec = parseFloat(NGC[4*i+2]);
+        for (var i=0; i<choice.length/4; i++) {
+            if (obj == choice[4*i]) {
+                cenRA = parseFloat(choice[4*i+1]);
+                cenDec = parseFloat(choice[4*i+2]);
             }
         }
     }
@@ -1279,12 +1278,12 @@ function show_main(){
             //メシエ
             DrawMessier_SH();
             //ポピュラー
-            for (i=0; i<NGC.length/4; i++){
-                var name = NGC[4*i];
+            for (i=0; i<choice.length/4; i++){
+                var name = choice[4*i];
                 if (popularList.indexOf(name) != -1) {
-                    var RA = parseFloat(NGC[4*i+1]);
-                    var Dec = parseFloat(NGC[4*i+2]);
-                    var type = NGC[4*i+3];
+                    var RA = parseFloat(choice[4*i+1]);
+                    var Dec = parseFloat(choice[4*i+2]);
+                    var type = choice[4*i+3];
                     var [RA_SH, Dec_SH] = angleSH(RA, Dec);
                     if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
                         var [x, y] = coordSH(RA_SH, Dec_SH);
@@ -1295,8 +1294,8 @@ function show_main(){
         }
 
         // メシエ以外
-        if (document.getElementById('NGCCheck').checked && rgEW < 0.5 * document.getElementById('NGCFrom').value) {
-            DrawNGC_SH();
+        if (document.getElementById('choiceCheck').checked && rgEW < 0.5 * document.getElementById('choiceFrom').value) {
+            DrawChoice_SH();
         }
 
         //惑星、惑星の名前
@@ -1441,12 +1440,12 @@ function show_main(){
             //メシエ
             DrawMessier();
             //ポピュラー
-            for (i=0; i<NGC.length/4; i++){
-                var name = NGC[4*i];
+            for (i=0; i<choice.length/4; i++){
+                var name = choice[4*i];
                 if (popularList.indexOf(name) != -1) {
-                    var RA = parseFloat(NGC[4*i+1]);
-                    var Dec = parseFloat(NGC[4*i+2]);
-                    var type = NGC[4*i+3];
+                    var RA = parseFloat(choice[4*i+1]);
+                    var Dec = parseFloat(choice[4*i+2]);
+                    var type = choice[4*i+3];
                     if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                         var [x, y] = coord(RA, Dec);
                         DrawObjects(name, x, y, type);
@@ -1456,8 +1455,8 @@ function show_main(){
         }
 
         // メシエ以外
-        if (document.getElementById('NGCCheck').checked && rgEW < 0.5 * document.getElementById('NGCFrom').value) {
-            DrawNGC();
+        if (document.getElementById('choiceCheck').checked && rgEW < 0.5 * document.getElementById('choiceFrom').value) {
+            DrawChoice();
         }
 
         //惑星、惑星の名前
@@ -1673,15 +1672,15 @@ function show_main(){
         }
     }
 
-    function DrawNGC() {
+    function DrawChoice() {
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
+        for (i=0; i<choice.length/4; i++){
+            var name = choice[4*i];
             if (popularList.indexOf(name) == -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
+                var RA = parseFloat(choice[4*i+1]);
+                var Dec = parseFloat(choice[4*i+2]);
+                var type = choice[4*i+3];
                 var [x, y] = coord(RA, Dec);
                 DrawObjects(name, x, y, type);
             }
@@ -1703,15 +1702,15 @@ function show_main(){
         }
     }
 
-    function DrawNGC_SH() {
+    function DrawChoice_SH() {
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
+        for (i=0; i<choice.length/4; i++){
+            var name = choice[4*i];
             if (popularList.indexOf(name) == -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
+                var RA = parseFloat(choice[4*i+1]);
+                var Dec = parseFloat(choice[4*i+2]);
+                var type = choice[4*i+3];
                 var [RA_SH, Dec_SH] = angleSH(RA, Dec);
                 if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
                     var [x, y] = coordSH(RA_SH, Dec_SH);
