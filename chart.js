@@ -165,6 +165,13 @@ function xhrChoice(data) {
     choice = data.split(',');
 }
 
+// NGC天体とIC天体
+var NGC = [];
+loadFile("allNGC_forJS", xhrNGC, 1);
+function xhrNGC(data) {
+    NGC = data.split(',');
+}
+
 //星座名
 var CLnames = [];
 loadFile("ConstellationList", xhrCLnames, 1);
@@ -1298,6 +1305,12 @@ function show_main(){
             DrawChoice_SH();
         }
 
+        // メシエ以外
+        if (document.getElementById('allNGCCheck').checked && rgEW < 0.5 * document.getElementById('allNGCFrom').value) {
+            console.log(document.getElementById('allNGCCheck').checked);
+            DrawNGC_SH();
+        }
+
         //惑星、惑星の名前
         ctx.font = '20px serif';
         ctx.textBaseline = 'bottom';
@@ -1457,6 +1470,11 @@ function show_main(){
         // メシエ以外
         if (document.getElementById('choiceCheck').checked && rgEW < 0.5 * document.getElementById('choiceFrom').value) {
             DrawChoice();
+        }
+
+        // メシエ以外
+        if (document.getElementById('allNGCCheck').checked && rgEW < 0.5 * document.getElementById('allNGCFrom').value) {
+            DrawNGC();
         }
 
         //惑星、惑星の名前
@@ -1687,6 +1705,21 @@ function show_main(){
         }
     }
 
+    function DrawNGC() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<NGC.length/4; i++){
+            var name = NGC[4*i];
+            if (popularList.indexOf(name) == -1) {
+                var RA = parseFloat(NGC[4*i+1]);
+                var Dec = parseFloat(NGC[4*i+2]);
+                var type = NGC[4*i+3];
+                var [x, y] = coord(RA, Dec);
+                DrawObjects(name, x, y, type);
+            }
+        }
+    }
+
     function DrawMessier_SH() {
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
@@ -1720,12 +1753,31 @@ function show_main(){
         }
     }
 
+    function DrawNGC_SH() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        console.log("allNGC");
+        for (i=0; i<NGC.length/4; i++){
+            var name = NGC[4*i];
+            if (popularList.indexOf(name) == -1 && choice.indexOf(name) == -1) {
+                var RA = parseFloat(NGC[4*i+1]);
+                var Dec = parseFloat(NGC[4*i+2]);
+                var type = NGC[4*i+3];
+                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
+                if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
+                    var [x, y] = coordSH(RA_SH, Dec_SH);
+                    DrawObjects(name, x, y, type);
+                }
+            }
+        }
+    }
+
     //入っていることは前提
     function DrawObjects(name, x, y, type) {
         ctx.beginPath();
-        if (type == "1") { //銀河
+        if (type == "1" || type == "gx") { //銀河
             ctx.strokeRect(x-8, y-4, 16, 8);
-        } else if (type == "3") { //星雲
+        } else if (type == "3" || type == "pn" || type == "rn") { //星雲
             ctx.arc(x, y, 5, 0, 2 * pi, false);
         } else { //星団、M40:二重星、M73
             ctx.moveTo(x  , y-6);
