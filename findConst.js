@@ -87,7 +87,7 @@ function loadFile(filename, func, go) {
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
-loadFile("StarsNewHIP_to6_5_set", xhrHIP, 1);
+loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
 function xhrHIP(data) {
     const DataAry = data.split(',');
     var num_of_stars = DataAry.length / 3;
