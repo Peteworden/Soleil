@@ -152,7 +152,7 @@ function xhrHelp1011(data) {
 }
 
 // メシエ天体
-var messier  = Array(3 * 110);
+var messier  = Array(4 * 110);
 loadFile("messier_forJS", xhrMessier, 1);
 function xhrMessier(data) {
     messier = data.split(',');
@@ -258,8 +258,8 @@ console.log(url.href);
 function link(obj) {
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
         var i = parseInt(obj.substr(1)) - 1;
-        cenRA = parseFloat(messier[3*i]);
-        cenDec = parseFloat(messier[3*i+1]);
+        cenRA = parseFloat(messier[4*i+1]);
+        cenDec = parseFloat(messier[4*i+2]);
     } else { //その他
         for (var i=0; i<choice.length/4; i++) {
             if (obj == choice[4*i]) {
@@ -1307,7 +1307,6 @@ function show_main(){
 
         // メシエ以外
         if (document.getElementById('allNGCCheck').checked && rgEW < 0.5 * document.getElementById('allNGCFrom').value) {
-            console.log(document.getElementById('allNGCCheck').checked);
             DrawNGC_SH();
         }
 
@@ -1680,12 +1679,13 @@ function show_main(){
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
         for (i=0; i<110; i++){
-            var RA = parseFloat(messier[3*i]);
-            var Dec = parseFloat(messier[3*i+1]);
-            var type = messier[3*i+2];
+            var name = messier[4*i];
+            var RA = parseFloat(messier[4*i+1]);
+            var Dec = parseFloat(messier[4*i+2]);
+            var type = messier[4*i+3];
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                 var [x, y] = coord(RA, Dec);
-                DrawObjects("M" + (i+1).toString(), x, y, type);
+                DrawObjects(name, x, y, type);
             }
         }
     }
@@ -1708,15 +1708,13 @@ function show_main(){
     function DrawNGC() {
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
-            if (popularList.indexOf(name) == -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
-                var [x, y] = coord(RA, Dec);
-                DrawObjects(name, x, y, type);
-            }
+        for (i=0; i<NGC.length/5; i++){
+            var name = NGC[5*i];
+            var RA = parseFloat(NGC[5*i+1]);
+            var Dec = parseFloat(NGC[5*i+2]);
+            var type = NGC[5*i+4];
+            var [x, y] = coord(RA, Dec);
+            DrawObjects(name, x, y, type);
         }
     }
 
@@ -1724,13 +1722,15 @@ function show_main(){
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
         for (i=0; i<110; i++){
-            var RA = parseFloat(messier[3*i]);
-            var Dec = parseFloat(messier[3*i+1]);
-            var type = messier[3*i+2];
+            var name = messier[4*i];
+            var RA = parseFloat(messier[4*i+1]);
+            var Dec = parseFloat(messier[4*i+2]);
+            var type = messier[4*i+3];
             var [RA_SH, Dec_SH] = angleSH(RA, Dec);
             if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
                 var [x, y] = coordSH(RA_SH, Dec_SH);
-                DrawObjects("M" + (i+1).toString(), x, y, type);
+                console.log(name, type);
+                DrawObjects(name, x, y, type);
             }
         }
     }
@@ -1756,18 +1756,18 @@ function show_main(){
     function DrawNGC_SH() {
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
-        console.log("allNGC");
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
-            if (popularList.indexOf(name) == -1 && choice.indexOf(name) == -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
-                    DrawObjects(name, x, y, type);
-                }
+        for (i=0; i<NGC.length/5; i++){
+            var name = NGC[5*i];
+            var RA = parseFloat(NGC[5*i+1]);
+            var Dec = parseFloat(NGC[5*i+2]);
+            if (NGC[5*i+3] != '') {
+                name += '(' + NGC[5*i+3] + ')';
+            }
+            var type = NGC[5*i+4];
+            var [RA_SH, Dec_SH] = angleSH(RA, Dec);
+            if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
+                var [x, y] = coordSH(RA_SH, Dec_SH);
+                DrawObjects(name, x, y, type);
             }
         }
     }
@@ -1775,15 +1775,44 @@ function show_main(){
     //入っていることは前提
     function DrawObjects(name, x, y, type) {
         ctx.beginPath();
-        if (type == "1" || type == "gx") { //銀河
+        /*
+        Gx       Galaxy 銀河
+        OC       Open star cluster 散開星団
+        Gb       Globular star cluster, usually in the Milky Way Galaxy 球状星団
+        Nb       Bright emission or reflection nebula 散光星雲、超新星残骸
+        Pl       Planetary nebula 惑星状星雲
+        C+N      Cluster associated with nebulosity
+        Ast      Asterism or group of a few stars
+        Kt       Knot or nebulous region in an external galaxy
+        TS       Triple star    (was *** in the CDS table version)
+        DS       Double star    (was ** in the CDS version)
+        SS       Single star    (was * in the CDS version)
+        ?        Uncertain type or may not exist
+        U        Unidentified at the place given, or type unknown (was blank in CDS v.)
+        -        Object called nonexistent in the RNGC (Sulentic and Tifft 1973)
+        PD       Photographic plate defect
+        */
+       console.log(name, type);
+        if (type == "Gx") { //銀河
             ctx.strokeRect(x-8, y-4, 16, 8);
-        } else if (type == "3" || type == "pn" || type == "rn") { //星雲
+        } else if (type == "Nb" || type == "Pl" || type == "Kt") { //星雲
+            ctx.moveTo(x  , y-5);
+            ctx.lineTo(x+5, y  );
+            ctx.lineTo(x  , y+5);
+            ctx.lineTo(x-5, y  );
+            ctx.lineTo(x  , y-5);
+        } else if (type == "Gb") {
             ctx.arc(x, y, 5, 0, 2 * pi, false);
-        } else { //星団、M40:二重星、M73
+        } else if (type == "OC" || type == "C+N" || type == "Ast" || type == "TS" || type == "DS") {
             ctx.moveTo(x  , y-6);
             ctx.lineTo(x-5, y+3);
             ctx.lineTo(x+5, y+3);
             ctx.lineTo(x  , y-6);
+        } else {
+            ctx.moveTo(x-4, y-4);
+            ctx.lineTo(x+4, y+4);
+            ctx.moveTo(x-4, y+4);
+            ctx.lineTo(x+4, y-4);
         }
         ctx.stroke();
         ctx.fillText(name, x+5, y-5);
