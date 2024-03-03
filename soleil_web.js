@@ -44,7 +44,7 @@ function loadFile(filename, func, go) {
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
-loadFile("StarsNewHIP_to6_5_set", xhrHIP, 1);
+loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
 function xhrHIP(data) {
     const DataAry = data.split(',');
     var num_of_stars = DataAry.length / 3;
@@ -156,7 +156,7 @@ function xhrExtra(data) {
         const option2 = document.createElement('option');
         option2.innerHTML = name;
         document.getElementById('target').appendChild(option2);
-
+                    
         if (url.searchParams.has('observer') && xhrcheck == 7) {
             for (var i=0; i<ENGplanets.length; i++) {
                 if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
@@ -208,11 +208,10 @@ var shiftDec = 0;
 var showingJD = 0;
 
 const url = new URL(window.location.href);
-console.log(url.href);
+console.log(url.href); 
 
 if (url.searchParams.has('time')) {
     var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
-    console.log(y, m, d, h, h_min);
     document.getElementById('yearText').value = parseInt(y).toString();
     document.getElementById('monthText').value = parseInt(m).toString();
     document.getElementById('dateText').value = parseInt(d).toString();
@@ -314,17 +313,14 @@ function now() {
     document.getElementById('monthText').value = m;
     document.getElementById('dateText').value = d;
     document.getElementById('hourText').value = h;
-    /*url.searchParams.set('time', `${y}-${m}-${d}-${ymdhm.getHours()}-${Math.round(ymdhm.getMinutes()*10/60)}`);
-    console.log(url.href);
-    history.replaceState('', '', url.href);*/
     showingJD = YMDH_to_JD(y, m, d, h);
     show_main(showingJD);
 }
 
 function getlocation() {
     function success(position) {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+        const latitude = Math.round(position.coords.latitude*100)/100;
+        const longitude = Math.round(position.coords.longitude*100)/100;
 
         if (latitude < 0) {
             document.getElementById('NSCombo').options[1].selected = true;
@@ -341,13 +337,13 @@ function getlocation() {
     }
 
     function error() {
-    alert("位置情報を取得できません");
+        alert("位置情報を取得できません");
     }
 
     if (!navigator.geolocation) {
-    alert("お使いのブラウザは位置情報に対応していません");
+        alert("お使いのブラウザは位置情報に対応していません");
     } else {
-    navigator.geolocation.getCurrentPosition(success, error);
+        navigator.geolocation.getCurrentPosition(success, error);
     }
 }
 
@@ -400,7 +396,6 @@ function show_JD_plus1(){
     document.getElementById('monthText').value = M;
     document.getElementById('dateText').value = D;
     document.getElementById('hourText').value = H;
-    console.log("check236");
     show_main(showingJD);
 }
 
@@ -444,7 +439,7 @@ function show_main(JD){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     ctx.fillStyle = '#003';
     ctx.fillRect(0, 0, canvas.height, canvas.height);
-
+    
     const eps = 0.4090926; //黄道傾斜角
     const sine = sin(eps);
     const cose = cos(eps);
@@ -485,7 +480,6 @@ function show_main(JD){
         for (var i=2; i<parseInt(extra[0])+1; i++) {
             name += ' ' + extra[i];
         }
-        console.log(name);
         JPNplanets.push(name);
         ENGplanets.push(name);
         var New = [];
@@ -526,7 +520,7 @@ function show_main(JD){
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
             url.searchParams.delete('observer');
-        }
+        }   
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }
@@ -534,7 +528,7 @@ function show_main(JD){
     if (Selected_number == 9) {
         if (url.searchParams.has('target')) {
             url.searchParams.delete('target');
-        }
+        }   
     } else {
         url.searchParams.set('target', ENGplanets[Selected_number].split(' ').join('').split('/').join(''));
     }
@@ -608,7 +602,7 @@ function show_main(JD){
     } else {
         url.searchParams.set('shiftDec', shiftDec.toString().replace('.', '_'));
     }
-
+        
     history.replaceState('', '', url.href);
 
     var lat_obs = parseInt(document.getElementById('lat').value) * pi/180;
@@ -634,7 +628,6 @@ function show_main(JD){
     RAlist[0] = RA_Sun;
     Declist[0] = Dec_Sun;
     Distlist[0] = dist;
-    console.log("check368", planets.length);
 
     for (i=1; i<planets.length; i++) {
         var planet = planets[i];
@@ -651,9 +644,7 @@ function show_main(JD){
             console.log("9 OK");
         } else {
             var [x, y, z] = calc(planet, JD);
-            if (i==12) {console.log(384)};
             var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (i==12) {console.log(386)};
             Xlist[i] = x;
             Ylist[i] = y;
             Zlist[i] = z;
@@ -663,8 +654,6 @@ function show_main(JD){
             console.log(i, "OK");
         }
     }
-
-    console.log("check393");
 
     var RA = RAlist[Selected_number];
     var Dec = Declist[Selected_number];
@@ -699,7 +688,7 @@ function show_main(JD){
             }
         }
     }
-
+    
     var constellation = "";
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
@@ -738,7 +727,7 @@ function show_main(JD){
                 if (i <= 163.7) {V = -4.384 - 0.001044 * i + 0.0003687 * i**2 - 2.814e-6 * i**3 + 8.938e-9 * i**4 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
                 else {V = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
                 Vlist[2] = V;
-            }
+            }    
             else if (n == 3) {
                 Vlist[3] = 1
             }
@@ -769,13 +758,13 @@ function show_main(JD){
                 Vlist[6] = V;
             }
             else if (n == 7) {
-                PS_2 = x**2 + y**2 + z**2;
+                PS_2 = x**2 + y**2 + z**2;                
                 if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
                 else{i = 0}
                 if (i < 3.1) {V = -7.110 + 0.00009617 * i**2 + 0.0001045 * i**2+ 5 * Math.log10(dist * Math.sqrt(PS_2))}
                 else{V = 5.6}
                 Vlist[7] = V;
-            }
+            }    
             else if (n == 8) {
                 PS_2 = x**2 + y**2 + z**2;
                 if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
@@ -797,7 +786,7 @@ function show_main(JD){
                 Vlist[n] = V;
             }
             else{Vlist[n] = 100}  //n=9（月）を含む
-        }
+        }        
         else{ //観測地自体
             Vlist[n] = 0;
         }
@@ -1022,12 +1011,12 @@ function show_main(JD){
             }
         }
     }
-
+    
     var zengo = document.getElementsByName("zengo");
     if (zengo[1].checked && Selected_number != 9 && Selected_number != 0){
         ctx.fillStyle = '#3F3'
         var planet = planets[Selected_number];
-
+        
         var interval1 = parseFloat(document.getElementById("zengo11").value);
         var zengorange1 = parseFloat(document.getElementById("zengo12").value);
         for (var i=1; i<=parseInt(zengorange1/interval1); i++){
@@ -1096,7 +1085,7 @@ function show_main(JD){
 
     var RA = RAlist[Selected_number];
     var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m  ";
-
+    
     var Dec = Declist[Selected_number];
     if (Dec >= 0) {
         var Dectext = "赤緯 +" + Math.floor(Dec) + "° " + Math.round((Dec-Math.floor(Dec))*60) + "'(J2000.0)  ";
@@ -1229,7 +1218,7 @@ function show_main(JD){
             } else {
                 return cal_Parabola(planet, JD);
             }
-
+            
         }
     }
 
@@ -1241,7 +1230,7 @@ function show_main(JD){
         var i = (planet[4] + planet[10] * (JD - T) / 36525) * pi / 180;
         var node = (planet[5] + planet[11] * (JD - T) / 36525) * pi / 180; //Ω
         var M0 = planet[6] * pi / 180;
-
+    
         var Ax = a *                     ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
         var Bx = a * Math.sqrt(1-e**2) * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
         var Ay = a *                     ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
@@ -1259,14 +1248,14 @@ function show_main(JD){
             }
             E = newE;
         }
-
+        
         var cE_e = cos(E) - e;
         var sE = sin(E);
-
+        
         var x = Ax * cE_e + Bx * sE;
         var y = Ay * cE_e + By * sE;
         var z = Az * cE_e + Bz * sE;
-
+        
         return [x, y, z];
     }
 
@@ -1282,7 +1271,7 @@ function show_main(JD){
         var i = 5.1454 * pi/180;
         var D = Mm + wm + Nm - Ms - ws;
         var F = Mm + wm;
-
+        
         var E = Mm + e * sin(Mm);
         if (Math.abs(E - Mm) > 0.000001) {
             var newE = Mm + e * sin(E);
@@ -1297,14 +1286,14 @@ function show_main(JD){
 
         var v = Math.atan2(yv, xv);
         var dist = Math.sqrt(xv**2 + yv**2);
-
+        
         var xh = dist * (cos(Nm) * cos(v+wm) - sin(Nm) * sin(v+wm) * cos(i));
         var yh = dist * (sin(Nm) * cos(v+wm) + cos(Nm) * sin(v+wm) * cos(i));
         var zh = dist * sin(v+wm) * sin(i);
-
+        
         var lon = Math.atan2(yh, xh);
         var lat = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
-
+        
         lon +=(- 1.274*sin(Mm - 2*D)
             + 0.658*sin(2*D)
             - 0.186*sin(Ms)
@@ -1325,7 +1314,7 @@ function show_main(JD){
         dist += -0.58*cos(Mm - 2*D) - 0.46*cos(2*D); //地球半径
 
         lon -= 0.0002437 * (JD - 2451545.0) / 365.25; //lon, latはJ2000.0
-
+        
         var Xe = cos(lat) * cos(lon)                             * dist * 6378.14 / 1.49598e8; //au
         var Ye = (-sin(lat) * sine + cos(lat) * sin(lon) * cose) * dist * 6378.14 / 1.49598e8; //au
         var Ze = (sin(lat) * cose + cos(lat) * sin(lon) * sine)  * dist * 6378.14 / 1.49598e8; //au
@@ -1347,14 +1336,14 @@ function show_main(JD){
         var peri = planet[3] * pi / 180; //ω
         var i = planet[4] * pi / 180;
         var node = planet[5] * pi / 180; //Ω
-
+    
         var Ax =     q * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
         var Bx = 2 * q * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
         var Ay =     q * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
         var By = 2 * q * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
         var Az =     q * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
         var Bz = 2 * q * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
-
+        
         var b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (JD - tp));
         if (Math.tan(b/2) >= 0) {
             var g = Math.atan(Math.pow(Math.tan(b/2), 1/3));
@@ -1366,7 +1355,7 @@ function show_main(JD){
         var x = Ax * (1 - tanv2**2) + Bx * tanv2;
         var y = Ay * (1 - tanv2**2) + By * tanv2;
         var z = Az * (1 - tanv2**2) + Bz * tanv2;
-
+        
         return [x, y, z];
     }
 }
@@ -1379,7 +1368,7 @@ function show_main(JD){
       }, 2000);
     });
   }
-
+  
 
 async function search () {
     var url = "https://ssd-api.jpl.nasa.gov/sbdb.api?sstr=31416&full-prec=true&phys-par=true";
