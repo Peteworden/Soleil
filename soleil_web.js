@@ -1,7 +1,9 @@
 //分断の色と星の色を変える
-const separationColor = '#FFF' //darkは'#000'
-const starColor = '#FFF' //darkは'#F33'
-const yellowColor = 'yellow' //darkは'#990'
+var separationColor = '#FFF'; //darkは'#000'
+var starColor = '#FFF'; //darkは'#F33'
+var yellowColor = 'yellow'; //darkは'#990'
+var zengoColor = '#0F0';
+var textColor = 'black';
 //'yellow'は全部yellowColorにする
 
 
@@ -12,6 +14,7 @@ canvas.width = 1100;
 canvas.height = 500;
 
 const ctx = canvas.getContext('2d');
+var darkFrag = 0; //0:light, 1:dark
 
 const rgW = 30;
 const rgN = 2.5;
@@ -24,112 +27,20 @@ const zerosizeN = 10;
 
 var xhrcheck = 0;
 
-function loadFile(filename, func, go) {
-    var url = "https://peteworden.github.io/Soleil/" + filename + ".txt";
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.send();
-    xhr.onreadystatechange = function() {
-        if(xhr.readyState === 4 && xhr.status === 200) {
-            func(xhr.responseText);
-            console.log(filename + " ready");
-            xhrcheck++;
-            show_initial();
-            return 0;
-        }
-    }
-}
-
-//HIP
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
-loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
-function xhrHIP(data) {
-    const DataAry = data.split(',');
-    var num_of_stars = DataAry.length / 3;
-    HIPRAary = Array(num_of_stars);
-    HIPDecary = Array(num_of_stars);
-    HIPmagary = Array(num_of_stars);
-    for (i=0; i<num_of_stars; i++){
-        HIPRAary[i] = parseFloat(DataAry[3*i]);
-        HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-        HIPmagary[i] = parseFloat(DataAry[3*i+2]);
-    }
-}
-
-//Tycho
 var Tycho = [];
-loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
-function xhrTycho(data) {
-    Tycho = data.split(',');
-}
-
-
-//Tycho helper
 var Help = [];
-loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
-function xhrHelp(data) {
-    Help = data.split(',');
-}
-
-//Tycho 10~11 mag
 var Tycho1011 = [];
-loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
-function xhrTycho1011(data) {
-    Tycho1011 = data.split(',');
-}
-
-//Tycho helper 10~11 mag
 var Help1011 = [];
-loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
-function xhrHelp1011(data) {
-    Help1011 = data.split(',');
-}
-
-// メシエ天体
-var messier  = Array(3 * 110);
-loadFile("messier_forJS", xhrMessier, 1);
-function xhrMessier(data) {
-    messier = data.split(',');
-}
-
-// NGC天体
+var messier  = Array(4 * 110);
 var NGC = [];
-loadFile("NGC_forJS", xhrNGC, 1);
-function xhrNGC(data) {
-    NGC = data.split(',');
-}
-
-//星座名
 var CLnames = [];
-loadFile("ConstellationList", xhrCLnames, 1);
-function xhrCLnames(data) {
-    CLnames = data.split('\r\n');
-}
-
-//星座の位置
 var constPos = [];
-loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
-function xhrCLpos(data) {
-    constPos = data.split(',');
-}
-
-//星座線
 var lines = [];
-loadFile("Lines_light_forJS", xhrCLlines, 1);
-function xhrCLlines(data) {
-    lines = data.split(',');
-}
-
-//星座境界線
 var boundary = [];
-loadFile("boundary_light_forJS", xhrCLboundary, 1);
-function xhrCLboundary(data) {
-    boundary = data.split(',');
-}
 
-//追加天体
 var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
 var RAlist = new Array(20);
@@ -140,48 +51,7 @@ var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
 
 var extra = [];
 
-loadFile("ExtraPlanet", xhrExtra, 1);
-function xhrExtra(data) {
-    extra = data.split(' ');
-    if (extra.length != 0) {
-        var name = extra[1];
-        for (var i=2; i<parseInt(extra[0])+1; i++) {
-            name += ' ' + extra[i];
-        }
-        ENGplanets.push(name);
-        JPNplanets.push(name);
-        const option1 = document.createElement('option');
-        option1.innerHTML = name;
-        document.getElementById('observer').appendChild(option1);
-        const option2 = document.createElement('option');
-        option2.innerHTML = name;
-        document.getElementById('target').appendChild(option2);
-                    
-        if (url.searchParams.has('observer') && xhrcheck == 7) {
-            for (var i=0; i<ENGplanets.length; i++) {
-                if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                    document.getElementById("observer").value = JPNplanets[i];
-                    break;
-                }
-            }
-            defaultcheck++;
-        } else {
-            defaultcheck++;
-        }
-
-        if (url.searchParams.has('target')) {
-            for (var i=0; i<ENGplanets.length; i++) {
-                if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                    document.getElementById("target").value = JPNplanets[i];
-                    break;
-                }
-            }
-            defaultcheck++;
-        } else {
-            defaultcheck++;
-        }
-    }
-}
+loadFiles();
 
 /*
 //SBDL
@@ -210,96 +80,10 @@ var showingJD = 0;
 const url = new URL(window.location.href);
 console.log(url.href); 
 
-if (url.searchParams.has('time')) {
-    var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
-    document.getElementById('yearText').value = parseInt(y).toString();
-    document.getElementById('monthText').value = parseInt(m).toString();
-    document.getElementById('dateText').value = parseInt(d).toString();
-    document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('lat')) {
-    var lat = url.searchParams.get('lat');
-    if (lat >= 0) {
-        document.getElementById("NSCombo").value = '北緯';
-        document.getElementById('lat').value = lat;
-    } else {
-        document.getElementById("NSCombo").value = '南緯';
-        document.getElementById('lat').value = -lat;
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('lon')) {
-    var lon = url.searchParams.get('lon');
-    if (lon >= 0) {
-        document.getElementById("EWCombo").value = '東経';
-        document.getElementById('lon').value = lon;
-    } else {
-        document.getElementById("EWCombo").value = '西経';
-        document.getElementById('lon').value = -lon;
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('zengo')) {
-    document.getElementsByName("zengo")[0].checked = true;
-    defaultcheck++;
-    show_initial();
-} else {
-    if (url.searchParams.has('z11') && isNaN(url.searchParams.get('z11').replace('_', '.')) == false) {
-        document.getElementById('zengo11').value = url.searchParams.get('z11').replace('_', '.');
-    }
-    if (url.searchParams.has('z12') && isNaN(url.searchParams.get('z12').replace('_', '.')) == false) {
-        document.getElementById('zengo12').value = url.searchParams.get('z12').replace('_', '.');
-    }
-    if (url.searchParams.has('z21') && isNaN(url.searchParams.get('z21').replace('_', '.')) == false) {
-        document.getElementById('zengo21').value = url.searchParams.get('z21').replace('_', '.');
-    }
-    if (url.searchParams.has('z22') && isNaN(url.searchParams.get('z22').replace('_', '.')) == false) {
-        document.getElementById('zengo22').value = url.searchParams.get('z22').replace('_', '.');
-    }
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('shiftRA')) {
-    if (isNaN(url.searchParams.get('shiftRA').replace('_', '.')) == false) {
-        shiftRA = parseFloat(url.searchParams.get('shiftRA').replace('_', '.'));
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('shiftDec')) {
-    if (isNaN(url.searchParams.get('shiftDec').replace('_', '.')) == false) {
-        shiftDec = parseFloat(url.searchParams.get('shiftDec').replace('_', '.'));
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
+checkURL();
 
 function show_initial(){
-    if (xhrcheck == 12 && defaultcheck == 8){
+    if (xhrcheck == 10 && defaultcheck == 9){
         show();
     } else {
         console.log(xhrcheck, defaultcheck);
@@ -330,7 +114,7 @@ function getlocation() {
         document.getElementById('lat').value = Math.abs(latitude);
         if (longitude < 0) {
             document.getElementById('EWCombo').options[1].selected = true;
-        } else{
+        } else {
             document.getElementById('EWCombo').options[0].selected = true;
         }
         document.getElementById('lon').value = Math.abs(longitude);
@@ -367,7 +151,6 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
         M = 1;
         D = 1;
     }
-
     return [Y, M, D, Hr];
 }
 
@@ -432,6 +215,16 @@ function show_Dec_minus2() {
 function viewreset() {
     shiftRA = 0;
     shiftDec = 0;
+    show_main(showingJD);
+}
+
+function light_dark() {
+    if (darkFrag == 0) {
+        darkMode();
+    } else {
+        lightMode();
+    }
+    setColor();
     show_main(showingJD);
 }
 
@@ -566,22 +359,22 @@ function show_main(JD){
     } else {
         if (url.searchParams.has('zengo')) {url.searchParams.delete('zengo')}
         if (document.getElementById("zengo11").value != '10' && isNaN(document.getElementById("zengo11").value) == false) {
-            url.searchParams.set('z11', document.getElementById("zengo11").value.replace('.', '_'));
+            url.searchParams.set('z11', document.getElementById("zengo11").value);
         } else {
             url.searchParams.delete('z11');
         }
         if (document.getElementById("zengo12").value != '100' && isNaN(document.getElementById("zengo12").value) == false) {
-            url.searchParams.set('z12', document.getElementById("zengo12").value.replace('.', '_'));
+            url.searchParams.set('z12', document.getElementById("zengo12").value);
         } else {
             url.searchParams.delete('z12');
         }
         if (document.getElementById("zengo21").value != '1' && isNaN(document.getElementById("zengo21").value) == false) {
-            url.searchParams.set('z21', document.getElementById("zengo21").value.replace('.', '_'));
+            url.searchParams.set('z21', document.getElementById("zengo21").value);
         } else {
             url.searchParams.delete('z21');
         }
         if (document.getElementById("zengo22").value != '10' && isNaN(document.getElementById("zengo22").value) == false) {
-            url.searchParams.set('z22', document.getElementById("zengo22").value.replace('.', '_'));
+            url.searchParams.set('z22', document.getElementById("zengo22").value);
         } else {
             url.searchParams.delete('z22');
         }
@@ -592,7 +385,7 @@ function show_main(JD){
             url.searchParams.delete('shiftRA');
         }
     } else {
-        url.searchParams.set('shiftRA', shiftRA.toString().replace('.', '_'));
+        url.searchParams.set('shiftRA', shiftRA.toString());
     }
 
     if (shiftDec == 0) {
@@ -600,7 +393,13 @@ function show_main(JD){
             url.searchParams.delete('shiftDec');
         }
     } else {
-        url.searchParams.set('shiftDec', shiftDec.toString().replace('.', '_'));
+        url.searchParams.set('shiftDec', shiftDec.toString());
+    }
+
+    if (darkFrag) {
+        url.searchParams.set('dark', 1);
+    } else {
+        url.searchParams.delete('dark');
     }
         
     history.replaceState('', '', url.href);
@@ -667,8 +466,8 @@ function show_main(JD){
         const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
         var h = Math.asin(sin(Dec_rad)*sin(lat_obs) + cos(Dec_rad)*cos(lat_obs)*cos(theta-RA_rad)) * 180/pi;
-        Astr = '方位角  ' + Math.round(A*10)/10 + '°(' + direc + ')   ';
-        hstr = '高度  ' + Math.round(h*10)/10 + '°  ';
+        Astr = '方位角  ' + Math.round(A*10)/10 + '°(' + direc + ')';
+        hstr = '高度  ' + Math.round(h*10)/10 + '°';
     }
 
     //星座判定
@@ -692,7 +491,7 @@ function show_main(JD){
     var constellation = "";
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
-            constellation = CLnames[i] + "座  ";
+            constellation = CLnames[i] + "座";
         }
     }
 
@@ -1014,57 +813,45 @@ function show_main(JD){
     
     var zengo = document.getElementsByName("zengo");
     if (zengo[1].checked && Selected_number != 9 && Selected_number != 0){
-        ctx.fillStyle = '#3F3'
+        ctx.fillStyle = zengoColor;
         var planet = planets[Selected_number];
         
         var interval1 = parseFloat(document.getElementById("zengo11").value);
         var zengorange1 = parseFloat(document.getElementById("zengo12").value);
         for (var i=1; i<=parseInt(zengorange1/interval1); i++){
             JD = showingJD + i * interval1;
-            var [X, Y, Z] = calc(planets[Obs_num], JD);
-            var [x, y, z] = calc(planet, JD);
-            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (Math.abs(RApos(RA)) < rgW && Math.abs(Dec-cenDec) < rgW) {
-                var [x, y] = coordW(RA, Dec);
-                ctx.beginPath();
-                ctx.arc(x, y, Math.max(sizeW(maglimW), 0.5), 0, 2 * pi, false);
-                ctx.fill();
-            }
-
+            drawZengo(JD, 'W');
             JD = showingJD - i * interval1;
-            var [X, Y, Z] = calc(planets[Obs_num], JD);
-            var [x, y, z] = calc(planet, JD);
-            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (Math.abs(RApos(RA)) < rgW && Math.abs(Dec-cenDec) < rgW) {
-                var [x, y] = coordW(RA, Dec);
-                ctx.beginPath();
-                ctx.arc(x, y, Math.max(sizeW(maglimW), 0.5), 0, 2 * pi, false);
-                ctx.fill();
-            }
+            drawZengo(JD, 'W');
         }
 
         var interval2 = parseFloat(document.getElementById("zengo21").value);
         var zengorange2 = parseFloat(document.getElementById("zengo22").value);
         for (var i=1; i<=parseInt(zengorange2/interval2); i++){
             JD = showingJD + i * interval2;
-            var [X, Y, Z] = calc(planets[Obs_num], JD);
-            var [x, y, z] = calc(planet, JD);
-            var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (Math.abs(RApos(RA)) < rgN && Math.abs(Dec-cenDec) < rgN) {
-                var [x, y] = coordN(RA, Dec);
-                ctx.beginPath();
-                ctx.arc(x, y, Math.max(sizeN(maglimN), 0.5), 0, 2 * pi, false);
-                ctx.fill();
-            }
+            drawZengo(JD, 'N');
             JD = showingJD - i * interval2;
+            drawZengo(JD, 'N');
+        }
+
+        function drawZengo(JD, WorN) {
             var [X, Y, Z] = calc(planets[Obs_num], JD);
             var [x, y, z] = calc(planet, JD);
             var [RA, Dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (Math.abs(RApos(RA)) < rgN && Math.abs(Dec-cenDec) < rgN) {
-                var [x, y] = coordN(RA, Dec);
-                ctx.beginPath();
-                ctx.arc(x, y, Math.max(sizeN(maglimN), 0.5), 0, 2 * pi, false);
-                ctx.fill();
+            if (WorN == 'W') {
+                if (Math.abs(RApos(RA)) < rgW && Math.abs(Dec-cenDec) < rgW) {
+                    var [x, y] = coordW(RA, Dec);
+                    ctx.beginPath();
+                    ctx.arc(x, y, Math.max(sizeW(maglimW), 0.5), 0, 2 * pi, false);
+                    ctx.fill();
+                }
+            } else {
+                if (Math.abs(RApos(RA)) < rgN && Math.abs(Dec-cenDec) < rgN) {
+                    var [x, y] = coordN(RA, Dec);
+                    ctx.beginPath();
+                    ctx.arc(x, y, Math.max(sizeN(maglimN), 0.5), 0, 2 * pi, false);
+                    ctx.fill();
+                }
             }
         }
     }
@@ -1084,32 +871,32 @@ function show_main(JD){
     ctx.stroke();
 
     var RA = RAlist[Selected_number];
-    var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m  ";
+    var RAtext = "赤経 " + Math.floor(RA/15) + "h " + Math.round((RA-15*Math.floor(RA/15))*4*10)/10 + "m";
     
     var Dec = Declist[Selected_number];
     if (Dec >= 0) {
-        var Dectext = "赤緯 +" + Math.floor(Dec) + "° " + Math.round((Dec-Math.floor(Dec))*60) + "'(J2000.0)  ";
+        var Dectext = "赤緯 +" + Math.floor(Dec) + "° " + Math.round((Dec-Math.floor(Dec))*60) + "'(J2000.0)";
     } else {
-        var Dectext = "赤緯 -" + Math.floor(-Dec) + "° " + Math.round((-Dec-Math.floor(-Dec))*60) + "'(J2000.0)  ";
+        var Dectext = "赤緯 -" + Math.floor(-Dec) + "° " + Math.round((-Dec-Math.floor(-Dec))*60) + "'(J2000.0)";
     }
 
     if (Selected_number == 9) {
-        var Disttext = "距離 " + Math.round(Distlist[Selected_number]/1000)/10 + "万km  ";
+        var Disttext = "距離 " + Math.round(Distlist[Selected_number]/1000)/10 + "万km";
     } else {
-        var Disttext = "距離 " + Math.round(Distlist[Selected_number]*100)/100 + "au  ";
+        var Disttext = "距離 " + Math.round(Distlist[Selected_number]*100)/100 + "au";
     }
 
     var Vtext = ""
     if (Vlist[Selected_number] != 100) {
-        var Vtext = Math.round(Vlist[Selected_number]*10)/10 + "等級  ";
+        var Vtext = Math.round(Vlist[Selected_number]*10)/10 + "等級　";
     }
 
-    var coordtext = constellation + "__" + RAtext + Dectext + "__" + Disttext + "__" + Vtext + "__" + Astr + hstr;
+    var coordtext = constellation + "　" + RAtext + "　" + Dectext + "　" + Disttext + "　" + Vtext + "　" + Astr + "　" + hstr;
     document.getElementById("coordtext").innerHTML = coordtext;
 
 
-    function sin(a){return Math.sin(a)}
-    function cos(a){return Math.cos(a)}
+    function sin(a){return Math.sin(a);}
+    function cos(a){return Math.cos(a);}
 
     function YMDH_to_JD(Y, M, D, H){
         if (M <= 2) {
@@ -1357,6 +1144,283 @@ function show_main(JD){
         var z = Az * (1 - tanv2**2) + Bz * tanv2;
         
         return [x, y, z];
+    }
+}
+
+function lightMode() {
+    darkFrag = 0;
+    separationColor = '#FFF';
+    starColor = '#FFF';
+    yellowColor = 'yellow';
+    document.body.style.color = 'black';
+}
+
+function darkMode() {
+    darkFrag = 1;
+    separationColor = '#000';
+    starColor = '#F33';
+    yellowColor = '#990';
+    document.body.style.color = starColor;
+}
+
+function setColor(){
+    document.body.style.backgroundColor = separationColor;
+    document.getElementById('yearText').style.backgroundColor = starColor;
+    document.getElementById('monthText').style.backgroundColor = starColor;
+    document.getElementById('dateText').style.backgroundColor = starColor;
+    document.getElementById('hourText').style.backgroundColor = starColor;
+    document.getElementById('nowBtn').style.backgroundColor = starColor;
+    document.getElementById('observer').style.backgroundColor = starColor;
+    document.getElementById('target').style.backgroundColor = starColor;
+    document.getElementById('NSCombo').style.backgroundColor = starColor;
+    document.getElementById('lat').style.backgroundColor = starColor;
+    document.getElementById('EWCombo').style.backgroundColor = starColor;
+    document.getElementById('lon').style.backgroundColor = starColor;
+    document.getElementById('getLocationBtn').style.backgroundColor = starColor;
+    document.getElementById('zengo11').style.backgroundColor = starColor;
+    document.getElementById('zengo12').style.backgroundColor = starColor;
+    document.getElementById('zengo21').style.backgroundColor = starColor;
+    document.getElementById('zengo22').style.backgroundColor = starColor;
+    document.getElementById('JDp1Btn').style.backgroundColor = starColor;
+    document.getElementById('JDm1Btn').style.backgroundColor = starColor;
+    document.getElementById('RAp2Btn').style.backgroundColor = starColor;
+    document.getElementById('RAm2Btn').style.backgroundColor = starColor;
+    document.getElementById('Decp2Btn').style.backgroundColor = starColor;
+    document.getElementById('Decm2Btn').style.backgroundColor = starColor;
+    document.getElementById('viewResetBtn').style.backgroundColor = starColor;
+    document.getElementById('lightDarkBtn').style.backgroundColor = starColor;
+}
+
+function loadFiles() {
+    function loadFile(filename, func, go) {
+        var url = "https://peteworden.github.io/Soleil/" + filename + ".txt";
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        xhr.send();
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState === 4 && xhr.status === 200) {
+                func(xhr.responseText);
+                console.log(filename + " ready");
+                xhrcheck++;
+                show_initial();
+                return 0;
+            }
+        }
+    }
+
+    //HIP
+    loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
+    function xhrHIP(data) {
+        const DataAry = data.split(',');
+        var num_of_stars = DataAry.length / 3;
+        HIPRAary = Array(num_of_stars);
+        HIPDecary = Array(num_of_stars);
+        HIPmagary = Array(num_of_stars);
+        for (i=0; i<num_of_stars; i++){
+            HIPRAary[i] = parseFloat(DataAry[3*i]);
+            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
+            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
+        }
+    }
+
+    //Tycho
+    loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
+    function xhrTycho(data) {
+        Tycho = data.split(',');
+    }
+
+
+    //Tycho helper
+    loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
+    function xhrHelp(data) {
+        Help = data.split(',');
+    }
+
+    //Tycho 10~11 mag
+    loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
+    function xhrTycho1011(data) {
+        Tycho1011 = data.split(',');
+    }
+
+    //Tycho helper 10~11 mag
+    loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
+    function xhrHelp1011(data) {
+        Help1011 = data.split(',');
+    }
+
+    //星座名
+    loadFile("ConstellationList", xhrCLnames, 1);
+    function xhrCLnames(data) {
+        CLnames = data.split('\r\n');
+    }
+
+    //星座の位置
+    loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
+    function xhrCLpos(data) {
+        constPos = data.split(',');
+    }
+
+    //星座線
+    loadFile("Lines_light_forJS", xhrCLlines, 1);
+    function xhrCLlines(data) {
+        lines = data.split(',');
+    }
+
+    //星座境界線
+    loadFile("boundary_light_forJS", xhrCLboundary, 1);
+    function xhrCLboundary(data) {
+        boundary = data.split(',');
+    }
+
+    //追加天体
+    var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
+    var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+    var RAlist = new Array(20);
+    var Declist = new Array(20);
+    var Distlist = new Array(20);
+    var Vlist = new Array(20);
+    var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
+
+    var extra = [];
+
+    loadFile("ExtraPlanet", xhrExtra, 1);
+    function xhrExtra(data) {
+        extra = data.split(' ');
+        if (extra.length != 0) {
+            var name = extra[1];
+            for (var i=2; i<parseInt(extra[0])+1; i++) {
+                name += ' ' + extra[i];
+            }
+            ENGplanets.push(name);
+            JPNplanets.push(name);
+            const option1 = document.createElement('option');
+            option1.innerHTML = name;
+            document.getElementById('observer').appendChild(option1);
+            const option2 = document.createElement('option');
+            option2.innerHTML = name;
+            document.getElementById('target').appendChild(option2);
+                        
+            if (url.searchParams.has('observer') && xhrcheck == 7) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("observer").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                defaultcheck++;
+            } else {
+                defaultcheck++;
+            }
+
+            if (url.searchParams.has('target')) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("target").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                defaultcheck++;
+            } else {
+                defaultcheck++;
+            }
+        }
+    }
+}
+
+function checkURL(){
+    if (url.searchParams.has('time')) {
+        var [y, m, d, h, h_min] = url.searchParams.get('time').split('-');
+        document.getElementById('yearText').value = parseInt(y).toString();
+        document.getElementById('monthText').value = parseInt(m).toString();
+        document.getElementById('dateText').value = parseInt(d).toString();
+        document.getElementById('hourText').value = parseFloat(parseInt(h)+h_min*Math.pow(10, -h_min.length)).toString();
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('lat')) {
+        var lat = url.searchParams.get('lat');
+        if (lat >= 0) {
+            document.getElementById("NSCombo").value = '北緯';
+            document.getElementById('lat').value = lat;
+        } else {
+            document.getElementById("NSCombo").value = '南緯';
+            document.getElementById('lat').value = -lat;
+        }
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('lon')) {
+        var lon = url.searchParams.get('lon');
+        if (lon >= 0) {
+            document.getElementById("EWCombo").value = '東経';
+            document.getElementById('lon').value = lon;
+        } else {
+            document.getElementById("EWCombo").value = '西経';
+            document.getElementById('lon').value = -lon;
+        }
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('zengo')) {
+        document.getElementsByName("zengo")[0].checked = true;
+        defaultcheck++;
+        show_initial();
+    } else {
+        if (url.searchParams.has('z11')) {
+            document.getElementById('zengo11').value = url.searchParams.get('z11');
+        }
+        if (url.searchParams.has('z12')) {
+            document.getElementById('zengo12').value = url.searchParams.get('z12');
+        }
+        if (url.searchParams.has('z21')) {
+            document.getElementById('zengo21').value = url.searchParams.get('z21');
+        }
+        if (url.searchParams.has('z22')) {
+            document.getElementById('zengo22').value = url.searchParams.get('z22');
+        }
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('shiftRA')) {
+        shiftRA = parseFloat(url.searchParams.get('shiftRA'));
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('shiftDec')) {
+        shiftDec = parseFloat(url.searchParams.get('shiftDec'));
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('dark')) {
+        darkFrag = 1;
+        darkMode();
+        setColor();
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
     }
 }
 

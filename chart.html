@@ -71,7 +71,7 @@
 
                 <div class="mainSettingRows">
                     <label>
-                        <input type="checkbox" id="to11Check">11等星まで（+53万個読み込み）
+                        <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
                     </label><br>
                     <label>
                         <input type="checkbox" id="SHzuhoCheck" checked>正距方位図法
@@ -92,7 +92,6 @@
                         <input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体<br>
                         （視野が<input type="text" id="allNGCFrom" size="1" value="30">°より小さいとき）
                     </label><br>
-
                 </div>
             </div>
         </div>
@@ -115,12 +114,6 @@
         <div id="description" class="description">
             <p>
                 説明など<br>これを開いた右下のボタンで閉じる
-            </p>
-
-            <p>
-                全画面表示ができるようになりました！
-                　が、私の場合スマホ自体の設定でナビゲーションバーを隠さないと星図が見切れてしまいます。
-                回避する方法がわかったら改善します
             </p>
 
             <p>

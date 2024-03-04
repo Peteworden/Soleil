@@ -1,19 +1,8 @@
-@media (prefers-color-scheme: dark){
-    html {
-        background-color: black;
-        color: #f38080;
-    }
-}
-
 body {
     margin: 0px;
 }
 
 h3 {
-    margin: 0px 20px;
-}
-
-h6 {
     margin: 0px 20px;
 }
 
@@ -26,42 +15,23 @@ h6 {
     margin: 3px 10px;
 }
 
+input {
+    width: 4em;
+    max-width: 100%;
+}
+
 .radio {
     width: 1em;
-}
-
-@media (prefers-color-scheme: light) {
-    input {
-        width: 4em;
-        max-width: 100%;
-    }
-}
-
-@media (prefers-color-scheme: dark){
-    input {
-        width: 3em;
-        max-width: 100%;
-        color: whitesmoke;
-        background-color: #c22424;
-    }
-
-    select {
-        color: whitesmoke;
-        background-color: #c22424;
-    }
-
-    .radio {
-        background-color: #c22424;
-    }
 }
 
 .zengoDiv {
     text-align: left;
 }
 
-.direcRows {
+#moveView {
+    margin: auto;
     text-align: center;
-    margin: 3px;
+    border: 0;
 }
 
 button {
@@ -71,6 +41,8 @@ button {
 .showBtn {
     font-size: 16px;
     font-weight: 600;
+    color: #fff;
+    background-color: #eb7000;
     padding: 0rem 2rem;
     line-height: 3em;
     margin: 0px 100px 6px 10px;
@@ -78,39 +50,7 @@ button {
     border: 0;
 }
 
-@media (prefers-color-scheme: light){
-    .showBtn {
-        color: #fff;
-        background-color: #eb7000;
-    }
-
-    .showBtn:hover {
-        color: #fff;
-        background: #f56500;
-    }
-}
-
-@media (prefers-color-scheme: dark){
-    button {
-        color: #e6c0c0;
-        background-color: #c22424;
-    }
-
-    .showBtn {
-        color: whitesmoke;
-        background-color: #c22424;
-    }
-
-    .showBtn:hover {
-        color: #fff;
-        background: #9f4301;
-    }
-
-    a:link {
-        color: blue;
-    }
-
-    a:visited {
-        color: blueviolet;
-    }
+.showBtn:hover {
+    color: #fff;
+    background: #f56500;
 }

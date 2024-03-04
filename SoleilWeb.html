@@ -6,11 +6,7 @@
         <link rel="stylesheet" href="styleWeb.css">
     </head>
     <body>
-        <h3>Soleil Web ~SBDB Web APIを使いたい~</h3>
-        <h6>
-            星のデータは自分のGitHubから取ってきてるのに、表示ボタンの右のリンクとブラウザの戻るボタンをうまく使うと
-            オフラインでも星が表示されます、なんで？？　教えてください
-        </h6>
+        <h3 id="h3">Soleil Web</h3>
         <div class="setting">
             <div class="settingBlock">
                 <div class="mainSettingRows">
@@ -25,9 +21,9 @@
                         document.getElementById('dateText').value = ymdhm.getDate();
                         document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
                     </script>
-                    <button type="button" onclick="now()">現在時刻</button>
+                    <button type="button" id="nowBtn" onclick="now()">現在時刻</button>
                 </div>
-
+                
                 <div class="mainSettingRows">
                     <select id="observer">
                         <option>太陽</option>
@@ -59,7 +55,7 @@
                         <option>Vesta</option>
                     </select>
                 </div>
-
+                
                 <div class="mainSettingRows">
                     <select id="NSCombo">
                         <option selected>北緯</option>
@@ -71,7 +67,7 @@
                         <option>西経</option>
                     </select>
                     <label><input type="text" id="lon" size="1" value="135">°</label>
-                    <button type="button" onclick="getlocation()">現在位置を取得</button>
+                    <button type="button" id="getLocationBtn" onclick="getlocation()">現在位置を取得</button>
                 </div>
             </div>
 
@@ -86,31 +82,37 @@
 
             <div class="settingBlock">
                 <br>
-                <button type="button" onclick="show_JD_plus1()">１日進む</button>
-                <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+                <button type="button" id="JDp1Btn" onclick="show_JD_plus1()">１日進む</button>
+                <button type="button" id="JDm1Btn" onclick="show_JD_minus1()">１日戻る</button>
             </div>
 
             <div class="settingBlock">
-                <div class="direcRows">
-                    <button type="button" onclick="show_Dec_plus2()">2°上</button>
-                </div>
-                <div class="direcRows">
-                    <button type="button" onclick="show_RA_plus2()">2°左</button>
-                    <button type="button" onclick="viewreset()">視点リセット</button>
-                    <button type="button" onclick="show_RA_minus2()">2°右</button>
-                </div>
-                <div class="direcRows">
-                    <button type="button" onclick="show_Dec_minus2()">2°下</button>
-                </div>
+                <table id="moveView">
+                    <tr>
+                        <td></td>
+                        <td><button type="button" id="RAp2Btn" onclick="show_Dec_plus2()">2°上</button></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><button type="button" id="Decp2Btn" onclick="show_RA_plus2()">2°左</button></td>
+                        <td><button type="button" id="viewResetBtn" onclick="viewreset()">リセット</button></td>
+                        <td><button type="button" id="RAm2Btn" onclick="show_RA_minus2()">2°右</button></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><button type="button" id="Decm2Btn" onclick="show_Dec_minus2()">2°下</button></td>
+                        <td></td>
+                    </tr>
+                </table>
             </div>
         </div>
 
         <button class="showBtn" type="button" onclick="show()">表示</button>
-        <a href="SoleilWhole.html">全天バージョン</a>
-        <label>　</label>
         <a href="PeteHOME.html">PeteHOME</a>
         <label>　</label>
         <a href="chart.html">----星図----</a>
+        <label>　</label>
+        <button class="lightDarkBtn" type="button" id="lightDarkBtn" onclick="light_dark()">ライト/ダーク</button>
         <div id="coordtext"></div>
         <div class="result">
             <canvas id="canvas" width="50" height="0"></canvas>

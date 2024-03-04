@@ -40,6 +40,7 @@ h3 {
     border-radius: 1rem;
     width: 300px;
     text-align: center;
+    overflow: scroll;
     z-index: 2;
 }
 
@@ -48,6 +49,10 @@ input {
     max-width: 100%;
     color: whitesmoke;
     background-color: #c22424;
+}
+
+#magLimitSlider {
+    width: 300px;
 }
 
 button {

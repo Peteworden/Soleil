@@ -60,147 +60,48 @@ const maxrg = 90;
 var rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
 
 var magLimtext;
-var magLimLim = 10;
-function find_magLim() {
-    var magLim = Math.min(Math.max(11.0 - 1.8 * Math.log(Math.min(rgEW, rgNS)), 4), magLimLim);
-    //var magLim = 11;
+var magLimLim = 11;
+var magkey1=11.0, magkey2=1.8;//key1は10~13
+function find_magLim(a, b) {
+    var magLim = Math.min(Math.max(a - b * Math.log(Math.min(rgEW, rgNS)), 5), magLimLim);
     magLimtext = `~${Math.round(magLim * 10) / 10}等級`;
     return magLim;
 }
-var magLim = find_magLim();
+var magLim = find_magLim(magkey1, magkey2);
 
 function find_zerosize() {
     return 13 - 2.4 * Math.log(Math.min(rgEW, rgNS) + 3);
 }
 var zerosize = find_zerosize();
 
+document.getElementById('magLimitSlider').addEventListener('change', function(){
+	magkey1 = document.getElementById('magLimitSlider').value;
+    magLim = find_magLim(magkey1, magkey2);
+    zerosize = find_zerosize();
+});
+
 var SHmode = document.getElementById('SHzuhoCheck').checked;
 
+var showingJD = 0;
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
-
 
 var xhrcheck = 0;
 var defaultcheck = 0;
 
-function loadFile(filename, func, go) {
-    var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url_load);
-    xhr.send();
-    xhr.onreadystatechange = function() {
-        if(xhr.readyState === 4 && xhr.status === 200) {
-            func(xhr.responseText);
-            console.log(filename + " ready");
-            xhrcheck++;
-            if (go == 1) {
-                show_initial();
-            } else {
-                if (xhrcheck == 12) {
-                    show_main();
-                }
-            }
-            return 0;
-        }
-    }
-}
-
-//HIP
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
-loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
-function xhrHIP(data) {
-    const DataAry = data.split(',');
-    var num_of_stars = DataAry.length / 3;
-    HIPRAary = Array(num_of_stars);
-    HIPDecary = Array(num_of_stars);
-    HIPmagary = Array(num_of_stars);
-    for (i=0; i<num_of_stars; i++){
-        HIPRAary[i] = parseFloat(DataAry[3*i]);
-        HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-        HIPmagary[i] = parseFloat(DataAry[3*i+2]);
-    }
-}
-
-//Tycho
 var Tycho = [];
-loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
-function xhrTycho(data) {
-    Tycho = data.split(',');
-}
-
-//Tycho helper
 var Help = [];
-loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
-function xhrHelp(data) {
-    Help = data.split(',');
-}
-
-//Tycho 10~11 mag
 var Tycho1011 = [];
-//loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
-function xhrTycho1011(data) {
-    Tycho1011 = data.split(',');
-}
-
-
-//Tycho helper 10~11 mag
 var Help1011 = [];
-//loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
-function xhrHelp1011(data) {
-    Help1011 = data.split(',');
-}
-
-// メシエ天体
 var messier  = Array(4 * 110);
-loadFile("messier_forJS", xhrMessier, 1);
-function xhrMessier(data) {
-    messier = data.split(',');
-}
-
-// choice天体
-var choice = [];
-loadFile("choice_forJS", xhrChoice, 1);
-function xhrChoice(data) {
-    choice = data.split(',');
-}
-
-// NGC天体とIC天体
 var NGC = [];
-loadFile("allNGC_forJS", xhrNGC, 1);
-function xhrNGC(data) {
-    NGC = data.split(',');
-}
-
-//星座名
 var CLnames = [];
-loadFile("ConstellationList", xhrCLnames, 1);
-function xhrCLnames(data) {
-    CLnames = data.split('\r\n');
-}
-
-//星座の位置
 var constPos = [];
-loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
-function xhrCLpos(data) {
-    constPos = data.split(',');
-}
-
-//星座線
 var lines = [];
-loadFile("Lines_light_forJS", xhrCLlines, 1);
-function xhrCLlines(data) {
-    lines = data.split(',');
-}
-
-//星座境界線
 var boundary = [];
-loadFile("boundary_light_forJS", xhrCLboundary, 1);
-function xhrCLboundary(data) {
-    boundary = data.split(',');
-}
 
-//追加天体
 var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
 var RAlist = new Array(20);
@@ -211,36 +112,13 @@ var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
 
 var extra = [];
 
-loadFile("ExtraPlanet", xhrExtra, 1);
-function xhrExtra(data) {
-    extra = data.split(' ');
-    if (extra.length != 0) {
-        var name = extra[1];
-        for (var i=2; i<parseInt(extra[0])+1; i++) {
-            name += ' ' + extra[i];
-        }
-        ENGplanets.push(name);
-        JPNplanets.push(name);
-        const option1 = document.createElement('option');
-        option1.innerHTML = name;
-        document.getElementById('observer').appendChild(option1);
-                    
-        if (url.searchParams.has('observer')) {// && xhrcheck == 7) {
-            for (var i=0; i<ENGplanets.length; i++) {
-                if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                    document.getElementById("observer").value = JPNplanets[i];
-                    break;
-                }
-            }
-            defaultcheck++;
-        } else {
-            defaultcheck++;
-        }
-    }
-}
+const url = new URL(window.location.href);
+console.log(url.href);
+loadFiles();
+checkURL();
 
 function show_initial(){
-    if (xhrcheck == 10 && defaultcheck == 9){
+    if (xhrcheck == 12 && defaultcheck == 9){
         newSetting();
         show_main();
     } else {
@@ -249,11 +127,6 @@ function show_initial(){
 }
 
 const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
-
-var showingJD = 0;
-
-const url = new URL(window.location.href);
-console.log(url.href);
 
 function link(obj) {
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
@@ -274,128 +147,6 @@ function link(obj) {
     document.getElementById("settingBtn").removeAttribute("disabled");
     document.getElementById('description').style.visibility = "hidden";
     show_main();
-}
-
-// キーを指定し、クエリパラメータを取得
-if (url.searchParams.has('RA')) {
-    cenRA = parseFloat(url.searchParams.get('RA'));
-    defaultcheck++;
-    show_initial();
-} else {
-    cenRA = 270;
-    url.searchParams.set('RA', cenRA);
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('Dec')) {
-    cenDec = parseFloat(url.searchParams.get('Dec'));
-    defaultcheck++;
-    show_initial();
-} else {
-    cenDec = -25;
-    url.searchParams.set('Dec', cenDec);
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('time')) {
-    var [y, m, d, h] = url.searchParams.get('time').split('-');
-    console.log('time', url.searchParams.get('time').split('-'));
-    setYMDH(y, m, d, h);
-    showingJD = YMDH_to_JD(y, m, d, h);
-    defaultcheck++;
-    show_initial();
-} else {
-    now();
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('SH')) {
-    console.log('SH', url.searchParams.get('SH'));
-    if (url.searchParams.get('SH') == 1) {
-        SHmode = true;
-        document.getElementById('SHzuhoCheck').checked = true;
-    } else {
-        SHmode = false;
-        url.searchParams.set('SH', 0);
-        document.getElementById('SHzuhoCheck').checked = false;
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    SHmode = true;
-    document.getElementById('SHzuhoCheck').checked = true;
-    url.searchParams.set('SH', 1);
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('to11')) {
-    if (url.searchParams.get('to11') == 1) {
-        document.getElementById('to11Check').checked = true;
-        magLimLim = 11;
-        magLim = find_magLim();
-        if (xhrcheck == 10) {
-            loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 2),
-            loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 2);
-        }
-    } else {
-        document.getElementById('to11Check').checked = false;
-        url.searchParams.set('to11', 0);
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    document.getElementById('to11Check').checked = true;
-    url.searchParams.set('to11', 1);
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('area')) {
-    console.log('area', url.searchParams.get('area'));
-    rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
-    rgNS = rgEW * canvas.height / canvas.width;
-    defaultcheck++;
-    show_initial();
-} else {
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('lat')) {
-    var lat_obs = url.searchParams.get('lat');
-    if (lat_obs >= 0) {
-        document.getElementById("NSCombo").value = '北緯';
-        document.getElementById('lat').value = lat_obs;
-    } else {
-        document.getElementById("NSCombo").value = '南緯';
-        document.getElementById('lat').value = -lat_obs;
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
-}
-
-if (url.searchParams.has('lon')) {
-    var lon_obs = url.searchParams.get('lon');
-    if (lon_obs >= 0) {
-        document.getElementById("EWCombo").value = '東経';
-        document.getElementById('lon').value = lon_obs;
-    } else {
-        document.getElementById("EWCombo").value = '西経';
-        document.getElementById('lon').value = -lon_obs;
-    }
-    defaultcheck++;
-    show_initial();
-} else {
-    defaultcheck++;
-    show_initial();
 }
 
 function now() {
@@ -455,89 +206,6 @@ function finishSetting() {
     show_main();
     document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
-}
-
-//入力をもとにURLを修正し、観測地についての変数を設定し、showingDataを設定し、showingJDを計算する
-function newSetting() {
-    let year = parseInt(document.getElementById('yearText').value);
-    let month = parseInt(document.getElementById('monthText').value);
-    let date = parseInt(document.getElementById('dateText').value);
-    let hour = parseFloat(document.getElementById('hourText').value);
-
-    ObsPlanet = document.getElementById("observer").value;
-    Obs_num = JPNplanets.indexOf(ObsPlanet);
-
-    // 視点
-    if (Obs_num == 3) {
-        if (url.searchParams.has('observer')) {
-            url.searchParams.delete('observer');
-        }   
-    } else {
-        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
-    }
-
-    if (document.getElementById('to11Check').checked) {
-        url.searchParams.set('to11', 1);
-        if (xhrcheck == 10) {
-            loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 2),
-            loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 2);
-        }
-        magLimLim = 11;
-        magLim = find_magLim();
-    } else {
-        url.searchParams.set('to11', 0);
-        magLimLim = 10;
-        magLim = find_magLim();
-    }
-
-    if (document.getElementById('SHzuhoCheck').checked) {
-        SHmode = true;
-        url.searchParams.set('SH', 1);
-    } else {
-        SHmode = false;
-        url.searchParams.set('SH', 0);
-    }
-
-    if (document.getElementById("NSCombo").value == '北緯') {
-        lat_obs = document.getElementById('lat').value * Math.PI/180;
-        lattext = document.getElementById('lat').value + "°N";
-        if (document.getElementById('lat').value == '35') {
-            if (url.searchParams.has('lat')) {
-                url.searchParams.delete('lat');
-            }
-        } else {
-            url.searchParams.set('lat', document.getElementById('lat').value);
-        }
-    } else {
-        lat_obs = -document.getElementById('lat').value * Math.PI/180;
-        lattext = document.getElementById('lat').value + "°S";
-        url.searchParams.set('lat', -document.getElementById('lat').value);
-    }
-
-    if (document.getElementById("EWCombo").value == '東経') {
-        lon_obs = document.getElementById('lon').value * Math.PI/180;
-        lontext = document.getElementById('lon').value + "°E";
-        if (document.getElementById('lon').value == '135') {
-            if (url.searchParams.has('lon')) {
-                url.searchParams.delete('lon');
-            }
-        } else {
-            url.searchParams.set('lon', document.getElementById('lon').value);
-        }
-    } else {
-        lon_obs = -document.getElementById('lon').value * Math.PI/180;
-        lontext = document.getElementById('lon').value + "°W";
-        url.searchParams.set('lon', -document.getElementById('lon').value);
-    }
-        
-    url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
-    console.log(url.href);
-    history.replaceState('', '', url.href);
-
-    document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}時JST ${lattext} ${lontext}`;
-
-    showingJD = YMDH_to_JD(year, month, date, hour);
-    calculation(showingJD);
 }
 
 function descriptionFunc() {
@@ -615,7 +283,6 @@ function ontouchstart(e) {
 function ontouchmove(e) {
     e.preventDefault();
     var touches = e.changedTouches;
-    console.log(touches.length);
     if (touches.length.toString() == '1') {
         if (pinchFrag == 0) {
             moveX = touches[0].pageX;
@@ -670,7 +337,7 @@ function ontouchmove(e) {
                     cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
                 }
                 rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
-                magLim = find_magLim();
+                magLim = find_magLim(magkey1, magkey2);
                 zerosize = find_zerosize();
                 show_main();
                 baseDistance = distance;
@@ -759,7 +426,7 @@ function onwheel(event) {
             cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
         }
         rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
-        magLim = find_magLim();
+        magLim = find_magLim(magkey1, magkey2);
         zerosize = find_zerosize();
         show_main();
         baseDistance = distance;
@@ -1226,7 +893,6 @@ function show_main(){
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else if (maxDec == 90) {
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
-                console.log(skyareas);
             } else {
                 var RArange1 = (SHtoRADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
                 var RArange2 = (SHtoRADec(rgEW,     0)[0] - cenRA + 360) % 360;
@@ -1729,7 +1395,6 @@ function show_main(){
             var [RA_SH, Dec_SH] = angleSH(RA, Dec);
             if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
                 var [x, y] = coordSH(RA_SH, Dec_SH);
-                console.log(name, type);
                 DrawObjects(name, x, y, type);
             }
         }
@@ -1792,7 +1457,6 @@ function show_main(){
         -        Object called nonexistent in the RNGC (Sulentic and Tifft 1973)
         PD       Photographic plate defect
         */
-       console.log(name, type);
         if (type == "Gx") { //銀河
             ctx.strokeRect(x-8, y-4, 16, 8);
         } else if (type == "Nb" || type == "Pl" || type == "Kt") { //星雲
@@ -1875,5 +1539,329 @@ function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸�
 
 function sin(a){return Math.sin(a)}
 function cos(a){return Math.cos(a)}
+
+//入力をもとにURLを修正し、観測地についての変数を設定し、showingDataを設定し、showingJDを計算する
+function newSetting() {
+    let year = parseInt(document.getElementById('yearText').value);
+    let month = parseInt(document.getElementById('monthText').value);
+    let date = parseInt(document.getElementById('dateText').value);
+    let hour = parseFloat(document.getElementById('hourText').value);
+
+    ObsPlanet = document.getElementById("observer").value;
+    Obs_num = JPNplanets.indexOf(ObsPlanet);
+
+    // 視点
+    if (Obs_num == 3) {
+        if (url.searchParams.has('observer')) {
+            url.searchParams.delete('observer');
+        }   
+    } else {
+        url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
+    }
+
+    if (document.getElementById('SHzuhoCheck').checked) {
+        SHmode = true;
+        url.searchParams.set('SH', 1);
+    } else {
+        SHmode = false;
+        url.searchParams.set('SH', 0);
+    }
+
+    url.searchParams.set('magkey', document.getElementById('magLimitSlider').value);
+    magLim = find_magLim(magkey1, magkey2);
+    zerosize = find_zerosize();
+
+    if (document.getElementById("NSCombo").value == '北緯') {
+        lat_obs = document.getElementById('lat').value * Math.PI/180;
+        lattext = document.getElementById('lat').value + "°N";
+        if (document.getElementById('lat').value == '35') {
+            if (url.searchParams.has('lat')) {
+                url.searchParams.delete('lat');
+            }
+        } else {
+            url.searchParams.set('lat', document.getElementById('lat').value);
+        }
+    } else {
+        lat_obs = -document.getElementById('lat').value * Math.PI/180;
+        lattext = document.getElementById('lat').value + "°S";
+        url.searchParams.set('lat', -document.getElementById('lat').value);
+    }
+
+    if (document.getElementById("EWCombo").value == '東経') {
+        lon_obs = document.getElementById('lon').value * Math.PI/180;
+        lontext = document.getElementById('lon').value + "°E";
+        if (document.getElementById('lon').value == '135') {
+            if (url.searchParams.has('lon')) {
+                url.searchParams.delete('lon');
+            }
+        } else {
+            url.searchParams.set('lon', document.getElementById('lon').value);
+        }
+    } else {
+        lon_obs = -document.getElementById('lon').value * Math.PI/180;
+        lontext = document.getElementById('lon').value + "°W";
+        url.searchParams.set('lon', -document.getElementById('lon').value);
+    }
+        
+    url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
+    console.log(url.href);
+    history.replaceState('', '', url.href);
+
+    document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}時JST ${lattext} ${lontext}`;
+
+    showingJD = YMDH_to_JD(year, month, date, hour);
+    calculation(showingJD);
+}
+
+function loadFiles() {
+    function loadFile(filename, func, go) {
+        var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url_load);
+        xhr.send();
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState === 4 && xhr.status === 200) {
+                func(xhr.responseText);
+                console.log(filename + " ready");
+                xhrcheck++;
+                if (go == 1) {
+                    show_initial();
+                } else {
+                    if (xhrcheck == 12) {
+                        show_main();
+                    }
+                }
+                return 0;
+            }
+        }
+    }
+
+    //HIP
+    loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
+    function xhrHIP(data) {
+        const DataAry = data.split(',');
+        var num_of_stars = DataAry.length / 3;
+        HIPRAary = Array(num_of_stars);
+        HIPDecary = Array(num_of_stars);
+        HIPmagary = Array(num_of_stars);
+        for (i=0; i<num_of_stars; i++){
+            HIPRAary[i] = parseFloat(DataAry[3*i]);
+            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
+            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
+        }
+    }
+
+    //Tycho
+    loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
+    function xhrTycho(data) {
+        Tycho = data.split(',');
+    }
+
+    //Tycho helper
+    loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
+    function xhrHelp(data) {
+        Help = data.split(',');
+    }
+
+    //Tycho 10~11 mag
+    loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
+    function xhrTycho1011(data) {
+        Tycho1011 = data.split(',');
+    }
+
+
+    //Tycho helper 10~11 mag
+    loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
+    function xhrHelp1011(data) {
+        Help1011 = data.split(',');
+    }
+
+    // メシエ天体
+    loadFile("messier_forJS", xhrMessier, 1);
+    function xhrMessier(data) {
+        messier = data.split(',');
+    }
+
+    // choice天体
+    loadFile("choice_forJS", xhrChoice, 1);
+    function xhrChoice(data) {
+        choice = data.split(',');
+    }
+
+    // NGC天体とIC天体
+    loadFile("allNGC_forJS", xhrNGC, 1);
+    function xhrNGC(data) {
+        NGC = data.split(',');
+    }
+
+    //星座名
+    loadFile("ConstellationList", xhrCLnames, 1);
+    function xhrCLnames(data) {
+        CLnames = data.split('\r\n');
+    }
+
+    //星座の位置
+    loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
+    function xhrCLpos(data) {
+        constPos = data.split(',');
+    }
+
+    //星座線
+    loadFile("Lines_light_forJS", xhrCLlines, 1);
+    function xhrCLlines(data) {
+        lines = data.split(',');
+    }
+
+    //星座境界線
+    loadFile("boundary_light_forJS", xhrCLboundary, 1);
+    function xhrCLboundary(data) {
+        boundary = data.split(',');
+    }
+
+    //追加天体
+    loadFile("ExtraPlanet", xhrExtra, 1);
+    function xhrExtra(data) {
+        extra = data.split(' ');
+        if (extra.length != 0) {
+            var name = extra[1];
+            for (var i=2; i<parseInt(extra[0])+1; i++) {
+                name += ' ' + extra[i];
+            }
+            ENGplanets.push(name);
+            JPNplanets.push(name);
+            const option1 = document.createElement('option');
+            option1.innerHTML = name;
+            document.getElementById('observer').appendChild(option1);
+                        
+            if (url.searchParams.has('observer')) {// && xhrcheck == 7) {
+                for (var i=0; i<ENGplanets.length; i++) {
+                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
+                        document.getElementById("observer").value = JPNplanets[i];
+                        break;
+                    }
+                }
+                defaultcheck++;
+            } else {
+                defaultcheck++;
+            }
+        }
+    }
+}
+
+function checkURL() {
+    // キーを指定し、クエリパラメータを取得
+    if (url.searchParams.has('RA')) {
+        cenRA = parseFloat(url.searchParams.get('RA'));
+        defaultcheck++;
+        show_initial();
+    } else {
+        cenRA = 270;
+        url.searchParams.set('RA', cenRA);
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('Dec')) {
+        cenDec = parseFloat(url.searchParams.get('Dec'));
+        defaultcheck++;
+        show_initial();
+    } else {
+        cenDec = -25;
+        url.searchParams.set('Dec', cenDec);
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('time')) {
+        var [y, m, d, h] = url.searchParams.get('time').split('-');
+        setYMDH(y, m, d, h);
+        showingJD = YMDH_to_JD(y, m, d, h);
+        defaultcheck++;
+        show_initial();
+    } else {
+        now();
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('SH')) {
+        console.log('SH', url.searchParams.get('SH'));
+        if (url.searchParams.get('SH') == 1) {
+            SHmode = true;
+            document.getElementById('SHzuhoCheck').checked = true;
+        } else {
+            SHmode = false;
+            url.searchParams.set('SH', 0);
+            document.getElementById('SHzuhoCheck').checked = false;
+        }
+        defaultcheck++;
+        show_initial();
+    } else {
+        SHmode = true;
+        document.getElementById('SHzuhoCheck').checked = true;
+        url.searchParams.set('SH', 1);
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('area')) {
+        rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
+        rgNS = rgEW * canvas.height / canvas.width;
+        rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+        magLim = find_magLim(magkey1, magkey2);
+        zerosize = find_zerosize();
+        defaultcheck++;
+        show_initial();
+    } else {
+        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('magkey')) {
+        magkey1 = parseFloat(url.searchParams.get('magkey'));
+        document.getElementById('magLimitSlider').value = magkey1;
+        magLim = find_magLim(magkey1, magkey2);
+        zerosize = find_zerosize();
+        defaultcheck++;
+        show_initial();
+    } else {
+        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('lat')) {
+        var lat_obs = url.searchParams.get('lat');
+        if (lat_obs >= 0) {
+            document.getElementById("NSCombo").value = '北緯';
+            document.getElementById('lat').value = lat_obs;
+        } else {
+            document.getElementById("NSCombo").value = '南緯';
+            document.getElementById('lat').value = -lat_obs;
+        }
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+
+    if (url.searchParams.has('lon')) {
+        var lon_obs = url.searchParams.get('lon');
+        if (lon_obs >= 0) {
+            document.getElementById("EWCombo").value = '東経';
+            document.getElementById('lon').value = lon_obs;
+        } else {
+            document.getElementById("EWCombo").value = '西経';
+            document.getElementById('lon').value = -lon_obs;
+        }
+        defaultcheck++;
+        show_initial();
+    } else {
+        defaultcheck++;
+        show_initial();
+    }
+}
 
 document.body.appendChild(canvas);
