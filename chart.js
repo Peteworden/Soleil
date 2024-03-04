@@ -118,6 +118,7 @@ loadFiles();
 checkURL();
 
 function show_initial(){
+    document.getElementById('title').innerHTML = `${xhrcheck} ${defaultcheck}`;
     if (xhrcheck == 12 && defaultcheck == 9){
         newSetting();
         show_main();
@@ -1614,7 +1615,7 @@ function newSetting() {
 }
 
 function loadFiles() {
-    function loadFile(filename, func, go) {
+    function loadFile(filename, func) {
         var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url_load);
@@ -1624,20 +1625,14 @@ function loadFiles() {
                 func(xhr.responseText);
                 console.log(filename + " ready");
                 xhrcheck++;
-                if (go == 1) {
-                    show_initial();
-                } else {
-                    if (xhrcheck == 12) {
-                        show_main();
-                    }
-                }
+                show_initial();
                 return 0;
             }
         }
     }
 
     //HIP
-    loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
+    loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
     function xhrHIP(data) {
         const DataAry = data.split(',');
         var num_of_stars = DataAry.length / 3;
@@ -1652,74 +1647,74 @@ function loadFiles() {
     }
 
     //Tycho
-    loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
+    loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho);
     function xhrTycho(data) {
         Tycho = data.split(',');
     }
 
     //Tycho helper
-    loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
+    loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
     function xhrHelp(data) {
         Help = data.split(',');
     }
 
     //Tycho 10~11 mag
-    loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
+    loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011);
     function xhrTycho1011(data) {
         Tycho1011 = data.split(',');
     }
 
 
     //Tycho helper 10~11 mag
-    loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
+    loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011);
     function xhrHelp1011(data) {
         Help1011 = data.split(',');
     }
 
     // メシエ天体
-    loadFile("messier_forJS", xhrMessier, 1);
+    loadFile("messier_forJS", xhrMessier);
     function xhrMessier(data) {
         messier = data.split(',');
     }
 
     // choice天体
-    loadFile("choice_forJS", xhrChoice, 1);
+    loadFile("choice_forJS", xhrChoice);
     function xhrChoice(data) {
         choice = data.split(',');
     }
 
     // NGC天体とIC天体
-    loadFile("allNGC_forJS", xhrNGC, 1);
+    loadFile("allNGC_forJS", xhrNGC);
     function xhrNGC(data) {
         NGC = data.split(',');
     }
 
     //星座名
-    loadFile("ConstellationList", xhrCLnames, 1);
+    loadFile("ConstellationList", xhrCLnames);
     function xhrCLnames(data) {
         CLnames = data.split('\r\n');
     }
 
     //星座の位置
-    loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
+    loadFile("ConstellationPositionNew_forJS", xhrCLpos);
     function xhrCLpos(data) {
         constPos = data.split(',');
     }
 
     //星座線
-    loadFile("Lines_light_forJS", xhrCLlines, 1);
+    loadFile("Lines_light_forJS", xhrCLlines);
     function xhrCLlines(data) {
         lines = data.split(',');
     }
 
     //星座境界線
-    loadFile("boundary_light_forJS", xhrCLboundary, 1);
+    loadFile("boundary_light_forJS", xhrCLboundary);
     function xhrCLboundary(data) {
         boundary = data.split(',');
     }
 
     //追加天体
-    loadFile("ExtraPlanet", xhrExtra, 1);
+    loadFile("ExtraPlanet", xhrExtra);
     function xhrExtra(data) {
         extra = data.split(' ');
         if (extra.length != 0) {
