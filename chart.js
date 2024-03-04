@@ -118,8 +118,7 @@ loadFiles();
 checkURL();
 
 function show_initial(){
-    document.getElementById('title').innerHTML = `${xhrcheck} ${defaultcheck}`;
-    if (xhrcheck == 12 && defaultcheck == 9){
+    if (xhrcheck == 13 && defaultcheck == 9){
         newSetting();
         show_main();
     } else {
