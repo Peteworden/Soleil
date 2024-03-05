@@ -41,12 +41,25 @@ var constPos = [];
 var lines = [];
 var boundary = [];
 
+const Sun = ['Sun'];
+const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
+const Venus   = [2451545.0,  0.723336, 0.006777,  54.922625,  3.394676,  76.679843,  50.376632,  0.000004, -0.000041,  0.280377, -0.000789, -0.277694];
+const Earth   = [2451545.0,  1.000003, 0.016711, 102.937682, -0.000015,   0       ,  -2.473110,  0.000006, -0.000044,  0.323274, -0.012947,  0       ];
+const Mars    = [2451545.0,  1.523710, 0.093394, 286.496832,  1.849691,  49.559539,  19.390198,  0.000018,  0.000079,  0.736984, -0.008131, -0.292573];
+const Jupiter = [2451545.0,  5.202887, 0.048386, 274.254571,  1.304397, 100.473909,  19.667961, -0.000116, -0.000133,  0.007836, -0.001837,  0.204691];
+const Saturn  = [2451545.0,  9.536676, 0.053862, -21.063546,  2.485992, 113.662424, 317.355366, -0.001251, -0.000510, -0.130294,  0.001936, -0.288678];
+const Uranus  = [2451545.0, 19.189165, 0.047257,  96.937351,  0.772638,  74.016925, 142.283828, -0.001962, -0.000044,  0.365647, -0.002429,  0.042406];
+const Neptune = [2451545.0, 30.069923, 0.008590, 273.180537,  1.770043, 131.784226, 259.915208,  0.000263,  0.000051, -0.317328,  0.000354, -0.005087];
+const Moon    = ['Moon'];
+const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
+const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
+
+const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
+const OriginalNumOfPlanets = planets.length;
+
 var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-var RAlist = new Array(20);
-var Declist = new Array(20);
-var Distlist = new Array(20);
-var Vlist = new Array(20);
+
 var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
 
 var extra = [];
@@ -236,26 +249,7 @@ function show_main(JD){
     const eps = 0.4090926; //黄道傾斜角
     const sine = sin(eps);
     const cose = cos(eps);
-    pi = Math.PI;
-
-    const Sun = ['Sun'];
-    const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
-    const Venus   = [2451545.0,  0.723336, 0.006777,  54.922625,  3.394676,  76.679843,  50.376632,  0.000004, -0.000041,  0.280377, -0.000789, -0.277694];
-    const Earth   = [2451545.0,  1.000003, 0.016711, 102.937682, -0.000015,   0       ,  -2.473110,  0.000006, -0.000044,  0.323274, -0.012947,  0       ];
-    const Mars    = [2451545.0,  1.523710, 0.093394, 286.496832,  1.849691,  49.559539,  19.390198,  0.000018,  0.000079,  0.736984, -0.008131, -0.292573];
-    const Jupiter = [2451545.0,  5.202887, 0.048386, 274.254571,  1.304397, 100.473909,  19.667961, -0.000116, -0.000133,  0.007836, -0.001837,  0.204691];
-    const Saturn  = [2451545.0,  9.536676, 0.053862, -21.063546,  2.485992, 113.662424, 317.355366, -0.001251, -0.000510, -0.130294,  0.001936, -0.288678];
-    const Uranus  = [2451545.0, 19.189165, 0.047257,  96.937351,  0.772638,  74.016925, 142.283828, -0.001962, -0.000044,  0.365647, -0.002429,  0.042406];
-    const Neptune = [2451545.0, 30.069923, 0.008590, 273.180537,  1.770043, 131.784226, 259.915208,  0.000263,  0.000051, -0.317328,  0.000354, -0.005087];
-    const Moon    = ['Moon'];
-    const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
-    const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
-
-    const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-    const JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-    const ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-
-    const OriginalNumOfPlanets = planets.length;
+    const pi = Math.PI;
 
     var y = document.getElementById('yearText').value;
     var m = document.getElementById('monthText').value;
@@ -267,20 +261,6 @@ function show_main(JD){
         var [h, h_min] = document.getElementById('hourText').value.split('.');
     }
     url.searchParams.set('time', `${y}-${m}-${d}-${h}-${h_min}`);
-
-    if (extra.length != 0) {
-        var name = extra[1];
-        for (var i=2; i<parseInt(extra[0])+1; i++) {
-            name += ' ' + extra[i];
-        }
-        JPNplanets.push(name);
-        ENGplanets.push(name);
-        var New = [];
-        for (var i=parseInt(extra[0])+1; i<extra.length-4; i++) {
-            New.push(parseFloat(extra[i]));
-        }
-        planets.push(New);
-    }
 
     // 視点
     const ObsPlanet = document.getElementById("observer").value;
@@ -1273,56 +1253,58 @@ function loadFiles() {
     }
 
     //追加天体
-    var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-    var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-    var RAlist = new Array(20);
-    var Declist = new Array(20);
-    var Distlist = new Array(20);
-    var Vlist = new Array(20);
-    var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
-
-    var extra = [];
-
     loadFile("ExtraPlanet", xhrExtra, 1);
     function xhrExtra(data) {
-        extra = data.split(' ');
-        if (extra.length != 0) {
-            var name = extra[1];
-            for (var i=2; i<parseInt(extra[0])+1; i++) {
-                name += ' ' + extra[i];
+        extra = data.split('\n');
+        for (var i=0; i<extra.length; i++) {
+            if (extra[i].length == 0) {
+                break;
+            }
+            var extraLine = extra[i].split(' ');
+            var name = extraLine[1];
+            for (var j=2; j<parseInt(extraLine[0])+1; j++) {
+                name += ' ' + extraLine[i];
             }
             ENGplanets.push(name);
             JPNplanets.push(name);
+
             const option1 = document.createElement('option');
             option1.innerHTML = name;
             document.getElementById('observer').appendChild(option1);
+
             const option2 = document.createElement('option');
             option2.innerHTML = name;
             document.getElementById('target').appendChild(option2);
-                        
-            if (url.searchParams.has('observer') && xhrcheck == 7) {
-                for (var i=0; i<ENGplanets.length; i++) {
-                    if (url.searchParams.get('observer') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                        document.getElementById("observer").value = JPNplanets[i];
-                        break;
-                    }
-                }
-                defaultcheck++;
-            } else {
-                defaultcheck++;
-            }
 
-            if (url.searchParams.has('target')) {
-                for (var i=0; i<ENGplanets.length; i++) {
-                    if (url.searchParams.get('target') == ENGplanets[i].split(' ').join('').split('/').join('')) {
-                        document.getElementById("target").value = JPNplanets[i];
-                        break;
-                    }
-                }
-                defaultcheck++;
-            } else {
-                defaultcheck++;
+            var New = [];
+            for (var j=parseInt(extraLine[0])+1; j<extraLine.length-4; j++) {
+                New.push(parseFloat(extraLine[j]));
             }
+            planets.push(New);
+        }
+
+        if (url.searchParams.has('observer') && xhrcheck == 7) {
+            for (var j=0; j<ENGplanets.length; j++) {
+                if (url.searchParams.get('observer') == ENGplanets[j].split(' ').join('').split('/').join('')) {
+                    document.getElementById("observer").value = JPNplanets[j];
+                    break;
+                }
+            }
+            defaultcheck++;
+        } else {
+            defaultcheck++;
+        }
+
+        if (url.searchParams.has('target')) {
+            for (var j=0; j<ENGplanets.length; j++) {
+                if (url.searchParams.get('target') == ENGplanets[j].split(' ').join('').split('/').join('')) {
+                    document.getElementById("target").value = JPNplanets[i];
+                    break;
+                }
+            }
+            defaultcheck++;
+        } else {
+            defaultcheck++;
         }
     }
 }
