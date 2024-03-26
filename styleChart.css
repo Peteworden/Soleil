@@ -16,6 +16,24 @@ h3 {
     height: 30px;
 }
 
+.upload-label {
+    display: inline;
+    cursor: pointer; /* カーソルを指に */
+    margin: 0; /* まわりの余白 */
+    padding: 0 0.5em; /* 文字まわりの余白 */
+    height: 28px;
+    line-height: auto; /* 行間 */
+    background: black; /* 背景色 */
+    color: #FFF; /* 文字色 */
+    font-size: 0.8em; /* フォントサイズ */
+    border-radius: 0.5em; /* 角の丸み */
+    transition: 0.2s; /* ホバーをなめらかに */
+}
+  /* inputは隠す */
+.upload-label input {
+    display: none;
+}
+
 .settingBtn {
     background-color: transparent;
     position: absolute;
