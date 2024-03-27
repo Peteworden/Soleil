@@ -12,7 +12,7 @@ const pi = Math.PI;
 
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
-document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+//document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -233,6 +233,7 @@ function descriptionFunc() {
     }
 }
 
+/*
 function toggleFullscreen() {  
     let elem = document.documentElement;    
     elem
@@ -258,6 +259,7 @@ function exitFullScreenFunc() {
     document.getElementById('fullScreenBtn').style.visibility = "visible";
     document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 }
+*/
 
 function show_JD_plus1(){
     showingJD += 1;
