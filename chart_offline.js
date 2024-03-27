@@ -1619,59 +1619,32 @@ function newSetting() {
 }
 
 function loadFiles() {
-    function readFileAsText(file){
-        return new Promise(function(resolve, reject){
-            let fr = new FileReader();
-            fr.onload = function(){
-                resolve(fr.result);
-            };
-            fr.onerror = function(){
-                reject(fr);
-            };
-            fr.readAsText(file);
-        });
-    }
-    document.getElementById("getFile").addEventListener("change", function(event){
-        let files = event.currentTarget.files;
-        let readers = [];
-        let filenames = [];
-      
-        // Abort if there were no files selected
-        if(!files.length) return;
-      
-        // Store promises in array
-        for(let i=0; i<files.length; i++){
-            readers.push(readFileAsText(files[i]));
-            filenames.push(files[i]['name']);
-        }
-        
-        // Trigger Promises
-        Promise.all(readers).then((values) => {
-            // Values will be an array that contains an item
-            // with the text of every selected file
-            // ["File1 Content", "File2 Content" ... "FileN Content"]
-            for (var i=0; i<values.length; i++) {
-                var fn = filenames[i].split('.')[0];
-                if (fn == 'StarsNewHIP_to6_5_forJS') {xhrHIP(values[i]);}
-                if (fn == 'StarsNew-Tycho-to10-2nd_forJS') {xhrTycho(values[i]);}
-                if (fn == 'TychoSearchHelper2nd_forJS') {xhrHelp(values[i]);}
-                if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {xhrTycho1011(values[i]);}
-                if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {xhrHelp1011(values[i]);}
-                if (fn == 'messier_forJS') {xhrMessier(values[i]);}
-                if (fn == 'choice_forJS') {xhrChoice(values[i]);}
-                if (fn == 'allNGC_forJS') {xhrNGC(values[i]);}
-                if (fn == 'ConstellationList') {xhrCLnames(values[i]);}
-                if (fn == 'ConstellationPositionNew_forJS') {xhrCLpos(values[i]);}
-                if (fn == 'Lines_light_forJS') {xhrCLlines(values[i]);}
-                if (fn == 'boundary_light_forJS') {xhrCLboundary(values[i]);}
-                if (fn == 'ExtraPlanet') {xhrExtra(values[i]);}
-
+    document.getElementById('getFile').addEventListener('change', function () {
+        let fr = new FileReader();
+        fr.onload = function () {
+            const content = fr.result.split(';');
+            for (var i=0; i<13; i++) {
+                fn = content[i].split(':')[0];
+                var data = content[i].split(':')[1];
+                if (fn == 'StarsNewHIP_to6_5_forJS') {xhrHIP(data);}
+                if (fn == 'StarsNew-Tycho-to10-2nd_forJS') {xhrTycho(data);}
+                if (fn == 'TychoSearchHelper2nd_forJS') {xhrHelp(data);}
+                if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {xhrTycho1011(data);}
+                if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {xhrHelp1011(data);}
+                if (fn == 'messier_forJS') {xhrMessier(data);}
+                if (fn == 'choice_forJS') {xhrChoice(data);}
+                if (fn == 'allNGC_forJS') {xhrNGC(data);}
+                if (fn == 'ConstellationList') {xhrCLnames(data);}
+                if (fn == 'ConstellationPositionNew_forJS') {xhrCLpos(data);}
+                if (fn == 'Lines_light_forJS') {xhrCLlines(data);}
+                if (fn == 'boundary_light_forJS') {xhrCLboundary(data);}
+                if (fn == 'ExtraPlanet') {xhrExtra(data);}
                 xhrcheck++;
-                defaultcheck = 9;
                 show_initial();
             }
-        });
-    }, false);
+        }
+        fr.readAsText(this.files[0]);
+    })
 
     //HIP
     function xhrHIP(data) {
