@@ -95,6 +95,12 @@ var Tycho = [];
 var Help = [];
 var Tycho1011 = [];
 var Help1011 = [];
+var BSCnum = 0;
+var BSCRAary = Array(1);
+var BSCDecary = Array(1);
+var FSs = Array(1);
+var Bayers = Array(1);
+var BayerNums = Array(1);
 var messier  = Array(4 * 110);
 var NGC = [];
 var CLnames = [];
@@ -135,7 +141,7 @@ loadFiles();
 checkURL();
 
 function show_initial(){
-    if (xhrcheck == 13 && defaultcheck == 9){
+    if (xhrcheck == 14 && defaultcheck == 9){
         newSetting();
         show_main();
     }
@@ -953,6 +959,10 @@ function show_main(){
         ctx.font = '16px serif';
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
+        
+        if (document.getElementById('BayerFSCheck').checked) {
+            writeBayer_SH();
+        }
 
         //メシエ天体とポピュラー天体
         if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
@@ -1120,6 +1130,11 @@ function show_main(){
         ctx.font = '16px serif';
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
+
+        
+        if (document.getElementById('BayerFSCheck').checked) {
+            writeBayer();
+        }
 
         //メシエ天体とポピュラー天体
         if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
@@ -1392,6 +1407,105 @@ function show_main(){
         }
     }
 
+    
+    function writeBayer() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<BSCnum; i++){
+            var RA = BSCRAary[i];
+            var Dec = BSCDecary[i];
+            const Greeks = ['Alp', 'Bet', 'Gam', 'Del', 'Eps', 'Zet', 'Eta', 'The', 'Iot', 'Kap', 'Lam', 'Mu', 'Nu', 'Xi', 'Omc', 'Pi', 'Rho', 'Sig', 'Tau', 'Ups', 'Phi', 'Chi', 'Psi', 'Ome'];
+            const GreekLetters = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω'];
+            if (Bayers[i] != '') {
+                var name = GreekLetters[Greeks.indexOf(Bayers[i])];
+                if (BayerNums[i] != '') {
+                    name += BayerNums[i];
+                }
+                if (FSs[i] != '') {
+                    name += '(' + FSs[i] + ')';
+                }
+            } else {
+                var name = FSs[i];
+            }
+            var type = messier[4*i+3];
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                var [x, y] = coord(RA, Dec);
+                DrawObjects(name, x, y, 0);
+            }
+        }
+    }
+
+    function DrawMessier() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<110; i++){
+            var name = messier[4*i];
+            var RA = parseFloat(messier[4*i+1]);
+            var Dec = parseFloat(messier[4*i+2]);
+            var type = messier[4*i+3];
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                var [x, y] = coord(RA, Dec);
+                DrawObjects(name, x, y, type);
+            }
+        }
+    }
+
+    function DrawChoice() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<choice.length/4; i++){
+            var name = choice[4*i];
+            if (popularList.indexOf(name) == -1) {
+                var RA = parseFloat(choice[4*i+1]);
+                var Dec = parseFloat(choice[4*i+2]);
+                var type = choice[4*i+3];
+                var [x, y] = coord(RA, Dec);
+                DrawObjects(name, x, y, type);
+            }
+        }
+    }
+
+    function DrawNGC() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<NGC.length/5; i++){
+            var name = NGC[5*i];
+            var RA = parseFloat(NGC[5*i+1]);
+            var Dec = parseFloat(NGC[5*i+2]);
+            var type = NGC[5*i+4];
+            var [x, y] = coord(RA, Dec);
+            DrawObjects(name, x, y, type);
+        }
+    }
+    
+    function writeBayer_SH() {
+        ctx.strokeStyle = 'orange';
+        ctx.fillStyle = 'orange';
+        for (i=0; i<BSCnum; i++){
+            var RA = BSCRAary[i];
+            var Dec = BSCDecary[i];
+            const Greeks = ['Alp', 'Bet', 'Gam', 'Del', 'Eps', 'Zet', 'Eta', 'The', 'Iot', 'Kap', 'Lam', 'Mu', 'Nu', 'Xi', 'Omc', 'Pi', 'Rho', 'Sig', 'Tau', 'Ups', 'Phi', 'Chi', 'Psi', 'Ome'];
+            const GreekLetters = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω'];
+            if (Bayers[i] != '') {
+                var name = GreekLetters[Greeks.indexOf(Bayers[i])];
+                if (BayerNums[i] != '') {
+                    name += BayerNums[i];
+                }
+                if (FSs[i] != '') {
+                    name += '(' + FSs[i] + ')';
+                }
+            } else {
+                var name = FSs[i];
+            }
+            var type = messier[4*i+3];
+            var [RA_SH, Dec_SH] = angleSH(RA, Dec);
+            if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
+                var [x, y] = coordSH(RA_SH, Dec_SH);
+                DrawObjects(name, x, y, 0);
+            }
+        }
+    }
+
     function DrawMessier_SH() {
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
@@ -1480,7 +1594,9 @@ function show_main(){
             ctx.lineTo(x-5, y+3);
             ctx.lineTo(x+5, y+3);
             ctx.lineTo(x  , y-6);
-        } else {
+        } else if (type == 0) {
+            1;
+        }  else {
             ctx.moveTo(x-4, y-4);
             ctx.lineTo(x+4, y+4);
             ctx.moveTo(x-4, y+4);
@@ -1625,7 +1741,7 @@ function loadFiles() {
         let fr = new FileReader();
         fr.onload = function () {
             const content = fr.result.split(';');
-            for (var i=0; i<13; i++) {
+            for (var i=0; i<14; i++) {
                 fn = content[i].split(':')[0];
                 var data = content[i].split(':')[1];
                 if (fn == 'StarsNewHIP_to6_5_forJS') {xhrHIP(data);}
@@ -1633,6 +1749,7 @@ function loadFiles() {
                 if (fn == 'TychoSearchHelper2nd_forJS') {xhrHelp(data);}
                 if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {xhrTycho1011(data);}
                 if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {xhrHelp1011(data);}
+                if (fn == 'bsc_forJS') {xhrBSC(data);}
                 if (fn == 'messier_forJS') {xhrMessier(data);}
                 if (fn == 'choice_forJS') {xhrChoice(data);}
                 if (fn == 'allNGC_forJS') {xhrNGC(data);}
@@ -1680,6 +1797,24 @@ function loadFiles() {
     //Tycho helper 10~11 mag
     function xhrHelp1011(data) {
         Help1011 = data.split(',');
+    }
+
+    //Bayer, FS
+    function xhrBSC(data) {
+        const BSC = data.split(',');
+        BSCnum = BSC.length / 6;
+        BSCRAary = Array(BSCnum);
+        BSCDecary = Array(BSCnum);
+        FSs = Array(BSCnum);
+        Bayers = Array(BSCnum);
+        BayerNums = Array(BSCnum);
+        for (i=0; i<BSCnum; i++){
+            BSCRAary[i] = parseFloat(BSC[6*i]);
+            BSCDecary[i] = parseFloat(BSC[6*i+1]);
+            FSs[i] = BSC[6*i+2];
+            Bayers[i] = BSC[6*i+3];
+            BayerNums[i] = BSC[6*i+4];
+        }
     }
 
     // メシエ天体
