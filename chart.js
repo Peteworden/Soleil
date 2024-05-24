@@ -3,16 +3,22 @@
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
-//分断の色と星の色を変える
-const starColor = '#FFF'
-const yellowColor = 'yellow'
-//'yellow'は全部yellowColorにする
+//星などの色を変える
+var darker = false;
+var starColor = '#FFF';
+var yellowColor = 'yellow';
+var objectColor = 'orange';
+var specialObjectNameColor = '#FF8';
+var lineColor = 'red';
+var textColor = 'white';
 
 const pi = Math.PI;
 
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+
+document.getElementById('darkerbtntext').innerHTML = 'darker';
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -215,6 +221,30 @@ function YMDH_to_JD(Y, M, D, H){
     }
     var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
     return JD;
+}
+
+function darkerFunc() {
+    if (darker) { /*明るくする*/
+        darker = false;
+        starColor = '#FFF';
+        yellowColor = 'yellow';
+        objectColor = 'orange';
+        lineColor = 'red';
+        textColor = 'white';
+        specialObjectNameColor = '#FF8';
+        document.getElementById('darkerbtntext').innerHTML = 'dark';
+    } else { /*暗くする*/
+        darker = true;
+        starColor = '#C66';
+        yellowColor = '#550';
+        objectColor = '#D55';
+        lineColor = '#700';
+        textColor = '#A53';
+        specialObjectNameColor = '#AA5';
+        document.getElementById('darkerbtntext').innerHTML = 'bright';
+    }
+    newSetting();
+    show_main();
 }
 
 function showSetting() {
@@ -857,7 +887,7 @@ function show_main(){
 
     if (SHmode) {
         //星座線
-        ctx.strokeStyle = 'red';
+        ctx.strokeStyle = lineColor;
         ctx.beginPath();
         const num_of_lines = lines.length / 5;
         for (var i=0; i<num_of_lines; i++) {
@@ -941,7 +971,7 @@ function show_main(){
         // 星座名
         ctx.font = '20px times new roman';
         if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = textColor;
             for (i=0; i<88; i++){
                 var RA = 1.0 * constPos[2*i];
                 var Dec = 1.0 * constPos[2*i+1];
@@ -955,8 +985,8 @@ function show_main(){
         }
 
         ctx.font = '16px serif';
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
 
         if (document.getElementById('BayerFSCheck').checked) {
             writeBayer_SH();
@@ -1008,12 +1038,12 @@ function show_main(){
                     ctx.beginPath();
                     ctx.arc(x, y, r, 0, 2 * pi, false);
                     ctx.fill();
-                    ctx.fillStyle = '#FF8';
+                    ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                 } else if (i == 9) { // 月(地球から見たときだけ)
                     if (Obs_num == 3) {
                         var r = DrawMoon();
-                        ctx.fillStyle = '#FF8';
+                        ctx.fillStyle = specialObjectNameColor;
                         ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                     }
                 } else if (i != 9) {// 太陽と月以外
@@ -1022,14 +1052,14 @@ function show_main(){
                     ctx.beginPath();
                     ctx.arc(x, y, Math.max(size(mag), 0.5), 0, 2 * pi, false);
                     ctx.fill();
-                    ctx.fillStyle = '#FF8';
+                    ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x, y);
                 }
             }
         }
     } else { //正距円筒図法
         //星座線
-        ctx.strokeStyle = 'red';
+        ctx.strokeStyle = lineColor;
         ctx.beginPath();
         const num_of_lines = lines.length / 5;
         for (var i=0; i<num_of_lines; i++) {
@@ -1113,7 +1143,7 @@ function show_main(){
         // 星座名
         ctx.font = '20px times new roman';
         if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = textColor;
             for (i=0; i<88; i++){
                 var RA = 1.0 * constPos[2*i];
                 var Dec = 1.0 * constPos[2*i+1];
@@ -1126,8 +1156,8 @@ function show_main(){
         }
 
         ctx.font = '16px serif';
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
 
         if (document.getElementById('BayerFSCheck').checked) {
             writeBayer();
@@ -1177,12 +1207,12 @@ function show_main(){
                     ctx.beginPath();
                     ctx.arc(x, y, r, 0, 2 * pi, false);
                     ctx.fill();
-                    ctx.fillStyle = '#FF8';
+                    ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                 } else if (i == 9) { // 月(地球から見たときだけ)
                     if (Obs_num == 3) {
                         var r = DrawMoon();
-                        ctx.fillStyle = '#FF8';
+                        ctx.fillStyle = specialObjectNameColor;
                         ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                     }
                 } else if (i != 9) {// 太陽と月以外
@@ -1191,7 +1221,7 @@ function show_main(){
                     ctx.beginPath();
                     ctx.arc(x, y, Math.max(size(mag), 0.5), 0, 2 * pi, false);
                     ctx.fill();
-                    ctx.fillStyle = '#FF8';
+                    ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x, y);
                 }
             }
@@ -1206,6 +1236,7 @@ function show_main(){
     }
     
     var coordtext = `${constellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
+    document.getElementById("coordtext").style.color = textColor;
     document.getElementById("coordtext").innerHTML = coordtext;
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
@@ -1362,8 +1393,8 @@ function show_main(){
     }
 
     function writeBayer() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<BSCnum; i++){
             var RA = BSCRAary[i];
             var Dec = BSCDecary[i];
@@ -1389,8 +1420,8 @@ function show_main(){
     }
 
     function DrawMessier() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<110; i++){
             var name = messier[4*i];
             var RA = parseFloat(messier[4*i+1]);
@@ -1404,8 +1435,8 @@ function show_main(){
     }
 
     function DrawChoice() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<choice.length/4; i++){
             var name = choice[4*i];
             if (popularList.indexOf(name) == -1) {
@@ -1419,8 +1450,8 @@ function show_main(){
     }
 
     function DrawNGC() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<NGC.length/5; i++){
             var name = NGC[5*i];
             var RA = parseFloat(NGC[5*i+1]);
@@ -1432,8 +1463,8 @@ function show_main(){
     }
     
     function writeBayer_SH() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<BSCnum; i++){
             var RA = BSCRAary[i];
             var Dec = BSCDecary[i];
@@ -1460,8 +1491,8 @@ function show_main(){
     }
 
     function DrawMessier_SH() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<110; i++){
             var name = messier[4*i];
             var RA = parseFloat(messier[4*i+1]);
@@ -1476,8 +1507,8 @@ function show_main(){
     }
 
     function DrawChoice_SH() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<choice.length/4; i++){
             var name = choice[4*i];
             if (popularList.indexOf(name) == -1) {
@@ -1494,8 +1525,8 @@ function show_main(){
     }
 
     function DrawNGC_SH() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
+        ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
         for (i=0; i<NGC.length/5; i++){
             var name = NGC[5*i];
             var RA = parseFloat(NGC[5*i+1]);
@@ -1683,6 +1714,7 @@ function newSetting() {
     url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
     history.replaceState('', '', url.href);
 
+    document.getElementById('showingData').style.color = textColor;
     document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}時JST ${lattext} ${lontext}`;
 
     showingJD = YMDH_to_JD(year, month, date, hour);
