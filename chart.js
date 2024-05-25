@@ -18,7 +18,7 @@ document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 
-document.getElementById('darkerbtntext').innerHTML = 'darker';
+document.getElementById('darkerbtntext').innerHTML = 'dark';
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
