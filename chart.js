@@ -307,7 +307,7 @@ function show_JD_minus1(){
     setYMDH(y, m, d, h)
 }
 
-var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 25);// distはスワイプを感知する最低距離（ピクセル単位）
+var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50);// distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
@@ -1714,7 +1714,7 @@ function newSetting() {
     url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
     history.replaceState('', '', url.href);
 
-    document.getElementById('showingData').style.color = textColor;
+    //document.getElementById('showingData').style.color = textColor;
     document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}時JST ${lattext} ${lontext}`;
 
     showingJD = YMDH_to_JD(year, month, date, hour);
