@@ -183,7 +183,7 @@ function link(obj) {
     }
     url.searchParams.set('RA', cenRA);
     url.searchParams.set('Dec', cenDec);
-    [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec);
+    [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
     url.searchParams.set('azm', cenAzm);
     url.searchParams.set('alt', cenAlt);
     history.replaceState('', '', url.href);
