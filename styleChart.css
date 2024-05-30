@@ -87,14 +87,15 @@ input[type="file"] {
     position: absolute;
     color: rgb(242, 192, 192);
     background-color: #8b321c;
-    padding: 20px;
+    padding: 10px;
     margin: auto;
     top: 50%;
     left: 50%;
     -webkit-transform : translate(-50%,-50%);
     transform : translate(-50%,-50%);
     border-radius: 1rem;
-    width: 300px;
+    width: 80%;
+    height: 80%;
     text-align: center;
     overflow: scroll;
     z-index: 2;
@@ -105,6 +106,16 @@ input {
     max-width: 100%;
     color: whitesmoke;
     background-color: #c22424;
+}
+
+.zuho {
+    text-align: left;
+}
+
+ul {
+    padding: 0;
+    list-style-type: none;
+    text-align: left;
 }
 
 #magLimitSlider {
