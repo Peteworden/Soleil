@@ -48,14 +48,14 @@ setCanvas(false);
 
 var cenRA = 270;
 var cenDec = -25;
-var cenAzm = 265;
-var cenAlt = 23.2;
+var cenAzm = 180;
+var cenAlt = 60;
 
 if (canvas.width < canvas.height) {
-    var rgEW = 10;
+    var rgEW = 20;
     var rgNS = rgEW * canvas.height / canvas.width;
 } else {
-    var rgNS = 10;
+    var rgNS = 20;
     var rgEW = rgNS * canvas.width / canvas.height;
     document.getElementById('constNameFrom').value = "180";
     document.getElementById('MessierFrom').value = "100";
@@ -89,12 +89,14 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
 });
 
 //var SHmode = document.getElementById('SHzuhoCheck').checked;
-var zuhoElem = document.getElementsByName('zuho');
+var zuhoElem = document.getElementsByName('mode');
+var mode;
+/*
 for (var i=0; i<zuhoElem.length; i++) {
     if (zuhoElem[i].checked) {
-        var mode = zuhoElem[i].value;
+        mode = zuhoElem[i].value;
     }
-}
+}*/
 //AEP(正距方位図法), EtP(正距円筒図法), view(実際の向き), rView(実際の上下左右反転)
 
 var showingJD = 0;
@@ -154,6 +156,7 @@ const url = new URL(window.location.href);
 console.log(url.href);
 loadFiles();
 checkURL();
+console.log(mode);
 
 function show_initial(){
     if (xhrcheck == 14 && defaultcheck ==11) {
@@ -901,7 +904,7 @@ function show_main(){
     var t = (JD - 2451545.0) / 36525;
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
-    if (mode in ['AEP', 'EtP']) {
+    if (['AEP', 'EtP'].includes(mode)) {
         [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
     } else if (mode == 'view') {
         [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
@@ -1077,7 +1080,6 @@ function show_main(){
                     }
                 }
             }
-            console.log(skyareas.length);
             DrawStars(skyareas);
             if (magLim > 10) {
                 DrawStars1011(skyareas);
@@ -1128,45 +1130,53 @@ function show_main(){
                 var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else {
-                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90, overCheck = 0;
+                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90, overCheck = false;
                 for (j=0; j<2; j++) {
                     for (i=0; i<7; i++) {
-                        console.log(2*j-1, 1-i/3);
                         [A, h] = SHtoAh((2*j-1)*rgEW, rgNS*(1-i/3));
                         [RA, Dec] = Ah2RADec(A, h, theta);
-                        /*if ((RA_max>350) && (RA<10)) {
-                            overCheck = 1;
-                            RA_max = RA;
-                        } else if ((RA_min<10) && (RA>350)) {
-                            overCheck = 1;
-                            RA_max = RA;
+                        if (!overCheck) {
+                            if ((RA_max>300) && (RA<60)) {
+                                overCheck = true;
+                                RA_max = 0;
+                            } else if ((RA_min<60) && (RA>300)) {
+                                overCheck = true;
+                                RA_min = 360;
+                            }
                         }
                         if (overCheck) {
+                            if (cenRA > 300) {
+                                if (RA > 300) {
+                                    RA_max = Math.max(RA, RA_max);
+                                } else {
+                                    RA_min = Math.min(RA, RA_min);
+                                }
+                            } else if (cenRA < 60) {
+                                if (RA > 300) {
+                                    RA_min = Math.min(RA, RA_min);
+                                } else {
+                                    RA_max = Math.max(RA, RA_max);
+                                }
+                            }
+                        } else {
                             RA_max = Math.max(RA, RA_max);
                             RA_min = Math.min(RA, RA_min);
-                        }*/
-                        RA_max = Math.max(RA, RA_max);
-                        RA_min = Math.min(RA, RA_min);
+                        }
                         Dec_max = Math.max(Dec, Dec_max);
                         Dec_min = Math.min(Dec, Dec_min);
-                        console.log(RA_max, RA_min, Dec_max, Dec_min);
-                    }
-                    for (i=1; i<6; i++) {
-                        console.log(1-i/3, 2*j-1);
-                        [A, h] = SHtoAh(rgEW*(1-i/3), (2*j-1)*rgNS);
-                        [RA, Dec] = Ah2RADec(A, h, theta);
-                        RA_max = Math.max(RA, RA_max);
-                        RA_min = Math.min(RA, RA_min);
-                        Dec_max = Math.max(Dec, Dec_max);
-                        Dec_min = Math.min(Dec, Dec_min);
-                        console.log(RA_max, RA_min, Dec_max, Dec_min);
                     }
                 }
-
-                console.log(RA_max, RA_min, Dec_max, Dec_min);
-                var skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
-                for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                if (overCheck) {
+                    var skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
+                    for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                    }
+                } else {
+                    var skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
+                    for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                    }
                 }
             }
             DrawStars(skyareas);
@@ -1294,13 +1304,13 @@ function show_main(){
             }
         }
     }
-/*
+
     if (mode == 'view') {
         var minAlt = Math.max(-90, Math.min(SHtoAh(rgEW, -rgNS)[1], cenAlt-rgNS));
         var maxAlt = Math.min( 90, Math.max(SHtoAh(rgEW,  rgNS)[1], cenAlt+rgNS));
 
         var altGridCalcIv = Math.min(rgEW, rgNS) / 30;
-        var azmGridCalcIv = altGridCalcIv / cos(cenAlt);
+        var azmGridCalcIv = altGridCalcIv / Math.max(cos(cenAlt*pi/180), 0.1);
         var gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
         ctx.strokeStyle = 'gray';
 
@@ -1313,62 +1323,141 @@ function show_main(){
         }
         var azmGridIv = 45;
         for (i=0; i<gridIvChoices.length; i++) {
-            if (gridIvChoices[i] > altGridIv / cos(cenAlt*pi/180)) {
+            if (gridIvChoices[i] > altGridIv / Math.max(cos(cenAlt*pi/180), 0.1)) {
                 azmGridIv = gridIvChoices[i];
                 break;
             }
         }
 
-        var A, h, RA_view0, Dec_view0, RA_view1, Dec_view1;
-        console.log(altGridIv, azmGridIv);
+        var A, h, RA_view0, Dec_view0, RA_view1, Dec_view1, drawnFrag=false;
+        function drawAzmAltLine (A, h, RA_view0, Dec_view0) {
+            [RA, Dec] = Ah2RADec(A, h, theta);
+            [RA_view1, Dec_view1] = angleView(RA, Dec);
+            if (j>0 && ((Math.abs(RA_view0)<rgEW && Math.abs(Dec_view0)<rgNS) || (Math.abs(RA_view1)<rgEW && Math.abs(Dec_view1)<rgNS))) {
+                var [x1, y1] = coordSH(RA_view0, Dec_view0);
+                var [x2, y2] = coordSH(RA_view1, Dec_view1);
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+            }
+            [RA_view0, Dec_view0] = [RA_view1, Dec_view1];
+            return [RA_view0, Dec_view0];
+        }
         if (maxAlt == 90) {
             for (i=Math.floor(minAlt/altGridIv); i<Math.ceil(90/altGridIv); i++) {
-                console.log(i);
                 h = i * altGridIv;
+                if (h == 0) {
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.lineWidth = 1;
+                }
                 ctx.beginPath();
-                for (j=0; j<360/azmGridCalcIv; j++) {
+                for (j=0; j<360/azmGridCalcIv+1; j++) {
                     A = j * azmGridCalcIv;
-                    //console.log(A, h, theta);
-                    [RA, Dec] = Ah2RADec(A, h, theta);
-                    [RA_view1, Dec_view1] = angleView(RA, Dec);
-                    if (j>0 && (Math.abs(RA_view0)<rgEW && Math.abs(Dec_view0)<rgNS) || (Math.abs(RA_view1)<rgEW && Math.abs(Dec_view1)<rgNS)) {
-                        var [x1, y1] = coordSH(RA_view0, Dec_view0);
-                        var [x2, y2] = coordSH(RA_view1, Dec_view1);
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                    }
-                    [RA_view0, Dec_view0] = [RA_view1, Dec_view1];
+                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
                 }
                 ctx.stroke();
             }
+            ctx.lineWidth = 1;
             for (i=0; i<Math.ceil(360/azmGridIv); i++) {
                 A = i * azmGridIv;
-                ctx.beginPath();
-                for (j=Math.floor(minAlt/altGridCalcIv); j<Math.ceil(90/altGridCalcIv); j++) {
-                    h = j * altGridCalcIv;
-                    [RA, Dec] = Ah2RADec(A, h, theta);
-                    [RA_view1, Dec_view1] = angleView(RA, Dec);
-                    console.log(RA_view1, Dec_view1);
-                    if (j>0 && (Math.abs(RA_view0)<rgEW && Math.abs(Dec_view0)<rgNS) || (Math.abs(RA_view1)<rgEW && Math.abs(Dec_view1)<rgNS)) {
-                        var [x1, y1] = coordSH(RA_view0, Dec_view0);
-                        var [x2, y2] = coordSH(RA_view1, Dec_view1);
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
-                    }
-                    [RA_view0, Dec_view0] = [RA_view1, Dec_view1];
+                for (j=0; j<Math.ceil(90/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
+                    h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
+                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
                 }
                 ctx.stroke();
             }
         } else if (maxAlt == -90) {
-            1+2;
+            for (i=Math.floor(-90/altGridIv); i<Math.ceil(maxAlt/altGridIv); i++) {
+                h = i * altGridIv;
+                if (h == 0) {
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.lineWidth = 1;
+                }
+                ctx.beginPath();
+                for (j=0; j<360/azmGridCalcIv+1; j++) {
+                    A = j * azmGridCalcIv;
+                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                }
+                ctx.stroke();
+            }
+            ctx.lineWidth = 1;
+            for (i=0; i<Math.ceil(360/azmGridIv); i++) {
+                A = i * azmGridIv;
+                for (j=0; j<Math.ceil((maxAlt+90)/altGridCalcIv)+1; j++) {
+                    h = -90 + j * altGridCalcIv;
+                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                }
+                ctx.stroke();
+            }
         } else {
             var azmRange1 = (SHtoAh(rgEW,  rgNS)[0] - cenAzm + 360) % 360;
             var azmRange2 = (SHtoAh(rgEW,     0)[0] - cenAzm + 360) % 360;
             var azmRange3 = (SHtoAh(rgEW, -rgNS)[0] - cenAzm + 360) % 360;
-            var RArange = Math.max(azmRange1, azmRange2, azmRange3);
+            var azmRange = Math.max(azmRange1, azmRange2, azmRange3);
+
+            for (i=Math.floor(minAlt/altGridIv); i<Math.ceil(maxAlt/altGridIv); i++) {
+                h = i * altGridIv;
+                if (h == 0) {
+                    ctx.lineWidth = 3;
+                } else {
+                    ctx.lineWidth = 1;
+                }
+                ctx.beginPath();
+                for (j=0; j<2*azmRange/azmGridCalcIv+1; j++) {
+                    A = cenAzm - azmRange + j * azmGridCalcIv;
+                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                }
+                ctx.stroke();
+            }
+            ctx.lineWidth = 1;
+            if (cenAzm - azmRange < 0) {
+                for (i=0; i<Math.ceil((cenAzm+azmRange)/azmGridIv); i++) {
+                    A = i * azmGridIv;
+                    for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
+                        h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
+                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    }
+                    ctx.stroke();
+                }
+                for (i=Math.ceil((cenAzm-azmRange+360)/azmGridIv); i<Math.ceil(360/azmGridIv); i++) {
+                    A = i * azmGridIv;
+                    for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
+                        h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
+                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    }
+                    ctx.stroke();
+                }
+            } else if (cenAzm + azmRange > 360) {
+                for (i=0; i<Math.ceil((cenAzm+azmRange)/azmGridIv); i++) {
+                    A = i * azmGridIv;
+                    for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
+                        h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
+                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    }
+                    ctx.stroke();
+                }
+                for (i=Math.ceil((cenAzm-azmRange)/azmGridIv); i<Math.ceil(360/azmGridIv); i++) {
+                    A = i * azmGridIv;
+                    for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
+                        h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
+                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    }
+                    ctx.stroke();
+                }
+            } else {
+                for (i=Math.ceil((cenAzm-azmRange)/azmGridIv); i<Math.ceil((cenAzm+azmRange)/azmGridIv); i++) {
+                    A = i * azmGridIv;
+                    for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
+                        h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
+                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    }
+                    ctx.stroke();
+                }
+            }
         }
         ctx.stroke();
-    }*/
+    }
 
     var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10}m `;
     if (cenDec >= 0) {
@@ -1864,7 +1953,7 @@ function newSetting() {
     for (var i=0; i<zuhoElem.length; i++) {
         if (zuhoElem[i].checked) {
             mode = zuhoElem[i].value;
-            url.searchParams.set('zuho', mode);
+            url.searchParams.set('mode', mode);
         }
     }
 
@@ -2122,11 +2211,14 @@ function checkURL() {
     }
 
     if (url.searchParams.has('mode')) {
-        if (url.searchParams.get('mode') in ['AEP', 'EtP', 'view']) {
-            mode = url.searchParams.get('mode')
+        if (['AEP', 'EtP', 'view'].includes(url.searchParams.get('mode'))) {
+            console.log('yes');
+            mode = url.searchParams.get('mode');
+            console.log(mode);
             for (var i=0; i<zuhoElem.length; i++) {
+                console.log(zuhoElem[i].value, zuhoElem[i].value == mode);
                 if (zuhoElem[i].value == mode) {
-                    zuhoElem[i].checked;
+                    zuhoElem[i].checked = true;
                 }
             }
         }
@@ -2134,14 +2226,16 @@ function checkURL() {
         show_initial();
     } else {
         for (var i=0; i<zuhoElem.length; i++) {
+            console.log(zuhoElem[i].checked, zuhoElem[i].value);
             if (zuhoElem[i].checked) {
                 mode = zuhoElem[i].value;
-                url.searchParams.set('zuho', mode);
+                url.searchParams.set('mode', mode);
             }
         }
         defaultcheck++;
         show_initial();
     }
+    console.log(typeof(mode));
 
     if (url.searchParams.has('area')) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
