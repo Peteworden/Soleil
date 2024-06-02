@@ -1304,7 +1304,7 @@ function show_main(){
             }
         }
     }
-
+/*
     if (mode == 'view') {
         var minAlt = Math.max(-90, Math.min(SHtoAh(rgEW, -rgNS)[1], cenAlt-rgNS));
         var maxAlt = Math.min( 90, Math.max(SHtoAh(rgEW,  rgNS)[1], cenAlt+rgNS));
@@ -1457,7 +1457,7 @@ function show_main(){
             }
         }
         ctx.stroke();
-    }
+    }*/
 
     var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10}m `;
     if (cenDec >= 0) {
