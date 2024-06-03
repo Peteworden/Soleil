@@ -1304,13 +1304,14 @@ function show_main(){
             }
         }
     }
-/*
+
     if (mode == 'view') {
         var minAlt = Math.max(-90, Math.min(SHtoAh(rgEW, -rgNS)[1], cenAlt-rgNS));
         var maxAlt = Math.min( 90, Math.max(SHtoAh(rgEW,  rgNS)[1], cenAlt+rgNS));
 
-        var altGridCalcIv = Math.min(rgEW, rgNS) / 30;
-        var azmGridCalcIv = altGridCalcIv / Math.max(cos(cenAlt*pi/180), 0.1);
+        var altGridCalcIv = Math.min(rgEW, rgNS) / 20;
+        var azmGridCalcIv = Math.min(altGridCalcIv / Math.max(cos(cenAlt*pi/180), 0.1), 8);
+        console.log(altGridCalcIv, azmGridCalcIv, cos(cenAlt*pi/180));
         var gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
         ctx.strokeStyle = 'gray';
 
@@ -1323,7 +1324,7 @@ function show_main(){
         }
         var azmGridIv = 45;
         for (i=0; i<gridIvChoices.length; i++) {
-            if (gridIvChoices[i] > altGridIv / Math.max(cos(cenAlt*pi/180), 0.1)) {
+            if (gridIvChoices[i] > altGridIv / cos(cenAlt*pi/180)) {
                 azmGridIv = gridIvChoices[i];
                 break;
             }
@@ -1366,7 +1367,7 @@ function show_main(){
                 }
                 ctx.stroke();
             }
-        } else if (maxAlt == -90) {
+        } else if (minAlt == -90) {
             for (i=Math.floor(-90/altGridIv); i<Math.ceil(maxAlt/altGridIv); i++) {
                 h = i * altGridIv;
                 if (h == 0) {
@@ -1391,9 +1392,9 @@ function show_main(){
                 ctx.stroke();
             }
         } else {
-            var azmRange1 = (SHtoAh(rgEW,  rgNS)[0] - cenAzm + 360) % 360;
-            var azmRange2 = (SHtoAh(rgEW,     0)[0] - cenAzm + 360) % 360;
-            var azmRange3 = (SHtoAh(rgEW, -rgNS)[0] - cenAzm + 360) % 360;
+            var azmRange1 = (SHtoAh(-rgEW,  rgNS)[0] - cenAzm + 360) % 360;
+            var azmRange2 = (SHtoAh(-rgEW,     0)[0] - cenAzm + 360) % 360;
+            var azmRange3 = (SHtoAh(-rgEW, -rgNS)[0] - cenAzm + 360) % 360;
             var azmRange = Math.max(azmRange1, azmRange2, azmRange3);
 
             for (i=Math.floor(minAlt/altGridIv); i<Math.ceil(maxAlt/altGridIv); i++) {
@@ -1420,7 +1421,7 @@ function show_main(){
                     }
                     ctx.stroke();
                 }
-                for (i=Math.ceil((cenAzm-azmRange+360)/azmGridIv); i<Math.ceil(360/azmGridIv); i++) {
+                for (i=Math.floor((cenAzm-azmRange+360)/azmGridIv); i<Math.ceil(360/azmGridIv); i++) {
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
@@ -1437,7 +1438,7 @@ function show_main(){
                     }
                     ctx.stroke();
                 }
-                for (i=Math.ceil((cenAzm-azmRange)/azmGridIv); i<Math.ceil(360/azmGridIv); i++) {
+                for (i=Math.floor((cenAzm-azmRange)/azmGridIv); i<Math.ceil(360/azmGridIv); i++) {
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
@@ -1446,7 +1447,7 @@ function show_main(){
                     ctx.stroke();
                 }
             } else {
-                for (i=Math.ceil((cenAzm-azmRange)/azmGridIv); i<Math.ceil((cenAzm+azmRange)/azmGridIv); i++) {
+                for (i=Math.floor((cenAzm-azmRange)/azmGridIv); i<Math.ceil((cenAzm+azmRange)/azmGridIv); i++) {
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
@@ -1457,7 +1458,7 @@ function show_main(){
             }
         }
         ctx.stroke();
-    }*/
+    }
 
     var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10}m `;
     if (cenDec >= 0) {
