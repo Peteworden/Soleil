@@ -156,7 +156,6 @@ const url = new URL(window.location.href);
 console.log(url.href);
 loadFiles();
 checkURL();
-console.log(mode);
 
 function show_initial(){
     if (xhrcheck == 14 && defaultcheck ==11) {
@@ -178,7 +177,6 @@ function link(obj) {
     } else { //その他
         for (var i=0; i<choice.length/4; i++) {
             if (obj == choice[4*i]) {
-                console.log(choice[4*i], choice[4*i+1], choice[4*i+2]);
                 cenRA = parseFloat(choice[4*i+1]);
                 cenDec = parseFloat(choice[4*i+2]);
             }
@@ -1311,7 +1309,6 @@ function show_main(){
 
         var altGridCalcIv = Math.min(rgEW, rgNS) / 20;
         var azmGridCalcIv = Math.min(altGridCalcIv / Math.max(cos(cenAlt*pi/180), 0.1), 8);
-        console.log(altGridCalcIv, azmGridCalcIv, cos(cenAlt*pi/180));
         var gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
         ctx.strokeStyle = 'gray';
 
@@ -1829,14 +1826,23 @@ function show_main(){
     }
 
     function DrawMoon () {
-        var r = Math.max(canvas.width * (0.259 / (dist_Moon / 384400)) / rgEW / 2, 13);
         var rs = RAlist[0] * pi/180;
         var ds = Declist[0] * pi/180;
         var rm = RAlist[9] * pi/180;
         var dm = Declist[9] * pi/180;
+        var r = Math.max(canvas.width * (0.259 / (dist_Moon / 384400)) / rgEW / 2, 13);
         var lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
         var k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
-        var P = pi - Math.atan2(cos(ds) * sin(rm-rs), -sin(dm) * cos(ds) * cos(rm-rs) + cos(dm) * sin(ds));
+
+        if (['AEP', 'EtP'].includes(mode)) {
+            var P = pi - Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+        } else if (mode == 'view') {
+            var [As, hs] = RADec2Ah(RAlist[0], Declist[0], theta);
+            var [Am, hm] = RADec2Ah(RAlist[9], Declist[9], theta);
+            [As, hs] = [As*pi/180, hs*pi/180];
+            [Am, hm] = [Am*pi/180, hm*pi/180];
+            var P = pi - Math.atan2(cos(hs)*sin(As-Am), -sin(hm)*cos(hs)*cos(As-Am)+cos(hm)*sin(hs));
+        }
 
         ctx.beginPath();
         if (k < 0.5) {
@@ -2213,11 +2219,8 @@ function checkURL() {
 
     if (url.searchParams.has('mode')) {
         if (['AEP', 'EtP', 'view'].includes(url.searchParams.get('mode'))) {
-            console.log('yes');
             mode = url.searchParams.get('mode');
-            console.log(mode);
             for (var i=0; i<zuhoElem.length; i++) {
-                console.log(zuhoElem[i].value, zuhoElem[i].value == mode);
                 if (zuhoElem[i].value == mode) {
                     zuhoElem[i].checked = true;
                 }
@@ -2227,7 +2230,6 @@ function checkURL() {
         show_initial();
     } else {
         for (var i=0; i<zuhoElem.length; i++) {
-            console.log(zuhoElem[i].checked, zuhoElem[i].value);
             if (zuhoElem[i].checked) {
                 mode = zuhoElem[i].value;
                 url.searchParams.set('mode', mode);
@@ -2236,7 +2238,6 @@ function checkURL() {
         defaultcheck++;
         show_initial();
     }
-    console.log(typeof(mode));
 
     if (url.searchParams.has('area')) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
