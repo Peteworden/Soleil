@@ -5,6 +5,15 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="styleChart.css">
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+        
+          gtag('config', 'G-WREGJRZRGT');
+        </script>
     </head>
     <body>
         <div class="title">
@@ -78,45 +87,38 @@
                 </div>
 
                 <div class="mainSettingRows">
-                    <label>
+                    <div>
                         <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
-                    </label><br>
-                    <label>
-                        <input type="checkbox" id="SHzuhoCheck" checked>正距方位図法
-                    </label><br>
-                    <label>
-                        <input type="checkbox" id="constNameCheck" checked>星座名<br>
-                        （視野が<input type="text" id="constNameFrom" size="1" value="50">°より小さいとき）
-                    </label><br>
-                    <label>
-                        <input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体<br>
-                        （視野が<input type="text" id="MessierFrom" size="1" value="40">°より小さいとき）
-                    </label><br>
-                    <label>
-                        <input type="checkbox" id="choiceCheck" checked>その他、明るいNGC天体など<br>
-                        （視野が<input type="text" id="choiceFrom" size="1" value="30">°より小さいとき）
-                    </label><br>
-                    <label>
-                        <input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体<br>
-                        （視野が<input type="text" id="allNGCFrom" size="1" value="30">°より小さいとき）
-                    </label><br>
-                    <label>
-                        <input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号
-                    </label><br>
+                    </div>
+                    <div class="zuho">
+                        <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
+                        <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
+                        <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）
+                    </div>
+                    <ul>
+                        <li><input type="checkbox" id="constNameCheck" checked>星座名
+                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="50">°のとき）</li>
+                        <li><input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体
+                        （左右の視野&lt;<input type="text" id="MessierFrom" size="1" value="40">°のとき）</li>
+                        <li><input type="checkbox" id="choiceCheck" checked>その他、明るいNGC天体など
+                        （左右の視野&lt;<input type="text" id="choiceFrom" size="1" value="30">°のとき）</li>
+                        <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
+                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="30">°のとき）</li>
+                        <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
+                    </ul>
                 </div>
             </div>
         </div>
 
         <div>
-            <!--rgb(247, 206, 206) 48px-->
-            <!--
-            <button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
+            <!--<button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
+                rgb(247, 206, 206) 48px
                 <img src="fullScreenBtn.png" alt="全画面表示">
             </button>
             <button id="exitFullScreenBtn" class="exitFullScreenBtn" type="button" onclick="exitFullScreenFunc()">
+                rgb(247, 206, 206) 48px
                 <img src="exitFullScreenBtn.png" alt="全画面表示終了">
-            </button>
-            -->
+            </button>-->
             <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()">
                 <!--rgb(247, 206, 206) 48px-->
                 <img src="descriptionBtn.png" alt="説明">
@@ -135,7 +137,7 @@
                     <li>〇：球状星団</li>
                     <li>△：その他の星団、二重星など</li>
                     <li>□：銀河</li>
-                    <li>×：記載なしまたはその他<li>
+                    <li>×：記載なしまたはその他</li>
                 </ul>
             </p>
             <p>
@@ -212,9 +214,7 @@
                     <li>天体選びや不具合修正に協力してくれた人たちありがとう！</li>
                     <li>画面一番上にリンク貼ってるSoleil WebとHOMEも見てね</li>
                     <li>
-                        スマホで見切れる問題について。window.screen.heightには、全画面表示でも見えているナビゲーションバー部分が
-                        含まれているようです。window.outerHeightはwindow.innerHeightと同じ値になっており、
-                        全画面表示にすると下が黒くなります（時刻の文字と右下のボタンは正しい位置になる）。解決策の提案お待ちしてます～
+                        タップしたのと違う天体に飛ぶときがある気がする
                     </li>
                 </ul>                 
             </p>
