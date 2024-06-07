@@ -9,29 +9,29 @@
     <body>
         <header>
             <h1>Gaia Archiveのデータから星図を作る</h1>
-            <p><a href="PeteHOME.html">HOME</a>、<a href="chart.html?mode=AEP">星図</a></p>
+            <p>since:2024/06/06 <a href="PeteHOME.html">HOME</a>、<a href="chart.html?mode=AEP">ぴーとの星図</a></p>
         </header>
 
         <main>
-            Gaia Archiveのデータを利用して、詳細な星図を作成します。<br>
+            Gaia Archiveのデータを利用して、詳細な星図を作成します。データの取得方法は下のほうで説明しています。パソコン推奨。<br>
             <input type="file" id="getFile"/>
             <div id="info"></div>
             <canvas id="canvas"></canvas><br>
-            <input type="range" id="magmaxSlider" min="6" max="18" step="0.1" value="18">
-            <input type="range" id="raminSlider" min="0" max="360" step="0.01" value="180">
-            <input type="range" id="ramaxSlider" min="0" max="360" step="0.01" value="170">
-            <input type="range" id="decminSlider" min="-90" max="90" step="0.01" value="10">
-            <input type="range" id="decmaxSlider" min="-90" max="90" step="0.01" value="0">
-            <input type="range" id="aSlider" min="1" max="2" step="0.01" value="1.6">
-            <input type="range" id="bSlider" min="0" max="0.5" step="0.01" value="0.2"><br>
+            mag_max:<input type="range" id="magmaxSlider" min="6" max="18" step="0.1" value="18">
+            ra_min:<input type="range" id="raminSlider" min="0" max="360" step="0.01" value="180">
+            ra_max:<input type="range" id="ramaxSlider" min="0" max="360" step="0.01" value="170">
+            dec_min:<input type="range" id="decminSlider" min="-90" max="90" step="0.01" value="10">
+            dec_max:<input type="range" id="decmaxSlider" min="-90" max="90" step="0.01" value="0">
+            size1:<input type="range" id="aSlider" min="1" max="2" step="0.01" value="1.6">
+            size2<input type="range" id="bSlider" min="0" max="0.5" step="0.01" value="0.2"><br>
             <ol>
                 <li>
                     <a href="https://gea.esac.esa.int/archive/" target="_blank" rel="noopener">Gaia Archive</a>からデータを取得するために、
                     「Search」「Basic」「Position」を開き、下のいずれかの方法で領域を指定する。
                     <ul>
-                        <li>（おすすめ）「Equatorial」「Target in Box」を選択し、ほしい領域の赤経と赤緯それぞれの上限と下限を指定する。幅は広くても1度くらいがよい。</li>
-                        <li>「Equatorial」「Target in Circle」を選択し、ほしい領域の中心の赤経・赤緯と半径を指定する。半径は30分角くらいがよい。</li>
-                        <li>「Name」を選択し、中心にしたい天体の名前を入力する。半径は30分角くらいがよい。</li>
+                        <li>「Equatorial」「Target in Box」を選択し、ほしい領域の赤経と赤緯それぞれの上限と下限を指定する。幅は10分角~1度くらいがよい。</li>
+                        <li>「Equatorial」「Target in Circle」を選択し、ほしい領域の中心の赤経・赤緯と半径を指定する。半径は5~30分角くらいがよい。</li>
+                        <li>「Name」を選択し、中心にしたい天体の名前を入力する。半径は5~30分角くらいがよい。</li>
                     </ul>
                 </li>
                 <li>
@@ -39,20 +39,27 @@
                     その右の枠に最微等級（たとえば18）を入力する。
                 </li>
                 <li>
-                    「Display columns」を開き「ra」「dec」「phot_g_mean_mag」の位置を確認したあと、下にスクロールして「Select All / None」を
-                    押し、一旦すべてチェックを外したあと、「ra」「dec」「phot_g_mean_mag」だけにチェックを入れる。
+                    「Display columns」を開き「ra」「dec」「phot_g_mean_mag」の位置を確認したあと、下にスクロールして「Select All / None」を2度
+                    クリックし、一旦すべてチェックを外したあと、「ra」「dec」「phot_g_mean_mag」だけにチェックを入れる。
                 </li>
                 <li>一番下の「Submit Query」をクリック</li>
-                <li>数字が3列並んでいることを確認して、下中央の選択肢を「CSV」に変更し、「Download results」をクリック</li>
+                <li>
+                    数字が3列並んでいること、画面左下の「1-20 of ****」の****が2000以下であることを確認する。****が2000より大きい場合は
+                    星が多すぎてすべての星のデータを取得できていないので、領域を狭めたり最微等級を明るくしたりする。
+                </li>
+                <li>下中央の選択肢を「CSV」に変更し、「Download results」をクリック</li>
                 <li>データがダウンロードされるので、拡張子.csvを無理やり.txtに変更する。必要があれば名前や保存場所を変える。</li>
                 <li>この画面上部の「ファイルを選択」のボタンから、今ダウンロードして拡張子を変えたテキストファイルを選択する。</li>
-                <li>ちゃんと表示されましたか？　スライダーを動かすと最微等級や表示する範囲、星の大きさなどを変えられます。</li>
+                <li>ちゃんと表示されましたか？　スライダーを動かすと最微等級や表示する範囲、星の大きさなどを変えられます。スクリーンショットしてお使いください。</li>
             </ol>
             <h3>注意</h3>
             <ul>
-                <li>赤緯によらず赤緯の1°と赤経の1°(=4')を同じ長さで描いています。赤道から離れると横に引き伸ばされます。
-                赤経0時の線をまたぐときや極を含むときの例外処理、正距方位図法での投影もしていません。</li>
-                <li>作って間もないため機能が多くないのはごめんなさい</li>
+                <li>赤経はcos(Dec)の補正だけしています。
+                赤経0時の線をまたぐときや極を含むときの例外処理、正距方位図法での投影はしていません。</li>
+                <li>
+                    作って間もないため機能が多くないのはごめんなさい。星や背景の色を変えられるようにする、トリミングを簡単にする、
+                    CSVのままで扱えるようにするなどの改良を考えています。
+                </li>
                 <li>作成した画像はご自由にお使いください。このツールや星図を使ったり広めたりしていただけるとうれしいです。</li>
             </ul>
             <script src="gaiaChart.js"></script>
