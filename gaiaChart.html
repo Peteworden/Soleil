@@ -4,12 +4,11 @@
         <title>ぴーと｜詳しい星図</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <!--<link rel="stylesheet" href="stylePeteHome.css">-->
     </head>
     <body>
         <header>
             <h1>Gaia Archiveのデータから星図を作る</h1>
-            <p>since:2024/06/06 <a href="PeteHOME.html">HOME</a>、<a href="chart.html?mode=AEP">ぴーとの星図</a></p>
+            <p>since:2024/06/06 last updated:2024/06/08<a href="PeteHOME.html">HOME</a>、<a href="chart.html?mode=AEP">ぴーとの星図</a></p>
         </header>
 
         <main>
@@ -17,13 +16,16 @@
             <input type="file" id="getFile"/>
             <div id="info"></div>
             <canvas id="canvas"></canvas><br>
-            mag_max:<input type="range" id="magmaxSlider" min="6" max="18" step="0.1" value="18">
-            ra_min:<input type="range" id="raminSlider" min="0" max="360" step="0.01" value="180">
-            ra_max:<input type="range" id="ramaxSlider" min="0" max="360" step="0.01" value="170">
-            dec_min:<input type="range" id="decminSlider" min="-90" max="90" step="0.01" value="10">
-            dec_max:<input type="range" id="decmaxSlider" min="-90" max="90" step="0.01" value="0">
-            size1:<input type="range" id="aSlider" min="1" max="2" step="0.01" value="1.6">
-            size2<input type="range" id="bSlider" min="0" max="0.5" step="0.01" value="0.2"><br>
+            <button onclick="saveImg()">save this chart</button><br>
+            mag_max:<input type="range" id="magmaxSlider" min="5" max="15" step="0.1" value="15">,
+            ra_min:<input type="range" id="raminSlider" min="-3" max="3" step="0.1" value="-3">,
+            ra_max:<input type="range" id="ramaxSlider" min="-3" max="3" step="0.1" value="3">,
+            dec_min:<input type="range" id="decminSlider" min="-3" max="3" step="0.1" value="-3">,
+            dec_max:<input type="range" id="decmaxSlider" min="-3" max="3" step="0.1" value="3">,
+            size1:<input type="range" id="aSlider" min="1" max="2" step="0.01" value="1.6">,
+            size2<input type="range" id="bSlider" min="0" max="0.5" step="0.01" value="0.2">,
+            星の色:<input type="radio" name="starColor" value="white" checked>白/<input type="radio" name="starColor" value="#A00">赤/<input type="radio" name="starColor" value="black">黒,
+            背景色:<input type="radio" name="backgroundColor" value="black" checked>黒/<input type="radio" name="backgroundColor" value="white">白 <br>
             <ol>
                 <li>
                     <a href="https://gea.esac.esa.int/archive/" target="_blank" rel="noopener">Gaia Archive</a>からデータを取得するために、
@@ -50,14 +52,14 @@
                 <li>下中央の選択肢を「CSV」に変更し、「Download results」をクリック</li>
                 <li>データがダウンロードされるので、拡張子.csvを無理やり.txtに変更する。必要があれば名前や保存場所を変える。</li>
                 <li>この画面上部の「ファイルを選択」のボタンから、今ダウンロードして拡張子を変えたテキストファイルを選択する。</li>
-                <li>ちゃんと表示されましたか？　スライダーを動かすと最微等級や表示する範囲、星の大きさなどを変えられます。スクリーンショットしてお使いください。</li>
+                <li>ちゃんと表示されましたか？　スライダーを動かすと最微等級や表示する範囲、星の大きさなどを変えられます。ダウンロードかスクリーンショットしてお使いください。</li>
             </ol>
             <h3>注意</h3>
             <ul>
                 <li>赤経はcos(Dec)の補正だけしています。
                 赤経0時の線をまたぐときや極を含むときの例外処理、正距方位図法での投影はしていません。</li>
                 <li>
-                    作って間もないため機能が多くないのはごめんなさい。星や背景の色を変えられるようにする、トリミングを簡単にする、
+                    作って間もないため機能が多くないのはごめんなさい。トリミングを簡単にする、
                     目盛りをつける、CSVのままで扱えるようにするなどの改良を考えています。
                 </li>
                 <li>作成した画像はご自由にお使いください。このツールや星図を使ったり広めたりしていただけるとうれしいです。</li>

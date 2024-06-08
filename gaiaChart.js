@@ -2,17 +2,33 @@
 let canvas = document.getElementById('canvas');
 let ctx = canvas.getContext('2d');
 
-canvas.width = window.innerWidth * 0.8;
-canvas.height = window.innerHeight * 0.8;
+setCanvasSize (ramax, ramin, decmax, decmin);
 
-var raArray = Array(0);
-var decArray = Array(0);
-var magArray = Array(0);
-var dataNum = 0;
+var raArray = [-0.5, 0, 0.5, -1.5, 1.5, -1.5, 1.5];
+var decArray = [0, 0, 0, 2, 2, -2, -2];
+var magArray = [10, 10, 10, 10, 6, 6, 10];
+var dataNum = 7;
 
-var ramax, ramin, decmax, decmin, magmax;
+var ramax=3, ramin=-3, decmax=3, decmin=-3, magmax=15;
 var a = document.getElementById('aSlider').value * 1;
 var b = document.getElementById('bSlider').value * 1;
+
+var starColorElem = document.getElementsByName('starColor');
+var backgroundColorElem = document.getElementsByName('backgroundColor');
+var starColor, backgroundColor;
+for (var i=0; i<starColorElem.length; i++) {
+    if (starColorElem[i].checked) {
+        starColor = starColorElem[i].value;
+        break;
+    }
+}
+for (var i=0; i<backgroundColorElem.length; i++) {
+    if (backgroundColorElem[i].checked) {
+        backgroundColor = backgroundColorElem[i].value;
+        break;
+    }
+}
+draw (ramax, ramin, decmax, decmin, magmax, a, b);
 
 document.getElementById('getFile').addEventListener('change', function () {
     let fr = new FileReader();
@@ -67,19 +83,39 @@ document.getElementById('magmaxSlider').addEventListener('input', function(){
 });
 document.getElementById('raminSlider').addEventListener('input', function(){
     ramin = document.getElementById('raminSlider').value * 1;
-    draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    if (ramin >= ramax) {
+        ramin = ramax - document.getElementById('ramaxSlider').step;
+        document.getElementById('raminSlider').value = ramin;
+    } else {
+        draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    }
 });
 document.getElementById('ramaxSlider').addEventListener('input', function(){
     ramax = document.getElementById('ramaxSlider').value * 1;
-    draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    if (ramax <= ramin) {
+        ramax = ramin + document.getElementById('ramaxSlider').step;
+        document.getElementById('ramaxSlider').value = ramax;
+    } else {
+        draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    }
 });
 document.getElementById('decminSlider').addEventListener('input', function(){
     decmin = document.getElementById('decminSlider').value * 1;
-    draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    if (decmin >= decmax) {
+        decmin = decmax - document.getElementById('decmaxSlider').step;
+        document.getElementById('decminSlider').value = decmin;
+    } else {
+        draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    }
 });
 document.getElementById('decmaxSlider').addEventListener('input', function(){
     decmax = document.getElementById('decmaxSlider').value * 1;
-    draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    if (decmax <= decmin) {
+        decmax = decmin + document.getElementById('decmaxSlider').step;
+        document.getElementById('decmaxSlider').value = decmax;
+    } else {
+        draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    }
 });
 document.getElementById('aSlider').addEventListener('input', function(){
     a = document.getElementById('aSlider').value * 1;
@@ -89,14 +125,48 @@ document.getElementById('bSlider').addEventListener('input', function(){
     b = document.getElementById('bSlider').value * 1;
     draw (ramax, ramin, decmax, decmin, magmax, a, b);
 });
+starColorElem.forEach(function(e) {
+    e.addEventListener("click", function() {
+        for (var i=0; i<starColorElem.length; i++) {
+            if (starColorElem[i].checked) {
+                starColor = starColorElem[i].value;
+                break;
+            }
+        }
+        draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    });
+});
+backgroundColorElem.forEach(function(e) {
+    e.addEventListener("click", function() {
+        for (var i=0; i<backgroundColorElem.length; i++) {
+            if (backgroundColorElem[i].checked) {
+                backgroundColor = backgroundColorElem[i].value;
+                break;
+            }
+        }
+        draw (ramax, ramin, decmax, decmin, magmax, a, b);
+    });
+});
+
+function saveImg(event) {
+    let canvasUrl = canvas.toDataURL("image/jpeg", 0.5);
+    console.log(canvasUrl);
+    var racen = Math.round((ramin + ramax) * 500);
+    var deccen = Math.round((decmin + decmax) * 500);
+    const createEl = document.createElement('a');
+    createEl.href = canvasUrl;
+    createEl.download = `${racen}_${deccen}_${Math.round(magmax*100)}`;
+    createEl.click();
+    createEl.remove();
+};
 
 function draw (ramax, ramin, decmax, decmin, magmax, a, b) {
     document.getElementById('info').innerHTML = `R.A.:${Math.round(ramin*1000)/1000}~${Math.round(ramax*1000)/1000}deg, Dec:${Math.round(decmin*1000)/1000}~${Math.round(decmax*1000)/1000}deg, mag:~${Math.round(magmax*100)/100}mag`;
-    canvas.width = canvas.height * (ramax - ramin) * Math.cos((decmin + decmax) * Math.PI / 180 / 2)/ (decmax - decmin);
+    setCanvasSize (ramax, ramin, decmax, decmin)
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.fillStyle = 'black';
+    ctx.fillStyle = backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = 'white';
+    ctx.fillStyle = starColor;
     for (var i=0; i<dataNum; i++) {
         var [x, y] = radec2xy(raArray[i], decArray[i]);
         var size = mag2size(magArray[i], a, b);
@@ -114,21 +184,22 @@ function draw (ramax, ramin, decmax, decmin, magmax, a, b) {
     }
 }
 
-ctx.fillStyle = 'black'
-var ra_demo = [-0.5, 0, 0.5, -1.5, 1.5, -1.5, 1.5];
-var dec_demo = [0, 0, 0, 2, 2, -2, -2];
-var mag_demo = [10, 10, 10, 10, 6, 6, 10];
-document.getElementById('info').innerHTML = `R.A.:0~0deg, Dec:0~0deg, mag:~0mag`;
-canvas.width = canvas.height;
-ctx.clearRect(0,0,canvas.width,canvas.height);
-ctx.fillStyle = 'black';
-ctx.fillRect(0, 0, canvas.width, canvas.height);
-ctx.fillStyle = 'white';
-for (var i=0; i<7; i++) {
-    var [x, y] = [canvas.width * ((3 - ra_demo[i]) / 6), canvas.height * (3 -dec_demo[i]) / 6];
-    var size = Math.pow(15 - mag_demo[i], 1.6) * 0.2 + 1;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, 2*Math.PI, false);
-    ctx.fill();
-};
+function setCanvasSize (ramax, ramin, decmax, decmin) {
+    if (window.innerWidth > window.innerHeight) {
+        canvas.height = window.innerHeight * 0.8;
+        canvas.width = canvas.height * (ramax - ramin) * Math.cos((decmin + decmax) * Math.PI / 180 / 2) / (decmax - decmin);
+        if (canvas.width > window.innerWidth * 0.95) {
+            canvas.height = canvas.height * window.innerWidth * 0.95 / canvas.width;
+            canvas.width = window.innerWidth * 0.95;
+        }
+    } else {
+        canvas.width = window.innerWidth * 0.9;
+        canvas.height = canvas.width * (decmax - decmin) / (ramax - ramin) / Math.cos((decmin + decmax) * Math.PI / 180 / 2);
+        if (canvas.height > window.innerHeight * 0.9) {
+            canvas.width = canvas.width * window.innerHeight * 0.9 / canvas.height;
+            canvas.height = window.innerHeight * 0.9;
+        }
+    }
+    return [canvas.width, canvas.height];
+}
 
