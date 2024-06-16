@@ -53,7 +53,7 @@ var cenAlt = 60;
 var dev_a = 180 * pi/180; 
 var dev_b = 120 * pi/180;
 var dev_c = 0 * pi/180;
-var dev_a_array, dev_b_array, dev_c_array, dev_a_sum=0, dev_b_sum=0, dev_c_sum=0;
+var dev_a_array = new Array(), dev_b_array = new Array(), dev_c_array = new Array(), dev_a_sum=0, dev_b_sum=0, dev_c_sum=0;
 
 if (canvas.width < canvas.height) {
     var rgEW = 20;
@@ -104,6 +104,7 @@ function init() {
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
+    document.getElementById('test').innerHTML = `${os},${Math.round(dev_a*10)},${Math.round(dev_b*10)},${Math.round(dev_c*10)}`;
     } else{
         window.alert("PCではライブモードは使えません");
     }
@@ -158,7 +159,6 @@ function deviceOrientation(event) {//event.alphaもある
         dev_c = dev_c_sum / dev_c_array.length;
     }
 }
-    console.log([dev_a, dev_b, dev_c]);
 
 var zuhoElem = document.getElementsByName('mode');
 var mode;
