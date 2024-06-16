@@ -18,7 +18,7 @@ document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 
-//document.getElementById('darkerbtntext').innerHTML = 'dark';
+document.getElementById('darkerbtntext').innerHTML = 'dark';
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -98,8 +98,6 @@ init();
 function init() {
     // 簡易的なOS判定
     os = detectOSSimply();
-    console.log(document.getElementById('test'));
-    document.getElementById('test').innerHTML = os[0];
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         document.querySelector("#permit").addEventListener("click", permitDeviceOrientationForSafari);
@@ -138,21 +136,21 @@ function permitDeviceOrientationForSafari() {
         .catch(console.error);
 }
 function deviceOrientation(event) {//event.alphaもある
-    if (dev_a_array.length > 4) {
-        dev_a_sum += event.absolute*pi/180 - dev_a_array.pop();
+    if (dev_a_array.length > 2) {
+        dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
         dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
         dev_c_sum += event.gamma*pi/180 - dev_c_array.pop();
-        dev_a_array.unshift(event.absolute*pi/180);
+        dev_a_array.unshift(event.alpha*pi/180);
         dev_b_array.unshift(event.beta*pi/180);
         dev_c_array.unshift(event.gamma*pi/180);
-        dev_a = dev_a_sum / 5;
-        dev_b = dev_b_sum / 5;
-        dev_c = dev_c_sum / 5;
+        dev_a = dev_a_sum / 3;
+        dev_b = dev_b_sum / 3;
+        dev_c = dev_c_sum / 3;
     } else {
-        dev_a_sum += event.absolute*pi/180;
+        dev_a_sum += event.alpha*pi/180;
         dev_b_sum += event.beta*pi/180;
         dev_c_sum += event.gamma*pi/180;
-        dev_a_array.unshift(event.absolute*pi/180);
+        dev_a_array.unshift(event.alpha*pi/180);
         dev_b_array.unshift(event.beta*pi/180);
         dev_c_array.unshift(event.gamma*pi/180);
         dev_a = dev_a_sum / dev_a_array.length;
@@ -160,29 +158,16 @@ function deviceOrientation(event) {//event.alphaもある
         dev_c = dev_c_sum / dev_c_array.length;
     }
     show_initial();
-    document.getElementById('test').innerHTML = `${Math.round(dev_a*1800/pi)},${Math.round(dev_b*1800/pi)},${Math.round(dev_c*1800/pi)}`;
 }
-function turnOnOffLiveMode (turnOn) {
-    if (turnOn) {
-        canvas.removeEventListener("touchstart", ontouchstart);
-        canvas.removeEventListener("touchmove", ontouchmove);
-        canvas.removeEventListener('touchend', ontouchend);
-        canvas.removeEventListener('touchcancel', ontouchcancel);
-        canvas.removeEventListener('mousedown', onmousedown);
-        canvas.removeEventListener('mouseup', onmouseup);
+
+function turnOnOffLiveMode (mode) {
+    if (mode == 'live') {
         if (os == 'iphone') {
             window.addEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
             window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
         }
     } else {    
-        canvas.addEventListener("touchstart", ontouchstart);
-        canvas.addEventListener("touchmove", ontouchmove);
-        canvas.addEventListener('touchend', ontouchend);
-        canvas.addEventListener('touchcancel', ontouchcancel);
-        canvas.addEventListener('mousedown', onmousedown);
-        canvas.addEventListener('mouseup', onmouseup);
-        canvas.addEventListener('wheel', onwheel);
         if (os == 'iphone') {
             window.removeEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
@@ -425,6 +410,14 @@ var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
 var pinchFrag = 0;
+
+canvas.addEventListener("touchstart", ontouchstart);
+canvas.addEventListener("touchmove", ontouchmove);
+canvas.addEventListener('touchend', ontouchend);
+canvas.addEventListener('touchcancel', ontouchcancel);
+canvas.addEventListener('mousedown', onmousedown);
+canvas.addEventListener('mouseup', onmouseup);
+canvas.addEventListener('wheel', onwheel);
 
 // タッチ開始
 function ontouchstart(e) {
@@ -1662,14 +1655,11 @@ function show_main(){
     function Ah2liveScreen (A, h) {
         A *= pi/180;
         h *= pi/180;
-        var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], dev_a), dev_b), dev_c);
+        var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
         var b = Math.acos(z) * 180/pi;
         var a = Math.atan2(y, x);
         var scrRA = b * sin(a);
         var scrDec = -b * cos(a);
-        if (scrRA.isNaN) {
-            console.log(A, h, x, y, z, a, b);
-        }
         return [scrRA, scrDec];
     }
 
@@ -2172,11 +2162,7 @@ function newSetting() {
             mode = zuhoElem[i].value;
             url.searchParams.set('mode', mode);
         }
-        if (mode == 'live') {
-            turnOnOffLiveMode(1);
-        } else {
-            turnOnOffLiveMode(0);
-        }
+        turnOnOffLiveMode(mode);
     }
 
     url.searchParams.set('magkey', document.getElementById('magLimitSlider').value);
@@ -2440,11 +2426,7 @@ function checkURL() {
                 break;
             }
         }
-        if (mode == 'live') {
-            turnOnOffLiveMode(1);
-        } else {
-            turnOnOffLiveMode(0);
-        }
+        turnOnOffLiveMode(mode);
         defaultcheck++;
         show_initial();
     } else {
@@ -2454,11 +2436,7 @@ function checkURL() {
                 url.searchParams.set('mode', mode);
             }
         }
-        if (mode == 'live') {
-            turnOnOffLiveMode(1);
-        } else {
-            turnOnOffLiveMode(0);
-        }
+        turnOnOffLiveMode(mode);
         defaultcheck++;
         show_initial();
     }
