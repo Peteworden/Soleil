@@ -53,6 +53,7 @@ var cenAlt = 60;
 var dev_a = 180 * pi/180; 
 var dev_b = 120 * pi/180;
 var dev_c = 0 * pi/180;
+var dev_a_array, dev_b_array, dev_c_array, dev_a_sum=0, dev_b_sum=0, dev_c_sum=0;
 
 if (canvas.width < canvas.height) {
     var rgEW = 20;
@@ -134,8 +135,28 @@ function permitDeviceOrientationForSafari() {
         })
         .catch(console.error);
 }
-function deviceOrientation(event) {
-    [dev_a, dev_b, dev_c] = [event.absolute, event.beta, event.gamma]; //event.alphaもある
+function deviceOrientation(event) {//event.alphaもある
+    if (dev_a_array.length > 4) {
+        dev_a_sum += event.absolute*pi/180 - dev_a_array.pop();
+        dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
+        dev_c_sum += event.gamma*pi/180 - dev_c_array.pop();
+        dev_a_array.unshift(event.absolute*pi/180);
+        dev_b_array.unshift(event.beta*pi/180);
+        dev_c_array.unshift(event.gamma*pi/180);
+        dev_a = dev_a_sum / 5;
+        dev_b = dev_b_sum / 5;
+        dev_c = dev_c_sum / 5;
+    } else {
+        dev_a_sum += event.absolute*pi/180;
+        dev_b_sum += event.beta*pi/180;
+        dev_c_sum += event.gamma*pi/180;
+        dev_a_array.unshift(event.absolute*pi/180);
+        dev_b_array.unshift(event.beta*pi/180);
+        dev_c_array.unshift(event.gamma*pi/180);
+        dev_a = dev_a_sum / dev_a_array.length;
+        dev_b = dev_b_sum / dev_b_array.length;
+        dev_c = dev_c_sum / dev_c_array.length;
+    }
 }
     console.log([dev_a, dev_b, dev_c]);
 
