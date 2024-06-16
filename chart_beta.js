@@ -1291,13 +1291,13 @@ function show_main(){
             }
         }
     } else if (mode == 'live') {
-        if (magLim > 6.5) {
+        /*if (magLim > 6.5) {
             var skyareas = [[SkyArea(0, -89.9), SkyArea(359.9, 89.9)]];
             DrawStars(skyareas);
             if (magLim > 10) {
                 DrawStars1011(skyareas);
             }
-        }
+        }*/
     }
     
 
