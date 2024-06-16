@@ -1656,10 +1656,10 @@ function show_main(){
         A *= pi/180;
         h *= pi/180;
         var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
-        var b = Math.acos(z) * 180/pi;
+        var b = Math.acos(-z) * 180/pi;
         var a = Math.atan2(y, x);
-        var scrRA = b * sin(a);
-        var scrDec = -b * cos(a);
+        var scrRA = -b * cos(a);
+        var scrDec = b * sin(a);
         return [scrRA, scrDec];
     }
 
@@ -2117,7 +2117,6 @@ function screen2liveAh (scrRA, scrDec) {
     var scrTheta = Math.atan2(scrDec, -scrRA); //画面上で普通に極座標
     var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
     var [x, y, z] = Rz(Rx(Ry([sin(r)*cos(scrTheta), sin(r)*sin(scrTheta), -cos(r)], dev_c), dev_b), dev_a);
-    console.log(x, y, z);
     var h = Math.asin(z) * 180/pi;
     var A = (Math.atan2(-y, x) * 180/pi % 360 + 360) % 360;
     return [A, h];
