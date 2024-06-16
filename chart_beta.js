@@ -98,13 +98,15 @@ init();
 function init() {
     // 簡易的なOS判定
     os = detectOSSimply();
+    console.log(document.getElementById('test'));
+    document.getElementById('test').innerHTML = os[0];
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         document.querySelector("#permit").addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
-    document.getElementById('test').innerHTML = `${os},${Math.round(dev_a*10)},${Math.round(dev_b*10)},${Math.round(dev_c*10)}`;
+    document.getElementById('test').innerHTML = `${os[0]},${Math.round(dev_a*10)},${Math.round(dev_b*10)},${Math.round(dev_c*10)}`;
     } else{
         window.alert("PCではライブモードは使えません");
     }
