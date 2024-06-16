@@ -1,0 +1,229 @@
+<!--2023/10/21~10/22-->
+<html>
+    <head>
+        <title>星図</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="styleChart.css">
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
+        <script>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+        
+          gtag('config', 'G-WREGJRZRGT');
+        </script>
+    </head>
+    <body>
+        <div class="title">
+            <ul>
+                <li><h3>星図</h3></li>
+                <li><a href="PeteHOME.html">HOME</a></li>
+                <li><a href="SoleilWeb.html?dark=1">Soleil</a></li>
+                <li><button id="darkerBtn" class="darkerBtn" type="button" onclick="darkerFunc()"><div id="darkerbtntext"></div></li>
+            </ul>
+        </div>
+
+        <div>
+            <button id="settingBtn" class="settingBtn" type="button" onclick="showSetting()">
+                <img src="settingBtn.png" alt="設定">
+            </button>
+        </div>
+
+        <div id="setting" class="setting">
+            <div class="settingBlock">
+                <div>
+                    <button id="showBtn" class="showBtn" type="button" onclick="finishSetting()">OK</button>
+                </div>
+
+                <div class="mainSettingRows">
+                    <label><input type="text" id="yearText">年</label>
+                    <label><input type="text" id="monthText">月</label>
+                    <label><input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">時</label>
+                    <script>
+                        var ymdhm = new Date();
+                        document.getElementById('yearText').value = ymdhm.getFullYear();
+                        document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+                        document.getElementById('dateText').value = ymdhm.getDate();
+                        document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+                    </script>
+                    <button type="button" onclick="now()">現在時刻</button>
+                    <button type="button" onclick="show_JD_plus1()">１日進む</button>
+                    <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+                </div>
+                
+                <div class="mainSettingRows">
+                    <label>視点：</label>
+                    <select id="observer">
+                        <option>太陽</option>
+                        <option>水星</option>
+                        <option>金星</option>
+                        <option selected>地球</option>
+                        <option>火星</option>
+                        <option>木星</option>
+                        <option>土星</option>
+                        <option>天王星</option>
+                        <option>海王星</option>
+                        <option>月</option>
+                        <option>Ceres</option>
+                        <option>Vesta</option>
+                    </select>
+                </div>
+                
+                <div class="mainSettingRows">
+                    <select id="NSCombo">
+                        <option selected>北緯</option>
+                        <option>南緯</option>
+                    </select>
+                    <label><input type="text" id="lat" size="1" value="35">°</label>
+                    <select id="EWCombo">
+                        <option selected>東経</option>
+                        <option>西経</option>
+                    </select>
+                    <label><input type="text" id="lon" size="1" value="135">°</label>
+                </div>
+
+                <div class="mainSettingRows">
+                    <div>
+                        <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
+                    </div>
+                    <div class="zuho">
+                        <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
+                        <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
+                        <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
+                        <input type="radio" name="mode" value="live">ライブモード
+                    </div>
+                    <ul>
+                        <li><input type="checkbox" id="constNameCheck" checked>星座名
+                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="50">°のとき）</li>
+                        <li><input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体
+                        （左右の視野&lt;<input type="text" id="MessierFrom" size="1" value="40">°のとき）</li>
+                        <li><input type="checkbox" id="choiceCheck" checked>その他、明るいNGC天体など
+                        （左右の視野&lt;<input type="text" id="choiceFrom" size="1" value="30">°のとき）</li>
+                        <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
+                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="30">°のとき）</li>
+                        <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="fullScreenBtn.png" alt="全画面表示">
+            </button>
+            <button id="exitFullScreenBtn" class="exitFullScreenBtn" type="button" onclick="exitFullScreenFunc()">
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="exitFullScreenBtn.png" alt="全画面表示終了">
+            </button>
+            <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()">
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="descriptionBtn.png" alt="説明">
+            </button>
+        </div>
+
+        <div id="description" class="description">
+            <p>
+                説明など<br>これを開いた右下のボタンで閉じる
+            </p>
+
+            <p>
+                星雲・星団・銀河のマーク
+                <ul>
+                    <li>◇：星雲</li>
+                    <li>〇：球状星団</li>
+                    <li>△：その他の星団、二重星など</li>
+                    <li>□：銀河</li>
+                    <li>×：記載なしまたはその他</li>
+                </ul>
+            </p>
+            <p>
+                表示させている状態をURLで共有できます<br>
+                下の少し色が違うところからその天体に飛べます
+            </p>
+            <p>
+                双眼鏡向けの天体(上４つは暗いところなら肉眼でも見られる)
+                <ul>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M42')">M42</button> オリオン大星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M45')">M45</button> プレアデス星団、すばる</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M31')">M31</button> アンドロメダ銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M44')">M44</button>(かに座) プレセぺ星団。初めて見た散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC869')">NGC869</button>, 884(カシオペヤ座) 二重星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('コリンダー399')">コリンダー399</button> 夏の大三角の中にあるきれいなハンガー</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M41')">M41</button> 双眼鏡だとシリウスと同時に視野に入れられる散開星団</li>
+                </ul>
+                望遠鏡が必要だったり見つけにくかったりするが、比較的見やすいものや個人的に好きなもの
+                <ul>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('アルビレオ')">アルビレオ</button>(はくちょう座) きれいな二重星</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M22')">M22</button>(いて座) 球状星団。わりと見つけやすい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M13')">M13</button>(ヘルクレス座) 球状星団。明るい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M57')">M57</button>(こと座) 環状星雲(リング星雲) 惑星状星雲。小さい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M27')">M27</button>(こぎつね座) 亜鈴状星雲 惑星状星雲。夏の大三角の中</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC5139')">NGC5139</button>(ケンタウルス座) ω星団 一番大きくて明るい球状星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M33')">M33</button>(さんかく座) 銀河。明るいが広がっているので暗い空+双眼鏡向け</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2264')">NGC2264</button>(いっかくじゅう座) クリスマスツリー星団、コーン星雲</li>
+                </ul>
+                その他収録したもの。暗い天体、写真向けなど
+                <ul>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M8')">M8</button>(いて座) 干潟星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M20')">M20</button>(いて座) 三裂星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M51')">M51</button>(おおぐま座) 子持ち銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M101')">M101</button>(おおぐま座) 回転花火銀河</li>
+                    <Li><button id="linkBtn" class="linkBtn" type="button" onclick="link('M104')">M104</button>(おとめ座) ソンブレロ銀河</Li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC55')">NGC55</button>(ちょうこくしつ座) 銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC253')">NGC253</button>(ちょうこくしつ座) 銀河。明るいらしい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC288')">NGC288</button>(ちょうこくしつ座) 球状星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC457')">NGC457</button>(カシオペヤ座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC663')">NGC663</button>(カシオペヤ座) 散開星団。明るいっぽい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC752')">NGC752</button>(アンドロメダ座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC1528')">NGC1528</button>(ペルセウス座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC1851')">NGC1851</button>(はと座) 球状星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2237')">NGC2237</button>(いっかくじゅう座) ばら星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2403')">NGC2403</button>(きりん座) 銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2477')">NGC2477</button>(とも座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC2903')">NGC2903</button>(しし座) 銀河</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC3242')">NGC3242</button>(うみへび座) 木星状星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC3628')">NGC3628</button>(しし座) 銀河。３つ子の１つ</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC4565')">NGC4565</button>(かみのけ座) 銀河。ちょうど真横</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC5128')">NGC5128</button>(ケンタウルス座) ケンタウルス座A</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6124')">NGC6124</button>(さそり座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6231')">NGC6231</button>(さそり座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6940')">NGC6940</button>(こぎつね座) 散開星団</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7009')">NGC7009</button>(みずがめ座) 土星状星雲</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペヤ座) 球状星団。イチオシらしい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('馬頭星雲')">馬頭星雲</button>(オリオン座)</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('大マゼラン雲')">大マゼラン雲</button>(かじき座、テーブルさん座)</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('小マゼラン雲')">小マゼラン雲</button>(きょしちょう座)</li>
+                </ul>
+            </p>
+            <p>
+                星を見ているときによく使っているリンク(別ウィンドウで開きます)<br>
+                <ul>
+                    <li><a href="http://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank" rel="noopener">木星の衛星の位置</a>(名古屋市科学館)</li>
+                    <li><a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank" rel="noopener">土星の衛星の位置</a>(SKY & TELESCOPE)</li>
+                    <li><a href="https://www.heavens-above.com/Asteroids.aspx?lat=35&lng=135.8&loc=Unnamed&alt=0&tz=JapST&cul=ja" target="_blank" rel="noopener">Heavens-Above 小惑星</a></li>
+                    <li><a href="https://www.heavens-above.com/Comets.aspx?lat=35&lng=135.8&loc=Unnamed&alt=0&tz=JapST&cul=ja" target="_blank" rel="noopener">Heavens-Above 彗星</a></li>
+                </ul>
+            </p>
+            <p>
+                <ul>
+                    <li>ほしい機能とか不具合あったらなんでも教えてください</li>
+                    <li>天体選びや不具合修正に協力してくれた人たちありがとう！</li>
+                    <li>画面一番上にリンク貼ってるSoleil WebとHOMEも見てね</li>
+                    <li>
+                        タップしたのと違う天体に飛ぶときがある気がする
+                    </li>
+                </ul>                 
+            </p>
+        </div>
+        
+        <div id="coordtext" class="coordtext"></div>
+        <div class="result">
+            <script src="chart_beta.js"></script>
+        </div>
+
+        <div id="showingData" class="showingData"></div>
+</html>
