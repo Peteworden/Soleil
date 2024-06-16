@@ -160,6 +160,7 @@ function deviceOrientation(event) {//event.alphaもある
         dev_b = dev_b_sum / dev_b_array.length;
         dev_c = dev_c_sum / dev_c_array.length;
     }
+    document.getElementById('test').innerHTML = `${Math.round(dev_a*1800/pi)},${Math.round(dev_b*1800/pi)},${Math.round(dev_c*1800/pi)}`;
 }
 
 var zuhoElem = document.getElementsByName('mode');
