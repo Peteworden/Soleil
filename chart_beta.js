@@ -18,7 +18,7 @@ document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 
-document.getElementById('darkerbtntext').innerHTML = 'dark';
+//document.getElementById('darkerbtntext').innerHTML = 'dark';
 
 let canvas = document.createElement('canvas');
 let ctx = canvas.getContext('2d');
@@ -106,7 +106,6 @@ function init() {
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
-    document.getElementById('test').innerHTML = `${os[0]},${Math.round(dev_a*10)},${Math.round(dev_b*10)},${Math.round(dev_c*10)}`;
     } else{
         window.alert("PCではライブモードは使えません");
     }
@@ -160,7 +159,36 @@ function deviceOrientation(event) {//event.alphaもある
         dev_b = dev_b_sum / dev_b_array.length;
         dev_c = dev_c_sum / dev_c_array.length;
     }
+    show_initial();
     document.getElementById('test').innerHTML = `${Math.round(dev_a*1800/pi)},${Math.round(dev_b*1800/pi)},${Math.round(dev_c*1800/pi)}`;
+}
+function turnOnOffLiveMode (turnOn) {
+    if (turnOn) {
+        canvas.removeEventListener("touchstart", ontouchstart);
+        canvas.removeEventListener("touchmove", ontouchmove);
+        canvas.removeEventListener('touchend', ontouchend);
+        canvas.removeEventListener('touchcancel', ontouchcancel);
+        canvas.removeEventListener('mousedown', onmousedown);
+        canvas.removeEventListener('mouseup', onmouseup);
+        if (os == 'iphone') {
+            window.addEventListener("deviceorientation", deviceOrientation, true);
+        } else if (os == "android") {
+            window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
+        }
+    } else {    
+        canvas.addEventListener("touchstart", ontouchstart);
+        canvas.addEventListener("touchmove", ontouchmove);
+        canvas.addEventListener('touchend', ontouchend);
+        canvas.addEventListener('touchcancel', ontouchcancel);
+        canvas.addEventListener('mousedown', onmousedown);
+        canvas.addEventListener('mouseup', onmouseup);
+        canvas.addEventListener('wheel', onwheel);
+        if (os == 'iphone') {
+            window.removeEventListener("deviceorientation", deviceOrientation, true);
+        } else if (os == "android") {
+            window.removeEventListener("deviceorientationabsolute", deviceOrientation, true);
+        }
+    }
 }
 
 var zuhoElem = document.getElementsByName('mode');
@@ -397,14 +425,6 @@ var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
 var pinchFrag = 0;
-
-canvas.addEventListener("touchstart", ontouchstart);
-canvas.addEventListener("touchmove", ontouchmove);
-canvas.addEventListener('touchend', ontouchend);
-canvas.addEventListener('touchcancel', ontouchcancel);
-canvas.addEventListener('mousedown', onmousedown);
-canvas.addEventListener('mouseup', onmouseup);
-canvas.addEventListener('wheel', onwheel);
 
 // タッチ開始
 function ontouchstart(e) {
@@ -970,9 +990,7 @@ function show_main(){
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
     if (mode == 'live') {
-        console.log(dev_a, dev_b, dev_c);
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
-        console.log(cenAzm, cenAlt);
     }
     if (['AEP', 'EtP'].includes(mode)) {
         [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
@@ -2154,6 +2172,11 @@ function newSetting() {
             mode = zuhoElem[i].value;
             url.searchParams.set('mode', mode);
         }
+        if (mode == 'live') {
+            turnOnOffLiveMode(1);
+        } else {
+            turnOnOffLiveMode(0);
+        }
     }
 
     url.searchParams.set('magkey', document.getElementById('magLimitSlider').value);
@@ -2409,14 +2432,18 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('mode')) {
-        if (['AEP', 'EtP', 'view', 'live'].includes(url.searchParams.get('mode'))) {
-            mode = url.searchParams.get('mode');
-            for (var i=0; i<zuhoElem.length; i++) {
-                if (zuhoElem[i].value == mode) {
-                    zuhoElem[i].checked = true;
-                }
+    if (url.searchParams.has('mode') && ['AEP', 'EtP', 'view', 'live'].includes(url.searchParams.get('mode'))) {
+        mode = url.searchParams.get('mode');
+        for (var i=0; i<zuhoElem.length; i++) {
+            if (zuhoElem[i].value == mode) {
+                zuhoElem[i].checked = true;
+                break;
             }
+        }
+        if (mode == 'live') {
+            turnOnOffLiveMode(1);
+        } else {
+            turnOnOffLiveMode(0);
         }
         defaultcheck++;
         show_initial();
@@ -2426,6 +2453,11 @@ function checkURL() {
                 mode = zuhoElem[i].value;
                 url.searchParams.set('mode', mode);
             }
+        }
+        if (mode == 'live') {
+            turnOnOffLiveMode(1);
+        } else {
+            turnOnOffLiveMode(0);
         }
         defaultcheck++;
         show_initial();
