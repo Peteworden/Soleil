@@ -92,7 +92,7 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
     zerosize = find_zerosize();
 });
 
-var os, orientationPermittion=true, startAzm=0;
+var os, orientationPermittion=true, loadAzm=0;
 var orientationTime1 = Date.now();
 //window.addEventListener("DOMContentLoaded", init);
 init();
@@ -138,12 +138,11 @@ function permitDeviceOrientationForSafari() {
 }
 var moving = false;
 function deviceOrientation(event) {
-    if (os == 'iphone' && startAzm == 0) {
-        startAzm = event.webkitCompassHeading;
-        document.getElementById('title').innerHTML = `${os}, ${startAzm}`;
+    if (os == 'iphone' && loadAzm == 0) {
+        loadAzm = event.webkitCompassHeading;
     }
     var orientationTime2 = Date.now();
-    document.getElementById('title').innerHTML = `${os}, ${startAzm}, ${orientationTime2 - orientationTime1}`;
+    document.getElementById('title').innerHTML = `${os}, ${loadAzm}, ${orientationTime2 - orientationTime1}`;
     if (orientationTime2 - orientationTime1 > 100) {
         orientationTime1 = orientationTime2;
         if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
@@ -1683,7 +1682,7 @@ function show_main(){
     }
 
     function Ah2scrlive (A, h) {
-        A = (A - startAzm) * pi / 180;
+        A = (A - loadAzm - 90) * pi / 180;
         h *= pi/180;
         var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
         var b = Math.acos(-z) * 180/pi;
@@ -2159,7 +2158,7 @@ function screen2liveAh (scrRA, scrDec) {
     var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
     var [x, y, z] = Rz(Rx(Ry([sin(r)*cos(scrTheta), sin(r)*sin(scrTheta), -cos(r)], dev_c), dev_b), dev_a);
     var h = Math.asin(z) * 180/pi;
-    var A = ((Math.atan2(-y, x) * 180/pi + startAzm) % 360 + 360) % 360;
+    var A = ((Math.atan2(-y, x) * 180/pi + loadAzm + 90) % 360 + 360) % 360;
     return [A, h];
 }
 
