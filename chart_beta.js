@@ -93,6 +93,7 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
 });
 
 var os, orientationPermittion=true;
+document.getElementById('title').innerHTML = orientationPermittion;
 //window.addEventListener("DOMContentLoaded", init);
 init();
 function init() {
@@ -101,6 +102,7 @@ function init() {
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         orientationPermittion = false;
+        document.getElementById('title').innerHTML = orientationPermittion;
         document.getElementById('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
@@ -131,6 +133,7 @@ function permitDeviceOrientationForSafari() {
             if (response === "granted") {
                 window.addEventListener("deviceorientation", detectDirection);
                 orientationPermittion = true;
+                document.getElementById('title').innerHTML = orientationPermittion;
             }
         })
         .catch(console.error);
@@ -362,7 +365,7 @@ function darkerFunc() {
 function showSetting() {
     document.getElementById("descriptionBtn").setAttribute("disabled", true);
     document.getElementById('setting').style.visibility = "visible";
-    if (os == 'iphone' && orientationPermittion) {
+    if (os == 'iphone' && !orientationPermittion) {
         document.getElementById('permitBtn').style.visibility = "visible";
     }
 }
