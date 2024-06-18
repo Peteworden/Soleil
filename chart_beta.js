@@ -143,7 +143,7 @@ function deviceOrientation(event) {
         document.getElementById('title').innerHTML = `${os}, ${startAzm}`;
     }
     var orientationTime2 = Date.now();
-    document.getElementById('title').innerHTML = `${os}, ${startAzm}`, `${orientationTime2 - orientationTime1}`;
+    document.getElementById('title').innerHTML = `${os}, ${startAzm}, ${orientationTime2 - orientationTime1}`;
     if (orientationTime2 - orientationTime1 > 100) {
         orientationTime1 = orientationTime2;
         if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
