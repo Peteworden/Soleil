@@ -100,12 +100,14 @@ function init() {
     os = detectOSSimply();
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
-        document.querySelector("#permit").addEventListener("click", permitDeviceOrientationForSafari);
+        document.getElementById('permit').style.visibility = 'visible';
+        permitBtn.addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
-    } else{
-        window.alert("PCではライブモードは使えません");
+    } else {
+        permitBtn.addEventListener("click", permitDeviceOrientationForSafari);
+        //window.alert("PCではライブモードは使えません");
     }
 }
 // 簡易OS判定
@@ -127,6 +129,7 @@ function detectOSSimply() {
 }
 // iPhone + Safariの場合はDeviceOrientation APIの使用許可をユーザに求める
 function permitDeviceOrientationForSafari() {
+    document.getElementById('permit').style.visibility = 'hidden';
     DeviceOrientationEvent.requestPermission()
         .then(response => {
             if (response === "granted") {
@@ -135,7 +138,8 @@ function permitDeviceOrientationForSafari() {
         })
         .catch(console.error);
 }
-function deviceOrientation(event) {//event.alphaもある
+var moving = false;
+function deviceOrientation(event) {
     if (dev_a_array.length > 2) {
         dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
         dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
@@ -143,6 +147,7 @@ function deviceOrientation(event) {//event.alphaもある
         dev_a_array.unshift(event.alpha*pi/180);
         dev_b_array.unshift(event.beta*pi/180);
         dev_c_array.unshift(event.gamma*pi/180);
+        moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
         dev_a = dev_a_sum / 3;
         dev_b = dev_b_sum / 3;
         dev_c = dev_c_sum / 3;
@@ -166,6 +171,8 @@ function turnOnOffLiveMode (mode) {
             window.addEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
             window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
+        } else {
+            //window.alert("PCではライブモードは使えません");
         }
     } else {    
         if (os == 'iphone') {
@@ -219,11 +226,11 @@ const Moon    = ['Moon'];
 const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
 const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
-const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
+const planets    = [Sun, Marcury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Moon, Ceres, Vesta];
 const OriginalNumOfPlanets = planets.length;
 
 var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
-var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+var JPNplanets = ['太陽', '水星', '金星', '地球', '火星', '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
 
 var RAlist = new Array(20);
 var Declist = new Array(20);
@@ -405,7 +412,7 @@ function show_JD_minus1(){
     setYMDH(y, m, d, h)
 }
 
-var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50);// distはスワイプを感知する最低距離（ピクセル単位）
+var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50); // distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
@@ -437,12 +444,12 @@ function ontouchmove(e) {
             moveY = touches[0].pageY;
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
                 if (mode == 'AEP') {
-                    var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var startDec_SH = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    var [startRA, startDec] = SHtoRADec(startRA_SH, startDec_SH);
-                    var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    var [moveRA, moveDec] = SHtoRADec(moveRA_SH, moveDec_SH);
+                    var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var startscrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [startRA, startDec] = scr2RADec(startscrRA, startscrDec);
+                    var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [moveRA, moveDec] = scr2RADec(movescrRA, movescrDec);
                     cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
                     cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
@@ -451,12 +458,12 @@ function ontouchmove(e) {
                     cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - startY) / canvas.height), 90);
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
                 } else if (mode == 'view') {
-                    var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var startDec_SH = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    var [startAzm, startAlt] = SHtoAh(startRA_SH, startDec_SH);
-                    var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    var [moveAzm, moveAlt] = SHtoAh(moveRA_SH, moveDec_SH);
+                    var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var startscrDec = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [startAzm, startAlt] = SHtoAh(startscrRA, startscrDec);
+                    var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [moveAzm, moveAlt] = SHtoAh(movescrRA, movescrDec);
                     cenAzm = ((cenAzm - moveAzm + startAzm) % 360 + 360) % 360;
                     cenAlt = Math.min(Math.max(cenAlt - moveAlt + startAlt, -90), 90);
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
@@ -487,9 +494,9 @@ function ontouchmove(e) {
                 rgNS /= scale;
                 rgEW /= scale;
                 if (mode == 'AEP') {
-                    var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
-                    var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
-                    [cenRA, cenDec] = SHtoRADec(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
+                    var pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
+                    var pinchscrDec = -rgNS * y3 / (canvas.height / 2);
+                    [cenRA, cenDec] = scr2RADec(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
                 } else if (mode == 'EtP') {
                     var pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
@@ -498,9 +505,9 @@ function ontouchmove(e) {
                     cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
                 } else if (mode == 'view') {
-                    var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
-                    var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
-                    [cenAzm, cenAlt] = SHtoAh(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
+                    var pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
+                    var pinchscrDec = -rgNS * y3 / (canvas.height / 2);
+                    [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
                 }
                 rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
@@ -542,17 +549,16 @@ function onmousedown(e){
 }
 
 function onmousemove(e) {
-    //e.preventDefault();
     moveX = e.pageX;
     moveY = e.pageY;
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
         if (mode == 'AEP') {
-            var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var startDec_SH = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            var [startRA, startDec] = SHtoRADec(startRA_SH, startDec_SH);
-            var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            var [moveRA, moveDec] = SHtoRADec(moveRA_SH, moveDec_SH);
+            var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var startscrDec = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [startRA, startDec] = scr2RADec(startscrRA, startscrDec);
+            var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [moveRA, moveDec] = scr2RADec(movescrRA, movescrDec);
             cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
             cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
@@ -561,12 +567,12 @@ function onmousemove(e) {
             cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'view') {
-            var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var startDec_SH = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            var [startAzm, startAlt] = SHtoAh(startRA_SH, startDec_SH);
-            var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            var [moveAzm, moveAlt] = SHtoAh(moveRA_SH, moveDec_SH);
+            var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var startscrDec = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [startAzm, startAlt] = SHtoAh(startscrRA, startscrDec);
+            var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [moveAzm, moveAlt] = SHtoAh(movescrRA, movescrDec);
             cenAzm = ((cenAzm - moveAzm + startAzm) % 360 + 360) % 360;
             cenAlt = Math.min(Math.max(cenAlt - moveAlt + startAlt, -90), 90);
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
@@ -601,9 +607,9 @@ function onwheel(event) {
         rgNS /= scale;
         rgEW /= scale;
         if (mode == 'AEP') {
-            var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
-            var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
-            [cenRA, cenDec] = SHtoRADec(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
+            var pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
+            var pinchscrDec = -rgNS * y3 / (canvas.height / 2);
+            [cenRA, cenDec] = scr2RADec(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'EtP') {
             var pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
@@ -612,9 +618,9 @@ function onwheel(event) {
             cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'view') {
-            var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
-            var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
-            [cenAzm, cenAlt] = SHtoAh(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
+            var pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
+            var pinchscrDec = -rgNS * y3 / (canvas.height / 2);
+            [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
         }
         rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
@@ -652,8 +658,7 @@ function calculation(JD) {
     const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
     const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
-    const planets    = [   Sun, Marcury,  Venus,  Earth,   Mars, Jupiter, Saturn,   Uranus,  Neptune, Moon,   Ceres,   Vesta];
-
+    const planets    = [Sun, Marcury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Moon, Ceres, Vesta];
     const OriginalNumOfPlanets = planets.length;
 
     for (var i=0; i<extra.length; i++) {
@@ -976,6 +981,7 @@ function show_main(){
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     const pi = Math.PI;
+    var x, y, scrRA, scrDec;
 
     var JD = showingJD;
     
@@ -999,6 +1005,9 @@ function show_main(){
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
         Astr = `方位角 ${Math.round(A*10)/10}°(${direc}) `;
         hstr = `高度 ${Math.round(h*10)/10}° `;
+        if (moving) {
+            hstr += ' wait...';
+        }
     }
 
     //星座判定
@@ -1040,8 +1049,8 @@ function show_main(){
         var RA2 = parseFloat(lines[5*i+3]);
         var Dec2 = parseFloat(lines[5*i+4]);
         if (mode == 'AEP') {
-            var [RA1_SH, Dec1_SH] = angleSH(RA1, Dec1);
-            var [RA2_SH, Dec2_SH] = angleSH(RA2, Dec2);
+            var [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
+            var [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
             if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
                 if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
                     if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
@@ -1081,8 +1090,8 @@ function show_main(){
                 }
             }
         } else if (mode == 'view') {
-            var [RA1_view, Dec1_view] = angleView(RA1, Dec1);
-            var [RA2_view, Dec2_view] = angleView(RA2, Dec2);
+            var [RA1_view, Dec1_view] = RADec2scrview(RA1, Dec1);
+            var [RA2_view, Dec2_view] = RADec2scrview(RA2, Dec2);
             if (Math.min(RA1_view, RA2_view) < rgEW && Math.max(RA1_view, RA2_view) > -rgEW) {
                 if (Math.min(Dec1_view, Dec2_view) < rgNS && Math.max(Dec1_view, Dec2_view) > -rgNS) {
                     if (Math.pow(RA2_view-RA1_view, 2) + Math.pow(Dec2_view-Dec1_view, 2) < 30*30) {
@@ -1096,8 +1105,8 @@ function show_main(){
         } else if (mode == 'live') {
             var [A1, h1] = RADec2Ah(RA1, Dec1, theta);
             var [A2, h2] = RADec2Ah(RA2, Dec2, theta);
-            var [scrRA1, scrDec1] = Ah2liveScreen(A1, h1);
-            var [scrRA2, scrDec2] = Ah2liveScreen(A2, h2);
+            var [scrRA1, scrDec1] = Ah2scrlive(A1, h1);
+            var [scrRA2, scrDec2] = Ah2scrlive(A2, h2);
             if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
                 if (Math.min(scrDec1, scrDec2) < rgNS && Math.max(scrDec1, scrDec2) > -rgNS) {
                     if (Math.pow(scrRA2-scrRA1, 2) + Math.pow(scrDec2-scrDec1, 2) < 30*30) {
@@ -1122,27 +1131,27 @@ function show_main(){
             continue;
         }
         if (mode == 'AEP') {
-            var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-            if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
-                var [x, y] = coordSH(RA_SH, Dec_SH);
+            [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
                 drawFilledCircle(x, y, size(mag));
             }
         } else if (mode == 'EtP') {
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                var [x, y] = coord(RA, Dec);
+                [x, y] = coord(RA, Dec);
                 drawFilledCircle (x, y, size(mag));
             }
         } else if (mode == 'view') {
-            var [RA_view, Dec_view] = angleView(RA, Dec, theta);
-            if (Math.abs(RA_view) < rgEW && Math.abs(Dec_view) < rgNS) {
-                var [x, y] = coordSH(RA_view, Dec_view);
+            var [scrRA, scrDec] = RADec2scrview(RA, Dec, theta);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
                 drawFilledCircle(x, y, size(mag));
             }
         } else if (mode == 'live') {
             var [A, h] = RADec2Ah(RA, Dec, theta);
-            var [scrRA, scrDec] = Ah2liveScreen(A, h);
+            [scrRA, scrDec] = Ah2scrlive(A, h);
             if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                var [x, y] = coordSH(scrRA, scrDec);
+                [x, y] = coordSH(scrRA, scrDec);
                 drawFilledCircle(x, y, size(mag));
             }
         }
@@ -1152,17 +1161,17 @@ function show_main(){
     if (mode == 'AEP') {
         var skyareas = [];
         if (magLim > 6.5) {
-            var minDec = Math.max(-90, Math.min(SHtoRADec(rgEW, -rgNS)[1], cenDec-rgNS));
-            var maxDec = Math.min( 90, Math.max(SHtoRADec(rgEW,  rgNS)[1], cenDec+rgNS));
+            var minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
+            var maxDec = Math.min( 90, Math.max(scr2RADec(rgEW,  rgNS)[1], cenDec+rgNS));
 
             if (minDec == -90) {
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else if (maxDec == 90) {
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
             } else {
-                var RArange1 = (SHtoRADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
-                var RArange2 = (SHtoRADec(rgEW,     0)[0] - cenRA + 360) % 360;
-                var RArange3 = (SHtoRADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
+                var RArange1 = (scr2RADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
+                var RArange2 = (scr2RADec(rgEW,     0)[0] - cenRA + 360) % 360;
+                var RArange3 = (scr2RADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
                 var RArange = Math.max(RArange1, RArange2, RArange3);
 
                 if (cenRA - RArange < 0) {
@@ -1223,14 +1232,14 @@ function show_main(){
         var skyareas = [];
         if (magLim > 6.5) {
             skyareas = [];
-            var [RA_view_NP, Dec_view_NP] = angleView(0, 90);
-            var [RA_view_SP, Dec_view_SP] = angleView(0, -90);
-            if (Math.abs(RA_view_NP) < rgEW && Math.abs(Dec_view_NP) < rgNS) {
+            var [scrRA_NP, scrDec_NP] = RADec2scrview(0, 90);
+            var [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
+            if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
                 var [A1, h1] = SHtoAh(rgEW, -rgNS);
                 var [A2, h2] = SHtoAh(-rgEW, -rgNS);
                 var minDec = Math.min(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
-            } else if (Math.abs(RA_view_SP) < rgEW && Math.abs(Dec_view_SP) < rgNS) {
+            } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
                 var [A1, h1] = SHtoAh(rgEW, rgNS);
                 var [A2, h2] = SHtoAh(-rgEW, rgNS);
                 var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
@@ -1310,27 +1319,27 @@ function show_main(){
             var Dec = 1.0 * constPos[2*i+1];
             var constName = CLnames[i];
             if (mode == 'AEP') {
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
+                [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                    var [x, y] = coord(RA, Dec);
+                    [x, y] = coord(RA, Dec);
                     ctx.fillText(constName, x-40, y-10);
                 }
             } else if (mode == 'view') {
-                var [RA_view, Dec_view] = angleView(RA, Dec);
-                if (Math.abs(RA_view) < rgEW && Math.abs(Dec_view) < rgNS) {
-                    var [x, y] = coordSH(RA_view, Dec_view);
+                [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
+                    [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
                 }
             }
@@ -1357,27 +1366,27 @@ function show_main(){
                 var Dec = parseFloat(choice[4*i+2]);
                 var type = choice[4*i+3];
                 if (mode == 'AEP') {
-                    var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                    if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
-                        var [x, y] = coordSH(RA_SH, Dec_SH);
+                    [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                    if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                        [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                        var [x, y] = coord(RA, Dec);
+                        [x, y] = coord(RA, Dec);
                         DrawObjects(name, x, y, type);
                     }
                 } else if (mode == 'view') {
-                    var [RA_view, Dec_view] = angleView(RA, Dec);
-                    if (Math.abs(RA_view) < rgEW && Math.abs(Dec_view) < rgNS) {
-                        var [x, y] = coordSH(RA_view, Dec_view);
+                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                    if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                        [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                    [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        var [x, y] = coordSH(scrRA, scrDec);
+                        [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
                     }
                 }
@@ -1402,17 +1411,17 @@ function show_main(){
 
     for (i=0; i<JPNplanets.length; i++){
         if (mode == 'AEP') {
-            var [RA_SH, Dec_SH] = angleSH(RAlist[i], Declist[i]);
-            var [x, y] = coordSH(RA_SH, Dec_SH);
+            [scrRA, scrDec] = RADec2scrAEP(RAlist[i], Declist[i]);
+            [x, y] = coordSH(scrRA, scrDec);
         } else if (mode == 'EtP') {
-            var [x, y] = coord(RAlist[i], Declist[i]);
+            [x, y] = coord(RAlist[i], Declist[i]);
         } else if (mode == 'view') {
-            var [RA_view, Dec_view] = angleView(RAlist[i], Declist[i]);
-            var [x, y] = coordSH(RA_view, Dec_view);
+            [scrRA, scrDec] = RADec2scrview(RAlist[i], Declist[i]);
+            [x, y] = coordSH(scrRA, scrDec);
         } else if (mode == 'live') {
             var [A, h] = RADec2Ah(RAlist[i], Declist[i], theta);
-            var [scrRA, scrDec] = Ah2liveScreen(A, h);
-            var [x, y] = coordSH(scrRA, scrDec);
+            [scrRA, scrDec] = Ah2scrlive(A, h);
+            [x, y] = coordSH(scrRA, scrDec);
         }
         // 枠内に入っていて
         if (i != Obs_num && 0 < x < canvas.width && 0 < y < canvas.height) {
@@ -1462,18 +1471,18 @@ function show_main(){
             }
         }
 
-        var A, h, RA_view0, Dec_view0, RA_view1, Dec_view1, drawnFrag=false;
-        function drawAzmAltLine (A, h, RA_view0, Dec_view0) {
+        var A, h, scrRA0, scrDec0, scrRA1, scrDec1, drawnFrag=false;
+        function drawAzmAltLine (A, h, scrRA0, scrDec0) {
             [RA, Dec] = Ah2RADec(A, h, theta);
-            [RA_view1, Dec_view1] = angleView(RA, Dec);
-            if (j>0 && ((Math.abs(RA_view0)<rgEW && Math.abs(Dec_view0)<rgNS) || (Math.abs(RA_view1)<rgEW && Math.abs(Dec_view1)<rgNS))) {
-                var [x1, y1] = coordSH(RA_view0, Dec_view0);
-                var [x2, y2] = coordSH(RA_view1, Dec_view1);
+            [scrRA1, scrDec1] = RADec2scrview(RA, Dec);
+            if (j>0 && ((Math.abs(scrRA0)<rgEW && Math.abs(scrDec0)<rgNS) || (Math.abs(scrRA1)<rgEW && Math.abs(scrDec1)<rgNS))) {
+                var [x1, y1] = coordSH(scrRA0, scrDec0);
+                var [x2, y2] = coordSH(scrRA1, scrDec1);
                 ctx.moveTo(x1, y1);
                 ctx.lineTo(x2, y2);
             }
-            [RA_view0, Dec_view0] = [RA_view1, Dec_view1];
-            return [RA_view0, Dec_view0];
+            [scrRA0, scrDec0] = [scrRA1, scrDec1];
+            return [scrRA0, scrDec0];
         }
         if (maxAlt == 90) {
             for (i=Math.floor(minAlt/altGridIv); i<Math.ceil(90/altGridIv); i++) {
@@ -1486,7 +1495,7 @@ function show_main(){
                 ctx.beginPath();
                 for (j=0; j<360/azmGridCalcIv+1; j++) {
                     A = j * azmGridCalcIv;
-                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                 }
                 ctx.stroke();
             }
@@ -1495,7 +1504,7 @@ function show_main(){
                 A = i * azmGridIv;
                 for (j=0; j<Math.ceil(90/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                     h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
-                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                 }
                 ctx.stroke();
             }
@@ -1510,7 +1519,7 @@ function show_main(){
                 ctx.beginPath();
                 for (j=0; j<360/azmGridCalcIv+1; j++) {
                     A = j * azmGridCalcIv;
-                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                 }
                 ctx.stroke();
             }
@@ -1519,7 +1528,7 @@ function show_main(){
                 A = i * azmGridIv;
                 for (j=0; j<Math.ceil((maxAlt+90)/altGridCalcIv)+1; j++) {
                     h = -90 + j * altGridCalcIv;
-                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                 }
                 ctx.stroke();
             }
@@ -1539,7 +1548,7 @@ function show_main(){
                 ctx.beginPath();
                 for (j=0; j<2*azmRange/azmGridCalcIv+1; j++) {
                     A = cenAzm - azmRange + j * azmGridCalcIv;
-                    [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                    [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                 }
                 ctx.stroke();
             }
@@ -1549,7 +1558,7 @@ function show_main(){
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
-                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                        [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                     }
                     ctx.stroke();
                 }
@@ -1557,7 +1566,7 @@ function show_main(){
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
-                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                        [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                     }
                     ctx.stroke();
                 }
@@ -1566,7 +1575,7 @@ function show_main(){
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
-                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                        [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                     }
                     ctx.stroke();
                 }
@@ -1574,7 +1583,7 @@ function show_main(){
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
-                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                        [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                     }
                     ctx.stroke();
                 }
@@ -1583,7 +1592,7 @@ function show_main(){
                     A = i * azmGridIv;
                     for (j=0; j<Math.ceil(maxAlt/altGridCalcIv)-Math.floor(minAlt/altGridCalcIv)+1; j++) {
                         h = (Math.floor(minAlt/altGridCalcIv) + j) * altGridCalcIv;
-                        [RA_view0, Dec_view0] = drawAzmAltLine (A, h, RA_view0, Dec_view0);
+                        [scrRA0, scrDec0] = drawAzmAltLine (A, h, scrRA0, scrDec0);
                     }
                     ctx.stroke();
                 }
@@ -1603,7 +1612,6 @@ function show_main(){
     document.getElementById("coordtext").style.color = textColor;
     document.getElementById("coordtext").innerHTML = coordtext;
 
-
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
@@ -1618,10 +1626,10 @@ function show_main(){
         return [x, y];
     }
 
-    function angleSH (RA, Dec) { //deg
+    function RADec2scrAEP (RA, Dec) { //deg
         if (RA == cenRA && Dec == cenDec) {
-            var RA_SH = 0;
-            var Dec_SH = 0;
+            var scrRA = 0;
+            var scrDec = 0;
         } else {
             RA *= pi/180;
             Dec *= pi/180;
@@ -1635,24 +1643,24 @@ function show_main(){
 
             var r = Math.acos(c) * 180/pi; //中心からの角距離, deg
             var thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
-            var RA_SH = r * sin(thetaSH);
-            var Dec_SH = - r * cos(thetaSH);
+            var scrRA = r * sin(thetaSH);
+            var scrDec = - r * cos(thetaSH);
         }
-        return [RA_SH, Dec_SH];
+        return [scrRA, scrDec];
     }
 
-    function angleView(RA, Dec) {
+    function RADec2scrview (RA, Dec) {
         var t = theta - RA * pi/180;
         Dec *= pi/180;
         var [x, y, z] = Ry(Rz(Ry([-cos(t)*cos(Dec), sin(t)*cos(Dec), sin(Dec)], pi/2-lat_obs), cenAzm*pi/180), cenAlt*pi/180-pi/2);
         var b = Math.acos(z) * 180/pi;
         var a = Math.atan2(y, x);
-        var RA_view = b * sin(a);
-        var Dec_view = -b * cos(a);
-        return [RA_view, Dec_view];
+        var scrRA = b * sin(a);
+        var scrDec = -b * cos(a);
+        return [scrRA, scrDec];
     }
 
-    function Ah2liveScreen (A, h) {
+    function Ah2scrlive (A, h) {
         A *= pi/180;
         h *= pi/180;
         var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
@@ -1663,15 +1671,13 @@ function show_main(){
         return [scrRA, scrDec];
     }
 
-    function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
-        if (RA_SH == 0 && Dec_SH == 0) {
+    function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+        if (scrRA == 0 && scrDec == 0) {
             var RA = cenRA;
             var Dec = cenDec;
         } else {
-            var thetaSH = Math.atan2(RA_SH, -Dec_SH);
-            var r = Math.sqrt(RA_SH*RA_SH + Dec_SH*Dec_SH) * pi / 180;
-            
-            var cenRA_rad = cenRA * pi/180;
+            var thetaSH = Math.atan2(scrRA, -scrDec);
+            var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
             var cenDec_rad = cenDec * pi/180;
             
             var a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
@@ -1684,13 +1690,13 @@ function show_main(){
         return [RA, Dec];
     }
 
-    function SHtoAh (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
-        if (RA_SH == 0 && Dec_SH == 0) {
+    function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+        if (scrRA == 0 && scrDec == 0) {
             var A = cenAzm;
             var h = cenAlt;
         } else {
-            var thetaSH = Math.atan2(RA_SH, -Dec_SH); //地球から見て下から始めて時計回り
-            var r = Math.sqrt(RA_SH*RA_SH + Dec_SH*Dec_SH) * pi / 180;
+            var thetaSH = Math.atan2(scrRA, -scrDec); //地球から見て下から始めて時計回り
+            var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
             
             var cenAzm_rad = cenAzm * pi/180;
             var cenAlt_rad = cenAlt * pi/180;
@@ -1702,13 +1708,13 @@ function show_main(){
         return [A, h];
     }
 
-    function coordSH (RA_SH, Dec_SH) {
-        var x = canvas.width * (0.5 - RA_SH / rgEW / 2);
-        var y = canvas.height * (0.5 - Dec_SH / rgNS / 2);
+    function coordSH (scrRA, scrDec) {
+        var x = canvas.width * (0.5 - scrRA / rgEW / 2);
+        var y = canvas.height * (0.5 - scrDec / rgNS / 2);
         return [x, y];
     }
 
-    function drawLines(RA1, Dec1, RA2, Dec2, a){
+    function drawLines (RA1, Dec1, RA2, Dec2, a) {
         var [x1, y1] = coord(RA1+a, Dec1);
         var [x2, y2] = coord(RA2+a, Dec2);
         ctx.moveTo(x1, y1);
@@ -1729,7 +1735,7 @@ function show_main(){
         }
     }       
 
-    function DrawStars(skyareas){
+    function DrawStars (skyareas) {
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
             var fi = parseInt(Help[arearange[1]+1]);
@@ -1741,9 +1747,9 @@ function show_main(){
                     continue;
                 }
                 if (mode == 'AEP') {
-                    var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                    if (Math.abs(Dec_SH) < rgNS && Math.abs(RA_SH) < rgEW) {
-                        var [x, y] = coordSH(RA_SH, Dec_SH);
+                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                        var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle (x, y, size(mag));
                     }
                 } else if (mode == 'EtP') {
@@ -1752,14 +1758,14 @@ function show_main(){
                         drawFilledCircle (x, y, size(mag));
                     }
                 } else if (mode == 'view') {
-                    var [RA_view, Dec_view] = angleView(RA, Dec);
-                    if (Math.abs(Dec_view) < rgNS && Math.abs(RA_view) < rgEW) {
-                        var [x, y] = coordSH(RA_view, Dec_view);
+                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                        var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle (x, y, size(mag));
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                    var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle(x, y, size(mag));
@@ -1769,7 +1775,7 @@ function show_main(){
         }
     }
 
-    function DrawStars1011(skyareas){
+    function DrawStars1011 (skyareas) {
         for (var arearange of skyareas) {
             var st = parseInt(Help1011[arearange[0]]);
             var fi = parseInt(Help1011[arearange[1]+1]);
@@ -1781,9 +1787,9 @@ function show_main(){
                     continue;
                 }
                 if (mode == 'AEP') {
-                    var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                    if (Math.abs(Dec_SH) < rgNS && Math.abs(RA_SH) < rgEW) {
-                        var [x, y] = coordSH(RA_SH, Dec_SH);
+                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                        var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle (x, y, size(mag));
                     }
                 } else if (mode == 'EtP') {
@@ -1792,14 +1798,14 @@ function show_main(){
                         drawFilledCircle (x, y, size(mag));
                     }
                 } else if (mode == 'view') {
-                    var [RA_view, Dec_view] = angleView(RA, Dec);
-                    if (Math.abs(Dec_view) < rgNS && Math.abs(RA_view) < rgEW) {
-                        var [x, y] = coordSH(RA_view, Dec_view);
+                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                        var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle (x, y, size(mag));
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                    var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle(x, y, size(mag));
@@ -1809,7 +1815,7 @@ function show_main(){
         }
     }
 
-    function writeBayer() {
+    function writeBayer () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<BSCnum; i++){
@@ -1829,9 +1835,9 @@ function show_main(){
                 var name = FSs[i];
             }
             if (mode == 'AEP') {
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
+                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, 0);
                 }
             } else if (mode == 'EtP') {
@@ -1840,14 +1846,14 @@ function show_main(){
                     DrawObjects(name, x, y, 0);
                 }
             } else if (mode == 'view') {
-                var [RA_view, Dec_view] = angleView(RA, Dec);
-                if (Math.abs(RA_view) < rgEW && Math.abs(Dec_view) < rgNS) {
-                    var [x, y] = coordSH(RA_view, Dec_view);
+                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, 0);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, 0);
@@ -1856,7 +1862,7 @@ function show_main(){
         }
     }
 
-    function DrawMessier() {
+    function DrawMessier () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<110; i++){
@@ -1865,9 +1871,9 @@ function show_main(){
             var Dec = parseFloat(messier[4*i+2]);
             var type = messier[4*i+3];
             if (mode == 'AEP') {
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(RA_SH) < rgEW && Math.abs(Dec_SH) < rgNS) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
+                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
                 }
             } else if (mode == 'EtP') {
@@ -1876,14 +1882,14 @@ function show_main(){
                     DrawObjects(name, x, y, type);
                 }
             } else if (mode == 'view') {
-                var [RA_view, Dec_view] = angleView(RA, Dec);
-                if (Math.abs(RA_view) < rgEW && Math.abs(Dec_view) < rgNS) {
-                    var [x, y] = coordSH(RA_view, Dec_view);
+                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
@@ -1892,7 +1898,7 @@ function show_main(){
         }
     }
 
-    function DrawChoice() {
+    function DrawChoice () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<choice.length/4; i++){
@@ -1902,9 +1908,9 @@ function show_main(){
                 var Dec = parseFloat(choice[4*i+2]);
                 var type = choice[4*i+3];
                 if (mode == 'AEP') {
-                    var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                    if (Math.abs(Dec_SH) < rgNS && Math.abs(RA_SH) < rgEW) {
-                        var [x, y] = coordSH(RA_SH, Dec_SH);
+                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                        var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
                     }
                 } else if (mode == 'EtP') {
@@ -1913,14 +1919,14 @@ function show_main(){
                         DrawObjects(name, x, y, type);
                     }
                 } else if (mode == 'view') {
-                    var [RA_view, Dec_view] = angleView(RA, Dec);
-                    if (Math.abs(Dec_view) < rgNS && Math.abs(RA_view) < rgEW) {
-                        var [x, y] = coordSH(RA_view, Dec_view);
+                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                        var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                    var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
@@ -1930,7 +1936,7 @@ function show_main(){
         }
     }
 
-    function DrawNGC() {
+    function DrawNGC () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<NGC.length/5; i++){
@@ -1939,9 +1945,9 @@ function show_main(){
             var Dec = parseFloat(NGC[5*i+2]);
             var type = NGC[5*i+4];
             if (mode == 'AEP') {
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(Dec_SH) < rgNS && Math.abs(RA_SH) < rgEW) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
+                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                    var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
                 }
             } else if (mode == 'EtP') {
@@ -1950,14 +1956,14 @@ function show_main(){
                     DrawObjects(name, x, y, type);
                 }
             } else if (mode == 'view') {
-                var [RA_view, Dec_view] = angleView(RA, Dec);
-                if (Math.abs(Dec_view) < rgNS && Math.abs(RA_view) < rgEW) {
-                    var [x, y] = coordSH(RA_view, Dec_view);
+                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                    var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2liveScreen(A, h);
+                var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
@@ -1967,7 +1973,7 @@ function show_main(){
     }
 
     //入っていることは前提
-    function DrawObjects(name, x, y, type) {
+    function DrawObjects (name, x, y, type) {
         ctx.beginPath();
         /*
         Gx       Galaxy 銀河
@@ -2022,16 +2028,31 @@ function show_main(){
         var lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
         var k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
 
-        if (['AEP', 'EtP'].includes(mode)) {
-            var P = pi - Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+        //Pは赤経の負方向（右）から月を時計回りに見て黄色から黒になるところの角度
+        if (mode == 'AEP') {
+            var P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            var RA1 = (rm - 0.2*cos(P) / cos(dm)) * 180 / pi;
+            var Dec1 = (dm - 0.2*sin(P)) * 180 / pi;
+            var [scrRA1, scrDec1] = RADec2scrAEP(RA1, Dec1);
+            var [x1, y1] = coordSH(scrRA1, scrDec1);
+            P = Math.atan2(y1-y, x1-x);
+        } else if (mode == 'EtP') {
+            var P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
         } else if (mode == 'view') {
-            var [As, hs] = RADec2Ah(RAlist[0], Declist[0], theta);
-            var [Am, hm] = RADec2Ah(RAlist[9], Declist[9], theta);
-            [As, hs] = [As*pi/180, hs*pi/180];
-            [Am, hm] = [Am*pi/180, hm*pi/180];
-            var P = pi - Math.atan2(cos(hs)*sin(As-Am), -sin(hm)*cos(hs)*cos(As-Am)+cos(hm)*sin(hs));
+            var P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            var RA1 = (rm - 0.2*cos(P) / cos(dm)) * 180 / pi;
+            var Dec1 = (dm - 0.2*sin(P)) * 180 / pi;
+            var [scrRA1, scrDec1] = RADec2scrview(RA1, Dec1);
+            var [x1, y1] = coordSH(scrRA1, scrDec1);
+            P = Math.atan2(y1-y, x1-x);
         } else if (mode == 'live') {
-            1;
+            var P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            var RA1 = (rm - 0.2*cos(P) / cos(dm)) * 180 / pi;
+            var Dec1 = (dm - 0.2*sin(P)) * 180 / pi;
+            var [A1, h1] = RADec2Ah(RA1, Dec1, theta);
+            var [scrRA1, scrDec1] = Ah2scrlive(A1, h1);
+            var [x1, y1] = coordSH(scrRA1, scrDec1);
+            P = Math.atan2(y1-y, x1-x);
         }
 
         ctx.beginPath();
@@ -2040,17 +2061,17 @@ function show_main(){
             drawFilledCircle(x, y, r);
             ctx.fillStyle = '#333';
             ctx.beginPath();
-            ctx.arc(x, y, r, pi-P, 2*pi-P);
-            ctx.ellipse(x, y, r, r*(1-2*k), -P, 0, pi);
-            ctx.fill()
+            ctx.arc(x, y, r, P, P+pi);
+            ctx.ellipse(x, y, r, r*(1-2*k), P-pi, 0, pi);
+            ctx.fill();
         } else {
             ctx.fillStyle = '#333';
             drawFilledCircle(x, y, r);
             ctx.fillStyle = yellowColor;
             ctx.beginPath();
-            ctx.arc(x, y, r, -P, pi-P);
-            ctx.ellipse(x, y, r, r*(2*k-1), pi-P, 0, pi);
-            ctx.fill()
+            ctx.arc(x, y, r, P-pi, P);
+            ctx.ellipse(x, y, r, r*(2*k-1), P, 0, pi);
+            ctx.fill();
         }
         return r;
     }
@@ -2074,15 +2095,13 @@ function Ah2RADec (A, h, theta) {
     return [RA, Dec]; //deg
 }
 
-function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
-    if (RA_SH == 0 && Dec_SH == 0) {
+function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+    if (scrRA == 0 && scrDec == 0) {
         var RA = cenRA;
         var Dec = cenDec;
     } else {
-        var thetaSH = Math.atan2(RA_SH, -Dec_SH);
-        var r = Math.sqrt(RA_SH*RA_SH + Dec_SH*Dec_SH) * pi / 180;
-        
-        var cenRA_rad = cenRA * pi/180;
+        var thetaSH = Math.atan2(scrRA, -scrDec);
+        var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
         var cenDec_rad = cenDec * pi/180;
         
         var a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
@@ -2095,13 +2114,13 @@ function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸�
     return [RA, Dec];
 }
 
-function SHtoAh (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
-    if (RA_SH == 0 && Dec_SH == 0) {
+function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+    if (scrRA == 0 && scrDec == 0) {
         var A = cenAzm;
         var h = cenAlt;
     } else {
-        var thetaSH = Math.atan2(RA_SH, -Dec_SH); //地球から見て下から始めて時計回り
-        var r = Math.sqrt(RA_SH*RA_SH + Dec_SH*Dec_SH) * pi / 180;
+        var thetaSH = Math.atan2(scrRA, -scrDec); //地球から見て下から始めて時計回り
+        var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
         
         var cenAzm_rad = cenAzm * pi/180;
         var cenAlt_rad = cenAlt * pi/180;
@@ -2165,6 +2184,11 @@ function newSetting() {
     }
 
     url.searchParams.set('magkey', document.getElementById('magLimitSlider').value);
+    if (mode == 'live') {
+        magLimLim = 6.5;
+    } else {
+        magLimLim = 11;
+    }
     magLim = find_magLim(magkey1, magkey2);
     zerosize = find_zerosize();
 
@@ -2444,6 +2468,11 @@ function checkURL() {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
         rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+        if (mode == 'live') {
+            magLimLim = 6.5;
+        } else {
+            magLimLim = 11;
+        }
         magLim = find_magLim(magkey1, magkey2);
         zerosize = find_zerosize();
         defaultcheck++;
