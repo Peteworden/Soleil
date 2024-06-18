@@ -101,7 +101,6 @@ function init() {
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         orientationPermittion = false;
-        document.getElementById('title').innerHTML = orientationPermittion;
         document.getElementById('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
@@ -139,6 +138,7 @@ function permitDeviceOrientationForSafari() {
 }
 var moving = false;
 function deviceOrientation(event) {
+    document.getElementById('title').innerHTML = `${event.alpha}, ${event.beta}, ${event.gamma}`;
     if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
         if (dev_a_array.length > 2) {
             dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
