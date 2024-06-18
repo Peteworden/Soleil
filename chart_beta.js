@@ -92,7 +92,7 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
     zerosize = find_zerosize();
 });
 
-var os;
+var os, orientationPermittion=true;
 //window.addEventListener("DOMContentLoaded", init);
 init();
 function init() {
@@ -100,16 +100,11 @@ function init() {
     os = detectOSSimply();
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
-        document.getElementById('permit').style.visibility = 'visible';
-        document.getElementById('permit').addEventListener("click", permitDeviceOrientationForSafari);
+        orientationPermittion = false;
+        document.getElementById('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
-    } else {
-        document.getElementById('permit').style.visibility = 'visible';
-        document.getElementById('permit').addEventListener("click", permitDeviceOrientationForSafari);
-        window.addEventListener("deviceorientation", deviceOrientation, true);
-        //window.alert("PCではライブモードは使えません");
     }
 }
 // 簡易OS判定
@@ -131,11 +126,11 @@ function detectOSSimply() {
 }
 // iPhone + Safariの場合はDeviceOrientation APIの使用許可をユーザに求める
 function permitDeviceOrientationForSafari() {
-    document.getElementById('permit').style.visibility = 'hidden';
     DeviceOrientationEvent.requestPermission()
         .then(response => {
             if (response === "granted") {
                 window.addEventListener("deviceorientation", detectDirection);
+                orientationPermittion = true;
             }
         })
         .catch(console.error);
@@ -185,8 +180,6 @@ function turnOnOffLiveMode (mode) {
             window.addEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
             window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
-        } else {
-            //window.alert("PCではライブモードは使えません");
         }
     } else {    
         if (os == 'iphone') {
@@ -369,6 +362,9 @@ function darkerFunc() {
 function showSetting() {
     document.getElementById("descriptionBtn").setAttribute("disabled", true);
     document.getElementById('setting').style.visibility = "visible";
+    if (os == 'iphone' && orientationPermittion) {
+        document.getElementById('permitBtn').style.visibility = "visible";
+    }
 }
 
 function finishSetting() {
@@ -376,6 +372,7 @@ function finishSetting() {
     show_main();
     document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
+    document.getElementById('permitBtn').style.visibility = "hidden";
 }
 
 function descriptionFunc() {
@@ -1005,7 +1002,6 @@ function show_main(){
     var textAngle = 0;
     if (mode == 'live') {
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
-        
     }
     if (['AEP', 'EtP'].includes(mode)) {
         [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
