@@ -99,7 +99,6 @@ init();
 function init() {
     // 簡易的なOS判定
     os = detectOSSimply();
-    document.getElementById('title').innerHTML = `${os}, ${orientationPermittion}`;
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         orientationPermittion = false;
@@ -141,9 +140,11 @@ var moving = false;
 function deviceOrientation(event) {
     if (os == 'iphone' && startAzm == 0) {
         startAzm = event.webkitCompassHeading;
+        document.getElementById('title').innerHTML = `${os}, ${startAzm}`;
     }
     var orientationTime2 = Date.now();
-    if (orientationTime2 - orientationTime1 > 60) {
+    document.getElementById('title').innerHTML = `${os}, ${startAzm}`, `${orientationTime2 - orientationTime1}`;
+    if (orientationTime2 - orientationTime1 > 100) {
         orientationTime1 = orientationTime2;
         if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
             if (dev_a_array.length > 2) {
