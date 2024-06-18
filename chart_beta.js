@@ -101,12 +101,14 @@ function init() {
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         document.getElementById('permit').style.visibility = 'visible';
-        permitBtn.addEventListener("click", permitDeviceOrientationForSafari);
+        document.getElementById('permit').addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
     } else {
-        permitBtn.addEventListener("click", permitDeviceOrientationForSafari);
+        document.getElementById('permit').style.visibility = 'visible';
+        document.getElementById('permit').addEventListener("click", permitDeviceOrientationForSafari);
+        window.addEventListener("deviceorientation", deviceOrientation, true);
         //window.alert("PCではライブモードは使えません");
     }
 }
@@ -140,27 +142,39 @@ function permitDeviceOrientationForSafari() {
 }
 var moving = false;
 function deviceOrientation(event) {
-    if (dev_a_array.length > 2) {
-        dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
-        dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
-        dev_c_sum += event.gamma*pi/180 - dev_c_array.pop();
-        dev_a_array.unshift(event.alpha*pi/180);
-        dev_b_array.unshift(event.beta*pi/180);
-        dev_c_array.unshift(event.gamma*pi/180);
-        moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
-        dev_a = dev_a_sum / 3;
-        dev_b = dev_b_sum / 3;
-        dev_c = dev_c_sum / 3;
+    if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
+        if (dev_a_array.length > 2) {
+            dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
+            dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
+            dev_c_sum += event.gamma*pi/180 - dev_c_array.pop();
+            dev_a_array.unshift(event.alpha*pi/180);
+            dev_b_array.unshift(event.beta*pi/180);
+            dev_c_array.unshift(event.gamma*pi/180);
+            moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
+            dev_a = dev_a_sum / 3;
+            dev_b = dev_b_sum / 3;
+            dev_c = dev_c_sum / 3;
+        } else {
+            dev_a_sum += event.alpha*pi/180;
+            dev_b_sum += event.beta*pi/180;
+            dev_c_sum += event.gamma*pi/180;
+            dev_a_array.unshift(event.alpha*pi/180);
+            dev_b_array.unshift(event.beta*pi/180);
+            dev_c_array.unshift(event.gamma*pi/180);
+            dev_a = dev_a_sum / dev_a_array.length;
+            dev_b = dev_b_sum / dev_b_array.length;
+            dev_c = dev_c_sum / dev_c_array.length;
+        }
     } else {
-        dev_a_sum += event.alpha*pi/180;
-        dev_b_sum += event.beta*pi/180;
-        dev_c_sum += event.gamma*pi/180;
-        dev_a_array.unshift(event.alpha*pi/180);
-        dev_b_array.unshift(event.beta*pi/180);
-        dev_c_array.unshift(event.gamma*pi/180);
-        dev_a = dev_a_sum / dev_a_array.length;
-        dev_b = dev_b_sum / dev_b_array.length;
-        dev_c = dev_c_sum / dev_c_array.length;
+        dev_a = event.alpha*pi/180;
+        dev_b = event.beta*pi/180;
+        dev_c = event.gamma*pi/180;
+        dev_a_sum = dev_a + 0;
+        dev_b_sum = dev_b + 0;
+        dev_c_sum = dev_c + 0;
+        dev_a_array = [dev_a];
+        dev_b_array = [dev_b];
+        dev_c_array = [dev_c];
     }
     show_initial();
 }
@@ -988,8 +1002,10 @@ function show_main(){
     var t = (JD - 2451545.0) / 36525;
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
+    var textAngle = 0;
     if (mode == 'live') {
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
+        
     }
     if (['AEP', 'EtP'].includes(mode)) {
         [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
