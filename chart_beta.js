@@ -93,7 +93,6 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
 });
 
 var os, orientationPermittion=true;
-document.getElementById('title').innerHTML = orientationPermittion;
 //window.addEventListener("DOMContentLoaded", init);
 init();
 function init() {
@@ -131,7 +130,7 @@ function permitDeviceOrientationForSafari() {
     DeviceOrientationEvent.requestPermission()
         .then(response => {
             if (response === "granted") {
-                window.addEventListener("deviceorientation", detectDirection);
+                window.addEventListener("deviceorientation", () => {});
                 orientationPermittion = true;
                 document.getElementById('title').innerHTML = orientationPermittion;
             }
