@@ -167,8 +167,8 @@ select {
     -webkit-transform : translate(-50%,-50%);
     transform : translate(-50%,-50%);
     border-radius: 1rem;
-    width: 300px;
-    height: 450px;
+    width: 80%;
+    height: 80%;
     overflow: scroll;
     z-index: 2;
 }

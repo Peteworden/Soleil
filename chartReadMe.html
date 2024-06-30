@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang = "ja">
+  <head>
+    <title>星図の使い方</title>
+    <meta charset="UTF-8">
+    <script type="text/javascript" nonce="f995dbb5c9ed47528971ee58740" src="//local.adguard.org?ts=1698529438160&amp;type=content-script&amp;dmn=peteworden.github.io&amp;url=https%3A%2F%2Fpeteworden.github.io%2FSoleil%2FPeteHOME.html&amp;app=com.android.chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=0"></script>
+    <style>
+        html {
+            background-color: rgb(145, 175, 241);
+            color: black;
+        }
+        main {
+            margin: 30px 30px;
+        }
+        a {
+            color: azure;
+        }
+    </style>
+  </head>
+  
+  <body>
+    <!-- ヘッダー -->
+    <header style="text-align: center;">
+        <h1>ぴーとの星図の使い方</h1>
+    </header>
+    
+    <!-- メイン -->
+    <main>
+        <p>いつも星図をお使いいただきありがとうございます。ぴーとの星図と名付けることにします</p>
+        <h3>！大事！</h3>
+        <ul>
+            <li>画面左下の画面を見て現在時刻になっているか確認する。なっていなければ右上の歯車→現在時刻ボタン→OK で現在時刻にする</li>
+            <li>URLをブックマークとかするときは「https://peteworden.github.io/Soleil/chart.html」の部分だけの保存がおすすめです（URLの最後の方に「time=...」を含めると毎回その日時の星が表示されるため）</li>
+            <li>別途アプリを入れるとオフラインでも動かせます！</li>
+        </ul>
+
+        <h3>基本のキ</h3>
+        <ul>
+            <li>
+                下の4つのモードがあります。
+                <ul>
+                    <li>赤道座標系モード（正距方位図法）・・・赤道座標系での南北が画面の上下と一致する。正距方位図法。赤道儀での導入の微調整にはプラネタリウムモードより便利</li>
+                    <li>プラネタリウムモード（ドラッグ操作）・・・星空を見上げたときの上下が画面の上下と一致する。たぶん一番使いやすくおすすめ。正距方位図法</li>
+                    <li>赤道座標系モード（正距円筒図法）・・・赤道座標系での南北が画面の上下と一致する。普通のxy座標のようにすべての赤経の線と赤緯の線が直交し、目盛り幅にも手を加えない。</li>
+                    <li>ライブモード・・・デバイスの向きに合わせてその方向に見える星を見せる。とても直感的だが、方角がずれる...？</li>
+                </ul>
+            </li>
+            <p><img src="chartRM1.jpg" width="80%"></p>
+            <p><img src="chartRM2.jpg" width="80%"></p>
+            <p><img src="chartRM3.jpg" width="80%"></p>
+            <p><a href="chart_offline_intro.html">いろいろやればオフラインでも使えます。</a></p>
+            URLのchart.html?以降（クエリパラメータといいます）には次の情報を含めることができます。そこを含めたリンクを共有すると便利なことがあるかも。モードを上の説明順に(A)～(D)とします。
+            <table border="1">
+                <tr>
+                    <th>URL中での名前</th>
+                    <th>意味</th>
+                    <th>デフォルト</th>
+                </tr>
+                <tr>
+                    <td>RA</td>
+                    <td>画面中央の赤経</td> 
+                    <td>(A)(C)270° (B)(D)azm, altなどから計算</td>
+                </tr>
+                <tr>
+                    <td>Dec</td>
+                    <td>画面中央の赤緯</td> 
+                    <td>(A)(C)30° (B)(D)azm, altなどから計算</td>
+                </tr>
+                <tr>
+                    <td>azm</td>
+                    <td>画面中央の方位角</td> 
+                    <td>(B)180° (D)デバイスの向き (A)(C)RA, Decなどから計算</td>
+                </tr>
+                <tr>
+                    <td>alt</td>
+                    <td>画面中央の高度</td> 
+                    <td>(B)60° (D)デバイスの向き (A)(C)RA, Decなどから計算</td>
+                </tr>
+                <tr>
+                    <td>mode</td>
+                    <td>モード（(A)AEP (B)view (C)EtP (D)live）</td> 
+                    <td>view</td>
+                </tr>
+                <tr>
+                    <td>area</td>
+                    <td>画面の左端から右端の角距離</td> 
+                    <td>視野は画面の上下と左右の短い方を20°とする</td>
+                </tr>
+                <tr>
+                    <td>magkey</td>
+                    <td>最微等級を調整するパラメータ。画面の上下と左右のうち短い方が2°のときの最微等級。設定画面のスライダーもこれ</td> 
+                    <td>11.0等級</td>
+                </tr>
+                <tr>
+                    <td>lat</td>
+                    <td>観測地の緯度</td> 
+                    <td>+35°（北緯35°）</td>
+                </tr>
+                <tr>
+                    <td>lon</td>
+                    <td>観測地の経度</td> 
+                    <td>+135°（東経35°）</td>
+                </tr>
+                <tr>
+                    <td>time</td>
+                    <td>時刻</td> 
+                    <td>現在時刻</td>
+                </tr>
+            </table>
+        </ul>
+
+        <h3>Q&A</h3>
+        <ol>
+            <li>
+                星の数は？<br>
+                →11.0等級までなんと約86万個。そのうち10.0等級より暗い星は約53万個。星の数はきれいに等級の指数関数になります
+            </li>
+            <li>
+                ええー、じゃあ通信量すごそう<br>
+                →ファイルのサイズは16MB。写真に換算するとせいぜい10枚以下？（どんな写真かにもよる）
+            </li>
+            <li>
+                どっからそんなデータ持ってきたん？<br>
+                →末尾に参考資料書きました
+            </li>
+            <li>
+                要望が、あります<br>
+                →聞きたい。LINEか、XのDMか、<a href="https://github.com/Peteworden/Soleil">GitHub</a>まで
+            </li>
+            <li>
+                なんで「ぴーと」なの？<br>
+                →小学生から高校生ぐらいまで円周率をたくさん覚えていた時期があり、小惑星番号31416のPetewordenという小惑星から取りました。
+                円周率は一番覚えていたときで660桁ぐらい言えた。もう無理
+            </li>
+            <li>
+                作り始めたのはいつ？<br>
+                →2023/10/21。でもその前身の<a href="SoleilWeb.html">Soleil Web</a>は2023/3/31からで、
+                そのさらに前身のPython版<a href="SoleilTop.html">Soleil</a>（今は星がちゃんと表示されない）を
+                作り始めたのは2021/8下旬で、またさらに前にExcelで惑星の軌跡の描画をやってたのはおそらくその1、2年前。
+            </li>
+        </ol>
+
+        <h3>参考資料</h3>
+        <ul>
+            <li>小天体の軌道要素：<a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/">Small-Body Database Lookup</a>のWeb API</li>
+            <li>恒星の座標：<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/hipparcos.html">ヒッパルコス星表</a>、<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/tycho2.html">ティコ第２星表</a></li>
+            <li>星座関係：<a href="http://astro.starfree.jp/commons/index.html">Astro Commons</a>（星座線は私が好みに合うように変えています）</li>
+            <li>惑星の軌道要素：<a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html">JPL Approximate Positions of the Planets</a></li>
+            <li>月の位置の式：<a href="https://www.stjarnhimlen.se/comp/ppcomp.html">How to compute planetary positions</a></li>
+            <li>等級計算：忘れた、しまった 探しても見つからない</li>
+            <li>位置計算、座標変換など：『天文の計算教室』（斉田博、地人書館）、『新天文学講座　第XIV巻　天体の軌道計算』（渡辺敏夫ほか、恒星社厚生閣）</li>
+        </ul>
+    </main>
+    
+    <!-- フッター -->
+    <footer>
+    </footer>
+  </body>
+</html>

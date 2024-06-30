@@ -2511,7 +2511,6 @@ function checkURL() {
         defaultcheck++;
         show_initial();
     } else {
-        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
         defaultcheck++;
         show_initial();
     }
