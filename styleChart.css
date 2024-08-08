@@ -101,6 +101,10 @@ input[type="file"] {
     z-index: 2;
 }
 
+#dtl {
+    width: 140px;
+}
+
 input {
     width: 3em;
     max-width: 100%;

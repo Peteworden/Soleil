@@ -296,6 +296,20 @@ function link(obj) {
     show_main();
 }
 
+let date = new Date();
+const localDate = new Date(date - date.getTimezoneOffset() * 60000);
+localDate.setSeconds(null);
+localDate.setMilliseconds(null);
+localDate.toISOString().slice(0, -1);
+document.getElementById("dtl").value = localDate.toISOString().slice(0, -1);
+document.getElementById("dtl").addEventListener("change", ondtlchange);
+function ondtlchange(event) {
+    let ymdhm = document.getElementById("dtl").value.split('T');
+    let ymd = ymdhm[0].split('-');
+    let hm = ymdhm[1].split(':');
+    setYMDH(ymd[0], parseInt(ymd[1]).toString(), parseInt(ymd[2]).toString(), (Math.round(parseFloat(hm[0])*100+parseFloat(hm[1])*10/6)/100).toString());
+}
+
 function now() {
     var ymdhm = new Date();
     var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
