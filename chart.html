@@ -39,16 +39,15 @@
 
                 <div class="mainSettingRows">
                     <input type="datetime-local" id="dtl" name="dtl" value=""/>
-                    <label><input type="text" id="yearText">年</label>
-                    <label><input type="text" id="monthText">月</label>
-                    <label><input type="text" id="dateText">日</label>
-                    <label><input type="text" id="hourText">時</label>
+                    <label><input type="text" id="yearText">年<input type="text" id="monthText">月<input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">:<input type="text" id="minuteText"></label>
                     <script>
                         var ymdhm = new Date();
                         document.getElementById('yearText').value = ymdhm.getFullYear();
                         document.getElementById('monthText').value = ymdhm.getMonth() + 1;
                         document.getElementById('dateText').value = ymdhm.getDate();
-                        document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+                        document.getElementById('hourText').value = ymdhm.getHours();
+                        document.getElementById('minuteText').value = ymdhm.getMinutes();
                     </script>
                     <button type="button" onclick="now()">現在時刻</button>
                     <button type="button" onclick="show_JD_plus1()">１日進む</button>
@@ -214,9 +213,13 @@
         </div>
         
         <div id="coordtext" class="coordtext"></div>
+
+        <div id="showingData" class="showingData"></div>
+        <div id="timeSliderDiv" class="timeSliderDiv">
+            <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+        </div>
+        
         <div class="result">
             <script src="chart.js"></script>
         </div>
-
-        <div id="showingData" class="showingData"></div>
 </html>

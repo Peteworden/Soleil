@@ -239,6 +239,19 @@ canvas {
     color: #fff;
     width: 100%;
     height: 20px;
+    bottom: 26px;
+    z-index: 1;
+}
+
+.timeSliderDiv {
+    position: absolute;
+    width: 100%;
+    height: 20px;
     bottom: 6px;
     z-index: 1;
+}
+
+.timeSlider {
+    text-align: center;
+    width: 80%;
 }

@@ -69,14 +69,14 @@ if (canvas.width < canvas.height) {
 const minrg = 0.3;
 const maxrg = 90;
 
-var rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+var rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
 
 var magLimtext;
 var magLimLim = 11;
 var magkey1=11.0, magkey2=1.8;//key1は10~13
 function find_magLim(a, b) {
     var magLim = Math.min(Math.max(a - b * Math.log(Math.min(rgEW, rgNS)), 5), magLimLim);
-    magLimtext = `~${Math.round(magLim * 10) / 10}等級`;
+    magLimtext = `~${magLim.toFixed(1)}等級`;
     return magLim;
 }
 var magLim = find_magLim(magkey1, magkey2);
@@ -288,8 +288,8 @@ function link(obj) {
     url.searchParams.set('RA', cenRA);
     url.searchParams.set('Dec', cenDec);
     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
     history.replaceState('', '', url.href);
     document.getElementById("settingBtn").removeAttribute("disabled");
     document.getElementById('description').style.visibility = "hidden";
@@ -307,27 +307,33 @@ function ondtlchange(event) {
     let ymdhm = document.getElementById("dtl").value.split('T');
     let ymd = ymdhm[0].split('-');
     let hm = ymdhm[1].split(':');
-    setYMDH(ymd[0], parseInt(ymd[1]).toString(), parseInt(ymd[2]).toString(), (Math.round(parseFloat(hm[0])*100+parseFloat(hm[1])*10/6)/100).toString());
+    setYMDHM(ymd[0], parseInt(ymd[1]).toString(), parseInt(ymd[2]).toString(), parseInt(hm[0]).toString(), parseFloat(hm[1]).toString());
 }
 
 function now() {
     var ymdhm = new Date();
-    var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
-    setYMDH(y, m, d, h);
-    showingJD = YMDH_to_JD(y, m, d, h);
+    var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), ymdhm.getMinutes()];
+    setYMDHM(y, m, d, h, mi);
+    showingJD = YMDHM_to_JD(y, m, d, h, mi);
 }
 
-function setYMDH(y, m, d, h) {
+function setYMDHM(y, m, d, h, mi) {
     document.getElementById('yearText').value = y;
     document.getElementById('monthText').value = m;
     document.getElementById('dateText').value = d;
     document.getElementById('hourText').value = h;
+    if (mi == null) {
+        document.getElementById('hourText').value = Math.floor(h);
+        document.getElementById('minuteText').value = Math.round((h - Math.floor(h)) * 60);
+    } else {
+        document.getElementById('minuteText').value = mi;
+    }
 }
 
-//基本的にYMDHはJST, JDはTT
+//基本的にYMDHMはJST, JDはTT
 
-function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
-    var JD = JD + 0.375;
+function JD_to_YMDHM(JD1) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
+    var JD = JD1 + 0.375 - 0.0008;
     var A = Math.floor(JD + 68569.5);
     var B = Math.floor(A / 36524.25);
     var C = A - Math.floor(36524.25 * B + 0.75);
@@ -337,23 +343,23 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
     var D = F - Math.floor(30.59 * G);
     var H = Math.floor(G / 11);
     var M = G - 12 * H + 2;
-    var Y = 100 * (B -49) + E + H;
-    var Hr = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 240) / 10;
+    var Y = 100 * (B - 49) + E + H;
+    var Hr = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 24);
+    var Mi = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 1440 - Hr * 60);
     if (M == 12 && D == 32) {
         Y += 1;
         M = 1;
         D = 1;
     }
-
-    return [Y, M, D, Hr];
+    return [Y, M, D, Hr, Mi];
 }
 
-function YMDH_to_JD(Y, M, D, H){
+function YMDHM_to_JD(Y, M, D, H, Mi){
     if (M <= 2) {
         M += 12;
         Y--;
     }
-    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
+    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + Mi/1440 + 1721088.5 + 0.0008 - 0.375;
     return JD;
 }
 
@@ -435,15 +441,32 @@ function exitFullScreenFunc() {
 
 function show_JD_plus1(){
     showingJD += 1;
-    var [y, m, d, h] = JD_to_YMDH(showingJD);
-    setYMDH(y, m, d, h)
+    var [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
+    setYMDHM(y, m, d, h, mi);
 }
 
 function show_JD_minus1(){
     showingJD -= 1;
-    var [y, m, d, h] = JD_to_YMDH(showingJD);
-    setYMDH(y, m, d, h)
+    var [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
+    setYMDHM(y, m, d, h, mi);
 }
+
+timeSliderValue = 0;
+document.getElementById('timeSlider').addEventListener('input', function(){
+    showingJD += (document.getElementById('timeSlider').value - timeSliderValue) / 1440;
+    timeSliderValue = document.getElementById('timeSlider').value;
+    let [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
+    setYMDHM(y, m, d, h, mi);
+
+    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    history.replaceState('', '', url.href);
+
+    document.getElementById('showingData').style.color = textColor;
+    document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+
+    calculation(showingJD);
+    show_main();
+});
 
 var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50); // distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
@@ -543,7 +566,7 @@ function ontouchmove(e) {
                     [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
                 }
-                rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+                rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
                 magLim = find_magLim(magkey1, magkey2);
                 zerosize = find_zerosize();
                 show_main();
@@ -558,20 +581,20 @@ function ontouchmove(e) {
 
 function ontouchend(e) {
     baseDistance = 0;
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
+    url.searchParams.set('area', (2*rgEW).toFixed(2));
     history.replaceState('', '', url.href);
 };
 
 function ontouchcancel(e) {
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
+    url.searchParams.set('area', (2*rgEW).toFixed(2));
     baseDistance = 0;
 };
 
@@ -617,11 +640,11 @@ function onmousemove(e) {
 }
 
 function onmouseup(e){
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
+    url.searchParams.set('area', (2*rgEW).toFixed(2));
     history.replaceState('', '', url.href);
     canvas.removeEventListener("mousemove", onmousemove);
 }
@@ -656,17 +679,17 @@ function onwheel(event) {
             [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
         }
-        rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+        rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
         magLim = find_magLim(magkey1, magkey2);
         zerosize = find_zerosize();
         show_main();
         baseDistance = distance;
 
-        url.searchParams.set('RA', Math.round(cenRA*100)/100);
-        url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-        url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-        url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        url.searchParams.set('RA', cenRA.toFixed(2));
+        url.searchParams.set('Dec', cenDec.toFixed(2));
+        url.searchParams.set('azm', cenAzm.toFixed(2));
+        url.searchParams.set('alt', cenAlt.toFixed(2));
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
     }
 }
@@ -1037,8 +1060,8 @@ function show_main(){
         var [A, h] = RADec2Ah(cenRA, cenDec, theta);
         const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
-        Astr = `方位角 ${Math.round(A*10)/10}°(${direc}) `;
-        hstr = `高度 ${Math.round(h*10)/10}° `;
+        Astr = `方位角 ${A.toFixed(1)}°(${direc}) `;
+        hstr = `高度 ${h.toFixed(1)}° `;
         if (moving) {
             hstr += ' wait...';
         }
@@ -1635,7 +1658,7 @@ function show_main(){
         ctx.stroke();
     }
 
-    var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10}m `;
+    var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${((cenRA-15*Math.floor(cenRA/15))*4).toFixed(1)}m `;
     if (cenDec >= 0) {
         var Dectext = `赤緯 +${Math.floor(cenDec)}° ${Math.round((cenDec-Math.floor(cenDec))*60)}' (J2000.0) `;
     } else {
@@ -2196,6 +2219,7 @@ function newSetting() {
     let month = parseInt(document.getElementById('monthText').value);
     let date = parseInt(document.getElementById('dateText').value);
     let hour = parseFloat(document.getElementById('hourText').value);
+    let minute = parseFloat(document.getElementById('minuteText').value);
 
     ObsPlanet = document.getElementById("observer").value;
     Obs_num = JPNplanets.indexOf(ObsPlanet);
@@ -2257,14 +2281,15 @@ function newSetting() {
         lontext = document.getElementById('lon').value + "°W";
         url.searchParams.set('lon', -document.getElementById('lon').value);
     }
-        
-    url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
+    
+    url.searchParams.set('time', `${year}-${month}-${date}-${hour}-${minute}`);
     history.replaceState('', '', url.href);
 
     document.getElementById('showingData').style.color = textColor;
-    document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}時JST ${lattext} ${lontext}`;
+    document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}:${minute.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
 
-    showingJD = YMDH_to_JD(year, month, date, hour);
+    showingJD = YMDHM_to_JD(year, month, date, hour, minute);
+    document.getElementById('timeSlider').value = 0;
     calculation(showingJD);
 }
 
@@ -2464,9 +2489,9 @@ function checkURL() {
     }
 
     if (url.searchParams.has('time')) {
-        var [y, m, d, h] = url.searchParams.get('time').split('-');
-        setYMDH(y, m, d, h);
-        showingJD = YMDH_to_JD(y, m, d, h);
+        var [y, m, d, h, mi] = url.searchParams.get('time').split('-');
+        setYMDHM(y, m, d, h, mi);
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
         defaultcheck++;
         show_initial();
     } else {
@@ -2501,7 +2526,7 @@ function checkURL() {
     if (url.searchParams.has('area')) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
-        rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+        rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
         if (mode == 'live') {
             magLimLim = 6.5;
         } else {
@@ -2512,7 +2537,7 @@ function checkURL() {
         defaultcheck++;
         show_initial();
     } else {
-        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
         defaultcheck++;
         show_initial();
     }
