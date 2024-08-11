@@ -353,9 +353,6 @@ function JD_to_YMDHM(JD) { //TT-->JST として変換　TT-->TTのときはJDに
     var Y = 100 * (B - 49) + E + H;
     var Hr = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 24);
     var Mi = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 1440 - Hr * 60);
-    if (Mi == 0) {
-        console.log(JD, Y, M, D, Hr)
-    }
     if (M == 12 && D == 32) {
         Y += 1;
         M = 1;
@@ -1886,7 +1883,6 @@ function show_main(){
         let rdeg = 1.5; //radius
         let r = canvas.width / rgEW / 2 * rdeg;
         let imax = parseInt(Tycho1011.length / 3);
-        console.log(Help1011.length)
         for (j=0; j<Help1011.length; j++) {
             var st = parseInt(Help1011[j]);
             var fi = parseInt(Help1011[j+1]);
@@ -2304,9 +2300,9 @@ function Rz ([x, y, z], a) {
     return [cos(a)*x-sin(a)*y, sin(a)*x+cos(a)*y, z];
 }
 
-let intervalIdRadec = setInterval(realtimeRadec, 1000);
+let intervalIdRadec = setInterval(realtimeRadec, 500);
 clearInterval(intervalIdRadec);
-let intervalIdAzmalt = setInterval(realtimeAzmalt, 1000);
+let intervalIdAzmalt = setInterval(realtimeAzmalt, 500);
 clearInterval(intervalIdAzmalt);
 
 //入力をもとにURLを修正し、観測地についての変数を設定し、showingDataを設定し、showingJDを計算する
@@ -2374,6 +2370,7 @@ function newSetting() {
 
     setRealtime();
     timeSliderElem.value = 0;
+    timeSliderValue = 0;
 
     //history.replaceState('', '', url.href);
 
@@ -2384,6 +2381,7 @@ function setRealtime() {
     var ymdhm = new Date();
     document.getElementById('showingData').style.color = textColor;
     if (realtimeElem[0].checked) {
+        timeSliderElem.style.visibility = 'visible';
         let y = parseInt(yearTextElem.value);
         let m = parseInt(monthTextElem.value);
         let d = parseInt(dateTextElem.value);
@@ -2395,6 +2393,7 @@ function setRealtime() {
         clearInterval(intervalIdAzmalt);
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
     } else if (realtimeElem[1].checked) {
+        timeSliderElem.style.visibility = 'hidden';
         var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
@@ -2403,6 +2402,7 @@ function setRealtime() {
         setYMDHM(y, m, d, h, mi);
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
     } else if (realtimeElem[2].checked) {
+        timeSliderElem.style.visibility = 'hidden';
         var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
@@ -2417,7 +2417,6 @@ function setRealtime() {
 function realtimeRadec() {
     var ymdhm = new Date();
     if (ymdhm.getSeconds() % 6 == 0 && ymdhm.getMilliseconds() < 500) {
-        console.log(ymdhm.getSeconds())
         var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), (ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1)];
         document.getElementById('showingData').style.color = textColor;
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
