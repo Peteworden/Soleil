@@ -13,6 +13,14 @@ var lineColor = 'red';
 var textColor = 'white';
 
 const pi = Math.PI;
+const yearTextElem = document.getElementById('yearText');
+const monthTextElem = document.getElementById('monthText');
+const dateTextElem = document.getElementById('dateText');
+const hourTextElem = document.getElementById('hourText');
+const minuteTextElem = document.getElementById('minuteText');
+const timeSliderElem = document.getElementById('timeSlider');
+let zuhoElem = document.getElementsByName('mode');
+const realtimeElem = document.getElementsByName('realtime');
 
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
@@ -198,7 +206,6 @@ function turnOnOffLiveMode (mode) {
     }
 }
 
-var zuhoElem = document.getElementsByName('mode');
 var mode;
 //AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き)
 
@@ -318,22 +325,22 @@ function now() {
 }
 
 function setYMDHM(y, m, d, h, mi) {
-    document.getElementById('yearText').value = y;
-    document.getElementById('monthText').value = m;
-    document.getElementById('dateText').value = d;
-    document.getElementById('hourText').value = h;
+    yearTextElem.value = y;
+    monthTextElem.value = m;
+    dateTextElem.value = d;
+    hourTextElem.value = h;
     if (mi == null) {
-        document.getElementById('hourText').value = Math.floor(h);
-        document.getElementById('minuteText').value = Math.round((h - Math.floor(h)) * 60);
+        hourTextElem.value = Math.floor(h);
+        minuteTextElem.value = Math.round((h - Math.floor(h)) * 60);
     } else {
-        document.getElementById('minuteText').value = mi;
+        minuteTextElem.value = mi;
     }
 }
 
 //基本的にYMDHMはJST, JDはTT
 
-function JD_to_YMDHM(JD1) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
-    var JD = JD1 + 0.375 - 0.0008;
+function JD_to_YMDHM(JD) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
+    var JD = JD + 0.375 - 0.0008 + 1/2880; //最後の項はhh:mm:30~hh:(mm+1):00をhh:(mm+1)にするため
     var A = Math.floor(JD + 68569.5);
     var B = Math.floor(A / 36524.25);
     var C = A - Math.floor(36524.25 * B + 0.75);
@@ -345,7 +352,10 @@ function JD_to_YMDHM(JD1) { //TT-->JST として変換　TT-->TTのときはJD�
     var M = G - 12 * H + 2;
     var Y = 100 * (B - 49) + E + H;
     var Hr = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 24);
-    var Mi = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 1440 - Hr * 60);
+    var Mi = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 1440 - Hr * 60);
+    if (Mi == 0) {
+        console.log(JD, Y, M, D, Hr)
+    }
     if (M == 12 && D == 32) {
         Y += 1;
         M = 1;
@@ -451,19 +461,16 @@ function show_JD_minus1(){
     setYMDHM(y, m, d, h, mi);
 }
 
-timeSliderValue = 0;
-document.getElementById('timeSlider').addEventListener('input', function(){
-    showingJD += (document.getElementById('timeSlider').value - timeSliderValue) / 1440;
-    timeSliderValue = document.getElementById('timeSlider').value;
+let timeSliderValue = 0;
+timeSliderElem.addEventListener('input', function(){
+    realtimeElem[1].checked = false;
+    realtimeElem[2].checked = false;
+    realtimeElem[0].checked = true;
+    showingJD += (timeSliderElem.value - timeSliderValue) / 1440;
+    timeSliderValue = timeSliderElem.value;                                                                                                               
     let [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
     setYMDHM(y, m, d, h, mi);
-
-    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
-    history.replaceState('', '', url.href);
-
-    document.getElementById('showingData').style.color = textColor;
-    document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
-
+    setRealtime();
     calculation(showingJD);
     show_main();
 });
@@ -1178,6 +1185,8 @@ function show_main(){
     }
     ctx.stroke();
 
+    //drawMilkyWay();
+
     //HIP
     ctx.fillStyle = starColor;
     for (i=0; i<HIPRAary.length; i++){
@@ -1872,6 +1881,88 @@ function show_main(){
         }
     }
 
+    function drawMilkyWay1() {
+        ctx.fillStyle = '#FFFFFF10';
+        let rdeg = 1.5; //radius
+        let r = canvas.width / rgEW / 2 * rdeg;
+        let imax = parseInt(Tycho1011.length / 3);
+        console.log(Help1011.length)
+        for (j=0; j<Help1011.length; j++) {
+            var st = parseInt(Help1011[j]);
+            var fi = parseInt(Help1011[j+1]);
+            if (fi - st < 20) {continue;}
+            for (i=st; i<st+1; i++) {
+                var RA = parseFloat(Tycho1011[3*(i-1)]);
+                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
+                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
+                if (mag < 10) {continue;}
+                if (mode == 'AEP') {
+                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                        var [x, y] = coordSH(scrRA, scrDec);
+                        drawFilledCircle (x, y, r);
+                    }
+                } else if (mode == 'EtP') {
+                    if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
+                        var [x, y] = coord(RA, Dec);
+                        drawFilledCircle (x, y, r);
+                    }
+                } else if (mode == 'view') {
+                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                        var [x, y] = coordSH(scrRA, scrDec);
+                        drawFilledCircle (x, y, r);
+                    }
+                } else if (mode == 'live') {
+                    var [A, h] = RADec2Ah(RA, Dec, theta);
+                    var [scrRA, scrDec] = Ah2scrlive(A, h);
+                    if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
+                        var [x, y] = coordSH(scrRA, scrDec);
+                        drawFilledCircle (x, y, r);
+                    }
+                }    
+            }
+        }
+    }
+
+    function drawMilkyWay() {
+        ctx.fillStyle = '#FFFFFF01';
+        let rdeg = 1.5; //radius
+        let r = canvas.width / rgEW / 2 * rdeg;
+        let imax = parseInt(Tycho1011.length / 3);
+        for (i=0; i<imax; i++) {
+            var RA = parseFloat(Tycho1011[3*i]);
+            var Dec = parseFloat(Tycho1011[3*i+1]);
+            var mag = parseFloat(Tycho1011[3*i+2]);
+            if (mag < 10) {continue;}
+            if (mode == 'AEP') {
+                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawFilledCircle (x, y, r);
+                }
+            } else if (mode == 'EtP') {
+                if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
+                    var [x, y] = coord(RA, Dec);
+                    drawFilledCircle (x, y, r);
+                }
+            } else if (mode == 'view') {
+                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawFilledCircle (x, y, r);
+                }
+            } else if (mode == 'live') {
+                var [A, h] = RADec2Ah(RA, Dec, theta);
+                var [scrRA, scrDec] = Ah2scrlive(A, h);
+                if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawFilledCircle (x, y, r);
+                }
+            }
+        }
+    }
+
     function writeBayer () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
@@ -2213,14 +2304,13 @@ function Rz ([x, y, z], a) {
     return [cos(a)*x-sin(a)*y, sin(a)*x+cos(a)*y, z];
 }
 
+let intervalIdRadec = setInterval(realtimeRadec, 1000);
+clearInterval(intervalIdRadec);
+let intervalIdAzmalt = setInterval(realtimeAzmalt, 1000);
+clearInterval(intervalIdAzmalt);
+
 //入力をもとにURLを修正し、観測地についての変数を設定し、showingDataを設定し、showingJDを計算する
 function newSetting() {
-    let year = parseInt(document.getElementById('yearText').value);
-    let month = parseInt(document.getElementById('monthText').value);
-    let date = parseInt(document.getElementById('dateText').value);
-    let hour = parseFloat(document.getElementById('hourText').value);
-    let minute = parseFloat(document.getElementById('minuteText').value);
-
     ObsPlanet = document.getElementById("observer").value;
     Obs_num = JPNplanets.indexOf(ObsPlanet);
 
@@ -2281,16 +2371,80 @@ function newSetting() {
         lontext = document.getElementById('lon').value + "°W";
         url.searchParams.set('lon', -document.getElementById('lon').value);
     }
-    
-    url.searchParams.set('time', `${year}-${month}-${date}-${hour}-${minute}`);
-    history.replaceState('', '', url.href);
 
-    document.getElementById('showingData').style.color = textColor;
-    document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}:${minute.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+    setRealtime();
+    timeSliderElem.value = 0;
 
-    showingJD = YMDHM_to_JD(year, month, date, hour, minute);
-    document.getElementById('timeSlider').value = 0;
+    //history.replaceState('', '', url.href);
+
     calculation(showingJD);
+}
+
+function setRealtime() {
+    var ymdhm = new Date();
+    document.getElementById('showingData').style.color = textColor;
+    if (realtimeElem[0].checked) {
+        let y = parseInt(yearTextElem.value);
+        let m = parseInt(monthTextElem.value);
+        let d = parseInt(dateTextElem.value);
+        let h = parseInt(hourTextElem.value);
+        let mi = parseFloat(minuteTextElem.value);
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        clearInterval(intervalIdRadec);
+        clearInterval(intervalIdAzmalt);
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    } else if (realtimeElem[1].checked) {
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        clearInterval(intervalIdAzmalt);
+        intervalIdRadec = setInterval(realtimeRadec, 500);
+        setYMDHM(y, m, d, h, mi);
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    } else if (realtimeElem[2].checked) {
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        clearInterval(intervalIdRadec);
+        intervalIdAzmalt = setInterval(realtimeAzmalt, 500);
+        setYMDHM(y, m, d, h, mi);
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    }
+    history.replaceState('', '', url.href);
+}
+
+function realtimeRadec() {
+    var ymdhm = new Date();
+    if (ymdhm.getSeconds() % 6 == 0 && ymdhm.getMilliseconds() < 500) {
+        console.log(ymdhm.getSeconds())
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), (ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1)];
+        document.getElementById('showingData').style.color = textColor;
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+        history.replaceState('', '', url.href);
+        setYMDHM(y, m, d, h, mi);
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        calculation(showingJD);
+        [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
+        show_main();
+    }
+}
+
+function realtimeAzmalt() {
+    var ymdhm = new Date();
+    if (ymdhm.getSeconds() % 6 == 0 && ymdhm.getMilliseconds() < 500) {
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), (ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1)];
+        document.getElementById('showingData').style.color = textColor;
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+        history.replaceState('', '', url.href);
+        setYMDHM(y, m, d, h, mi);
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        calculation(showingJD);
+        [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
+        show_main();
+    }
 }
 
 function loadFiles() {

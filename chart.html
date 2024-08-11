@@ -95,6 +95,12 @@
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
                         <input type="radio" name="mode" value="live">ライブモード(beta)<input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
                     </div>
+                    <div>
+                        リアルタイム
+                        <input type="radio" name="realtime" value="off">オフ
+                        <input type="radio" name="realtime" value="radec" checked>赤道座標固定
+                        <input type="radio" name="realtime" value="altazm">高度方位固定
+                    </div>
                     <ul>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
                         （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="50">°のとき）</li>
