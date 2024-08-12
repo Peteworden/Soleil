@@ -218,6 +218,7 @@ var defaultcheck = 0;
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
+var HIPbvary = Array(1);
 var Tycho = [];
 var Help = [];
 var Tycho1011 = [];
@@ -1196,42 +1197,6 @@ function show_main(){
 
     //drawMilkyWay();
 
-    //HIP
-    ctx.fillStyle = starColor;
-    for (i=0; i<HIPRAary.length; i++){
-        var RA = HIPRAary[i];
-        var Dec = HIPDecary[i];
-        var mag = HIPmagary[i];
-        if (mag > magLim) {
-            continue;
-        }
-        if (mode == 'AEP') {
-            [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag));
-            }
-        } else if (mode == 'EtP') {
-            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                [x, y] = coord(RA, Dec);
-                drawFilledCircle (x, y, size(mag));
-            }
-        } else if (mode == 'view') {
-            var [scrRA, scrDec] = RADec2scrview(RA, Dec, theta);
-            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag));
-            }
-        } else if (mode == 'live') {
-            var [A, h] = RADec2Ah(RA, Dec, theta);
-            [scrRA, scrDec] = Ah2scrlive(A, h);
-            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag));
-            }
-        }
-    }
-
     //Tycho
     if (mode == 'AEP') {
         var skyareas = [];
@@ -1383,7 +1348,43 @@ function show_main(){
             }
         }*/
     }
-    
+
+    //HIP
+    ctx.fillStyle = starColor;
+    for (i=0; i<HIPRAary.length; i++){
+        var RA = HIPRAary[i];
+        var Dec = HIPDecary[i];
+        var mag = HIPmagary[i];
+        let c = bv2color(HIPbvary[i]);
+        if (mag > magLim) {
+            continue;
+        }
+        if (mode == 'AEP') {
+            [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        } else if (mode == 'EtP') {
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                [x, y] = coord(RA, Dec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        } else if (mode == 'view') {
+            var [scrRA, scrDec] = RADec2scrview(RA, Dec, theta);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        } else if (mode == 'live') {
+            var [A, h] = RADec2Ah(RA, Dec, theta);
+            [scrRA, scrDec] = Ah2scrlive(A, h);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        }
+    }
 
     // 星座名
     ctx.font = '20px times new roman';
@@ -1502,8 +1503,7 @@ function show_main(){
         if (i != Obs_num && 0 < x < canvas.width && 0 < y < canvas.height) {
             if (i == 0){ // 太陽
                 var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
-                ctx.fillStyle = yellowColor;
-                drawFilledCircle(x, y, r);
+                drawFilledCircle(x, y, r, yellowColor);
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
             } else if (i == 9) { // 月(地球から見たときだけ)
@@ -1514,8 +1514,7 @@ function show_main(){
                 }
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
-                ctx.fillStyle = '#F33';
-                drawFilledCircle(x, y, Math.max(size(mag), 0.5));
+                drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x, y);
             }
@@ -1796,7 +1795,8 @@ function show_main(){
         ctx.lineTo(x2, y2);
     }
 
-    function drawFilledCircle (x, y, r) {
+    function drawFilledCircle (x, y, r, c=starColor) {
+        ctx.fillStyle = c;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * pi, false);
         ctx.fill();
@@ -1808,8 +1808,28 @@ function show_main(){
         } else {
             return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
-    }       
+    }
 
+    function bv2color(bv) {
+        let c;
+        if (bv == 'nodata') {
+            c = starColor;
+        } else {
+            bv = parseFloat(bv);
+            if (bv > 1.4) {
+                c = '#ff9999';
+            } else if (bv > 0.8) {
+                c = '#ffcc99';
+            } else if (bv > 0.6) {
+                c = '#ffffcc';
+            } else if (bv > 0) {
+                c = starColor;
+            } else if (bv > -0.33) {
+                c = '#ccffff';
+            }
+        }
+        return c;
+    }
     function DrawStars (skyareas) {
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
@@ -2213,16 +2233,14 @@ function show_main(){
 
         ctx.beginPath();
         if (k < 0.5) {
-            ctx.fillStyle = yellowColor;
-            drawFilledCircle(x, y, r);
+            drawFilledCircle(x, y, r, yellowColor);
             ctx.fillStyle = '#333';
             ctx.beginPath();
             ctx.arc(x, y, r, P, P+pi);
             ctx.ellipse(x, y, r, r*(1-2*k), P-pi, 0, pi);
             ctx.fill();
         } else {
-            ctx.fillStyle = '#333';
-            drawFilledCircle(x, y, r);
+            drawFilledCircle(x, y, r, '#333');
             ctx.fillStyle = yellowColor;
             ctx.beginPath();
             ctx.arc(x, y, r, P-pi, P);
@@ -2502,14 +2520,16 @@ function loadFiles() {
     loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
     function xhrHIP(data) {
         const DataAry = data.split(',');
-        var num_of_stars = DataAry.length / 3;
+        var num_of_stars = DataAry.length / 4;
         HIPRAary = Array(num_of_stars);
         HIPDecary = Array(num_of_stars);
         HIPmagary = Array(num_of_stars);
+        HIPbvary = Array(num_of_stars);
         for (i=0; i<num_of_stars; i++){
-            HIPRAary[i] = parseFloat(DataAry[3*i]);
-            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
+            HIPRAary[i] = parseFloat(DataAry[4*i]);
+            HIPDecary[i] = parseFloat(DataAry[4*i+1]);
+            HIPmagary[i] = parseFloat(DataAry[4*i+2]);
+            HIPbvary[i] = DataAry[4*i+3]
         }
     }
 
