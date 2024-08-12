@@ -102,7 +102,8 @@ input[type="file"] {
 }
 
 #dtl {
-    width: 140px;
+    background-color: white;
+    width: 20px;
 }
 
 input {
@@ -225,7 +226,7 @@ canvas {
     position: absolute;
     font-size: 16px;
     color: #fff;
-    width: 100%;
+    width: 80%;
     height: 20px;
     top: 40px;
     left: 6px;
@@ -237,7 +238,7 @@ canvas {
     font-size: 16px;
     font-weight: 100;
     color: #fff;
-    width: 100%;
+    width: 80%;
     height: 20px;
     bottom: 26px;
     z-index: 1;
@@ -245,7 +246,7 @@ canvas {
 
 .timeSliderDiv {
     position: absolute;
-    width: 100%;
+    width: 80%;
     height: 20px;
     bottom: 6px;
     z-index: 1;
