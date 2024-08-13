@@ -466,12 +466,14 @@ function show_JD_plus1(){
     showingJD += 1;
     var [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
     setYMDHM(y, m, d, h, mi);
+    realtimeOff();
 }
 
 function show_JD_minus1(){
     showingJD -= 1;
     var [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
     setYMDHM(y, m, d, h, mi);
+    realtimeOff();
 }
 
 let timeSliderValue = 0;
@@ -1049,7 +1051,7 @@ function calculation(JD) {
 }
 
 function show_main(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width,canvas.height);
     ctx.fillStyle = '#001';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
@@ -1082,6 +1084,17 @@ function show_main(){
         if (moving) {
             hstr += ' wait...';
         }
+    }
+
+    if (document.getElementById('center').checked) {
+        ctx.beginPath();
+        ctx.strokeStyle = starColor;
+        const centerReticleSize = Math.min(canvas.width, canvas.height) / 20;
+        ctx.moveTo(canvas.width/2-centerReticleSize, canvas.height/2);
+        ctx.lineTo(canvas.width/2+centerReticleSize, canvas.height/2);
+        ctx.moveTo(canvas.width/2, canvas.height/2-centerReticleSize);
+        ctx.lineTo(canvas.width/2, canvas.height/2+centerReticleSize);
+        ctx.stroke();
     }
 
     //星座判定
@@ -1285,50 +1298,31 @@ function show_main(){
                 var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else {
-                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90, overCheck = false;
-                for (j=0; j<2; j++) {
-                    for (i=0; i<7; i++) {
-                        [A, h] = SHtoAh((2*j-1)*rgEW, rgNS*(1-i/3));
+                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
+                let edgeRA = [];
+                let edgeDec = [];
+                for (j=0; j<=Math.ceil(3*rgEW); j++) {
+                    for (i=0; i<=Math.ceil(3*rgNS); i++) {
+                        [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                         [RA, Dec] = Ah2RADec(A, h, theta);
-                        if (!overCheck) {
-                            if ((RA_max>300) && (RA<60)) {
-                                overCheck = true;
-                                RA_max = 0;
-                            } else if ((RA_min<60) && (RA>300)) {
-                                overCheck = true;
-                                RA_min = 360;
-                            }
-                        }
-                        if (overCheck) {
-                            if (cenRA > 300) {
-                                if (RA > 300) {
-                                    RA_max = Math.max(RA, RA_max);
-                                } else {
-                                    RA_min = Math.min(RA, RA_min);
-                                }
-                            } else if (cenRA < 60) {
-                                if (RA > 300) {
-                                    RA_min = Math.min(RA, RA_min);
-                                } else {
-                                    RA_max = Math.max(RA, RA_max);
-                                }
-                            }
-                        } else {
-                            RA_max = Math.max(RA, RA_max);
-                            RA_min = Math.min(RA, RA_min);
-                        }
-                        Dec_max = Math.max(Dec, Dec_max);
-                        Dec_min = Math.min(Dec, Dec_min);
+                        edgeRA.push(RA);
+                        edgeDec.push(Dec);
                     }
                 }
-                if (overCheck) {
-                    var skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
+                Dec_max = Math.max(...edgeDec);
+                Dec_min = Math.min(...edgeDec);
+                RA_max = Math.max(...edgeRA);
+                RA_min = Math.min(...edgeRA);
+                if (RA_max > 358 && RA_min < 2) {
+                    RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
+                    RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
+                    skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
                     for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else {
-                    var skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
+                    skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
                     for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     }
@@ -2395,7 +2389,6 @@ function newSetting() {
 
     setRealtime();
     timeSliderElem.value = 0;
-    console.log(timeSliderValue);
     timeSliderValue = 0;
 
     //history.replaceState('', '', url.href);
