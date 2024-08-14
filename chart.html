@@ -137,6 +137,8 @@
                 説明など<br>これを開いた右下のボタンで閉じる
             </p>
 
+            <button id="openSearch" type="button" onclick="openSearch()">検索</button>
+
             <p>---<a href="chartReadMe.html" target="_blank" rel="noopener">説明ページ（新しいタブ）</a>---</p>
 
             <p>
@@ -149,10 +151,8 @@
                     <li>×：記載なしまたはその他</li>
                 </ul>
             </p>
-            <p>
-                表示させている状態をURLで共有できます<br>
-                下の少し色が違うところからその天体に飛べます
-            </p>
+            <p>表示させている状態をURLで共有できます</p>
+            <p>下の少し色が違うところからその天体に飛べます</p>
             <p>
                 双眼鏡向けの天体(上４つは暗いところなら肉眼でも見られる)
                 <ul>
@@ -217,6 +217,12 @@
                     <li><a href="https://www.heavens-above.com/Comets.aspx?lat=35&lng=135.8&loc=Unnamed&alt=0&tz=JapST&cul=ja" target="_blank" rel="noopener">Heavens-Above 彗星</a></li>
                 </ul>
             </p>
+        </div>
+
+        <div id="searchDiv" class="searchDiv">
+            <input type="text" id="searchInput" placeholder="ここに入力して検索">
+            <button id="closeSearch" type="button" onclick="closeSearch()">閉じる</button>
+            <div id="suggestionButtonContainer"></div>
         </div>
         
         <div id="coordtext" class="coordtext"></div>

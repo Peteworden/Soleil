@@ -25,6 +25,7 @@ const realtimeElem = document.getElementsByName('realtime');
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+document.getElementById('searchDiv').style.visibility = "hidden";
 
 document.getElementById('darkerbtntext').innerHTML = 'dark';
 
@@ -277,7 +278,35 @@ function show_initial(){
 
 const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
+function linkExist(obj) {
+    let linkExist = false;
+    if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
+        for (i=0; i<messier.length/4; i++) {
+            if (messier[4*i] == obj) {
+                linkExist = true;
+            }
+        }
+    } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
+        for (i=0; i<NGC.length/5; i++) {
+            if (NGC[5*i] == obj) {
+                linkExist = true;
+            }
+        }
+    } else { //その他
+        for (var i=0; i<choice.length/4; i++) {
+            if (obj == choice[4*i]) {
+                linkExist = true;
+            }
+        }
+    }
+    return linkExist;
+}
+
 function link(obj) {
+    if (!obj) {
+        console.error('Invalid input:', obj);
+        return;
+    }
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
         for (i=0; i<messier.length/4; i++) {
             if (messier[4*i] == obj) {
@@ -285,7 +314,21 @@ function link(obj) {
                 cenDec = parseFloat(messier[4*i+2]);
             }
         }
-    } else { //その他
+    } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
+        for (i=0; i<NGC.length/5; i++) {
+            if (NGC[5*i] == obj) {
+                cenRA = parseFloat(NGC[5*i+1]);
+                cenDec = parseFloat(NGC[5*i+2]);
+            }
+        }
+    } else if (obj.slice(-1) == '座') {
+        for (i=0; i<89; i++){
+            if (obj == CLnames[i] + '座') {
+                cenRA = parseFloat(constPos[2*i]);
+                cenDec = parseFloat(constPos[2*i+1]);
+            }
+        }
+    } else {
         for (var i=0; i<choice.length/4; i++) {
             if (obj == choice[4*i]) {
                 cenRA = parseFloat(choice[4*i+1]);
@@ -302,6 +345,97 @@ function link(obj) {
     document.getElementById("settingBtn").removeAttribute("disabled");
     document.getElementById('description').style.visibility = "hidden";
     show_main();
+}
+
+function openSearch() {
+    document.getElementById('searchDiv').style.visibility = "visible";
+}
+
+function closeSearch() {
+    document.getElementById('searchDiv').style.visibility = "hidden";
+}
+
+document.getElementById('searchInput').addEventListener('input', function() {
+    let searchText = hiraganaToKatakana(document.getElementById('searchInput').value.toUpperCase());
+    let suggestions = [[], []];
+    let preSuggestions = [[], []];
+    if (searchText.length == 0) {
+        suggestions = [[], []];
+        preSuggestions = [[], []];
+    } else if (searchText.length == 1) {
+        if (isNaN(searchText) == false) {
+            if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+                suggestions[0].push(`M${searchText}`);
+                suggestions[1].push(`M${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 7840 && linkExist(`NGC${searchText}`)) {
+                suggestions[0].push(`NGC${searchText}`);
+                suggestions[1].push(`NGC${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 5386 && linkExist(`IC${searchText}`)) {
+                suggestions[0].push(`IC${searchText}`);
+                suggestions[1].push(`IC${searchText}`);
+            }
+        } else {
+            for (let constName of CLnames) {
+                if (constName.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
+                    suggestions[0].push(`${constName}座`);
+                    suggestions[1].push(`${constName}座`);
+                }
+            }
+        }
+    } else {
+        preSuggestions = suggestions;
+        suggestions = [[], []];
+        if (isNaN(searchText) == false) {
+            if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+                suggestions[0].push(`M${searchText}`);
+                suggestions[1].push(`M${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 7840 && linkExist(`NGC${searchText}`)) {
+                suggestions[0].push(`NGC${searchText}`);
+                suggestions[1].push(`NGC${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 5386 && linkExist(`IC${searchText}`)) {
+                suggestions[0].push(`IC${searchText}`);
+                suggestions[1].push(`IC${searchText}`);
+            }
+        } else if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) <= 110 && linkExist(searchText)) {
+            suggestions[0].push(searchText.toUpperCase());
+            suggestions[1].push(searchText.toUpperCase());
+        } else if (searchText.startsWith('NGC') && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
+            suggestions[0].push(searchText.toUpperCase());
+            suggestions[1].push(searchText.toUpperCase());
+        } else if (searchText.startsWith('IC') && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
+            suggestions[0].push(searchText.toUpperCase());
+            suggestions[1].push(searchText.toUpperCase());
+        } else {
+            for (let constName of CLnames) {
+                if ((hiraganaToKatakana(constName)+'座').includes(searchText)) {
+                    suggestions[0].push(`${constName}座`);
+                    suggestions[1].push(`${constName}座`);
+                }
+            }
+        }
+    }
+
+    document.getElementById('suggestionButtonContainer').innerHTML = ''
+    for (let i=0; i<suggestions[0].length; i++) {
+        const button = document.createElement('button');
+        button.className = 'suggestionButton';
+        button.textContent = suggestions[0][i];
+        button.addEventListener('click', function() {
+            link(suggestions[1][i]);
+            closeSearch();
+        });
+        document.getElementById('suggestionButtonContainer').appendChild(button);
+    }
+});
+
+function hiraganaToKatakana(str) {
+    return str.replace(/[\u3041-\u309F]/g, function(char) {
+        return String.fromCharCode(char.charCodeAt(0) + 0x60);
+    });
 }
 
 let intervalId = null;
@@ -1384,7 +1518,7 @@ function show_main(){
     ctx.font = '20px times new roman';
     if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
-        for (i=0; i<88; i++){
+        for (i=0; i<89; i++){
             var RA = 1.0 * constPos[2*i];
             var Dec = 1.0 * constPos[2*i+1];
             var constName = CLnames[i];

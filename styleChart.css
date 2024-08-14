@@ -190,6 +190,73 @@ select {
     text-decoration: underline;
 }
 
+#openSearch {
+    width: 100px;
+    height: 40px;
+    background-color: #F5F5DC;
+    color: black;
+}
+
+.searchDiv {
+    position: fixed;
+    background-color: #8b321c;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    overflow: scroll;
+    z-index: 3;
+}
+
+.searchDiv input {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: left;
+    background-color: white;
+    color: black;
+    font-size: large;
+    width: 60%;
+    height: 30px;
+}
+
+#closeSearch {
+    position: absolute;
+    border: 0;
+    top: 10px;
+    right: 10px;
+    width: 60px;
+    height: 30px;
+    text-align: center;
+}
+
+#suggestionButtonContainer{
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+}
+
+.suggestionButton {
+    display: block;
+    width: 90%;
+    margin: 10px auto;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.suggestionButton:hover {
+    background-color: #45a049;
+}
+
 .fullScreenBtn {
     background-color: transparent;
     position: absolute;
