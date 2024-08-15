@@ -104,13 +104,16 @@
                     <ul>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
-                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="50">°のとき）</li>
+                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="190">°のとき）</li>
+                        <li><input type="checkbox" id="objectInfoCheck">クリックで詳細を見る</li>
+                        <br>
                         <li><input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体
                         （左右の視野&lt;<input type="text" id="MessierFrom" size="1" value="40">°のとき）</li>
                         <li><input type="checkbox" id="choiceCheck" checked>その他、明るいNGC天体など
-                        （左右の視野&lt;<input type="text" id="choiceFrom" size="1" value="30">°のとき）</li>
+                        （左右の視野&lt;<input type="text" id="choiceFrom" size="1" value="40">°のとき）</li>
                         <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
-                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="30">°のとき）</li>
+                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="50">°のとき）</li>
+                        <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
                     </ul>
                 </div>
@@ -227,8 +230,8 @@
 
         <div id="objectInfo" class="objectInfo">
             <button id="closeObjectInfo" type="button" onclick="closeObjectInfo()">閉</button>
-            <p id="objectInfoName"></p>
-            <p id="objectInfoText"></p>
+            <div id="objectInfoName"></div>
+            <div id="objectInfoText"></div>
         </div>
         
         <div id="coordtext" class="coordtext"></div>

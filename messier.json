@@ -1,0 +1,1222 @@
+[
+    {
+        "name": "M1",
+        "alt_name": [
+            "かに星雲",
+            "NGC1952"
+        ],
+        "ra": "05 34.5",
+        "dec": "+22 1.0",
+        "vmag": "8.4",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M2",
+        "alt_name": [
+            "NGC7089"
+        ],
+        "ra": "21 33.5",
+        "dec": "-00 49.0",
+        "vmag": "6.5",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M3",
+        "alt_name": [
+            "NGC5272"
+        ],
+        "ra": "13 42.2",
+        "dec": "+28 23.0",
+        "vmag": "6.4",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M4",
+        "alt_name": [
+            "NGC6121"
+        ],
+        "ra": "16 23.6",
+        "dec": "-26 32.0",
+        "vmag": "5.9",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M5",
+        "alt_name": [
+            "NGC5904"
+        ],
+        "ra": "15 18.6",
+        "dec": "+02 5.0",
+        "vmag": "5.8",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M6",
+        "alt_name": [
+            "NGC6405"
+        ],
+        "ra": "17 40.1",
+        "dec": "-32 13.0",
+        "vmag": "4.2",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M7",
+        "alt_name": [
+            "NGC6475"
+        ],
+        "ra": "17 53.9",
+        "dec": "-34 49.0",
+        "vmag": "3.3",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M8",
+        "alt_name": [
+            "NGC6523"
+        ],
+        "ra": "18 3.8",
+        "dec": "-24 23.0",
+        "vmag": "5.8",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M9",
+        "alt_name": [
+            "NGC6333"
+        ],
+        "ra": "17 19.2",
+        "dec": "-18 31.0",
+        "vmag": "7.9",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M10",
+        "alt_name": [
+            "NGC6254"
+        ],
+        "ra": "16 57.1",
+        "dec": "-04 6.0",
+        "vmag": "6.6",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M11",
+        "alt_name": [
+            "NGC6705"
+        ],
+        "ra": "18 51.1",
+        "dec": "-06 16.0",
+        "vmag": "5.8",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M12",
+        "alt_name": [
+            "NGC6218"
+        ],
+        "ra": "16 47.2",
+        "dec": "-01 57.0",
+        "vmag": "6.6",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M13",
+        "alt_name": [
+            "NGC6205"
+        ],
+        "ra": "16 41.7",
+        "dec": "+36 28.0",
+        "vmag": "5.9",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M14",
+        "alt_name": [
+            "NGC6402"
+        ],
+        "ra": "17 37.6",
+        "dec": "-03 15.0",
+        "vmag": "7.6",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M15",
+        "alt_name": [
+            "NGC7078"
+        ],
+        "ra": "21 30.0",
+        "dec": "+12 10.0",
+        "vmag": "6.4",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M16",
+        "alt_name": [
+            "NGC6611"
+        ],
+        "ra": "18 18.8",
+        "dec": "-13 47.0",
+        "vmag": "6.0",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M17",
+        "alt_name": [
+            "NGC6618"
+        ],
+        "ra": "18 20.8",
+        "dec": "-16 11.0",
+        "vmag": "7.0",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M18",
+        "alt_name": [
+            "NGC6613"
+        ],
+        "ra": "18 19.9",
+        "dec": "-17 8.0",
+        "vmag": "6.9",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M19",
+        "alt_name": [
+            "NGC6273"
+        ],
+        "ra": "17 2.6",
+        "dec": "-26 16.0",
+        "vmag": "7.2",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M20",
+        "alt_name": [
+            "NGC6514"
+        ],
+        "ra": "18 2.6",
+        "dec": "-23 2.0",
+        "vmag": "8.5",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M21",
+        "alt_name": [
+            "NGC6531"
+        ],
+        "ra": "18 4.6",
+        "dec": "-22 30.0",
+        "vmag": "5.9",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M22",
+        "alt_name": [
+            "NGC6656"
+        ],
+        "ra": "18 36.4",
+        "dec": "-23 54.0",
+        "vmag": "5.1",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M23",
+        "alt_name": [
+            "NGC6494"
+        ],
+        "ra": "17 56.8",
+        "dec": "-19 1.0",
+        "vmag": "5.5",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M24",
+        "alt_name": [
+            ""
+        ],
+        "ra": "18 16.9",
+        "dec": "-18 29.0",
+        "vmag": "4.5",
+        "class": "?",
+        "description": ""
+    },
+    {
+        "name": "M25",
+        "alt_name": [
+            "IC4725"
+        ],
+        "ra": "18 31.6",
+        "dec": "-19 15.0",
+        "vmag": "4.6",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M26",
+        "alt_name": [
+            "NGC6694"
+        ],
+        "ra": "18 45.2",
+        "dec": "-09 24.0",
+        "vmag": "8.0",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M27",
+        "alt_name": [
+            "あれい状星雲",
+            "NGC6853"
+        ],
+        "ra": "19 59.6",
+        "dec": "+22 43.0",
+        "vmag": "8.1",
+        "class": "Pl",
+        "description": ""
+    },
+    {
+        "name": "M28",
+        "alt_name": [
+            "NGC6626"
+        ],
+        "ra": "18 24.5",
+        "dec": "-24 52.0",
+        "vmag": "6.9",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M29",
+        "alt_name": [
+            "NGC6913"
+        ],
+        "ra": "20 23.9",
+        "dec": "+38 32.0",
+        "vmag": "6.6",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M30",
+        "alt_name": [
+            "NGC7099"
+        ],
+        "ra": "21 40.4",
+        "dec": "-23 11.0",
+        "vmag": "7.5",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M31",
+        "alt_name": [
+            "アンドロメダ銀河",
+            "NGC224"
+        ],
+        "ra": "00 42.7",
+        "dec": "+41 16.0",
+        "vmag": "3.4",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M32",
+        "alt_name": [
+            "NGC221"
+        ],
+        "ra": "00 42.7",
+        "dec": "+40 52.0",
+        "vmag": "8.2",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M33",
+        "alt_name": [
+            "NGC598"
+        ],
+        "ra": "01 33.9",
+        "dec": "+30 39.0",
+        "vmag": "5.7",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M34",
+        "alt_name": [
+            "NGC1039"
+        ],
+        "ra": "02 42.0",
+        "dec": "+42 47.0",
+        "vmag": "5.2",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M35",
+        "alt_name": [
+            "NGC2168"
+        ],
+        "ra": "06 8.9",
+        "dec": "+24 20.0",
+        "vmag": "5.1",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M36",
+        "alt_name": [
+            "NGC1960"
+        ],
+        "ra": "05 36.1",
+        "dec": "+34 8.0",
+        "vmag": "6.0",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M37",
+        "alt_name": [
+            "NGC2099"
+        ],
+        "ra": "05 52.4",
+        "dec": "+32 33.0",
+        "vmag": "5.6",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M38",
+        "alt_name": [
+            "NGC1912"
+        ],
+        "ra": "05 28.7",
+        "dec": "+35 50.0",
+        "vmag": "6.4",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M39",
+        "alt_name": [
+            "NGC7092"
+        ],
+        "ra": "21 32.2",
+        "dec": "+48 26.0",
+        "vmag": "4.6",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M40",
+        "alt_name": [
+            ""
+        ],
+        "ra": "12 22.4",
+        "dec": "+58 5.0",
+        "vmag": "8.0",
+        "class": "?",
+        "description": ""
+    },
+    {
+        "name": "M41",
+        "alt_name": [
+            "NGC2287"
+        ],
+        "ra": "06 47.0",
+        "dec": "-20 44.0",
+        "vmag": "4.5",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M42",
+        "alt_name": [
+            "オリオン大星雲",
+            "NGC1976"
+        ],
+        "ra": "05 35.4",
+        "dec": "-05 27.0",
+        "vmag": "4.0",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M43",
+        "alt_name": [
+            "NGC1982"
+        ],
+        "ra": "05 35.6",
+        "dec": "-05 16.0",
+        "vmag": "9.0",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M44",
+        "alt_name": [
+            "プレセペ星団",
+            "NGC2632"
+        ],
+        "ra": "08 40.1",
+        "dec": "+19 59.0",
+        "vmag": "3.1",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M45",
+        "alt_name": [
+            "すばる",
+            "プレアデス星団"
+        ],
+        "ra": "03 47.0",
+        "dec": "+24 7.0",
+        "vmag": "1.2",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M46",
+        "alt_name": [
+            "NGC2437"
+        ],
+        "ra": "07 41.8",
+        "dec": "-14 49.0",
+        "vmag": "6.1",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M47",
+        "alt_name": [
+            "NGC2422"
+        ],
+        "ra": "07 36.6",
+        "dec": "-14 30.0",
+        "vmag": "4.4",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M48",
+        "alt_name": [
+            "NGC2548"
+        ],
+        "ra": "08 13.8",
+        "dec": "-05 48.0",
+        "vmag": "5.8",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M49",
+        "alt_name": [
+            "NGC4472"
+        ],
+        "ra": "12 29.8",
+        "dec": "+08 0.0",
+        "vmag": "8.4",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M50",
+        "alt_name": [
+            "NGC2323"
+        ],
+        "ra": "07 3.2",
+        "dec": "-08 20.0",
+        "vmag": "5.9",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M51",
+        "alt_name": [
+            "子持ち銀河",
+            "こもち銀河",
+            "NGC5194-5"
+        ],
+        "ra": "13 29.9",
+        "dec": "+47 12.0",
+        "vmag": "8.1",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M52",
+        "alt_name": [
+            "NGC7654"
+        ],
+        "ra": "23 24.2",
+        "dec": "+61 35.0",
+        "vmag": "6.9",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M53",
+        "alt_name": [
+            "NGC5024"
+        ],
+        "ra": "13 12.9",
+        "dec": "+18 10.0",
+        "vmag": "7.7",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M54",
+        "alt_name": [
+            "NGC6715"
+        ],
+        "ra": "18 55.1",
+        "dec": "-30 29.0",
+        "vmag": "7.7",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M55",
+        "alt_name": [
+            "NGC6809"
+        ],
+        "ra": "19 40.0",
+        "dec": "-30 58.0",
+        "vmag": "7.0",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M56",
+        "alt_name": [
+            "NGC6779"
+        ],
+        "ra": "19 16.6",
+        "dec": "+30 11.0",
+        "vmag": "8.2",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M57",
+        "alt_name": [
+            "リング星雲",
+            "環状星雲",
+            "NGC6720"
+        ],
+        "ra": "18 53.6",
+        "dec": "+33 2.0",
+        "vmag": "9.0",
+        "class": "Pl",
+        "description": ""
+    },
+    {
+        "name": "M58",
+        "alt_name": [
+            "NGC4579"
+        ],
+        "ra": "12 37.7",
+        "dec": "+11 49.0",
+        "vmag": "9.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M59",
+        "alt_name": [
+            "NGC4621"
+        ],
+        "ra": "12 42.0",
+        "dec": "+11 39.0",
+        "vmag": "9.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M60",
+        "alt_name": [
+            "NGC4649"
+        ],
+        "ra": "12 43.7",
+        "dec": "+11 33.0",
+        "vmag": "8.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M61",
+        "alt_name": [
+            "NGC4303"
+        ],
+        "ra": "12 21.9",
+        "dec": "+04 28.0",
+        "vmag": "9.7",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M62",
+        "alt_name": [
+            "NGC6266"
+        ],
+        "ra": "17 1.2",
+        "dec": "-30 7.0",
+        "vmag": "6.6",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M63",
+        "alt_name": [
+            "NGC5055"
+        ],
+        "ra": "13 15.8",
+        "dec": "+42 2.0",
+        "vmag": "8.6",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M64",
+        "alt_name": [
+            "NGC4826"
+        ],
+        "ra": "12 56.7",
+        "dec": "+21 41.0",
+        "vmag": "8.5",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M65",
+        "alt_name": [
+            "NGC3623"
+        ],
+        "ra": "11 18.9",
+        "dec": "+13 5.0",
+        "vmag": "9.3",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M66",
+        "alt_name": [
+            "NGC3627"
+        ],
+        "ra": "11 20.2",
+        "dec": "+12 59.0",
+        "vmag": "9.0",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M67",
+        "alt_name": [
+            "NGC2682"
+        ],
+        "ra": "08 50.4",
+        "dec": "+11 49.0",
+        "vmag": "6.9",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M68",
+        "alt_name": [
+            "NGC4590"
+        ],
+        "ra": "12 39.5",
+        "dec": "-26 45.0",
+        "vmag": "8.2",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M69",
+        "alt_name": [
+            "NGC6637"
+        ],
+        "ra": "18 31.4",
+        "dec": "-32 21.0",
+        "vmag": "7.7",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M70",
+        "alt_name": [
+            "NGC6681"
+        ],
+        "ra": "18 43.2",
+        "dec": "-32 18.0",
+        "vmag": "8.1",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M71",
+        "alt_name": [
+            "NGC6838"
+        ],
+        "ra": "19 53.8",
+        "dec": "+18 47.0",
+        "vmag": "8.3",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M72",
+        "alt_name": [
+            "NGC6981"
+        ],
+        "ra": "20 53.5",
+        "dec": "-12 32.0",
+        "vmag": "9.4",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M73",
+        "alt_name": [
+            "NGC6994"
+        ],
+        "ra": "20 58.9",
+        "dec": "-12 38.0",
+        "vmag": "",
+        "class": "?",
+        "description": ""
+    },
+    {
+        "name": "M74",
+        "alt_name": [
+            "NGC628"
+        ],
+        "ra": "01 36.7",
+        "dec": "+15 47.0",
+        "vmag": "9.2",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M75",
+        "alt_name": [
+            "NGC6864"
+        ],
+        "ra": "20 6.1",
+        "dec": "-21 55.0",
+        "vmag": "8.6",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M76",
+        "alt_name": [
+            "NGC650-1"
+        ],
+        "ra": "01 42.4",
+        "dec": "+51 34.0",
+        "vmag": "11.5",
+        "class": "Pl",
+        "description": ""
+    },
+    {
+        "name": "M77",
+        "alt_name": [
+            "NGC1068"
+        ],
+        "ra": "02 42.7",
+        "dec": "-00 1.0",
+        "vmag": "8.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M78",
+        "alt_name": [
+            "NGC2068"
+        ],
+        "ra": "05 46.7",
+        "dec": "+00 3.0",
+        "vmag": "8.0",
+        "class": "Nb",
+        "description": ""
+    },
+    {
+        "name": "M79",
+        "alt_name": [
+            "NGC1904"
+        ],
+        "ra": "05 24.5",
+        "dec": "-24 33.0",
+        "vmag": "8.0",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M80",
+        "alt_name": [
+            "NGC6093"
+        ],
+        "ra": "16 17.0",
+        "dec": "-22 59.0",
+        "vmag": "7.2",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M81",
+        "alt_name": [
+            "NGC3031"
+        ],
+        "ra": "09 55.6",
+        "dec": "+69 4.0",
+        "vmag": "6.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M82",
+        "alt_name": [
+            "NGC3034"
+        ],
+        "ra": "09 55.8",
+        "dec": "+69 41.0",
+        "vmag": "8.4",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M83",
+        "alt_name": [
+            "NGC5236"
+        ],
+        "ra": "13 37.0",
+        "dec": "-29 52.0",
+        "vmag": "7.6",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M84",
+        "alt_name": [
+            "NGC4374"
+        ],
+        "ra": "12 25.1",
+        "dec": "+12 53.0",
+        "vmag": "9.3",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M85",
+        "alt_name": [
+            "NGC4382"
+        ],
+        "ra": "12 25.4",
+        "dec": "+18 11.0",
+        "vmag": "9.2",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M86",
+        "alt_name": [
+            "NGC4406"
+        ],
+        "ra": "12 26.2",
+        "dec": "+12 57.0",
+        "vmag": "9.2",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M87",
+        "alt_name": [
+            "NGC4486"
+        ],
+        "ra": "12 30.8",
+        "dec": "+12 24.0",
+        "vmag": "8.6",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M88",
+        "alt_name": [
+            "NGC4501"
+        ],
+        "ra": "12 32.0",
+        "dec": "+14 25.0",
+        "vmag": "9.5",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M89",
+        "alt_name": [
+            "NGC4552"
+        ],
+        "ra": "12 35.7",
+        "dec": "+12 33.0",
+        "vmag": "9.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M90",
+        "alt_name": [
+            "NGC4569"
+        ],
+        "ra": "12 36.8",
+        "dec": "+13 10.0",
+        "vmag": "9.5",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M91",
+        "alt_name": [
+            "NGC4548"
+        ],
+        "ra": "12 35.4",
+        "dec": "+14 30.0",
+        "vmag": "10.2",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M92",
+        "alt_name": [
+            "NGC6341"
+        ],
+        "ra": "17 17.1",
+        "dec": "+43 8.0",
+        "vmag": "6.5",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M93",
+        "alt_name": [
+            "NGC2447"
+        ],
+        "ra": "07 44.6",
+        "dec": "-23 52.0",
+        "vmag": "6.2",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M94",
+        "alt_name": [
+            "NGC4736"
+        ],
+        "ra": "12 50.9",
+        "dec": "+41 7.0",
+        "vmag": "8.1",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M95",
+        "alt_name": [
+            "NGC3351"
+        ],
+        "ra": "10 44.0",
+        "dec": "+11 42.0",
+        "vmag": "9.7",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M96",
+        "alt_name": [
+            "NGC3368"
+        ],
+        "ra": "10 46.8",
+        "dec": "+11 49.0",
+        "vmag": "9.2",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M97",
+        "alt_name": [
+            "NGC3587"
+        ],
+        "ra": "11 14.8",
+        "dec": "+55 1.0",
+        "vmag": "11.2",
+        "class": "Pl",
+        "description": ""
+    },
+    {
+        "name": "M98",
+        "alt_name": [
+            "NGC4192"
+        ],
+        "ra": "12 13.8",
+        "dec": "+14 54.0",
+        "vmag": "10.1",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M99",
+        "alt_name": [
+            "NGC4254"
+        ],
+        "ra": "12 18.8",
+        "dec": "+14 25.0",
+        "vmag": "9.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M100",
+        "alt_name": [
+            "NGC4321"
+        ],
+        "ra": "12 22.9",
+        "dec": "+15 49.0",
+        "vmag": "9.4",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M101",
+        "alt_name": [
+            "NGC5457"
+        ],
+        "ra": "14 3.2",
+        "dec": "+54 21.0",
+        "vmag": "7.7",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "",
+        "alt_name": [
+            ""
+        ],
+        "ra": "",
+        "dec": "",
+        "vmag": "",
+        "class": "",
+        "description": ""
+    },
+    {
+        "name": "M103",
+        "alt_name": [
+            "NGC581"
+        ],
+        "ra": "01 33.2",
+        "dec": "+60 42.0",
+        "vmag": "7.4",
+        "class": "OC",
+        "description": ""
+    },
+    {
+        "name": "M104",
+        "alt_name": [
+            "NGC4594"
+        ],
+        "ra": "12 40.0",
+        "dec": "-11 37.0",
+        "vmag": "8.3",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M105",
+        "alt_name": [
+            "NGC3379"
+        ],
+        "ra": "10 47.8",
+        "dec": "+12 35.0",
+        "vmag": "9.3",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M106",
+        "alt_name": [
+            "NGC4258"
+        ],
+        "ra": "12 19.0",
+        "dec": "+47 18.0",
+        "vmag": "8.3",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M107",
+        "alt_name": [
+            "NGC6171"
+        ],
+        "ra": "16 32.5",
+        "dec": "-13 3.0",
+        "vmag": "8.1",
+        "class": "Gb",
+        "description": ""
+    },
+    {
+        "name": "M108",
+        "alt_name": [
+            "NGC3556"
+        ],
+        "ra": "11 11.5",
+        "dec": "+55 40.0",
+        "vmag": "10.0",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M109",
+        "alt_name": [
+            "NGC3992"
+        ],
+        "ra": "11 57.6",
+        "dec": "+53 23.0",
+        "vmag": "9.8",
+        "class": "Gx",
+        "description": ""
+    },
+    {
+        "name": "M110",
+        "alt_name": [
+            "NGC205"
+        ],
+        "ra": "00 40.4",
+        "dec": "+41 41.0",
+        "vmag": "8.0",
+        "class": "Gx",
+        "description": ""
+    }
+]

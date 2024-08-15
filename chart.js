@@ -26,6 +26,7 @@ document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
+document.getElementById('objectInfo').style.visibility = "hidden";
 
 document.getElementById('darkerbtntext').innerHTML = 'dark';
 
@@ -445,7 +446,24 @@ function closeObjectInfo() {
 }
 
 function showObjectInfo(scrRA, scrDec) {
-    1;
+    if (!document.getElementById('objectInfoCheck').value) {
+        return;
+    }
+    let nearest = null;
+    let nearestDistance = 180;
+    for (i=0; i<infoList.length; i++) {
+        let distance = Math.sqrt(Math.pow(scrRA - infoList[i][1], 2) + Math.pow(scrDec - infoList[i][2], 2));
+        if (distance < nearestDistance && distance < Math.min(rgEW, rgNS) / 4) {
+            nearest = infoList[i];
+            console.log(nearest)
+        }
+    }
+    if (nearest != null) {
+        console.log(nearest)
+        document.getElementById('objectInfo').style.visibility = 'visible';
+        document.getElementById('objectInfoName').innerHTML = nearest[0]
+        document.getElementById('objectInfoText').innerHTML = `No data`
+    }
 }
 
 let intervalId = null;
@@ -816,6 +834,7 @@ function onmousemove(e) {
 }
 
 function onmouseup(e){
+    canvas.removeEventListener("mousemove", onmousemove);
     if (dragFrag) {
         url.searchParams.set('RA', cenRA.toFixed(2));
         url.searchParams.set('Dec', cenDec.toFixed(2));
@@ -824,6 +843,11 @@ function onmouseup(e){
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
         canvas.removeEventListener("mousemove", onmousemove);
+    } else {
+        console.log('clicked')
+        var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+        var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+        showObjectInfo(scrRA, scrDec);
     }
 }
 
@@ -1520,26 +1544,22 @@ function show_main(){
         if (mode == 'AEP') {
             [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
             if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag), c);
+                drawFilledCircle(...coordSH(scrRA, scrDec), size(mag), c);
             }
         } else if (mode == 'EtP') {
             if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                [x, y] = coord(RA, Dec);
-                drawFilledCircle(x, y, size(mag), c);
+                drawFilledCircle(...coord(RA, Dec), size(mag), c);
             }
         } else if (mode == 'view') {
             var [scrRA, scrDec] = RADec2scrview(RA, Dec, theta);
             if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag), c);
+                drawFilledCircle(...coordSH(scrRA, scrDec), size(mag), c);
             }
         } else if (mode == 'live') {
             var [A, h] = RADec2Ah(RA, Dec, theta);
             [scrRA, scrDec] = Ah2scrlive(A, h);
             if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag), c);
+                drawFilledCircle(...coordSH(scrRA, scrDec), size(mag), c);
             }
         }
     }
@@ -1557,20 +1577,20 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName, scrRA, scrDec]);
+                    infoList.push([constName + '座', scrRA, scrDec]);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     [x, y] = coord(RA, Dec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName, scrRA, scrDec]);
+                    infoList.push([constName + '座', scrRA, scrDec]);
                 }
             } else if (mode == 'view') {
                 [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName, scrRA, scrDec]);
+                    infoList.push([constName + '座', scrRA, scrDec]);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -1578,7 +1598,7 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName, scrRA, scrDec]);
+                    infoList.push([constName + '座', scrRA, scrDec]);
                 }
             }
         }
