@@ -261,6 +261,7 @@ var Declist = new Array(20);
 var Distlist = new Array(20);
 var Vlist = new Array(20);
 var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
+let infoList = []; //[[name, scrRA, scrDec], [,,], ...]
 
 var extra = [];
 
@@ -426,6 +427,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         button.textContent = suggestions[0][i];
         button.addEventListener('click', function() {
             link(suggestions[1][i]);
+            document.getElementById('searchInput').value = '';
             closeSearch();
         });
         document.getElementById('suggestionButtonContainer').appendChild(button);
@@ -436,6 +438,14 @@ function hiraganaToKatakana(str) {
     return str.replace(/[\u3041-\u309F]/g, function(char) {
         return String.fromCharCode(char.charCodeAt(0) + 0x60);
     });
+}
+
+function closeObjectInfo() {
+    document.getElementById('objectInfo').style.visibility = 'hidden';
+}
+
+function showObjectInfo(scrRA, scrDec) {
+    1;
 }
 
 let intervalId = null;
@@ -626,6 +636,7 @@ var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
 var pinchFrag = 0;
+let dragFrag = false;
 
 canvas.addEventListener("touchstart", ontouchstart);
 canvas.addEventListener("touchmove", ontouchmove);
@@ -639,6 +650,7 @@ canvas.addEventListener('wheel', onwheel);
 function ontouchstart(e) {
     e.preventDefault();
     pinchFrag = 0;
+    dragFrag = false;
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
 };
@@ -646,6 +658,7 @@ function ontouchstart(e) {
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
     e.preventDefault();
+    dragFrag = true;
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
         if (pinchFrag == 0) {
@@ -733,31 +746,41 @@ function ontouchmove(e) {
 }
 
 function ontouchend(e) {
-    baseDistance = 0;
-    url.searchParams.set('RA', cenRA.toFixed(2));
-    url.searchParams.set('Dec', cenDec.toFixed(2));
-    url.searchParams.set('azm', cenAzm.toFixed(2));
-    url.searchParams.set('alt', cenAlt.toFixed(2));
-    url.searchParams.set('area', (2*rgEW).toFixed(2));
-    history.replaceState('', '', url.href);
+    if (dragFrag) {
+        baseDistance = 0;
+        url.searchParams.set('RA', cenRA.toFixed(2));
+        url.searchParams.set('Dec', cenDec.toFixed(2));
+        url.searchParams.set('azm', cenAzm.toFixed(2));
+        url.searchParams.set('alt', cenAlt.toFixed(2));
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
+        history.replaceState('', '', url.href);
+    } else {
+        var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+        var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+        showObjectInfo(scrRA, scrDec);
+    }
 };
 
 function ontouchcancel(e) {
-    url.searchParams.set('RA', cenRA.toFixed(2));
-    url.searchParams.set('Dec', cenDec.toFixed(2));
-    url.searchParams.set('azm', cenAzm.toFixed(2));
-    url.searchParams.set('alt', cenAlt.toFixed(2));
-    url.searchParams.set('area', (2*rgEW).toFixed(2));
-    baseDistance = 0;
+    if (dragFrag) {
+        url.searchParams.set('RA', cenRA.toFixed(2));
+        url.searchParams.set('Dec', cenDec.toFixed(2));
+        url.searchParams.set('azm', cenAzm.toFixed(2));
+        url.searchParams.set('alt', cenAlt.toFixed(2));
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
+        baseDistance = 0;
+    }
 };
 
 function onmousedown(e){
+    dragFrag = false;
     startX = e.pageX;
     startY = e.pageY;
     canvas.addEventListener("mousemove", onmousemove);
 }
 
 function onmousemove(e) {
+    dragFrag = true;
     moveX = e.pageX;
     moveY = e.pageY;
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
@@ -793,13 +816,15 @@ function onmousemove(e) {
 }
 
 function onmouseup(e){
-    url.searchParams.set('RA', cenRA.toFixed(2));
-    url.searchParams.set('Dec', cenDec.toFixed(2));
-    url.searchParams.set('azm', cenAzm.toFixed(2));
-    url.searchParams.set('alt', cenAlt.toFixed(2));
-    url.searchParams.set('area', (2*rgEW).toFixed(2));
-    history.replaceState('', '', url.href);
-    canvas.removeEventListener("mousemove", onmousemove);
+    if (dragFrag) {
+        url.searchParams.set('RA', cenRA.toFixed(2));
+        url.searchParams.set('Dec', cenDec.toFixed(2));
+        url.searchParams.set('azm', cenAzm.toFixed(2));
+        url.searchParams.set('alt', cenAlt.toFixed(2));
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
+        history.replaceState('', '', url.href);
+        canvas.removeEventListener("mousemove", onmousemove);
+    }
 }
 
 function onwheel(event) {
@@ -1191,6 +1216,7 @@ function show_main(){
     
     const pi = Math.PI;
     var x, y, scrRA, scrDec;
+    infoList = [];
 
     var JD = showingJD;
     
@@ -1424,12 +1450,16 @@ function show_main(){
             if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
                 var [A1, h1] = SHtoAh(rgEW, -rgNS);
                 var [A2, h2] = SHtoAh(-rgEW, -rgNS);
-                var minDec = Math.min(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
+                var [A3, h3] = SHtoAh(rgEW, rgNS);
+                var [A4, h4] = SHtoAh(-rgEW, rgNS);
+                var minDec = Math.min(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1], Ah2RADec(A3, h3, theta)[1], Ah2RADec(A4, h4, theta)[1]);
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
             } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
-                var [A1, h1] = SHtoAh(rgEW, rgNS);
-                var [A2, h2] = SHtoAh(-rgEW, rgNS);
-                var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
+                var [A1, h1] = SHtoAh(rgEW, -rgNS);
+                var [A2, h2] = SHtoAh(-rgEW, -rgNS);
+                var [A3, h3] = SHtoAh(rgEW, rgNS);
+                var [A4, h4] = SHtoAh(-rgEW, rgNS);
+                var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1], Ah2RADec(A3, h3, theta)[1], Ah2RADec(A4, h4, theta)[1]);
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else {
                 var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
@@ -1527,17 +1557,20 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
+                    infoList.push([constName, scrRA, scrDec]);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     [x, y] = coord(RA, Dec);
                     ctx.fillText(constName, x-40, y-10);
+                    infoList.push([constName, scrRA, scrDec]);
                 }
             } else if (mode == 'view') {
                 [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
+                    infoList.push([constName, scrRA, scrDec]);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -1545,6 +1578,7 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
+                    infoList.push([constName, scrRA, scrDec]);
                 }
             }
         }
@@ -1634,17 +1668,20 @@ function show_main(){
                 drawFilledCircle(x, y, r, yellowColor);
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                infoList.push([JPNplanets[i], scrRA, scrDec]);
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
                     var r = DrawMoon();
                     ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                    infoList.push(['月', scrRA, scrDec]);
                 }
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
                 drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x, y);
+                infoList.push([JPNplanets[i], scrRA, scrDec]);
             }
         }
     }
@@ -2179,17 +2216,20 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
+                    infoList.push([name, scrRA, scrDec]);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     var [x, y] = coord(RA, Dec);
                     DrawObjects(name, x, y, type);
+                    infoList.push([name, scrRA, scrDec]);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
+                    infoList.push([name, scrRA, scrDec]);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -2197,6 +2237,7 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
+                    infoList.push([name, scrRA, scrDec]);
                 }
             }
         }
@@ -2216,17 +2257,20 @@ function show_main(){
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
+                        infoList.push([name, scrRA, scrDec]);
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
                         var [x, y] = coord(RA, Dec);
                         DrawObjects(name, x, y, type);
+                        infoList.push([name, scrRA, scrDec]);
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
+                        infoList.push([name, scrRA, scrDec]);
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -2234,6 +2278,7 @@ function show_main(){
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
+                        infoList.push([name, scrRA, scrDec]);
                     }
                 }
             }

@@ -87,17 +87,20 @@ function loadFile(filename, func, go) {
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
+var HIPbvary = Array(1);
 loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
 function xhrHIP(data) {
     const DataAry = data.split(',');
-    var num_of_stars = DataAry.length / 3;
+    var num_of_stars = DataAry.length / 4;
     HIPRAary = Array(num_of_stars);
     HIPDecary = Array(num_of_stars);
     HIPmagary = Array(num_of_stars);
+    HIPbvary = Array(num_of_stars);
     for (i=0; i<num_of_stars; i++){
-        HIPRAary[i] = parseFloat(DataAry[3*i]);
-        HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-        HIPmagary[i] = parseFloat(DataAry[3*i+2]);
+        HIPRAary[i] = parseFloat(DataAry[4*i]);
+        HIPDecary[i] = parseFloat(DataAry[4*i+1]);
+        HIPmagary[i] = parseFloat(DataAry[4*i+2]);
+        HIPbvary[i] = DataAry[4*i+3];
     }
 }
 
@@ -228,6 +231,8 @@ function YMDH_to_JD(Y, M, D, H){
     return JD;
 }*/
 
+var logs, temp;
+
 chartLinkElement = document.getElementById('chart');
 
 function showAnswer() {
@@ -273,14 +278,14 @@ function showNext() {
     canvas.removeEventListener('touchcancel', ontouchcancel);
     canvas.removeEventListener('mousedown', onmousedown);
     canvas.removeEventListener('mousemove', onmousemove);
-    canvas.removeEventListener('wheel', onwheel);
+    canvas.removeEventListener('mouseup', onmouseup);
     canvas.removeEventListener('wheel', onwheel);
 
     canvas.addEventListener('mousedown', startPoint, false);
-    canvas.addEventListener('mousemove', movePoint, false);
+    //canvas.addEventListener('mousemove', movePoint, false);
     canvas.addEventListener('mouseup', endPoint, false);
     canvas.addEventListener('touchstart', startPoint, false);
-    canvas.addEventListener('touchmove', movePoint, false);
+    //canvas.addEventListener('touchmove', movePoint, false);
     canvas.addEventListener('touchend', endPoint, false);
 
     document.getElementById('drawBtn').style.visibility = "visible";
@@ -290,6 +295,7 @@ function showNext() {
     chartLinkElement.href = '';
     chartLinkElement.textContent = ''
 
+    initLocalStorage();
     show_main();
 }
 
@@ -470,11 +476,11 @@ window.onload = initLocalStorage();
  
 // PC対応
 canvas.addEventListener('mousedown', startPoint, false);
-canvas.addEventListener('mousemove', movePoint, false);
+//canvas.addEventListener('mousemove', movePoint, false);
 canvas.addEventListener('mouseup', endPoint, false);
 // スマホ対応
 canvas.addEventListener('touchstart', startPoint, false);
-canvas.addEventListener('touchmove', movePoint, false);
+//canvas.addEventListener('touchmove', movePoint, false);
 canvas.addEventListener('touchend', endPoint, false);
  
 function startPoint(e){
@@ -487,24 +493,29 @@ function startPoint(e){
         Xpoint = e.touches[0].pageX - canvas.offsetLeft;
         Ypoint = e.touches[0].pageY - canvas.offsetTop;
     }
-    ctx.moveTo(Xpoint, Ypoint);
+    ctx.lineTo(Xpoint, Ypoint);
+    canvas.addEventListener('mousemove', movePoint, false);
+    canvas.addEventListener('touchmove', movePoint, false);
 }
  
 function movePoint(e){
-    if(e.buttons === 1 || e.witch === 1 || e.type == 'touchmove'){
-        if (e.pageX) {
-            Xpoint = e.pageX - canvas.offsetLeft;
-            Ypoint = e.pageY - canvas.offsetTop;
-        } else {
-            Xpoint = e.touches[0].pageX - canvas.offsetLeft;
-            Ypoint = e.touches[0].pageY - canvas.offsetTop;
+    if (e.pageX) {
+        Xpoint = e.pageX - canvas.offsetLeft;
+        Ypoint = e.pageY - canvas.offsetTop;
+    } else {
+        Xpoint = e.touches[0].pageX - canvas.offsetLeft;
+        Ypoint = e.touches[0].pageY - canvas.offsetTop;
+    }
+    if (0 <= Xpoint && Xpoint <= canvas.width && 0 <= Ypoint && Ypoint <= canvas.height) {
+        if (moveflg === 0) {
+            moveflg = 1;
+            ctx.lineTo(Xpoint, Ypoint);
+            ctx.lineCap = "round";
+            ctx.lineWidth = defSize * 2;
+            ctx.strokeStyle = defColor;
+            ctx.stroke();
         }
-        moveflg = 1;
-        ctx.lineTo(Xpoint, Ypoint);
-        ctx.lineCap = "round";
-        ctx.lineWidth = defSize * 2;
-        ctx.strokeStyle = defColor;
-        ctx.stroke();
+        moveflg = 0;
     }
 }
  
@@ -518,6 +529,8 @@ function endPoint(e) {
     }
     moveflg = 0;
     setLocalStoreage();
+    canvas.removeEventListener('mousemove', movePoint, false);
+    canvas.removeEventListener('touchmove', movePoint, false);
 }
  
 function clearCanvas(){
@@ -530,25 +543,30 @@ function clearCanvas(){
  
 function initLocalStorage(){
     myStorage.setItem("__log", JSON.stringify([]));
+    temp = [];
 }
+
 function setLocalStoreage(){
     var png = canvas.toDataURL();
-    var logs = JSON.parse(myStorage.getItem("__log"));
+    logs = JSON.parse(myStorage.getItem("__log"));
  
     setTimeout(function(){
         logs.unshift({png:png});
         myStorage.setItem("__log", JSON.stringify(logs));
-        temp = [];
+        //temp = [];
+        console.log(logs.length, temp.length);
     }, 0);
 }
  
 function prevCanvas(){
-    var logs = JSON.parse(myStorage.getItem("__log"));
+    logs = JSON.parse(myStorage.getItem("__log"));
+    console.log(logs.length);
     if(logs.length > 0){
-        if (temp.length == 0) {
+        /*if (temp.length == 0) {
             temp.unshift(logs.shift());
-        }
+        }*/
         temp.unshift(logs.shift());
+        console.log(logs.length, temp.length);
         //show_main();
         setTimeout(function(){
             myStorage.setItem("__log", JSON.stringify(logs));
@@ -559,7 +577,7 @@ function prevCanvas(){
         show_main();
     }
 }
- 
+
 function nextCanvas(){
     var logs = JSON.parse(myStorage.getItem("__log"));
     if(temp.length > 0){

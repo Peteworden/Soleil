@@ -39,16 +39,16 @@
                 </div>
 
                 <div class="mainSettingRows">
-                    <label><input type="text" id="yearText">年</label>
-                    <label><input type="text" id="monthText">月</label>
-                    <label><input type="text" id="dateText">日</label>
-                    <label><input type="text" id="hourText">時</label>
+                    <input type="datetime-local" id="dtl" name="dtl" value=""/>
+                    <label><input type="text" id="yearText">年<input type="text" id="monthText">月<input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">:<input type="text" id="minuteText"></label>
                     <script>
                         var ymdhm = new Date();
                         document.getElementById('yearText').value = ymdhm.getFullYear();
                         document.getElementById('monthText').value = ymdhm.getMonth() + 1;
                         document.getElementById('dateText').value = ymdhm.getDate();
-                        document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+                        document.getElementById('hourText').value = ymdhm.getHours();
+                        document.getElementById('minuteText').value = ymdhm.getMinutes();
                     </script>
                     <button type="button" onclick="now()">現在時刻</button>
                     <button type="button" onclick="show_JD_plus1()">１日進む</button>
@@ -96,7 +96,14 @@
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
                         <input type="radio" name="mode" value="live">ライブモード(beta)<input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
                     </div>
+                    <div>
+                        リアルタイム
+                        <input type="radio" name="realtime" value="off">オフ
+                        <input type="radio" name="realtime" value="radec">赤道座標固定
+                        <input type="radio" name="realtime" value="altazm" checked>高度方位固定
+                    </div>
                     <ul>
+                        <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
                         （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="50">°のとき）</li>
                         <li><input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体
@@ -112,6 +119,12 @@
         </div>
 
         <div>
+            <!--<button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
+                <img src="fullScreenBtn.png" alt="全画面表示">
+            </button>
+            <button id="exitFullScreenBtn" class="exitFullScreenBtn" type="button" onclick="exitFullScreenFunc()">
+                <img src="exitFullScreenBtn.png" alt="全画面表示終了">
+            </button>-->
             <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()">
                 <!--rgb(247, 206, 206) 48px-->
                 <img src="descriptionBtn.png" alt="説明">
@@ -122,6 +135,8 @@
             <p>
                 説明など<br>これを開いた右下のボタンで閉じる
             </p>
+
+            <button id="openSearch" type="button" onclick="openSearch()">検索</button>
 
             <p>---<a href="chartReadMe.html" target="_blank" rel="noopener">説明ページ（新しいタブ）</a>---</p>
 
@@ -135,10 +150,8 @@
                     <li>×：記載なしまたはその他</li>
                 </ul>
             </p>
-            <p>
-                表示させている状態をURLで共有できます<br>
-                下の少し色が違うところからその天体に飛べます
-            </p>
+            <p>表示させている状態をURLで共有できます</p>
+            <p>下の少し色が違うところからその天体に飛べます</p>
             <p>
                 双眼鏡向けの天体(上４つは暗いところなら肉眼でも見られる)
                 <ul>
@@ -204,11 +217,21 @@
                 </ul>
             </p>
         </div>
+
+        <div id="searchDiv" class="searchDiv">
+            <input type="text" id="searchInput" placeholder="ここに入力して検索">
+            <button id="closeSearch" type="button" onclick="closeSearch()">閉じる</button>
+            <div id="suggestionButtonContainer"></div>
+        </div>
         
         <div id="coordtext" class="coordtext"></div>
+
+        <div id="showingData" class="showingData"></div>
+        <div id="timeSliderDiv" class="timeSliderDiv">
+            <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+        </div>
+        
         <div class="result">
             <script src="chart_offline.js"></script>
         </div>
-
-        <div id="showingData" class="showingData"></div>
 </html>

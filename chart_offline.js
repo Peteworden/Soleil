@@ -13,10 +13,19 @@ var lineColor = 'red';
 var textColor = 'white';
 
 const pi = Math.PI;
+const yearTextElem = document.getElementById('yearText');
+const monthTextElem = document.getElementById('monthText');
+const dateTextElem = document.getElementById('dateText');
+const hourTextElem = document.getElementById('hourText');
+const minuteTextElem = document.getElementById('minuteText');
+const timeSliderElem = document.getElementById('timeSlider');
+let zuhoElem = document.getElementsByName('mode');
+const realtimeElem = document.getElementsByName('realtime');
 
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 //document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+document.getElementById('searchDiv').style.visibility = "hidden";
 
 document.getElementById('darkerbtntext').innerHTML = 'dark';
 
@@ -69,14 +78,14 @@ if (canvas.width < canvas.height) {
 const minrg = 0.3;
 const maxrg = 90;
 
-var rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+var rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
 
 var magLimtext;
 var magLimLim = 11;
 var magkey1=11.0, magkey2=1.8;//key1は10~13
 function find_magLim(a, b) {
     var magLim = Math.min(Math.max(a - b * Math.log(Math.min(rgEW, rgNS)), 5), magLimLim);
-    magLimtext = `~${Math.round(magLim * 10) / 10}等級`;
+    magLimtext = `~${magLim.toFixed(1)}等級`;
     return magLim;
 }
 var magLim = find_magLim(magkey1, magkey2);
@@ -198,7 +207,6 @@ function turnOnOffLiveMode (mode) {
     }
 }
 
-var zuhoElem = document.getElementsByName('mode');
 var mode;
 //AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き)
 
@@ -211,6 +219,7 @@ var defaultcheck = 0;
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
 var HIPmagary = Array(1);
+var HIPbvary = Array(1);
 var Tycho = [];
 var Help = [];
 var Tycho1011 = [];
@@ -269,7 +278,35 @@ function show_initial(){
 
 const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
+function linkExist(obj) {
+    let linkExist = false;
+    if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
+        for (i=0; i<messier.length/4; i++) {
+            if (messier[4*i] == obj) {
+                linkExist = true;
+            }
+        }
+    } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
+        for (i=0; i<NGC.length/5; i++) {
+            if (NGC[5*i] == obj) {
+                linkExist = true;
+            }
+        }
+    } else { //その他
+        for (var i=0; i<choice.length/4; i++) {
+            if (obj == choice[4*i]) {
+                linkExist = true;
+            }
+        }
+    }
+    return linkExist;
+}
+
 function link(obj) {
+    if (!obj) {
+        console.error('Invalid input:', obj);
+        return;
+    }
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
         for (i=0; i<messier.length/4; i++) {
             if (messier[4*i] == obj) {
@@ -277,7 +314,21 @@ function link(obj) {
                 cenDec = parseFloat(messier[4*i+2]);
             }
         }
-    } else { //その他
+    } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
+        for (i=0; i<NGC.length/5; i++) {
+            if (NGC[5*i] == obj) {
+                cenRA = parseFloat(NGC[5*i+1]);
+                cenDec = parseFloat(NGC[5*i+2]);
+            }
+        }
+    } else if (obj.slice(-1) == '座') {
+        for (i=0; i<89; i++){
+            if (obj == CLnames[i] + '座') {
+                cenRA = parseFloat(constPos[2*i]);
+                cenDec = parseFloat(constPos[2*i+1]);
+            }
+        }
+    } else {
         for (var i=0; i<choice.length/4; i++) {
             if (obj == choice[4*i]) {
                 cenRA = parseFloat(choice[4*i+1]);
@@ -288,32 +339,159 @@ function link(obj) {
     url.searchParams.set('RA', cenRA);
     url.searchParams.set('Dec', cenDec);
     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
     history.replaceState('', '', url.href);
     document.getElementById("settingBtn").removeAttribute("disabled");
     document.getElementById('description').style.visibility = "hidden";
     show_main();
 }
 
+function openSearch() {
+    document.getElementById('searchDiv').style.visibility = "visible";
+}
+
+function closeSearch() {
+    document.getElementById('searchDiv').style.visibility = "hidden";
+}
+
+document.getElementById('searchInput').addEventListener('input', function() {
+    let searchText = hiraganaToKatakana(document.getElementById('searchInput').value.toUpperCase());
+    let suggestions = [[], []];
+    let preSuggestions = [[], []];
+    if (searchText.length == 0) {
+        suggestions = [[], []];
+        preSuggestions = [[], []];
+    } else if (searchText.length == 1) {
+        if (isNaN(searchText) == false) {
+            if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+                suggestions[0].push(`M${searchText}`);
+                suggestions[1].push(`M${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 7840 && linkExist(`NGC${searchText}`)) {
+                suggestions[0].push(`NGC${searchText}`);
+                suggestions[1].push(`NGC${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 5386 && linkExist(`IC${searchText}`)) {
+                suggestions[0].push(`IC${searchText}`);
+                suggestions[1].push(`IC${searchText}`);
+            }
+        } else {
+            for (let constName of CLnames) {
+                if (constName.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
+                    suggestions[0].push(`${constName}座`);
+                    suggestions[1].push(`${constName}座`);
+                }
+            }
+        }
+    } else {
+        preSuggestions = suggestions;
+        suggestions = [[], []];
+        if (isNaN(searchText) == false) {
+            if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+                suggestions[0].push(`M${searchText}`);
+                suggestions[1].push(`M${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 7840 && linkExist(`NGC${searchText}`)) {
+                suggestions[0].push(`NGC${searchText}`);
+                suggestions[1].push(`NGC${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 5386 && linkExist(`IC${searchText}`)) {
+                suggestions[0].push(`IC${searchText}`);
+                suggestions[1].push(`IC${searchText}`);
+            }
+        } else if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) <= 110 && linkExist(searchText)) {
+            suggestions[0].push(searchText.toUpperCase());
+            suggestions[1].push(searchText.toUpperCase());
+        } else if (searchText.startsWith('NGC') && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
+            suggestions[0].push(searchText.toUpperCase());
+            suggestions[1].push(searchText.toUpperCase());
+        } else if (searchText.startsWith('IC') && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
+            suggestions[0].push(searchText.toUpperCase());
+            suggestions[1].push(searchText.toUpperCase());
+        } else {
+            for (let constName of CLnames) {
+                if ((hiraganaToKatakana(constName)+'座').includes(searchText)) {
+                    suggestions[0].push(`${constName}座`);
+                    suggestions[1].push(`${constName}座`);
+                }
+            }
+        }
+    }
+
+    document.getElementById('suggestionButtonContainer').innerHTML = ''
+    for (let i=0; i<suggestions[0].length; i++) {
+        const button = document.createElement('button');
+        button.className = 'suggestionButton';
+        button.textContent = suggestions[0][i];
+        button.addEventListener('click', function() {
+            link(suggestions[1][i]);
+            document.getElementById('searchInput').value = '';
+            closeSearch();
+        });
+        document.getElementById('suggestionButtonContainer').appendChild(button);
+    }
+});
+
+function hiraganaToKatakana(str) {
+    return str.replace(/[\u3041-\u309F]/g, function(char) {
+        return String.fromCharCode(char.charCodeAt(0) + 0x60);
+    });
+}
+
+let intervalId = null;
+
+let date = new Date();
+const localDate = new Date(date - date.getTimezoneOffset() * 60000);
+localDate.setSeconds(null);
+localDate.setMilliseconds(null);
+localDate.toISOString().slice(0, -1);
+document.getElementById("dtl").value = localDate.toISOString().slice(0, -1);
+document.getElementById("dtl").addEventListener("change", ondtlchange);
+function ondtlchange(event) {
+    let ymdhm = document.getElementById("dtl").value.split('T');
+    let ymd = ymdhm[0].split('-');
+    let hm = ymdhm[1].split(':');
+    setYMDHM(ymd[0], parseInt(ymd[1]).toString(), parseInt(ymd[2]).toString(), parseInt(hm[0]).toString(), parseFloat(hm[1]).toString());
+    realtimeOff();
+}
+
+yearTextElem.addEventListener('input', realtimeOff);
+monthTextElem.addEventListener('input', realtimeOff);
+dateTextElem.addEventListener('input', realtimeOff);
+hourTextElem.addEventListener('input', realtimeOff);
+minuteTextElem.addEventListener('input', realtimeOff);
+document.querySelectorAll('input[name="realtime"]').forEach(radio => {
+    radio.addEventListener('change', (event) => {
+        if (event.target.value != 'off') {
+            now();
+        }
+    });
+});
 function now() {
     var ymdhm = new Date();
-    var [y, m, d, h] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours()+Math.round(ymdhm.getMinutes()*10/60)/10];
-    setYMDH(y, m, d, h);
-    showingJD = YMDH_to_JD(y, m, d, h);
+    var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), ymdhm.getMinutes()];
+    setYMDHM(y, m, d, h, mi);
+    showingJD = YMDHM_to_JD(y, m, d, h, mi);
 }
 
-function setYMDH(y, m, d, h) {
-    document.getElementById('yearText').value = y;
-    document.getElementById('monthText').value = m;
-    document.getElementById('dateText').value = d;
-    document.getElementById('hourText').value = h;
+function setYMDHM(y, m, d, h, mi) {
+    yearTextElem.value = y;
+    monthTextElem.value = m;
+    dateTextElem.value = d;
+    hourTextElem.value = h;
+    if (mi == null) {
+        hourTextElem.value = Math.floor(h);
+        minuteTextElem.value = Math.round((h - Math.floor(h)) * 60);
+    } else {
+        minuteTextElem.value = mi;
+    }
 }
 
-//基本的にYMDHはJST, JDはTT
+//基本的にYMDHMはJST, JDはTT
 
-function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
-    var JD = JD + 0.375;
+function JD_to_YMDHM(JD) { //TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
+    var JD = JD + 0.375 - 0.0008 + 1/2880; //最後の項はhh:mm:30~hh:(mm+1):00をhh:(mm+1)にするため
     var A = Math.floor(JD + 68569.5);
     var B = Math.floor(A / 36524.25);
     var C = A - Math.floor(36524.25 * B + 0.75);
@@ -323,23 +501,23 @@ function JD_to_YMDH(JD) { //TT-->JST として変換　TT-->TTのときはJDに-
     var D = F - Math.floor(30.59 * G);
     var H = Math.floor(G / 11);
     var M = G - 12 * H + 2;
-    var Y = 100 * (B -49) + E + H;
-    var Hr = Math.round((JD + 0.5 - Math.floor(JD + 0.5)) * 240) / 10;
+    var Y = 100 * (B - 49) + E + H;
+    var Hr = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 24);
+    var Mi = Math.floor((JD + 0.5 - Math.floor(JD + 0.5)) * 1440 - Hr * 60);
     if (M == 12 && D == 32) {
         Y += 1;
         M = 1;
         D = 1;
     }
-
-    return [Y, M, D, Hr];
+    return [Y, M, D, Hr, Mi];
 }
 
-function YMDH_to_JD(Y, M, D, H){
+function YMDHM_to_JD(Y, M, D, H, Mi){
     if (M <= 2) {
         M += 12;
         Y--;
     }
-    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + 1721088.5 + 0.0008 - 0.375;
+    var JD = Math.floor(365.25*Y) + Math.floor(Y/400) - Math.floor(Y/100) + Math.floor(30.59*(M-2)) + D + H/24 + Mi/1440 + 1721088.5 + 0.0008 - 0.375;
     return JD;
 }
 
@@ -421,15 +599,28 @@ function exitFullScreenFunc() {
 
 function show_JD_plus1(){
     showingJD += 1;
-    var [y, m, d, h] = JD_to_YMDH(showingJD);
-    setYMDH(y, m, d, h)
+    var [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
+    setYMDHM(y, m, d, h, mi);
+    realtimeOff();
 }
 
 function show_JD_minus1(){
     showingJD -= 1;
-    var [y, m, d, h] = JD_to_YMDH(showingJD);
-    setYMDH(y, m, d, h)
+    var [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
+    setYMDHM(y, m, d, h, mi);
+    realtimeOff();
 }
+
+let timeSliderValue = 0;
+timeSliderElem.addEventListener('input', function(){
+    showingJD += (timeSliderElem.value - timeSliderValue) / 1440;
+    timeSliderValue = timeSliderElem.value;                                                                                                               
+    let [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
+    setYMDHM(y, m, d, h, mi);
+    realtimeOff();
+    calculation(showingJD);
+    show_main();
+});
 
 var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50); // distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
@@ -529,7 +720,7 @@ function ontouchmove(e) {
                     [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
                 }
-                rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+                rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
                 magLim = find_magLim(magkey1, magkey2);
                 zerosize = find_zerosize();
                 show_main();
@@ -544,20 +735,20 @@ function ontouchmove(e) {
 
 function ontouchend(e) {
     baseDistance = 0;
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
+    url.searchParams.set('area', (2*rgEW).toFixed(2));
     history.replaceState('', '', url.href);
 };
 
 function ontouchcancel(e) {
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
+    url.searchParams.set('area', (2*rgEW).toFixed(2));
     baseDistance = 0;
 };
 
@@ -603,11 +794,11 @@ function onmousemove(e) {
 }
 
 function onmouseup(e){
-    url.searchParams.set('RA', Math.round(cenRA*100)/100);
-    url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-    url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-    url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-    url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
+    url.searchParams.set('azm', cenAzm.toFixed(2));
+    url.searchParams.set('alt', cenAlt.toFixed(2));
+    url.searchParams.set('area', (2*rgEW).toFixed(2));
     history.replaceState('', '', url.href);
     canvas.removeEventListener("mousemove", onmousemove);
 }
@@ -642,17 +833,17 @@ function onwheel(event) {
             [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
         }
-        rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+        rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
         magLim = find_magLim(magkey1, magkey2);
         zerosize = find_zerosize();
         show_main();
         baseDistance = distance;
 
-        url.searchParams.set('RA', Math.round(cenRA*100)/100);
-        url.searchParams.set('Dec', Math.round(cenDec*100)/100);
-        url.searchParams.set('azm', Math.round(cenAzm*100)/100);
-        url.searchParams.set('alt', Math.round(cenAlt*100)/100);
-        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        url.searchParams.set('RA', cenRA.toFixed(2));
+        url.searchParams.set('Dec', cenDec.toFixed(2));
+        url.searchParams.set('azm', cenAzm.toFixed(2));
+        url.searchParams.set('alt', cenAlt.toFixed(2));
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
     }
 }
@@ -995,7 +1186,7 @@ function calculation(JD) {
 }
 
 function show_main(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width,canvas.height);
     ctx.fillStyle = '#001';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
@@ -1023,11 +1214,22 @@ function show_main(){
         var [A, h] = RADec2Ah(cenRA, cenDec, theta);
         const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
-        Astr = `方位角 ${Math.round(A*10)/10}°(${direc}) `;
-        hstr = `高度 ${Math.round(h*10)/10}° `;
+        Astr = `方位角 ${A.toFixed(1)}°(${direc}) `;
+        hstr = `高度 ${h.toFixed(1)}° `;
         if (moving) {
             hstr += ' wait...';
         }
+    }
+
+    if (document.getElementById('center').checked) {
+        ctx.beginPath();
+        ctx.strokeStyle = starColor;
+        const centerReticleSize = Math.min(canvas.width, canvas.height) / 20;
+        ctx.moveTo(canvas.width/2-centerReticleSize, canvas.height/2);
+        ctx.lineTo(canvas.width/2+centerReticleSize, canvas.height/2);
+        ctx.moveTo(canvas.width/2, canvas.height/2-centerReticleSize);
+        ctx.lineTo(canvas.width/2, canvas.height/2+centerReticleSize);
+        ctx.stroke();
     }
 
     //星座判定
@@ -1141,41 +1343,7 @@ function show_main(){
     }
     ctx.stroke();
 
-    //HIP
-    ctx.fillStyle = starColor;
-    for (i=0; i<HIPRAary.length; i++){
-        var RA = HIPRAary[i];
-        var Dec = HIPDecary[i];
-        var mag = HIPmagary[i];
-        if (mag > magLim) {
-            continue;
-        }
-        if (mode == 'AEP') {
-            [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag));
-            }
-        } else if (mode == 'EtP') {
-            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                [x, y] = coord(RA, Dec);
-                drawFilledCircle (x, y, size(mag));
-            }
-        } else if (mode == 'view') {
-            var [scrRA, scrDec] = RADec2scrview(RA, Dec, theta);
-            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag));
-            }
-        } else if (mode == 'live') {
-            var [A, h] = RADec2Ah(RA, Dec, theta);
-            [scrRA, scrDec] = Ah2scrlive(A, h);
-            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                [x, y] = coordSH(scrRA, scrDec);
-                drawFilledCircle(x, y, size(mag));
-            }
-        }
-    }
+    //drawMilkyWay();
 
     //Tycho
     if (mode == 'AEP') {
@@ -1257,58 +1425,43 @@ function show_main(){
             if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
                 var [A1, h1] = SHtoAh(rgEW, -rgNS);
                 var [A2, h2] = SHtoAh(-rgEW, -rgNS);
-                var minDec = Math.min(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
+                var [A3, h3] = SHtoAh(rgEW, rgNS);
+                var [A4, h4] = SHtoAh(-rgEW, rgNS);
+                var minDec = Math.min(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1], Ah2RADec(A3, h3, theta)[1], Ah2RADec(A4, h4, theta)[1]);
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
             } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
-                var [A1, h1] = SHtoAh(rgEW, rgNS);
-                var [A2, h2] = SHtoAh(-rgEW, rgNS);
-                var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1]);
+                var [A1, h1] = SHtoAh(rgEW, -rgNS);
+                var [A2, h2] = SHtoAh(-rgEW, -rgNS);
+                var [A3, h3] = SHtoAh(rgEW, rgNS);
+                var [A4, h4] = SHtoAh(-rgEW, rgNS);
+                var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1], Ah2RADec(A3, h3, theta)[1], Ah2RADec(A4, h4, theta)[1]);
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else {
-                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90, overCheck = false;
-                for (j=0; j<2; j++) {
-                    for (i=0; i<7; i++) {
-                        [A, h] = SHtoAh((2*j-1)*rgEW, rgNS*(1-i/3));
+                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
+                let edgeRA = [];
+                let edgeDec = [];
+                for (j=0; j<=Math.ceil(3*rgEW); j++) {
+                    for (i=0; i<=Math.ceil(3*rgNS); i++) {
+                        [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                         [RA, Dec] = Ah2RADec(A, h, theta);
-                        if (!overCheck) {
-                            if ((RA_max>300) && (RA<60)) {
-                                overCheck = true;
-                                RA_max = 0;
-                            } else if ((RA_min<60) && (RA>300)) {
-                                overCheck = true;
-                                RA_min = 360;
-                            }
-                        }
-                        if (overCheck) {
-                            if (cenRA > 300) {
-                                if (RA > 300) {
-                                    RA_max = Math.max(RA, RA_max);
-                                } else {
-                                    RA_min = Math.min(RA, RA_min);
-                                }
-                            } else if (cenRA < 60) {
-                                if (RA > 300) {
-                                    RA_min = Math.min(RA, RA_min);
-                                } else {
-                                    RA_max = Math.max(RA, RA_max);
-                                }
-                            }
-                        } else {
-                            RA_max = Math.max(RA, RA_max);
-                            RA_min = Math.min(RA, RA_min);
-                        }
-                        Dec_max = Math.max(Dec, Dec_max);
-                        Dec_min = Math.min(Dec, Dec_min);
+                        edgeRA.push(RA);
+                        edgeDec.push(Dec);
                     }
                 }
-                if (overCheck) {
-                    var skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
+                Dec_max = Math.max(...edgeDec);
+                Dec_min = Math.min(...edgeDec);
+                RA_max = Math.max(...edgeRA);
+                RA_min = Math.min(...edgeRA);
+                if (RA_max > 358 && RA_min < 2) {
+                    RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
+                    RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
+                    skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
                     for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else {
-                    var skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
+                    skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
                     for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     }
@@ -1328,13 +1481,49 @@ function show_main(){
             }
         }*/
     }
-    
+
+    //HIP
+    ctx.fillStyle = starColor;
+    for (i=0; i<HIPRAary.length; i++){
+        var RA = HIPRAary[i];
+        var Dec = HIPDecary[i];
+        var mag = HIPmagary[i];
+        let c = bv2color(HIPbvary[i]);
+        if (mag > magLim) {
+            continue;
+        }
+        if (mode == 'AEP') {
+            [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        } else if (mode == 'EtP') {
+            if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                [x, y] = coord(RA, Dec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        } else if (mode == 'view') {
+            var [scrRA, scrDec] = RADec2scrview(RA, Dec, theta);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        } else if (mode == 'live') {
+            var [A, h] = RADec2Ah(RA, Dec, theta);
+            [scrRA, scrDec] = Ah2scrlive(A, h);
+            if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                [x, y] = coordSH(scrRA, scrDec);
+                drawFilledCircle(x, y, size(mag), c);
+            }
+        }
+    }
 
     // 星座名
     ctx.font = '20px times new roman';
     if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
-        for (i=0; i<88; i++){
+        for (i=0; i<89; i++){
             var RA = 1.0 * constPos[2*i];
             var Dec = 1.0 * constPos[2*i+1];
             var constName = CLnames[i];
@@ -1447,8 +1636,7 @@ function show_main(){
         if (i != Obs_num && 0 < x < canvas.width && 0 < y < canvas.height) {
             if (i == 0){ // 太陽
                 var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
-                ctx.fillStyle = yellowColor;
-                drawFilledCircle(x, y, r);
+                drawFilledCircle(x, y, r, yellowColor);
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
             } else if (i == 9) { // 月(地球から見たときだけ)
@@ -1459,8 +1647,7 @@ function show_main(){
                 }
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
-                ctx.fillStyle = '#F33';
-                drawFilledCircle(x, y, Math.max(size(mag), 0.5));
+                drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x, y);
             }
@@ -1621,7 +1808,7 @@ function show_main(){
         ctx.stroke();
     }
 
-    var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10}m `;
+    var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${((cenRA-15*Math.floor(cenRA/15))*4).toFixed(1)}m `;
     if (cenDec >= 0) {
         var Dectext = `赤緯 +${Math.floor(cenDec)}° ${Math.round((cenDec-Math.floor(cenDec))*60)}' (J2000.0) `;
     } else {
@@ -1741,7 +1928,8 @@ function show_main(){
         ctx.lineTo(x2, y2);
     }
 
-    function drawFilledCircle (x, y, r) {
+    function drawFilledCircle (x, y, r, c=starColor) {
+        ctx.fillStyle = c;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, 2 * pi, false);
         ctx.fill();
@@ -1753,8 +1941,28 @@ function show_main(){
         } else {
             return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
-    }       
+    }
 
+    function bv2color(bv) {
+        let c;
+        if (bv == 'nodata') {
+            c = starColor;
+        } else {
+            bv = parseFloat(bv);
+            if (bv > 1.4) {
+                c = '#ff9999';
+            } else if (bv > 0.8) {
+                c = '#ffcc99';
+            } else if (bv > 0.6) {
+                c = '#ffffcc';
+            } else if (bv > 0) {
+                c = starColor;
+            } else if (bv > -0.33) {
+                c = '#ccffff';
+            }
+        }
+        return c;
+    }
     function DrawStars (skyareas) {
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
@@ -1830,6 +2038,87 @@ function show_main(){
                         var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle(x, y, size(mag));
                     }
+                }
+            }
+        }
+    }
+
+    function drawMilkyWay1() {
+        ctx.fillStyle = '#FFFFFF10';
+        let rdeg = 1.5; //radius
+        let r = canvas.width / rgEW / 2 * rdeg;
+        let imax = parseInt(Tycho1011.length / 3);
+        for (j=0; j<Help1011.length; j++) {
+            var st = parseInt(Help1011[j]);
+            var fi = parseInt(Help1011[j+1]);
+            if (fi - st < 20) {continue;}
+            for (i=st; i<st+1; i++) {
+                var RA = parseFloat(Tycho1011[3*(i-1)]);
+                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
+                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
+                if (mag < 10) {continue;}
+                if (mode == 'AEP') {
+                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                        var [x, y] = coordSH(scrRA, scrDec);
+                        drawFilledCircle (x, y, r);
+                    }
+                } else if (mode == 'EtP') {
+                    if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
+                        var [x, y] = coord(RA, Dec);
+                        drawFilledCircle (x, y, r);
+                    }
+                } else if (mode == 'view') {
+                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                        var [x, y] = coordSH(scrRA, scrDec);
+                        drawFilledCircle (x, y, r);
+                    }
+                } else if (mode == 'live') {
+                    var [A, h] = RADec2Ah(RA, Dec, theta);
+                    var [scrRA, scrDec] = Ah2scrlive(A, h);
+                    if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
+                        var [x, y] = coordSH(scrRA, scrDec);
+                        drawFilledCircle (x, y, r);
+                    }
+                }    
+            }
+        }
+    }
+
+    function drawMilkyWay() {
+        ctx.fillStyle = '#FFFFFF01';
+        let rdeg = 1.5; //radius
+        let r = canvas.width / rgEW / 2 * rdeg;
+        let imax = parseInt(Tycho1011.length / 3);
+        for (i=0; i<imax; i++) {
+            var RA = parseFloat(Tycho1011[3*i]);
+            var Dec = parseFloat(Tycho1011[3*i+1]);
+            var mag = parseFloat(Tycho1011[3*i+2]);
+            if (mag < 10) {continue;}
+            if (mode == 'AEP') {
+                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawFilledCircle (x, y, r);
+                }
+            } else if (mode == 'EtP') {
+                if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
+                    var [x, y] = coord(RA, Dec);
+                    drawFilledCircle (x, y, r);
+                }
+            } else if (mode == 'view') {
+                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawFilledCircle (x, y, r);
+                }
+            } else if (mode == 'live') {
+                var [A, h] = RADec2Ah(RA, Dec, theta);
+                var [scrRA, scrDec] = Ah2scrlive(A, h);
+                if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawFilledCircle (x, y, r);
                 }
             }
         }
@@ -2077,16 +2366,14 @@ function show_main(){
 
         ctx.beginPath();
         if (k < 0.5) {
-            ctx.fillStyle = yellowColor;
-            drawFilledCircle(x, y, r);
+            drawFilledCircle(x, y, r, yellowColor);
             ctx.fillStyle = '#333';
             ctx.beginPath();
             ctx.arc(x, y, r, P, P+pi);
             ctx.ellipse(x, y, r, r*(1-2*k), P-pi, 0, pi);
             ctx.fill();
         } else {
-            ctx.fillStyle = '#333';
-            drawFilledCircle(x, y, r);
+            drawFilledCircle(x, y, r, '#333');
             ctx.fillStyle = yellowColor;
             ctx.beginPath();
             ctx.arc(x, y, r, P-pi, P);
@@ -2178,11 +2465,6 @@ function Rz ([x, y, z], a) {
 
 //入力をもとにURLを修正し、観測地についての変数を設定し、showingDataを設定し、showingJDを計算する
 function newSetting() {
-    let year = parseInt(document.getElementById('yearText').value);
-    let month = parseInt(document.getElementById('monthText').value);
-    let date = parseInt(document.getElementById('dateText').value);
-    let hour = parseFloat(document.getElementById('hourText').value);
-
     ObsPlanet = document.getElementById("observer").value;
     Obs_num = JPNplanets.indexOf(ObsPlanet);
 
@@ -2243,15 +2525,110 @@ function newSetting() {
         lontext = document.getElementById('lon').value + "°W";
         url.searchParams.set('lon', -document.getElementById('lon').value);
     }
-        
-    url.searchParams.set('time', `${year}-${month}-${date}-${hour}`);
-    history.replaceState('', '', url.href);
 
-    document.getElementById('showingData').style.color = textColor;
-    document.getElementById('showingData').innerHTML = `${year}/${month}/${date} ${hour}時JST ${lattext} ${lontext}`;
+    setRealtime();
+    timeSliderElem.value = 0;
+    timeSliderValue = 0;
 
-    showingJD = YMDH_to_JD(year, month, date, hour);
+    //history.replaceState('', '', url.href);
+
     calculation(showingJD);
+}
+
+function setRealtime() {
+    var ymdhm = new Date();
+    document.getElementById('showingData').style.color = textColor;
+    if (realtimeElem[0].checked) {
+        timeSliderElem.style.visibility = 'visible';
+        let y = parseInt(yearTextElem.value);
+        let m = parseInt(monthTextElem.value);
+        let d = parseInt(dateTextElem.value);
+        let h = parseInt(hourTextElem.value);
+        let mi = parseFloat(minuteTextElem.value);
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        if (intervalId !== null) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    } else if (realtimeElem[1].checked) {
+        timeSliderElem.style.visibility = 'hidden';
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        if (intervalId !== null) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+        intervalId = setInterval(realtimeRadec, 500);
+        setYMDHM(y, m, d, h, mi);
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    } else if (realtimeElem[2].checked) {
+        timeSliderElem.style.visibility = 'hidden';
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        if (intervalId !== null) {
+            clearInterval(intervalId);
+            intervalId = null;
+        }
+        intervalId = setInterval(realtimeAzmalt, 500);
+        setYMDHM(y, m, d, h, mi);
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+    }
+    history.replaceState('', '', url.href);
+}
+
+function realtimeOff() {
+    realtimeElem[1].checked = false;
+    realtimeElem[2].checked = false;
+    realtimeElem[0].checked = true;
+    timeSliderElem.style.visibility = 'visible';
+    let y = parseInt(yearTextElem.value);
+    let m = parseInt(monthTextElem.value);
+    let d = parseInt(dateTextElem.value);
+    let h = parseInt(hourTextElem.value);
+    let mi = parseFloat(minuteTextElem.value);
+    document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+    showingJD = YMDHM_to_JD(y, m, d, h, mi);
+    if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+    }
+    url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+}
+
+function realtimeRadec() {
+    var ymdhm = new Date();
+    if (ymdhm.getSeconds() % 6 == 0 && ymdhm.getMilliseconds() < 500) {
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), (ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1)];
+        document.getElementById('showingData').style.color = textColor;
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+        history.replaceState('', '', url.href);
+        setYMDHM(y, m, d, h, mi);
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        calculation(showingJD);
+        [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
+        show_main();
+    }
+}
+
+function realtimeAzmalt() {
+    var ymdhm = new Date();
+    if (ymdhm.getSeconds() % 6 == 0 && ymdhm.getMilliseconds() < 500) {
+        var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), (ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1)];
+        document.getElementById('showingData').style.color = textColor;
+        document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
+        url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
+        history.replaceState('', '', url.href);
+        setYMDHM(y, m, d, h, mi);
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        calculation(showingJD);
+        [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
+        show_main();
+    }
 }
 
 function loadFiles() {
@@ -2286,14 +2663,16 @@ function loadFiles() {
     //HIP
     function xhrHIP(data) {
         const DataAry = data.split(',');
-        var num_of_stars = DataAry.length / 3;
+        var num_of_stars = DataAry.length / 4;
         HIPRAary = Array(num_of_stars);
         HIPDecary = Array(num_of_stars);
         HIPmagary = Array(num_of_stars);
+        HIPbvary = Array(num_of_stars);
         for (i=0; i<num_of_stars; i++){
-            HIPRAary[i] = parseFloat(DataAry[3*i]);
-            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
+            HIPRAary[i] = parseFloat(DataAry[4*i]);
+            HIPDecary[i] = parseFloat(DataAry[4*i+1]);
+            HIPmagary[i] = parseFloat(DataAry[4*i+2]);
+            HIPbvary[i] = DataAry[4*i+3];
         }
     }
 
@@ -2404,6 +2783,7 @@ function loadFiles() {
     }
 }
 
+
 function checkURL() {
     // キーを指定し、クエリパラメータを取得
     if (url.searchParams.has('RA')) {
@@ -2447,9 +2827,9 @@ function checkURL() {
     }
 
     if (url.searchParams.has('time')) {
-        var [y, m, d, h] = url.searchParams.get('time').split('-');
-        setYMDH(y, m, d, h);
-        showingJD = YMDH_to_JD(y, m, d, h);
+        var [y, m, d, h, mi] = url.searchParams.get('time').split('-');
+        setYMDHM(y, m, d, h, mi);
+        showingJD = YMDHM_to_JD(y, m, d, h, mi);
         defaultcheck++;
         show_initial();
     } else {
@@ -2484,7 +2864,7 @@ function checkURL() {
     if (url.searchParams.has('area')) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
-        rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+        rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
         if (mode == 'live') {
             magLimLim = 6.5;
         } else {
@@ -2495,7 +2875,7 @@ function checkURL() {
         defaultcheck++;
         show_initial();
     } else {
-        url.searchParams.set('area', Math.round(2*rgEW*100)/100);
+        url.searchParams.set('area', (2*rgEW).toFixed(2));
         defaultcheck++;
         show_initial();
     }
