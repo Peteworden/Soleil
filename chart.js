@@ -283,8 +283,8 @@ const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ"
 function linkExist(obj) {
     let linkExist = false;
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
-        for (i=0; i<messier.length/4; i++) {
-            if (messier[4*i] == obj) {
+        for (i=0; i<messier.length; i++) {
+            if (messier[i].name == obj) {
                 linkExist = true;
             }
         }
@@ -310,10 +310,10 @@ function link(obj) {
         return;
     }
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
-        for (i=0; i<messier.length/4; i++) {
-            if (messier[4*i] == obj) {
-                cenRA = parseFloat(messier[4*i+1]);
-                cenDec = parseFloat(messier[4*i+2]);
+        for (i=0; i<messier.length; i++) {
+            if (messier[i].name == obj) {
+                cenRA = rahm2deg(messier[i].ra);
+                cenDec = decdm2deg(messier[i].dec);
             }
         }
     } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
@@ -772,10 +772,12 @@ function ontouchend(e) {
         url.searchParams.set('alt', cenAlt.toFixed(2));
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
+        document.getElementById("coordtext").innerHTML = 'drag end';
     } else {
         var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
+        document.getElementById("coordtext").innerHTML = 'clicked';
     }
 };
 
@@ -1875,6 +1877,20 @@ function show_main(){
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
+    function rahm2deg(rahmtext) {
+        let rahm = rahmtext.split(' ').map(parseFloat);
+        return rahm[0] * 15 + rahm[1] / 4;
+    }
+
+    function decdm2deg(decdmtext) {
+        let decdm = decdmtext.split(' ').map(parseFloat);
+        let dec = Math.abs(decdm[0]) + decdm[1] / 60;
+        if (decdmtext[0] == '-') {
+            dec *= -1;
+        }
+        return dec;
+    }
+
     function RApos(RA) { //PythonでのadjustRA(RA)-piccenRAに相当
         return (RA + 540 - cenRA) % 360 - 180;
     }
@@ -2227,10 +2243,13 @@ function show_main(){
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<110; i++){
-            var name = messier[4*i];
-            var RA = parseFloat(messier[4*i+1]);
-            var Dec = parseFloat(messier[4*i+2]);
-            var type = messier[4*i+3];
+            var name = messier[i].name;
+            if (name == '') {
+                continue;
+            }
+            var RA = rahm2deg(messier[i].ra);
+            var Dec = decdm2deg(messier[i].dec);
+            var type = messier[i].class;
             if (mode == 'AEP') {
                 var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2774,6 +2793,33 @@ function loadFiles() {
     function xhrMessier(data) {
         messier = data.split(',');
     }
+
+    // JSONデータを取得する関数
+    function fetchMessierData() {
+        fetch('https://peteworden.github.io/Soleil/messier.json')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                //messier = response.json();
+                //console.log(messier.length, messier[0])
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);  // 取得したデータをコンソールに表示
+                messier = data;
+                console.log(messier.length, messier[0], messier[2].name)
+                /*data.forEach(item => {
+                    console.log(`Name: ${item.name}, RA: ${item.ra}, Dec: ${item.dec}`);
+                });*/
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+    }
+
+    fetchMessierData();
+
 
     // choice天体
     loadFile("choice_forJS", xhrChoice);
