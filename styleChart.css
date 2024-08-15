@@ -257,6 +257,33 @@ select {
     background-color: #45a049;
 }
 
+.objectInfo {
+    position: fixed;
+    background-color: #8b321c;
+    width: 80%;
+    height: 80%;
+    top: 10%;
+    left: 10%;
+    overflow: scroll;
+    text-align: center;
+    z-index: 3;
+}
+
+#closeObjectInfo {
+    position: absolute;
+    border: 0;
+    top: 10px;
+    right: 10px;
+    width: 60px;
+    height: 30px;
+    text-align: center;
+}
+
+#objectInfoName {
+    font-size: x-large;
+    font-weight: 300;
+}
+
 .fullScreenBtn {
     background-color: transparent;
     position: absolute;
