@@ -779,6 +779,7 @@ function ontouchend(e) {
         showObjectInfo(scrRA, scrDec);
         document.getElementById("coordtext").innerHTML = 'clicked';
     }
+    dragFrag = false;
 };
 
 function ontouchcancel(e) {
@@ -1327,10 +1328,8 @@ function show_main(){
             if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
                 if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
                     if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
-                        var [x1, y1] = coordSH(RA1_SH, Dec1_SH);
-                        var [x2, y2] = coordSH(RA2_SH, Dec2_SH);
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
+                        ctx.moveTo(...coordSH(RA1_SH, Dec1_SH));
+                        ctx.lineTo(...coordSH(RA2_SH, Dec2_SH));
                     }
                 }
             }
@@ -1368,25 +1367,19 @@ function show_main(){
             if (Math.min(RA1_view, RA2_view) < rgEW && Math.max(RA1_view, RA2_view) > -rgEW) {
                 if (Math.min(Dec1_view, Dec2_view) < rgNS && Math.max(Dec1_view, Dec2_view) > -rgNS) {
                     if (Math.pow(RA2_view-RA1_view, 2) + Math.pow(Dec2_view-Dec1_view, 2) < 30*30) {
-                        var [x1, y1] = coordSH(RA1_view, Dec1_view);
-                        var [x2, y2] = coordSH(RA2_view, Dec2_view);
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
+                        ctx.moveTo(...coordSH(RA1_view, Dec1_view));
+                        ctx.lineTo(...coordSH(RA2_view, Dec2_view));
                     }
                 }
             }
         } else if (mode == 'live') {
-            var [A1, h1] = RADec2Ah(RA1, Dec1, theta);
-            var [A2, h2] = RADec2Ah(RA2, Dec2, theta);
-            var [scrRA1, scrDec1] = Ah2scrlive(A1, h1);
-            var [scrRA2, scrDec2] = Ah2scrlive(A2, h2);
+            var [scrRA1, scrDec1] = Ah2scrlive(...RADec2Ah(RA1, Dec1, theta));
+            var [scrRA2, scrDec2] = Ah2scrlive(...RADec2Ah(RA2, Dec2, theta));
             if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
                 if (Math.min(scrDec1, scrDec2) < rgNS && Math.max(scrDec1, scrDec2) > -rgNS) {
                     if (Math.pow(scrRA2-scrRA1, 2) + Math.pow(scrDec2-scrDec1, 2) < 30*30) {
-                        var [x1, y1] = coordSH(scrRA1, scrDec1);
-                        var [x2, y2] = coordSH(scrRA2, scrDec2);
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
+                        ctx.moveTo(...coordSH(scrRA1, scrDec1));
+                        ctx.lineTo(...coordSH(scrRA2, scrDec2));
                     }
                 }
             }
@@ -1474,18 +1467,20 @@ function show_main(){
             var [scrRA_NP, scrDec_NP] = RADec2scrview(0, 90);
             var [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
             if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
-                var [A1, h1] = SHtoAh(rgEW, -rgNS);
-                var [A2, h2] = SHtoAh(-rgEW, -rgNS);
-                var [A3, h3] = SHtoAh(rgEW, rgNS);
-                var [A4, h4] = SHtoAh(-rgEW, rgNS);
-                var minDec = Math.min(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1], Ah2RADec(A3, h3, theta)[1], Ah2RADec(A4, h4, theta)[1]);
+                var minDec = Math.min(
+                    Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1], 
+                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1], 
+                    Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
+                );
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
             } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
-                var [A1, h1] = SHtoAh(rgEW, -rgNS);
-                var [A2, h2] = SHtoAh(-rgEW, -rgNS);
-                var [A3, h3] = SHtoAh(rgEW, rgNS);
-                var [A4, h4] = SHtoAh(-rgEW, rgNS);
-                var maxDec = Math.max(Ah2RADec(A1, h1, theta)[1], Ah2RADec(A2, h2, theta)[1], Ah2RADec(A3, h3, theta)[1], Ah2RADec(A4, h4, theta)[1]);
+                var maxDec = Math.max(
+                    Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
+                    Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
+                );
                 skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
             } else {
                 var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
@@ -1571,8 +1566,8 @@ function show_main(){
     if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
         for (i=0; i<89; i++){
-            var RA = 1.0 * constPos[2*i];
-            var Dec = 1.0 * constPos[2*i+1];
+            var RA = parseFloat(constPos[2*i]);
+            var Dec = parseFloat(constPos[2*i+1]);
             var constName = CLnames[i];
             if (mode == 'AEP') {
                 [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
@@ -1628,26 +1623,22 @@ function show_main(){
                 if (mode == 'AEP') {
                     [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        [x, y] = coordSH(scrRA, scrDec);
-                        DrawObjects(name, x, y, type);
+                        DrawObjects(name, ...coordSH(scrRA, scrDec), type);
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                        [x, y] = coord(RA, Dec);
-                        DrawObjects(name, x, y, type);
+                        DrawObjects(name, ...coord(RA, Dec), type);
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        [x, y] = coordSH(scrRA, scrDec);
-                        DrawObjects(name, x, y, type);
+                        DrawObjects(name, ...coordSH(scrRA, scrDec), type);
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        [x, y] = coordSH(scrRA, scrDec);
-                        DrawObjects(name, x, y, type);
+                        DrawObjects(name, ...coordSH(scrRA, scrDec), type);
                     }
                 }
             }
@@ -1671,17 +1662,13 @@ function show_main(){
 
     for (i=0; i<JPNplanets.length; i++){
         if (mode == 'AEP') {
-            [scrRA, scrDec] = RADec2scrAEP(RAlist[i], Declist[i]);
-            [x, y] = coordSH(scrRA, scrDec);
+            [x, y] = coordSH(...RADec2scrAEP(RAlist[i], Declist[i]));
         } else if (mode == 'EtP') {
             [x, y] = coord(RAlist[i], Declist[i]);
         } else if (mode == 'view') {
-            [scrRA, scrDec] = RADec2scrview(RAlist[i], Declist[i]);
-            [x, y] = coordSH(scrRA, scrDec);
+            [x, y] = coordSH(...RADec2scrview(RAlist[i], Declist[i]));
         } else if (mode == 'live') {
-            var [A, h] = RADec2Ah(RAlist[i], Declist[i], theta);
-            [scrRA, scrDec] = Ah2scrlive(A, h);
-            [x, y] = coordSH(scrRA, scrDec);
+            [x, y] = coordSH(...Ah2scrlive(...RADec2Ah(RAlist[i], Declist[i], theta)));
         }
         // 枠内に入っていて
         if (i != Obs_num && 0 < x < canvas.width && 0 < y < canvas.height) {
@@ -1734,8 +1721,7 @@ function show_main(){
 
         var A, h, scrRA0, scrDec0, scrRA1, scrDec1, drawnFrag=false;
         function drawAzmAltLine (A, h, scrRA0, scrDec0) {
-            [RA, Dec] = Ah2RADec(A, h, theta);
-            [scrRA1, scrDec1] = RADec2scrview(RA, Dec);
+            [scrRA1, scrDec1] = RADec2scrview(...Ah2RADec(A, h, theta));
             if (j>0 && ((Math.abs(scrRA0)<rgEW && Math.abs(scrDec0)<rgNS) || (Math.abs(scrRA1)<rgEW && Math.abs(scrDec1)<rgNS))) {
                 var [x1, y1] = coordSH(scrRA0, scrDec0);
                 var [x2, y2] = coordSH(scrRA1, scrDec1);
@@ -1990,10 +1976,8 @@ function show_main(){
     }
 
     function drawLines (RA1, Dec1, RA2, Dec2, a) {
-        var [x1, y1] = coord(RA1+a, Dec1);
-        var [x2, y2] = coord(RA2+a, Dec2);
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+        ctx.moveTo(...coord(RA1+a, Dec1));
+        ctx.lineTo(...coord(RA2+a, Dec2));
     }
 
     function drawFilledCircle (x, y, r, c=starColor) {
@@ -2013,7 +1997,9 @@ function show_main(){
 
     function bv2color(bv) {
         let c;
-        if (bv == 'nodata') {
+        if (darker) {
+            c = starColor;
+        } else if (bv == 'nodata') {
             c = starColor;
         } else {
             bv = parseFloat(bv);
@@ -2045,26 +2031,23 @@ function show_main(){
                 if (mode == 'AEP') {
                     var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, size(mag));
+                        drawFilledCircle (...coordSH(scrRA, scrDec), size(mag));
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
                         var [x, y] = coord(RA, Dec);
-                        drawFilledCircle (x, y, size(mag));
+                        drawFilledCircle (...coord(RA, Dec), size(mag));
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, size(mag));
+                        drawFilledCircle (...coordSH(scrRA, scrDec), size(mag));
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle(x, y, size(mag));
+                        drawFilledCircle(...coordSH(scrRA, scrDec), size(mag));
                     }
                 }
             }
@@ -2085,26 +2068,23 @@ function show_main(){
                 if (mode == 'AEP') {
                     var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, size(mag));
+                        drawFilledCircle(...coordSH(scrRA, scrDec), size(mag));
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
-                        var [x, y] = coord(RA, Dec);
-                        drawFilledCircle (x, y, size(mag));
+                        drawFilledCircle(...coord(RA, Dec), size(mag));
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, size(mag));
+                        drawFilledCircle(...coordSH(scrRA, scrDec), size(mag));
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle(x, y, size(mag));
+                        drawFilledCircle(...coordSH(scrRA, scrDec), size(mag));
                     }
                 }
             }
@@ -2214,26 +2194,22 @@ function show_main(){
             if (mode == 'AEP') {
                 var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, 0);
+                    DrawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                    var [x, y] = coord(RA, Dec);
-                    DrawObjects(name, x, y, 0);
+                    DrawObjects(name, ...coord(RA, Dec), 0);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, 0);
+                    DrawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, 0);
+                    DrawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
             }
         }
