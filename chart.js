@@ -688,6 +688,7 @@ function ontouchstart(e) {
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
     document.getElementById("coordtext").innerHTML = 'touch start';
+    document.getElementById("showingData").innerHTML = `${e.Touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
 };
 
 // スワイプ中またはピンチイン・ピンチアウト中
@@ -695,6 +696,7 @@ function ontouchmove(e) {
     e.preventDefault();
     dragFrag = true;
     document.getElementById("coordtext").innerHTML = 'dragging';
+    document.getElementById("showingData").innerHTML = `${e.Touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
         if (!pinchFrag) {
@@ -783,7 +785,7 @@ function ontouchmove(e) {
 }
 
 function ontouchend(e) {
-    document.getElementById("coordtext").innerHTML = `${e.Touches.length}, ${dragFrag}, ${baseDistance}`;
+    document.getElementById("showingData").innerHTML = `${e.Touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
     if (dragFrag) {
         url.searchParams.set('RA', cenRA.toFixed(2));
         url.searchParams.set('Dec', cenDec.toFixed(2));
