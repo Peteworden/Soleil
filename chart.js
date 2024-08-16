@@ -782,9 +782,8 @@ function ontouchmove(e) {
 }
 
 function ontouchend(e) {
-    document.getElementById("showingData").innerHTML = `${e.changedTouches.length}, ${dragFrag}, ${distance}`;
+    document.getElementById("coordtext").innerHTML = `${e.Touches.length}, ${dragFrag}, ${baseDistance}`;
     if (dragFrag) {
-        baseDistance = 0;
         url.searchParams.set('RA', cenRA.toFixed(2));
         url.searchParams.set('Dec', cenDec.toFixed(2));
         url.searchParams.set('azm', cenAzm.toFixed(2));
@@ -793,13 +792,14 @@ function ontouchend(e) {
         history.replaceState('', '', url.href);
         document.getElementById("coordtext").innerHTML = 'drag end';
     }
-    if (e.changedTouches.length.toString() == '0' && (!dragFrag || (dragFrag && distance < Math.min(canvas.width, canvas.height) / 10))) {
+    if (e.touches.length.toString() == '0' && (!dragFrag || (dragFrag && baseDistance < Math.min(canvas.width, canvas.height) / 10))) {
         var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
         document.getElementById("coordtext").innerHTML = 'clicked';
     }
     dragFrag = false;
+    baseDistance = 0;
 };
 
 function ontouchcancel(e) {
