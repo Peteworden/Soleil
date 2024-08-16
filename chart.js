@@ -782,6 +782,7 @@ function ontouchmove(e) {
 }
 
 function ontouchend(e) {
+    document.getElementById("showingData").innerHTML = `${e.changedTouches.length}, ${dragFrag}, ${distance}`;
     if (dragFrag) {
         baseDistance = 0;
         url.searchParams.set('RA', cenRA.toFixed(2));
