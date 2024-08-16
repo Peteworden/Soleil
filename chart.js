@@ -665,7 +665,7 @@ timeSliderElem.addEventListener('input', function(){
     show_main();
 });
 
-var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50); // distはスワイプを感知する最低距離（ピクセル単位）
+var startX, startY, preX, preY, moveX, moveY, dist_detect = Math.round(canvas.width / 50); // distはスワイプを感知する最低距離（ピクセル単位）
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
@@ -687,6 +687,8 @@ function ontouchstart(e) {
     dragFrag = false;
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
+    preX = startX;
+    preY = startY;
     document.getElementById("coordtext").innerHTML = `touch start ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
 };
@@ -702,36 +704,36 @@ function ontouchmove(e) {
         if (!pinchFrag) {
             moveX = e.touches[0].pageX;
             moveY = e.touches[0].pageY;
-            distance = Math.sqrt((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY));
+            distance = Math.sqrt((moveX-preX)*(moveX-preX) + (moveY-preY)*(moveY-preY));
             if (distance > dist_detect) {
                 if (mode == 'AEP') {
-                    var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var startscrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    var [startRA, startDec] = scr2RADec(startscrRA, startscrDec);
+                    var prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var prescrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [preRA, preDec] = scr2RADec(prescrRA, prescrDec);
                     var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
                     var [moveRA, moveDec] = scr2RADec(movescrRA, movescrDec);
-                    cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
-                    cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
+                    cenRA = ((cenRA - moveRA + preRA) % 360 + 360) % 360;
+                    cenDec = Math.min(Math.max(cenDec - moveDec + preDec, -90), 90);
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
                 } else if (mode == 'EtP') {
-                    cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width) % 360 + 360) % 360;
-                    cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - startY) / canvas.height), 90);
+                    cenRA  = ((cenRA  + 2 * rgEW * (moveX - preX) / canvas.width) % 360 + 360) % 360;
+                    cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - preY) / canvas.height), 90);
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
                 } else if (mode == 'view') {
-                    var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var startscrDec = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    var [startAzm, startAlt] = SHtoAh(startscrRA, startscrDec);
+                    var prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var prescrDec = -rgNS* (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var [preAzm, preAlt] = SHtoAh(prescrRA, prescrDec);
                     var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
                     var [moveAzm, moveAlt] = SHtoAh(movescrRA, movescrDec);
-                    cenAzm = ((cenAzm - moveAzm + startAzm) % 360 + 360) % 360;
-                    cenAlt = Math.min(Math.max(cenAlt - moveAlt + startAlt, -90), 90);
+                    cenAzm = ((cenAzm - moveAzm + preAzm) % 360 + 360) % 360;
+                    cenAlt = Math.min(Math.max(cenAlt - moveAlt + preAlt, -90), 90);
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
                 }
                 show_main();
-                startX = moveX;
-                startY = moveY;
+                preX = moveX;
+                preY = moveY;
             }
         }
     } else {
@@ -795,13 +797,12 @@ function ontouchend(e) {
         history.replaceState('', '', url.href);
         document.getElementById("coordtext").innerHTML = `drag end ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
-    if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && distance < Math.min(canvas.width, canvas.height) / 10))) {
-        var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-        var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+    if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && Math.sqrt(Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2)) < Math.min(canvas.width, canvas.height) / 10))) {
+        var scrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+        var scrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
         document.getElementById("coordtext").innerHTML = `clicked ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
-    dragFrag = false;
     pinchFrag = false;
     baseDistance = 0;
 };
@@ -819,8 +820,8 @@ function ontouchcancel(e) {
 
 function onmousedown(e){
     dragFrag = false;
-    startX = e.pageX;
-    startY = e.pageY;
+    preX = e.pageX;
+    preY = e.pageY;
     canvas.addEventListener("mousemove", onmousemove);
 }
 
@@ -828,35 +829,35 @@ function onmousemove(e) {
     dragFrag = true;
     moveX = e.pageX;
     moveY = e.pageY;
-    if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
+    if ((moveX-preX)*(moveX-preX) + (moveY-preY)*(moveY-preY) > dist_detect*dist_detect) {
         if (mode == 'AEP') {
-            var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var startscrDec = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            var [startRA, startDec] = scr2RADec(startscrRA, startscrDec);
+            var prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var prescrDec = -rgNS* (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [preRA, preDec] = scr2RADec(prescrRA, prescrDec);
             var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
             var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
             var [moveRA, moveDec] = scr2RADec(movescrRA, movescrDec);
-            cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
-            cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
+            cenRA = ((cenRA - moveRA + preRA) % 360 + 360) % 360;
+            cenDec = Math.min(Math.max(cenDec - moveDec + preDec, -90), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'EtP') {
-            cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
-            cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
+            cenRA  = ((cenRA  + 2 * rgEW * (moveX - preX) / canvas.width ) % 360 + 360) % 360;
+            cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - preY) / canvas.height, -90), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'view') {
-            var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var startscrDec = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            var [startAzm, startAlt] = SHtoAh(startscrRA, startscrDec);
+            var prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var prescrDec = -rgNS* (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var [preAzm, preAlt] = SHtoAh(prescrRA, prescrDec);
             var movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
             var movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
             var [moveAzm, moveAlt] = SHtoAh(movescrRA, movescrDec);
-            cenAzm = ((cenAzm - moveAzm + startAzm) % 360 + 360) % 360;
-            cenAlt = Math.min(Math.max(cenAlt - moveAlt + startAlt, -90), 90);
+            cenAzm = ((cenAzm - moveAzm + preAzm) % 360 + 360) % 360;
+            cenAlt = Math.min(Math.max(cenAlt - moveAlt + preAlt, -90), 90);
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
         }
         show_main();
-        startX = moveX;
-        startY = moveY;
+        preX = moveX;
+        preY = moveY;
     }
 }
 
@@ -872,8 +873,8 @@ function onmouseup(e){
         canvas.removeEventListener("mousemove", onmousemove);
     } else {
         console.log('clicked')
-        var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-        var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+        var scrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+        var scrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
     }
 }

@@ -280,6 +280,7 @@ select {
 }
 
 #objectInfoName {
+    padding: 20px auto;
     font-size: x-large;
     font-weight: 300;
 }
