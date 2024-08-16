@@ -312,6 +312,7 @@ function link(obj) {
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
         for (i=0; i<messier.length; i++) {
             if (messier[i].name == obj) {
+                console.log(messier[i].ra, rahm2deg(messier[i].ra))
                 cenRA = rahm2deg(messier[i].ra);
                 cenDec = decdm2deg(messier[i].dec);
             }
@@ -360,10 +361,8 @@ function closeSearch() {
 document.getElementById('searchInput').addEventListener('input', function() {
     let searchText = hiraganaToKatakana(document.getElementById('searchInput').value.toUpperCase());
     let suggestions = [[], []];
-    let preSuggestions = [[], []];
     if (searchText.length == 0) {
         suggestions = [[], []];
-        preSuggestions = [[], []];
     } else if (searchText.length == 1) {
         if (isNaN(searchText) == false) {
             if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
@@ -378,16 +377,23 @@ document.getElementById('searchInput').addEventListener('input', function() {
                 suggestions[0].push(`IC${searchText}`);
                 suggestions[1].push(`IC${searchText}`);
             }
-        } else {
+        } else if (!["M, N, I"].includes(searchText)){
             for (let constName of CLnames) {
                 if (constName.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
                     suggestions[0].push(`${constName}座`);
                     suggestions[1].push(`${constName}座`);
                 }
             }
+            for (m of messier) {
+                for (alt of m.alt_name) {
+                    if (alt.length > 0 && hiraganaToKatakana(alt[0]) == searchText) {    
+                        suggestions[0].push(m.name);
+                        suggestions[1].push(m.name);
+                    }
+                }
+            }
         }
     } else {
-        preSuggestions = suggestions;
         suggestions = [[], []];
         if (isNaN(searchText) == false) {
             if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
@@ -416,6 +422,16 @@ document.getElementById('searchInput').addEventListener('input', function() {
                 if ((hiraganaToKatakana(constName)+'座').includes(searchText)) {
                     suggestions[0].push(`${constName}座`);
                     suggestions[1].push(`${constName}座`);
+                }
+            }
+            for (m of messier) {
+                for (alt of m.alt_name) {
+                    if (hiraganaToKatakana(alt).includes(searchText)) {    
+                        suggestions[0].push(m.name);
+                        suggestions[1].push(m.name);
+                        console.log(m.name)
+                        console.log(linkExist(m.name))
+                    }
                 }
             }
         }
@@ -453,7 +469,7 @@ function showObjectInfo(scrRA, scrDec) {
     let nearestDistance = 180;
     for (i=0; i<infoList.length; i++) {
         let distance = Math.sqrt(Math.pow(scrRA - infoList[i][1], 2) + Math.pow(scrDec - infoList[i][2], 2));
-        if (distance < nearestDistance && distance < Math.min(rgEW, rgNS) / 4) {
+        if (distance < nearestDistance && distance < Math.min(rgEW, rgNS) / 3) {
             nearest = infoList[i];
             console.log(nearest)
         }
@@ -671,12 +687,14 @@ function ontouchstart(e) {
     dragFrag = false;
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
+    document.getElementById("coordtext").innerHTML = 'touch start';
 };
 
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
     e.preventDefault();
     dragFrag = true;
+    document.getElementById("coordtext").innerHTML = 'dragging';
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
         if (pinchFrag == 0) {
@@ -1863,20 +1881,6 @@ function show_main(){
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
-    function rahm2deg(rahmtext) {
-        let rahm = rahmtext.split(' ').map(parseFloat);
-        return rahm[0] * 15 + rahm[1] / 4;
-    }
-
-    function decdm2deg(decdmtext) {
-        let decdm = decdmtext.split(' ').map(parseFloat);
-        let dec = Math.abs(decdm[0]) + decdm[1] / 60;
-        if (decdmtext[0] == '-') {
-            dec *= -1;
-        }
-        return dec;
-    }
-
     function RApos(RA) { //PythonでのadjustRA(RA)-piccenRAに相当
         return (RA + 540 - cenRA) % 360 - 180;
     }
@@ -2439,6 +2443,20 @@ function show_main(){
     }
 }
 
+function rahm2deg(rahmtext) {
+    let rahm = rahmtext.split(' ').map(parseFloat);
+    return rahm[0] * 15 + rahm[1] / 4;
+}
+
+function decdm2deg(decdmtext) {
+    let decdm = decdmtext.split(' ').map(parseFloat);
+    let dec = Math.abs(decdm[0]) + decdm[1] / 60;
+    if (decdmtext[0] == '-') {
+        dec *= -1;
+    }
+    return dec;
+}
+
 function RADec2Ah (RA, Dec, theta) { //deg
     RA *= pi/180;
     Dec *= pi/180;
@@ -2764,37 +2782,28 @@ function loadFiles() {
         }
     }
 
-    // メシエ天体
-    loadFile("messier_forJS", xhrMessier);
-    function xhrMessier(data) {
-        messier = data.split(',');
-    }
-
-    // JSONデータを取得する関数
-    function fetchMessierData() {
-        fetch('https://peteworden.github.io/Soleil/messier.json')
+    //Messier
+    function fetchJsonData(filename, func) {
+        fetch(`https://peteworden.github.io/Soleil/${filename}.json`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
                 }
-                //messier = response.json();
-                //console.log(messier.length, messier[0])
                 return response.json();
             })
             .then(data => {
-                console.log(data);  // 取得したデータをコンソールに表示
-                messier = data;
-                console.log(messier.length, messier[0], messier[2].name)
-                /*data.forEach(item => {
-                    console.log(`Name: ${item.name}, RA: ${item.ra}, Dec: ${item.dec}`);
-                });*/
+                func(data)
+                xhrcheck++;
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json is ready`);
+                show_initial();
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
             });
     }
-
-    fetchMessierData();
+    fetchJsonData('messier', function(data){
+        messier = data
+    });
 
 
     // choice天体
