@@ -470,13 +470,12 @@ function showObjectInfo(x, y) {
     let nearestDistance = Math.max(canvas.width, canvas.height);
     for (i=0; i<infoList.length; i++) {
         let distance = Math.sqrt(Math.pow(x - infoList[i][1], 2) + Math.pow(y - infoList[i][2], 2));
-        if (distance < nearestDistance && distance < Math.min(canvas.width, canvas.height) / 6) {
+        if (distance < nearestDistance && distance < Math.min(canvas.width, canvas.height) / 15) {
             nearest = infoList[i];
-            console.log(nearest)
+            nearestDistance = distance;
         }
     }
     if (nearest != null) {
-        console.log(nearest)
         document.getElementById('objectInfo').style.visibility = 'visible';
         document.getElementById('objectInfoName').innerHTML = nearest[0]
         document.getElementById('objectInfoText').innerHTML = `No data`
@@ -692,16 +691,11 @@ function ontouchstart(e) {
         preX = startX;
         preY = startY;
     }
-    document.getElementById("coordtext").innerHTML = `touch start ${e.touches.length} ${pinchFrag} ${dragFrag}`;
-    //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
 };
 
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
     e.preventDefault();
-    document.getElementById("coordtext").innerHTML = `drag or pinch ${e.touches.length} ${pinchFrag} ${dragFrag}`;
-    //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
-    //var touches = e.changedTouches;
     if (e.touches.length === 1) {
         if (!pinchFrag) {
             dragFrag = true;
@@ -791,7 +785,6 @@ function ontouchmove(e) {
 }
 
 function ontouchend(e) {
-    document.getElementById("coordtext").innerHTML = `touch end ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     if (dragFrag) {
         url.searchParams.set('RA', cenRA.toFixed(2));
         url.searchParams.set('Dec', cenDec.toFixed(2));
@@ -799,13 +792,9 @@ function ontouchend(e) {
         url.searchParams.set('alt', cenAlt.toFixed(2));
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
-        document.getElementById("coordtext").innerHTML = `drag end ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
     if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && Math.sqrt(Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2)) < Math.min(canvas.width, canvas.height) / 10))) {
-        var scrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-        var scrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(preX - canvas.offsetLeft, preY - canvas.offsetTop);
-        document.getElementById("coordtext").innerHTML = `clicked ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
     if (e.touches.length === 0) {
         dragFrag = false;
