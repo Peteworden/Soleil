@@ -7,7 +7,6 @@ var textColor = 'black';
 //'yellow'は全部yellowColorにする
 
 
-
 const canvas = document.createElement('canvas');
 
 canvas.width = 1100;
@@ -1192,14 +1191,14 @@ function loadFiles() {
     loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
     function xhrHIP(data) {
         const DataAry = data.split(',');
-        var num_of_stars = DataAry.length / 3;
+        var num_of_stars = DataAry.length / 4;
         HIPRAary = Array(num_of_stars);
         HIPDecary = Array(num_of_stars);
         HIPmagary = Array(num_of_stars);
         for (i=0; i<num_of_stars; i++){
-            HIPRAary[i] = parseFloat(DataAry[3*i]);
-            HIPDecary[i] = parseFloat(DataAry[3*i+1]);
-            HIPmagary[i] = parseFloat(DataAry[3*i+2]);
+            HIPRAary[i] = parseFloat(DataAry[4*i]);
+            HIPDecary[i] = parseFloat(DataAry[4*i+1]);
+            HIPmagary[i] = parseFloat(DataAry[4*i+2]);
         }
     }
 
@@ -1298,7 +1297,7 @@ function loadFiles() {
         if (url.searchParams.has('target')) {
             for (var j=0; j<ENGplanets.length; j++) {
                 if (url.searchParams.get('target') == ENGplanets[j].split(' ').join('').split('/').join('')) {
-                    document.getElementById("target").value = JPNplanets[i];
+                    document.getElementById("target").value = JPNplanets[j];
                     break;
                 }
             }

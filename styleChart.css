@@ -85,8 +85,8 @@ input[type="file"] {
 
 .setting {
     position: absolute;
-    color: rgb(242, 192, 192);
-    background-color: #8b321c;
+    color: #C0C0C0;
+    background-color: #2C0B0B;
     padding: 10px;
     margin: auto;
     top: 50%;
@@ -94,6 +94,7 @@ input[type="file"] {
     -webkit-transform : translate(-50%,-50%);
     transform : translate(-50%,-50%);
     border-radius: 1rem;
+    border: 2px solid #5A1E1E;
     width: 80%;
     height: 80%;
     text-align: center;
@@ -102,7 +103,7 @@ input[type="file"] {
 }
 
 #dtl {
-    background-color: white;
+    background-color: #F5F5DC;
     width: 20px;
 }
 
@@ -110,7 +111,7 @@ input {
     width: 3em;
     max-width: 100%;
     color: whitesmoke;
-    background-color: #c22424;
+    background-color: #8F5A3C;
 }
 
 .zuho {
@@ -128,20 +129,19 @@ ul {
 }
 
 button {
-    color: #e6c0c0;
-    background-color: #c22424;
+    color: whitesmoke;
+    background-color: #8B4513;
 }
 
 select {
-    color: whitesmoke;
-    background-color: #c22424;
+    color: #F5F5DC;
+    background-color: #8F5A3C;
 }
 
 .showBtn {
     font-size: 16px;
     font-weight: 600;
-    color: #fff;
-    background-color: gray;
+    background-color: #A0522D;
     line-height: 3em;
     border-radius: 1rem;
     border: 0;
@@ -163,8 +163,8 @@ select {
 
 .description {
     position: absolute;
-    color: rgb(242, 192, 192);
-    background-color: #8b321c;
+    color: #C0C0C0;
+    background-color: #2C0B0B;
     padding: 10px 10px;
     margin: auto;
     top: 50%;
@@ -172,6 +172,7 @@ select {
     -webkit-transform : translate(-50%,-50%);
     transform : translate(-50%,-50%);
     border-radius: 1rem;
+    border: 2px solid #5A1E1E;
     width: 80%;
     height: 80%;
     overflow: scroll;
@@ -179,6 +180,7 @@ select {
 }
 
 .linkBtn {
+    background-color: #8B4513;
     border: 0;
     margin: 0px;
     padding: 1px 1px;
@@ -186,20 +188,20 @@ select {
 }
 
 .description a {
-    color: rgb(242, 192, 192);
+    color: whitesmoke;
     text-decoration: underline;
 }
 
 #openSearch {
     width: 100px;
     height: 40px;
-    background-color: #F5F5DC;
-    color: black;
+    color: whitesmoke;
+    background-color: #8B4513;
 }
 
 .searchDiv {
     position: fixed;
-    background-color: #8b321c;
+    background-color: #2C0B0B;
     width: 100%;
     height: 100%;
     top: 0px;
@@ -244,7 +246,7 @@ select {
     width: 90%;
     margin: 10px auto;
     padding: 10px;
-    background-color: #4CAF50;
+    background-color: #147d18;
     color: white;
     border: none;
     border-radius: 5px;
@@ -254,12 +256,13 @@ select {
 }
 
 .suggestionButton:hover {
-    background-color: #45a049;
+    background-color: #176c1b;
 }
 
 .objectInfo {
     position: fixed;
-    background-color: #8b321c;
+    color: #C0C0C0;
+    background-color: #2C0B0B;
     width: 80%;
     height: 80%;
     top: 10%;
@@ -274,15 +277,24 @@ select {
     border: 0;
     top: 10px;
     right: 10px;
-    width: 60px;
+    width: 30px;
     height: 30px;
     text-align: center;
 }
 
 #objectInfoName {
-    padding: 20px auto;
+    margin: 20px 80px;
     font-size: x-large;
     font-weight: 300;
+}
+
+#objectInfoText {
+    margin: auto 80px;
+    font-size: large;
+}
+
+#objectInfoText a {
+    color: #C0C0C0;
 }
 
 .fullScreenBtn {

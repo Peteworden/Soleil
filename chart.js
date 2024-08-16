@@ -477,8 +477,19 @@ function showObjectInfo(x, y) {
     }
     if (nearest != null) {
         document.getElementById('objectInfo').style.visibility = 'visible';
-        document.getElementById('objectInfoName').innerHTML = nearest[0]
-        document.getElementById('objectInfoText').innerHTML = `No data`
+        document.getElementById('objectInfoName').innerHTML = nearest[0];
+        if (JPNplanets.includes(nearest[0])) {
+            document.getElementById('objectInfoText').innerHTML = `<a href="https://peteworden.github.io/Soleil/SoleilWeb.html?time=${yearTextElem.value}-${monthTextElem.value}-${dateTextElem.value}-${hourTextElem.value}-${Math.floor(minuteTextElem.value/6.0)}&target=${ENGplanets[JPNplanets.indexOf(nearest[0])].split(' ').join('').split('/').join('')}&dark=1">Soleil Webでくわしく見る</a>`;
+        } else if (nearest[0][0] == 'M') {
+            console.log(messier[parseInt(nearest[0].slice(1))])
+            if (messier[parseInt(nearest[0].slice(1))].description.length > 0) {
+                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))].description;
+            } else {
+                document.getElementById('objectInfoText').innerHTML = 'no description';
+            }
+        } else {
+            document.getElementById('objectInfoText').innerHTML = `No data`;
+        }
     }
 }
 
