@@ -700,7 +700,8 @@ function ontouchmove(e) {
         if (!pinchFrag) {
             moveX = touches[0].pageX;
             moveY = touches[0].pageY;
-            if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
+            distance = Math.sqrt((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY));
+            if (distance > dist_detect) {
                 if (mode == 'AEP') {
                     var startscrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     var startscrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
@@ -792,13 +793,14 @@ function ontouchend(e) {
         history.replaceState('', '', url.href);
         document.getElementById("coordtext").innerHTML = 'drag end';
     }
-    if (e.touches.length.toString() == '0' && (!dragFrag || (dragFrag && baseDistance < Math.min(canvas.width, canvas.height) / 10))) {
+    if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && distance < Math.min(canvas.width, canvas.height) / 10))) {
         var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
         document.getElementById("coordtext").innerHTML = 'clicked';
     }
     dragFrag = false;
+    pinchFrag = false;
     baseDistance = 0;
 };
 
