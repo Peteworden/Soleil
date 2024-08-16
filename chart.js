@@ -687,21 +687,21 @@ function ontouchstart(e) {
     dragFrag = false;
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
-    document.getElementById("coordtext").innerHTML = 'touch start';
-    document.getElementById("showingData").innerHTML = `${e.Touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
+    document.getElementById("coordtext").innerHTML = `touch start ${e.touches.length} ${pinchFrag} ${dragFrag}`;
+    //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
 };
 
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
     e.preventDefault();
     dragFrag = true;
-    document.getElementById("coordtext").innerHTML = 'dragging';
-    document.getElementById("showingData").innerHTML = `${e.Touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
-    var touches = e.changedTouches;
-    if (touches.length.toString() == '1') {
+    document.getElementById("coordtext").innerHTML = `drag or pinch ${e.touches.length} ${pinchFrag} ${dragFrag}`;
+    //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
+    //var touches = e.changedTouches;
+    if (e.touches.length.toString() == '1') {
         if (!pinchFrag) {
-            moveX = touches[0].pageX;
-            moveY = touches[0].pageY;
+            moveX = e.touches[0].pageX;
+            moveY = e.touches[0].pageY;
             distance = Math.sqrt((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY));
             if (distance > dist_detect) {
                 if (mode == 'AEP') {
@@ -736,10 +736,10 @@ function ontouchmove(e) {
         }
     } else {
         pinchFrag = true;
-        var x1 = touches[0].pageX ;
-        var y1 = touches[0].pageY ;
-        var x2 = touches[1].pageX ;
-        var y2 = touches[1].pageY ;
+        var x1 = e.touches[0].pageX ;
+        var y1 = e.touches[0].pageY ;
+        var x2 = e.touches[1].pageX ;
+        var y2 = e.touches[1].pageY ;
         distance = Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1));
         if (baseDistance) {
             movedDistance = distance;
@@ -785,7 +785,7 @@ function ontouchmove(e) {
 }
 
 function ontouchend(e) {
-    document.getElementById("showingData").innerHTML = `${e.Touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
+    document.getElementById("coordtext").innerHTML = `touch end ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     if (dragFrag) {
         url.searchParams.set('RA', cenRA.toFixed(2));
         url.searchParams.set('Dec', cenDec.toFixed(2));
@@ -793,13 +793,13 @@ function ontouchend(e) {
         url.searchParams.set('alt', cenAlt.toFixed(2));
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
-        document.getElementById("coordtext").innerHTML = 'drag end';
+        document.getElementById("coordtext").innerHTML = `drag end ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
     if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && distance < Math.min(canvas.width, canvas.height) / 10))) {
         var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
-        document.getElementById("coordtext").innerHTML = 'clicked';
+        document.getElementById("coordtext").innerHTML = `clicked ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
     dragFrag = false;
     pinchFrag = false;
