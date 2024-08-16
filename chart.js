@@ -461,15 +461,16 @@ function closeObjectInfo() {
     document.getElementById('objectInfo').style.visibility = 'hidden';
 }
 
-function showObjectInfo(scrRA, scrDec) {
-    if (!document.getElementById('objectInfoCheck').value) {
+function showObjectInfo(x, y) {
+    console.log(x, y)
+    if (!document.getElementById('objectInfoCheck').checked) {
         return;
     }
     let nearest = null;
-    let nearestDistance = 180;
+    let nearestDistance = Math.max(canvas.width, canvas.height);
     for (i=0; i<infoList.length; i++) {
-        let distance = Math.sqrt(Math.pow(scrRA - infoList[i][1], 2) + Math.pow(scrDec - infoList[i][2], 2));
-        if (distance < nearestDistance && distance < Math.min(rgEW, rgNS) / 3) {
+        let distance = Math.sqrt(Math.pow(x - infoList[i][1], 2) + Math.pow(y - infoList[i][2], 2));
+        if (distance < nearestDistance && distance < Math.min(canvas.width, canvas.height) / 6) {
             nearest = infoList[i];
             console.log(nearest)
         }
@@ -803,7 +804,7 @@ function ontouchend(e) {
     if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && Math.sqrt(Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2)) < Math.min(canvas.width, canvas.height) / 10))) {
         var scrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-        showObjectInfo(scrRA, scrDec);
+        showObjectInfo(preX - canvas.offsetLeft, preY - canvas.offsetTop);
         document.getElementById("coordtext").innerHTML = `clicked ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
     if (e.touches.length === 0) {
@@ -881,7 +882,7 @@ function onmouseup(e){
         console.log('clicked')
         var scrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-        showObjectInfo(scrRA, scrDec);
+        showObjectInfo(preX - canvas.offsetLeft, preY - canvas.offsetTop);
     }
 }
 
@@ -1605,20 +1606,20 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName + '座', scrRA, scrDec]);
+                    infoList.push([constName + '座', x, y]);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     [x, y] = coord(RA, Dec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName + '座', scrRA, scrDec]);
+                    infoList.push([constName + '座', x, y]);
                 }
             } else if (mode == 'view') {
                 [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName + '座', scrRA, scrDec]);
+                    infoList.push([constName + '座', x, y]);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -1626,7 +1627,7 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     [x, y] = coordSH(scrRA, scrDec);
                     ctx.fillText(constName, x-40, y-10);
-                    infoList.push([constName + '座', scrRA, scrDec]);
+                    infoList.push([constName + '座', x, y]);
                 }
             }
         }
@@ -1708,20 +1709,20 @@ function show_main(){
                 drawFilledCircle(x, y, r, yellowColor);
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
-                infoList.push([JPNplanets[i], scrRA, scrDec]);
+                infoList.push([JPNplanets[i], x, y]);
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
                     var r = DrawMoon();
                     ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
-                    infoList.push(['月', scrRA, scrDec]);
+                    infoList.push(['月', x, y]);
                 }
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
                 drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
                 ctx.fillStyle = specialObjectNameColor;
                 ctx.fillText(JPNplanets[i], x, y);
-                infoList.push([JPNplanets[i], scrRA, scrDec]);
+                infoList.push([JPNplanets[i], x, y]);
             }
         }
     }
@@ -1898,10 +1899,16 @@ function show_main(){
         return (RA + 540 - cenRA) % 360 - 180;
     }
 
-    function coord (RA, Dec) {
+    function coord(RA, Dec) {
         var x = canvas.width * (0.5 - RApos(RA) / rgEW / 2);
         var y = canvas.height * (0.5 - (Dec - cenDec) / rgNS / 2);
         return [x, y];
+    }
+
+    function xy2scr(x, y) {
+        var scrRA = rgEW * (1 - 2 * x / canvas.width);
+        var scrDec = rgNS * (1 - 2 * y / canvas.height);
+        return [scrRA, scrDec];
     }
 
     function RADec2scrAEP (RA, Dec) { //deg
@@ -2248,20 +2255,20 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
-                    infoList.push([name, scrRA, scrDec]);
+                    infoList.push([name, x, y]);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     var [x, y] = coord(RA, Dec);
                     DrawObjects(name, x, y, type);
-                    infoList.push([name, scrRA, scrDec]);
+                    infoList.push([name, x, y]);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
-                    infoList.push([name, scrRA, scrDec]);
+                    infoList.push([name, x, y]);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -2269,7 +2276,7 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
                     DrawObjects(name, x, y, type);
-                    infoList.push([name, scrRA, scrDec]);
+                    infoList.push([name, x, y]);
                 }
             }
         }
@@ -2289,20 +2296,20 @@ function show_main(){
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
-                        infoList.push([name, scrRA, scrDec]);
+                        infoList.push([name, x, y]);
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
                         var [x, y] = coord(RA, Dec);
                         DrawObjects(name, x, y, type);
-                        infoList.push([name, scrRA, scrDec]);
+                        infoList.push([name, x, y]);
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
-                        infoList.push([name, scrRA, scrDec]);
+                        infoList.push([name, x, y]);
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
@@ -2310,7 +2317,7 @@ function show_main(){
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         var [x, y] = coordSH(scrRA, scrDec);
                         DrawObjects(name, x, y, type);
-                        infoList.push([name, scrRA, scrDec]);
+                        infoList.push([name, x, y]);
                     }
                 }
             }
