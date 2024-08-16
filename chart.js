@@ -683,12 +683,14 @@ canvas.addEventListener('wheel', onwheel);
 // タッチ開始
 function ontouchstart(e) {
     e.preventDefault();
-    pinchFrag = false;
-    dragFrag = false;
-    startX = e.touches[0].pageX;
-    startY = e.touches[0].pageY;
-    preX = startX;
-    preY = startY;
+    if (e.touches.length === 1) {
+        pinchFrag = false;
+        dragFrag = false;
+        startX = e.touches[0].pageX;
+        startY = e.touches[0].pageY;
+        preX = startX;
+        preY = startY;
+    }
     document.getElementById("coordtext").innerHTML = `touch start ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
 };
@@ -696,12 +698,12 @@ function ontouchstart(e) {
 // スワイプ中またはピンチイン・ピンチアウト中
 function ontouchmove(e) {
     e.preventDefault();
-    dragFrag = true;
     document.getElementById("coordtext").innerHTML = `drag or pinch ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     //document.getElementById("showingData").innerHTML = `${e.touches.length}, ${pinchFrag}, ${dragFrag}, ${distance}`;
     //var touches = e.changedTouches;
-    if (e.touches.length.toString() == '1') {
+    if (e.touches.length === 1) {
         if (!pinchFrag) {
+            dragFrag = true;
             moveX = e.touches[0].pageX;
             moveY = e.touches[0].pageY;
             distance = Math.sqrt((moveX-preX)*(moveX-preX) + (moveY-preY)*(moveY-preY));
@@ -737,6 +739,7 @@ function ontouchmove(e) {
             }
         }
     } else {
+        dragFrag = false;
         pinchFrag = true;
         var x1 = e.touches[0].pageX ;
         var y1 = e.touches[0].pageY ;
@@ -803,7 +806,10 @@ function ontouchend(e) {
         showObjectInfo(scrRA, scrDec);
         document.getElementById("coordtext").innerHTML = `clicked ${e.touches.length} ${pinchFrag} ${dragFrag}`;
     }
-    pinchFrag = false;
+    if (e.touches.length === 0) {
+        dragFrag = false;
+        pinchFrag = false;
+    }
     baseDistance = 0;
 };
 
