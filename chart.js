@@ -669,7 +669,7 @@ var startX, startY, moveX, moveY, dist_detect = Math.round(canvas.width / 50); /
 var baseDistance = 0;
 var movedDistance = 0;
 var distance = 0;
-var pinchFrag = 0;
+var pinchFrag = false;
 let dragFrag = false;
 
 canvas.addEventListener("touchstart", ontouchstart);
@@ -683,7 +683,7 @@ canvas.addEventListener('wheel', onwheel);
 // タッチ開始
 function ontouchstart(e) {
     e.preventDefault();
-    pinchFrag = 0;
+    pinchFrag = false;
     dragFrag = false;
     startX = e.touches[0].pageX;
     startY = e.touches[0].pageY;
@@ -697,7 +697,7 @@ function ontouchmove(e) {
     document.getElementById("coordtext").innerHTML = 'dragging';
     var touches = e.changedTouches;
     if (touches.length.toString() == '1') {
-        if (pinchFrag == 0) {
+        if (!pinchFrag) {
             moveX = touches[0].pageX;
             moveY = touches[0].pageY;
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
@@ -732,7 +732,7 @@ function ontouchmove(e) {
             }
         }
     } else {
-        pinchFrag = 1;
+        pinchFrag = true;
         var x1 = touches[0].pageX ;
         var y1 = touches[0].pageY ;
         var x2 = touches[1].pageX ;
@@ -791,7 +791,8 @@ function ontouchend(e) {
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
         document.getElementById("coordtext").innerHTML = 'drag end';
-    } else {
+    }
+    if (e.changedTouches.length.toString() == '0' && (!dragFrag || (dragFrag && distance < Math.min(canvas.width, canvas.height) / 10))) {
         var scrRA = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(scrRA, scrDec);
