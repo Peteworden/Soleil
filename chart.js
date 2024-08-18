@@ -273,6 +273,13 @@ checkURL();
 
 function show_initial(){
     if (xhrcheck == 14 && defaultcheck ==11) {
+        canvas.addEventListener("touchstart", ontouchstart);
+        canvas.addEventListener("touchmove", ontouchmove);
+        canvas.addEventListener('touchend', ontouchend);
+        canvas.addEventListener('touchcancel', ontouchcancel);
+        canvas.addEventListener('mousedown', onmousedown);
+        canvas.addEventListener('mouseup', onmouseup);
+        canvas.addEventListener('wheel', onwheel);
         newSetting();
         show_main();
     }
@@ -682,14 +689,6 @@ var movedDistance = 0;
 var distance = 0;
 var pinchFrag = false;
 let dragFrag = false;
-
-canvas.addEventListener("touchstart", ontouchstart);
-canvas.addEventListener("touchmove", ontouchmove);
-canvas.addEventListener('touchend', ontouchend);
-canvas.addEventListener('touchcancel', ontouchcancel);
-canvas.addEventListener('mousedown', onmousedown);
-canvas.addEventListener('mouseup', onmouseup);
-canvas.addEventListener('wheel', onwheel);
 
 // タッチ開始
 function ontouchstart(e) {
@@ -2725,13 +2724,19 @@ function realtimeAzmalt() {
 }
 
 function loadFiles() {
+    /*document.getElementById('coordtext').innerHTML = 'Fetching the ZIP file...';
     fetch('https://peteworden.github.io/Soleil/allInOne.zip')
-        .then(response => response.arrayBuffer())
+        .then(response => {
+            document.getElementById('coordtext').innerHTML = 'ZIP file fetched, converting to arrayBuffer...';
+            response.arrayBuffer();
+        })
         .then(buffer => {
+            document.getElementById('coordtext').innerHTML = 'arrayBuffer obtained, initializing JSZip...';
             const jszip = new JSZip();
             return jszip.loadAsync(buffer);
         })
         .then(zip => {
+            document.getElementById('coordtext').innerHTML = 'ZIP file loaded successfully!';
             zip.forEach((relativePath, file) => {
             file.async('string').then(content0 => {
                 console.log('File:', relativePath);
@@ -2759,7 +2764,7 @@ function loadFiles() {
             });
             });
         })
-        .catch(err => console.error('Error:', err));
+        .catch(err => console.error('Error:', err));*/
     function loadFile(filename, func) {
         var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
         var xhr = new XMLHttpRequest();
@@ -2777,7 +2782,7 @@ function loadFiles() {
     }
 
     //HIP
-    //loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
+    loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
     function xhrHIP(data) {
         const DataAry = data.split(',');
         var num_of_stars = DataAry.length / 4;
@@ -2789,37 +2794,37 @@ function loadFiles() {
             HIPRAary[i] = parseFloat(DataAry[4*i]);
             HIPDecary[i] = parseFloat(DataAry[4*i+1]);
             HIPmagary[i] = parseFloat(DataAry[4*i+2]);
-            HIPbvary[i] = DataAry[4*i+3]
+            HIPbvary[i] = DataAry[4*i+3];
         }
     }
 
     //Tycho
-    //loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho);
+    loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho);
     function xhrTycho(data) {
         Tycho = data.split(',');
     }
 
     //Tycho helper
-    //loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
+    loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
     function xhrHelp(data) {
         Help = data.split(',');
     }
 
     //Tycho 10~11 mag
-    //loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011);
+    loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011);
     function xhrTycho1011(data) {
         Tycho1011 = data.split(',');
     }
 
 
     //Tycho helper 10~11 mag
-    //loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011);
+    loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011);
     function xhrHelp1011(data) {
         Help1011 = data.split(',');
     }
 
     //Bayer
-    //loadFile("bsc_forJS", xhrBSC);
+    loadFile("bsc_forJS", xhrBSC);
     function xhrBSC(data) {
         const BSC = data.split(',');
         BSCnum = BSC.length / 6;
@@ -2859,49 +2864,49 @@ function loadFiles() {
     function xhrMessier(data) {
         messier = JSON.parse(data);
     }
-    /*fetchJsonData('messier', function(data){
+    fetchJsonData('messier', function(data){
         messier = data
-    });*/
+    });
 
 
     // choice天体
-    //loadFile("choice_forJS", xhrChoice);
+    loadFile("choice_forJS", xhrChoice);
     function xhrChoice(data) {
         choice = data.split(',');
     }
 
     // NGC天体とIC天体
-    //loadFile("allNGC_forJS", xhrNGC);
+    loadFile("allNGC_forJS", xhrNGC);
     function xhrNGC(data) {
         NGC = data.split(',');
     }
 
     //星座名
-    //loadFile("ConstellationList", xhrCLnames);
+    loadFile("ConstellationList", xhrCLnames);
     function xhrCLnames(data) {
         CLnames = data.split('\r\n');
     }
 
     //星座の位置
-    //loadFile("ConstellationPositionNew_forJS", xhrCLpos);
+    loadFile("ConstellationPositionNew_forJS", xhrCLpos);
     function xhrCLpos(data) {
         constPos = data.split(',');
     }
 
     //星座線
-    //loadFile("Lines_light_forJS", xhrCLlines);
+    loadFile("Lines_light_forJS", xhrCLlines);
     function xhrCLlines(data) {
         lines = data.split(',');
     }
 
     //星座境界線
-    //loadFile("boundary_light_forJS", xhrCLboundary);
+    loadFile("boundary_light_forJS", xhrCLboundary);
     function xhrCLboundary(data) {
         boundary = data.split(',');
     }
 
     //追加天体
-    //loadFile("ExtraPlanet", xhrExtra);
+    loadFile("ExtraPlanet", xhrExtra);
     function xhrExtra(data) {
         extra = data.split('\n');
         for (var i=0; i<extra.length; i++) {
@@ -2981,6 +2986,7 @@ function checkURL() {
         var [y, m, d, h, mi] = url.searchParams.get('time').split('-');
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
+        realtimeOff();
         defaultcheck++;
         show_initial();
     } else {
