@@ -490,7 +490,7 @@ function showObjectInfo(x, y) {
         } else if (nearest[0][0] == 'M') {
             console.log(messier[parseInt(nearest[0].slice(1))])
             if (messier[parseInt(nearest[0].slice(1))].description.length > 0) {
-                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))].description;
+                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))-1].description;
             } else {
                 document.getElementById('objectInfoText').innerHTML = 'no description';
             }
