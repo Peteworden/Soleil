@@ -490,7 +490,7 @@ function showObjectInfo(x, y) {
         } else if (nearest[0][0] == 'M') {
             console.log(messier[parseInt(nearest[0].slice(1))])
             if (messier[parseInt(nearest[0].slice(1))].description.length > 0) {
-                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))-1].description;
+                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))].description;
             } else {
                 document.getElementById('objectInfoText').innerHTML = 'no description';
             }
@@ -3061,22 +3061,24 @@ function checkURL() {
         defaultcheck++;
         show_initial();
     } else {
+        let lat_obs = 35 * pi/180;
         defaultcheck++;
         show_initial();
     }
 
     if (url.searchParams.has('lon')) {
-        var lon_obs = url.searchParams.get('lon');
+        var lon_obs = url.searchParams.get('lon') * pi/180;
         if (lon_obs >= 0) {
             document.getElementById("EWCombo").value = '東経';
-            document.getElementById('lon').value = lon_obs;
+            document.getElementById('lon').value = url.searchParams.get('lon');
         } else {
             document.getElementById("EWCombo").value = '西経';
-            document.getElementById('lon').value = -lon_obs;
+            document.getElementById('lon').value = -url.searchParams.get('lon');
         }
         defaultcheck++;
         show_initial();
     } else {
+        let lon_obs = 135 * pi/180;
         defaultcheck++;
         show_initial();
     }
