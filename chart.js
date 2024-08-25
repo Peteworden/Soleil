@@ -266,8 +266,9 @@ let infoList = []; //[[name, scrRA, scrDec], [,,], ...]
 
 var extra = [];
 
+let intervalId = null;
+
 const url = new URL(window.location.href);
-console.log(url.href);
 loadFiles();
 checkURL();
 
@@ -319,7 +320,6 @@ function link(obj) {
     if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
         for (i=0; i<messier.length; i++) {
             if (messier[i].name == obj) {
-                console.log(messier[i].ra, rahm2deg(messier[i].ra))
                 cenRA = rahm2deg(messier[i].ra);
                 cenDec = decdm2deg(messier[i].dec);
             }
@@ -436,8 +436,6 @@ document.getElementById('searchInput').addEventListener('input', function() {
                     if (hiraganaToKatakana(alt).includes(searchText)) {    
                         suggestions[0].push(m.name);
                         suggestions[1].push(m.name);
-                        console.log(m.name)
-                        console.log(linkExist(m.name))
                     }
                 }
             }
@@ -469,7 +467,6 @@ function closeObjectInfo() {
 }
 
 function showObjectInfo(x, y) {
-    console.log(x, y)
     if (!document.getElementById('objectInfoCheck').checked) {
         return;
     }
@@ -488,7 +485,6 @@ function showObjectInfo(x, y) {
         if (JPNplanets.includes(nearest[0])) {
             document.getElementById('objectInfoText').innerHTML = `<a href="https://peteworden.github.io/Soleil/SoleilWeb.html?time=${yearTextElem.value}-${monthTextElem.value}-${dateTextElem.value}-${hourTextElem.value}-${Math.floor(minuteTextElem.value/6.0)}&target=${ENGplanets[JPNplanets.indexOf(nearest[0])].split(' ').join('').split('/').join('')}&dark=1">Soleil Webでくわしく見る</a>`;
         } else if (nearest[0][0] == 'M') {
-            console.log(messier[parseInt(nearest[0].slice(1))])
             if (messier[parseInt(nearest[0].slice(1))].description.length > 0) {
                 document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))].description;
             } else {
@@ -499,8 +495,6 @@ function showObjectInfo(x, y) {
         }
     }
 }
-
-let intervalId = null;
 
 let date = new Date();
 const localDate = new Date(date - date.getTimezoneOffset() * 60000);
@@ -878,7 +872,6 @@ function onmouseup(e){
         history.replaceState('', '', url.href);
         canvas.removeEventListener("mousemove", onmousemove);
     } else {
-        console.log('clicked')
         var scrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
         var scrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
         showObjectInfo(preX - canvas.offsetLeft, preY - canvas.offsetTop);
