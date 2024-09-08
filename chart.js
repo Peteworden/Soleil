@@ -73,7 +73,7 @@ if (canvas.width < canvas.height) {
     var rgEW = rgNS * canvas.width / canvas.height;
     document.getElementById('constNameFrom').value = "180";
     document.getElementById('MessierFrom').value = "100";
-    document.getElementById('choiceFrom').value = "80";
+    document.getElementById('recsFrom').value = "80";
 }
 
 const minrg = 0.3;
@@ -232,6 +232,7 @@ var FSs = Array(1);
 var Bayers = Array(1);
 var BayerNums = Array(1);
 var messier  = Array(4 * 110);
+let recs;
 var NGC = [];
 var CLnames = [];
 var constPos = [];
@@ -286,68 +287,88 @@ function show_initial(){
     }
 }
 
-const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
+//const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
 function linkExist(obj) {
     let linkExist = false;
-    if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
+    if (obj[0] == 'M' && !isNaN(obj.substr(1))) { //メシエ
         for (i=0; i<messier.length; i++) {
             if (messier[i].name == obj) {
                 linkExist = true;
+                break;
             }
         }
-    } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
+    } else if ((obj.startsWith('NGC') && !isNaN(obj.substr(3))) || (obj.startsWith('IC') && !isNaN(obj.substr(2)))) {
         for (i=0; i<NGC.length/5; i++) {
             if (NGC[5*i] == obj) {
                 linkExist = true;
+                break;
             }
         }
-    } else { //その他
+    }/* else { //その他 
         for (var i=0; i<choice.length/4; i++) {
             if (obj == choice[4*i]) {
                 linkExist = true;
+                break;
             }
         }
-    }
+    }*/
     return linkExist;
 }
 
 function link(obj) {
+    console.log(obj)
     if (!obj) {
         console.error('Invalid input:', obj);
         return;
     }
-    if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
-        for (i=0; i<messier.length; i++) {
-            if (messier[i].name == obj) {
-                cenRA = rahm2deg(messier[i].ra);
-                cenDec = decdm2deg(messier[i].dec);
-            }
-        }
-    } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
-        for (i=0; i<NGC.length/5; i++) {
-            if (NGC[5*i] == obj) {
-                cenRA = parseFloat(NGC[5*i+1]);
-                cenDec = parseFloat(NGC[5*i+2]);
-            }
-        }
-    } else if (obj.slice(-1) == '座') {
-        for (i=0; i<89; i++){
-            if (obj == CLnames[i] + '座') {
-                cenRA = parseFloat(constPos[2*i]);
-                cenDec = parseFloat(constPos[2*i+1]);
-            }
-        }
-    } else {
-        for (var i=0; i<choice.length/4; i++) {
-            if (obj == choice[4*i]) {
-                cenRA = parseFloat(choice[4*i+1]);
-                cenDec = parseFloat(choice[4*i+2]);
-            }
+    let frag = false;
+    for (i=0; i<recs.length; i++) {
+        console.log(recs[i].name, recs[i].name == obj)
+        if (recs[i].name == obj) {
+            cenRA = rahm2deg(recs[i].ra);
+            cenDec = decdm2deg(recs[i].dec);
+            frag = true;
+            break;
         }
     }
-    url.searchParams.set('RA', cenRA);
-    url.searchParams.set('Dec', cenDec);
+    if (!frag) {
+        if (obj[0] == 'M' && isNaN(obj.substr(1)) == false) { //メシエ
+            for (i=0; i<messier.length; i++) {
+                if (messier[i].name == obj) {
+                    cenRA = rahm2deg(messier[i].ra);
+                    cenDec = decdm2deg(messier[i].dec);
+                    break;
+                }
+            }
+        } else if ((obj.startsWith('NGC') && isNaN(obj.substr(3)) == false) || (obj.startsWith('IC') && isNaN(obj.substr(2)) == false)) {
+            for (i=0; i<NGC.length/5; i++) {
+                if (NGC[5*i] == obj) {
+                    cenRA = parseFloat(NGC[5*i+1]);
+                    cenDec = parseFloat(NGC[5*i+2]);
+                    break;
+                }
+            }
+        } else if (obj.slice(-1) == '座') {
+            for (i=0; i<89; i++){
+                if (obj == CLnames[i] + '座') {
+                    cenRA = parseFloat(constPos[2*i]);
+                    cenDec = parseFloat(constPos[2*i+1]);
+                    break;
+                }
+            }
+        }/* else {
+            for (var i=0; i<choice.length/4; i++) {
+                if (obj == choice[4*i]) {
+                    cenRA = parseFloat(choice[4*i+1]);
+                    cenDec = parseFloat(choice[4*i+2]);
+                    break;
+                }
+            }
+        }*/
+    }
+    url.searchParams.set('RA', cenRA.toFixed(2));
+    url.searchParams.set('Dec', cenDec.toFixed(2));
     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
     url.searchParams.set('azm', cenAzm.toFixed(2));
     url.searchParams.set('alt', cenAlt.toFixed(2));
@@ -359,6 +380,7 @@ function link(obj) {
 
 function openSearch() {
     document.getElementById('searchDiv').style.visibility = "visible";
+    document.getElementById('suggestionButtonContainer').innerHTML = '';
 }
 
 function closeSearch() {
@@ -367,88 +389,188 @@ function closeSearch() {
 
 document.getElementById('searchInput').addEventListener('input', function() {
     let searchText = hiraganaToKatakana(document.getElementById('searchInput').value.toUpperCase());
-    let suggestions = [[], []];
+    let suggestions1 = [[], []];
+    let suggestions2 = [[], []];
+    let recsugs = [];
     if (searchText.length == 0) {
-        suggestions = [[], []];
-    } else if (searchText.length == 1) {
-        if (isNaN(searchText) == false) {
-            if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
-                suggestions[0].push(`M${searchText}`);
-                suggestions[1].push(`M${searchText}`);
-            }
-            if (1 <= parseInt(searchText) <= 7840 && linkExist(`NGC${searchText}`)) {
-                suggestions[0].push(`NGC${searchText}`);
-                suggestions[1].push(`NGC${searchText}`);
-            }
-            if (1 <= parseInt(searchText) <= 5386 && linkExist(`IC${searchText}`)) {
-                suggestions[0].push(`IC${searchText}`);
-                suggestions[1].push(`IC${searchText}`);
-            }
-        } else if (!["M, N, I"].includes(searchText)){
+        suggestions1 = [[], []];
+        suggestions2 = [[], []];
+    } else if (searchText.length == 1) { //1文字
+        if (!isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
             for (let constName of CLnames) {
                 if (constName.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
-                    suggestions[0].push(`${constName}座`);
-                    suggestions[1].push(`${constName}座`);
+                    suggestions1[0].push(`${constName}座`);
+                    suggestions1[1].push(`${constName}座`);
                 }
             }
+        }
+        if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+            suggestions1[0].push(`M${searchText}`);
+            suggestions1[1].push(`M${searchText}`);
+        }
+        if (isNaN(searchText)) {
+            for (let rec of recs) {
+                if (hiraganaToKatakana(rec.name[0]) == searchText) {
+                    suggestions1[0].push(rec.name);
+                    suggestions1[1].push(rec.name);
+                }
+                for (let alt of rec.alt_name) {
+                    if (hiraganaToKatakana(alt[0].toUpperCase()) == searchText) {
+                        suggestions1[0].push(`${rec.name}(${alt})`);
+                        suggestions1[1].push(rec.name);
+                    }
+                }
+            }
+        } else {
+            for (let rec of recs) {
+                if ([`NGC${searchText}`, `IC${searchText}`, `Cr${searchText}`].includes(rec.name)) {
+                    suggestions1[0].push(rec.name);
+                    suggestions1[1].push(rec.name);
+                    recsugs.push(rec.name);
+                }
+                for (let alt of rec.alt_name) {
+                    if ([`NGC${searchText}`, `IC${searchText}`, `Cr${searchText}`].includes(alt)) {
+                        suggestions1[0].push(`${rec.name}(${alt})`);
+                        suggestions1[1].push(rec.name);
+                        recsugs.push(alt);
+                    }
+                }
+            }
+        }
+        if (!isNaN(searchText)) {
+            if (1 <= parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
+                suggestions1[0].push(`NGC${searchText}`);
+                suggestions1[1].push(`NGC${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 5386 && !recsugs.includes(`IC${searchText}`) && linkExist(`IC${searchText}`)) {
+                suggestions1[0].push(`IC${searchText}`);
+                suggestions1[1].push(`IC${searchText}`);
+            }
+        } else if (!["M", "N", "I"].includes(searchText)){
             for (m of messier) {
                 for (alt of m.alt_name) {
                     if (alt.length > 0 && hiraganaToKatakana(alt[0]) == searchText) {    
-                        suggestions[0].push(m.name);
-                        suggestions[1].push(m.name);
+                        suggestions1[0].push(m.name);
+                        suggestions1[1].push(m.name);
                     }
                 }
             }
         }
     } else {
-        suggestions = [[], []];
-        if (isNaN(searchText) == false) {
-            if (1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
-                suggestions[0].push(`M${searchText}`);
-                suggestions[1].push(`M${searchText}`);
-            }
-            if (1 <= parseInt(searchText) <= 7840 && linkExist(`NGC${searchText}`)) {
-                suggestions[0].push(`NGC${searchText}`);
-                suggestions[1].push(`NGC${searchText}`);
-            }
-            if (1 <= parseInt(searchText) <= 5386 && linkExist(`IC${searchText}`)) {
-                suggestions[0].push(`IC${searchText}`);
-                suggestions[1].push(`IC${searchText}`);
-            }
-        } else if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) <= 110 && linkExist(searchText)) {
-            suggestions[0].push(searchText.toUpperCase());
-            suggestions[1].push(searchText.toUpperCase());
-        } else if (searchText.startsWith('NGC') && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
-            suggestions[0].push(searchText.toUpperCase());
-            suggestions[1].push(searchText.toUpperCase());
-        } else if (searchText.startsWith('IC') && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
-            suggestions[0].push(searchText.toUpperCase());
-            suggestions[1].push(searchText.toUpperCase());
-        } else {
+        suggestions1 = [[], []];
+        suggestions2 = [[], []];
+        //星座
+        if (!isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
             for (let constName of CLnames) {
                 if ((hiraganaToKatakana(constName)+'座').includes(searchText)) {
-                    suggestions[0].push(`${constName}座`);
-                    suggestions[1].push(`${constName}座`);
+                    if (hiraganaToKatakana(constName+'座').startsWith(searchText)) {
+                        suggestions1[0].push(`${constName}座`);
+                        suggestions1[1].push(`${constName}座`);
+                    } else {
+                        suggestions2[0].push(`${constName}座`);
+                        suggestions2[1].push(`${constName}座`);
+                    }
                 }
             }
+        }
+        //Mをつけてメシエになるとき
+        if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+            suggestions1[0].push(`M${searchText}`);
+            suggestions1[1].push(`M${searchText}`);
+        }
+        //そのままでメシエになるとき
+        if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) <= 110 && linkExist(searchText)) {
+            suggestions1[0].push(searchText.toUpperCase());
+            suggestions1[1].push(searchText.toUpperCase());
+        }
+        if (isNaN(searchText)) {
+            for (let rec of recs) {
+                if (hiraganaToKatakana(rec.name).startsWith(searchText)) {
+                    suggestions1[0].push(rec.name);
+                    suggestions1[1].push(rec.name);
+                } else if (hiraganaToKatakana(rec.name).includes(searchText)) {
+                    suggestions2[0].push(rec.name);
+                    suggestions2[1].push(rec.name);
+                }
+                for (let alt of rec.alt_name) {
+                    if (hiraganaToKatakana(alt.toUpperCase()).startsWith(searchText)) {
+                        suggestions1[0].push(rec.name);
+                        suggestions1[1].push(rec.name);
+                    } else if (hiraganaToKatakana(alt.toUpperCase()).includes(searchText)) {
+                        suggestions2[0].push(rec.name);
+                        suggestions2[1].push(rec.name);
+                    }
+                }
+            }
+        } else {
+            for (let rec of recs) {
+                if ([`NGC${searchText}`, `IC${searchText}`, `Cr${searchText}`].includes(rec.name)) {
+                    suggestions1[0].push(rec.name);
+                    suggestions1[1].push(rec.name);
+                    recsugs.push(rec.name);
+                }
+                for (let alt of rec.alt_name) {
+                    if ([`NGC${searchText}`, `IC${searchText}`, `Cr${searchText}`].includes(alt)) {
+                        suggestions1[0].push(rec.name);
+                        suggestions1[1].push(rec.name);
+                        recsugs.push(alt);
+                    }
+                }
+            }
+        }
+        //NGC, ICをつけてそれらになるとき
+        if (!isNaN(searchText)) {
+            if (1 <= parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
+                suggestions1[0].push(`NGC${searchText}`);
+                suggestions1[1].push(`NGC${searchText}`);
+            }
+            if (1 <= parseInt(searchText) <= 5386 && !recsugs.includes(`IC${searchText}`) && linkExist(`IC${searchText}`)) {
+                suggestions1[0].push(`IC${searchText}`);
+                suggestions1[1].push(`IC${searchText}`);
+            }
+        } else if (searchText.startsWith('NGC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
+            suggestions1[0].push(searchText);
+            suggestions1[1].push(searchText);
+        } else if (searchText.startsWith('IC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
+            suggestions1[0].push(searchText);
+            suggestions1[1].push(searchText);
+        }
+        //数字ではないがM, N, I始まりではないとき
+        if (isNaN(searchText) && !["M", "N", "I"].includes(searchText[0])){
             for (m of messier) {
                 for (alt of m.alt_name) {
-                    if (hiraganaToKatakana(alt).includes(searchText)) {    
-                        suggestions[0].push(m.name);
-                        suggestions[1].push(m.name);
+                    if (hiraganaToKatakana(alt).includes(searchText)) {
+                        if (hiraganaToKatakana(alt).startsWith(searchText)) {
+                            suggestions1[0].push(m.name);
+                            suggestions1[1].push(m.name);
+                        } else {
+                            suggestions2[0].push(m.name);
+                            suggestions2[1].push(m.name);
+                        }
                     }
                 }
             }
         }
     }
 
-    document.getElementById('suggestionButtonContainer').innerHTML = ''
-    for (let i=0; i<suggestions[0].length; i++) {
+    document.getElementById('suggestionButtonContainer').innerHTML = '';
+    for (let i=0; i<suggestions1[0].length; i++) {
         const button = document.createElement('button');
         button.className = 'suggestionButton';
-        button.textContent = suggestions[0][i];
+        button.textContent = suggestions1[0][i];
         button.addEventListener('click', function() {
-            link(suggestions[1][i]);
+            link(suggestions1[1][i]);
+            document.getElementById('searchInput').value = '';
+            closeSearch();
+        });
+        document.getElementById('suggestionButtonContainer').appendChild(button);
+    }
+    for (let i=0; i<suggestions2[0].length; i++) {
+        const button = document.createElement('button');
+        button.className = 'suggestionButton';
+        button.textContent = suggestions2[0][i];
+        button.addEventListener('click', function() {
+            link(suggestions2[1][i]);
             document.getElementById('searchInput').value = '';
             closeSearch();
         });
@@ -470,6 +592,7 @@ function showObjectInfo(x, y) {
     if (!document.getElementById('objectInfoCheck').checked) {
         return;
     }
+    const wikiSpecial = [[1, 8, 16, 17, 20, 27, 31, 33, 42, 44, 45, 51, 57, 64, 97, 104], ["かに星雲", "干潟星雲", "わし星雲", "オメガ星雲", "三裂星雲", "亜鈴状星雲", "アンドロメダ銀河", "さんかく座銀河", "オリオン大星雲", "プレセペ星団", "プレアデス星団", "子持ち銀河", "環状星雲", "黒眼銀河", "ふくろう星雲", "ソンブレロ銀河"]]
     let nearest = null;
     let nearestDistance = Math.max(canvas.width, canvas.height);
     for (i=0; i<infoList.length; i++) {
@@ -485,10 +608,15 @@ function showObjectInfo(x, y) {
         if (JPNplanets.includes(nearest[0])) {
             document.getElementById('objectInfoText').innerHTML = `<a href="https://peteworden.github.io/Soleil/SoleilWeb.html?time=${yearTextElem.value}-${monthTextElem.value}-${dateTextElem.value}-${hourTextElem.value}-${Math.floor(minuteTextElem.value/6.0)}&target=${ENGplanets[JPNplanets.indexOf(nearest[0])].split(' ').join('').split('/').join('')}&dark=1">Soleil Webでくわしく見る</a>`;
         } else if (nearest[0][0] == 'M') {
-            if (messier[parseInt(nearest[0].slice(1))].description.length > 0) {
-                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))].description;
+            if (messier[parseInt(nearest[0].slice(1))-1].description.length > 0) {
+                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))-1].description;
             } else {
                 document.getElementById('objectInfoText').innerHTML = 'no description';
+            }
+            if (wikiSpecial[0].includes(parseInt(nearest[0].slice(1)))) {
+                document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${wikiSpecial[1][wikiSpecial[0].indexOf(parseInt(nearest[0].slice(1)))]}">Wikipedia</a>`;
+            } else {
+                document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
             }
         } else {
             document.getElementById('objectInfoText').innerHTML = `No data`;
@@ -1451,9 +1579,9 @@ function show_main(){
                     }
                 }
             }
-            DrawStars(skyareas);
+            drawStars(skyareas);
             if (magLim > 10) {
-                DrawStars1011(skyareas);
+                drawStars1011(skyareas);
             }
         }
     } else if (mode == 'EtP') { //正距円筒図法
@@ -1479,9 +1607,9 @@ function show_main(){
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                 }
             }
-            DrawStars(skyareas);
+            drawStars(skyareas);
             if (magLim > 10) {
-                DrawStars1011(skyareas);
+                drawStars1011(skyareas);
             }
         }
     } else if (mode == 'view') {
@@ -1537,17 +1665,17 @@ function show_main(){
                     }
                 }
             }
-            DrawStars(skyareas);
+            drawStars(skyareas);
             if (magLim > 10) {
-                DrawStars1011(skyareas);
+                drawStars1011(skyareas);
             }
         }
     } else if (mode == 'live') {
         /*if (magLim > 6.5) {
             var skyareas = [[SkyArea(0, -89.9), SkyArea(359.9, 89.9)]];
-            DrawStars(skyareas);
+            drawStars(skyareas);
             if (magLim > 10) {
-                DrawStars1011(skyareas);
+                drawStars1011(skyareas);
             }
         }*/
     }
@@ -1636,9 +1764,9 @@ function show_main(){
     //メシエ天体とポピュラー天体
     if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
         //メシエ
-        DrawMessier();
+        drawMessier();
         //ポピュラー
-        for (i=0; i<choice.length/4; i++){
+        /*for (i=0; i<choice.length/4; i++){
             var name = choice[4*i];
             if (popularList.indexOf(name) != -1) {
                 var RA = parseFloat(choice[4*i+1]);
@@ -1647,36 +1775,40 @@ function show_main(){
                 if (mode == 'AEP') {
                     [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        DrawObjects(name, ...coordSH(scrRA, scrDec), type);
+                        drawObjects(name, ...coordSH(scrRA, scrDec), type);
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                        DrawObjects(name, ...coord(RA, Dec), type);
+                        drawObjects(name, ...coord(RA, Dec), type);
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        DrawObjects(name, ...coordSH(scrRA, scrDec), type);
+                        drawObjects(name, ...coordSH(scrRA, scrDec), type);
                     }
                 } else if (mode == 'live') {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        DrawObjects(name, ...coordSH(scrRA, scrDec), type);
+                        drawObjects(name, ...coordSH(scrRA, scrDec), type);
                     }
                 }
             }
-        }
+        }*/
     }
 
     // メシエ以外
-    if (document.getElementById('choiceCheck').checked && rgEW < 0.5 * document.getElementById('choiceFrom').value) {
-        DrawChoice();
+    /*if (document.getElementById('choiceCheck').checked && rgEW < 0.5 * document.getElementById('choiceFrom').value) {
+        drawChoice();
+    }*/
+
+    if (document.getElementById('recsCheck').checked && rgEW < 0.5 * document.getElementById('recsFrom').value) {
+        drawRecs();
     }
 
     // メシエ以外
     if (document.getElementById('allNGCCheck').checked && rgEW < 0.5 * document.getElementById('allNGCFrom').value) {
-        DrawNGC();
+        drawNGC();
     }
 
     //惑星、惑星の名前
@@ -1704,7 +1836,7 @@ function show_main(){
                 infoList.push([JPNplanets[i], x, y]);
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
-                    var r = DrawMoon();
+                    var r = drawMoon();
                     ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                     infoList.push(['月', x, y]);
@@ -2033,7 +2165,7 @@ function show_main(){
         }
         return c;
     }
-    function DrawStars (skyareas) {
+    function drawStars (skyareas) {
         for (var arearange of skyareas) {
             var st = parseInt(Help[arearange[0]]);
             var fi = parseInt(Help[arearange[1]+1]);
@@ -2070,7 +2202,7 @@ function show_main(){
         }
     }
 
-    function DrawStars1011 (skyareas) {
+    function drawStars1011 (skyareas) {
         for (var arearange of skyareas) {
             var st = parseInt(Help1011[arearange[0]]);
             var fi = parseInt(Help1011[arearange[1]+1]);
@@ -2210,29 +2342,73 @@ function show_main(){
             if (mode == 'AEP') {
                 var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    DrawObjects(name, ...coordSH(scrRA, scrDec), 0);
+                    drawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                    DrawObjects(name, ...coord(RA, Dec), 0);
+                    drawObjects(name, ...coord(RA, Dec), 0);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    DrawObjects(name, ...coordSH(scrRA, scrDec), 0);
+                    drawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    DrawObjects(name, ...coordSH(scrRA, scrDec), 0);
+                    drawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
             }
         }
     }
 
-    function DrawMessier () {
+    function drawJsonObjects (data) {
         ctx.strokeStyle = objectColor;
+        ctx.fillStyle = objectColor;
+        for (i=0; i<data.length; i++){
+            var name = data[i].name;
+            if (name == '') {
+                continue;
+            }
+            var RA = rahm2deg(data[i].ra);
+            var Dec = decdm2deg(data[i].dec);
+            var type = data[i].class;
+            if (mode == 'AEP') {
+                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawObjects(name, x, y, type);
+                    infoList.push([name, x, y]);
+                }
+            } else if (mode == 'EtP') {
+                if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
+                    var [x, y] = coord(RA, Dec);
+                    drawObjects(name, x, y, type);
+                    infoList.push([name, x, y]);
+                }
+            } else if (mode == 'view') {
+                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawObjects(name, x, y, type);
+                    infoList.push([name, x, y]);
+                }
+            } else if (mode == 'live') {
+                var [A, h] = RADec2Ah(RA, Dec, theta);
+                var [scrRA, scrDec] = Ah2scrlive(A, h);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    var [x, y] = coordSH(scrRA, scrDec);
+                    drawObjects(name, x, y, type);
+                    infoList.push([name, x, y]);
+                }
+            }
+        }
+    }
+
+    function drawMessier () {
+        drawJsonObjects(messier);
+        /*ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<110; i++){
             var name = messier[i].name;
@@ -2246,20 +2422,20 @@ function show_main(){
                 var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                     infoList.push([name, x, y]);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     var [x, y] = coord(RA, Dec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                     infoList.push([name, x, y]);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                     infoList.push([name, x, y]);
                 }
             } else if (mode == 'live') {
@@ -2267,19 +2443,19 @@ function show_main(){
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                     infoList.push([name, x, y]);
                 }
             }
-        }
+        }*/
     }
 
-    function DrawChoice () {
+    function drawChoice () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<choice.length/4; i++){
             var name = choice[4*i];
-            if (popularList.indexOf(name) == -1) {
+            //if (popularList.indexOf(name) == -1) {
                 var RA = parseFloat(choice[4*i+1]);
                 var Dec = parseFloat(choice[4*i+2]);
                 var type = choice[4*i+3];
@@ -2287,20 +2463,20 @@ function show_main(){
                     var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
-                        DrawObjects(name, x, y, type);
+                        drawObjects(name, x, y, type);
                         infoList.push([name, x, y]);
                     }
                 } else if (mode == 'EtP') {
                     if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
                         var [x, y] = coord(RA, Dec);
-                        DrawObjects(name, x, y, type);
+                        drawObjects(name, x, y, type);
                         infoList.push([name, x, y]);
                     }
                 } else if (mode == 'view') {
                     var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         var [x, y] = coordSH(scrRA, scrDec);
-                        DrawObjects(name, x, y, type);
+                        drawObjects(name, x, y, type);
                         infoList.push([name, x, y]);
                     }
                 } else if (mode == 'live') {
@@ -2308,15 +2484,19 @@ function show_main(){
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         var [x, y] = coordSH(scrRA, scrDec);
-                        DrawObjects(name, x, y, type);
+                        drawObjects(name, x, y, type);
                         infoList.push([name, x, y]);
                     }
                 }
-            }
+            //}
         }
     }
 
-    function DrawNGC () {
+    function drawRecs () {
+        drawJsonObjects(recs)
+    }
+
+    function drawNGC () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
         for (i=0; i<NGC.length/5; i++){
@@ -2328,32 +2508,32 @@ function show_main(){
                 var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
                     var [x, y] = coord(RA, Dec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                 }
             } else if (mode == 'live') {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    DrawObjects(name, x, y, type);
+                    drawObjects(name, x, y, type);
                 }
             }
         }
     }
 
     //入っていることは前提
-    function DrawObjects (name, x, y, type) {
+    function drawObjects (name, x, y, type) {
         ctx.beginPath();
         /*
         Gx       Galaxy 銀河
@@ -2399,7 +2579,7 @@ function show_main(){
         ctx.fillText(name, x+5, y-5);
     }
 
-    function DrawMoon () {
+    function drawMoon () {
         var rs = RAlist[0] * pi/180;
         var ds = Declist[0] * pi/180;
         var rm = RAlist[9] * pi/180;
@@ -2863,10 +3043,13 @@ function loadFiles() {
 
 
     // choice天体
-    loadFile("choice_forJS", xhrChoice);
+    /*loadFile("choice_forJS", xhrChoice);
     function xhrChoice(data) {
         choice = data.split(',');
-    }
+    }*/
+    fetchJsonData('rec', function(data) {
+        recs = data;
+    });
 
     // NGC天体とIC天体
     loadFile("allNGC_forJS", xhrNGC);
@@ -2935,7 +3118,7 @@ function loadFiles() {
 
 function checkURL() {
     // キーを指定し、クエリパラメータを取得
-    if (url.searchParams.has('RA')) {
+    if (url.searchParams.has('RA') && !isNaN(url.searchParams.get('RA'))) {
         cenRA = parseFloat(url.searchParams.get('RA'));
         defaultcheck++;
         show_initial();
@@ -2945,7 +3128,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('Dec')) {
+    if (url.searchParams.has('Dec') && !isNaN(url.searchParams.get('Dec'))) {
         cenDec = parseFloat(url.searchParams.get('Dec'));
         defaultcheck++;
         show_initial();
@@ -2955,7 +3138,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('azm')) {
+    if (url.searchParams.has('azm') && !isNaN(url.searchParams.get('azm'))) {
         cenAzm = parseFloat(url.searchParams.get('azm'));
         defaultcheck++;
         show_initial();
@@ -2965,7 +3148,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('alt')) {
+    if (url.searchParams.has('alt') && !isNaN(url.searchParams.get('alt'))) {
         cenAlt = parseFloat(url.searchParams.get('alt'));
         defaultcheck++;
         show_initial();
@@ -3011,7 +3194,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('area')) {
+    if (url.searchParams.has('area') && !isNaN(url.searchParams.get('area'))) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
         rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
@@ -3030,7 +3213,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('magkey')) {
+    if (url.searchParams.has('magkey') && !isNaN(url.searchParams.get('magkey'))) {
         magkey1 = parseFloat(url.searchParams.get('magkey'));
         document.getElementById('magLimitSlider').value = magkey1;
         magLim = find_magLim(magkey1, magkey2);
@@ -3042,7 +3225,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('lat')) {
+    if (url.searchParams.has('lat') && !isNaN(url.searchParams.get('lat'))) {
         var lat_obs = url.searchParams.get('lat') * pi/180;
         if (lat_obs >= 0) {
             document.getElementById("NSCombo").value = '北緯';
@@ -3059,7 +3242,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('lon')) {
+    if (url.searchParams.has('lon') && !isNaN(url.searchParams.get('lon'))) {
         var lon_obs = url.searchParams.get('lon') * pi/180;
         if (lon_obs >= 0) {
             document.getElementById("EWCombo").value = '東経';
