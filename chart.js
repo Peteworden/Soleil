@@ -619,7 +619,20 @@ function showObjectInfo(x, y) {
                 document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
             }
         } else {
-            document.getElementById('objectInfoText').innerHTML = `No data`;
+            for (let rec of recs) {
+                if (rec.name == nearest[0]) {
+                    if (rec.description.length > 0) {
+                        document.getElementById('objectInfoText').innerHTML = rec.description;
+                    } else {
+                        document.getElementById('objectInfoText').innerHTML = 'no description';
+                    }
+                    if (rec.wiki == null) {
+                        document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.name}">Wikipedia</a>`;
+                    } else {
+                        document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.wiki}">Wikipedia</a>`;
+                    }
+                }
+            }
         }
     }
 }

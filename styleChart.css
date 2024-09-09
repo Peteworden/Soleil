@@ -289,7 +289,7 @@ select {
 }
 
 #objectInfoText {
-    margin: auto 80px;
+    width: 90%;
     font-size: large;
 }
 
