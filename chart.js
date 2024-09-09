@@ -606,10 +606,13 @@ function showObjectInfo(x, y) {
         document.getElementById('objectInfo').style.visibility = 'visible';
         document.getElementById('objectInfoName').innerHTML = nearest[0];
 
-        for (let ext of ["png", "PNG", "JPG"]) {
+        let found = false;
+        document.getElementById('objectInfoImage').innerHTML = "";
+        for (let ext of ["jpg", "JPG"]) {
             const img = new Image();
             img.onload = function() {
                 document.getElementById('objectInfoImage').appendChild(img);
+                console.log(`https://peteworden.github.io/Soleil/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`)
                 found = true;
             };
             img.onerror = function() {

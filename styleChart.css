@@ -269,6 +269,9 @@ select {
     left: 10%;
     overflow: scroll;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     z-index: 3;
 }
 
@@ -289,16 +292,19 @@ select {
 }
 
 #objectInfoImage {
-    width: 90%;
+    width: 70%;
+    height: auto;
 }
 
 #objectInfoImage img{
     width: 100%;
-    height: auto;
+    height: 100%;
+    display: block;
 }
 
 #objectInfoText {
     width: 90%;
+    margin: 10px auto;
     font-size: large;
 }
 
