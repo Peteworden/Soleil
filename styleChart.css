@@ -288,6 +288,15 @@ select {
     font-weight: 300;
 }
 
+#objectInfoImage {
+    width: 90%;
+}
+
+#objectInfoImage img{
+    width: 100%;
+    height: auto;
+}
+
 #objectInfoText {
     width: 90%;
     font-size: large;
