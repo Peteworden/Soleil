@@ -259,8 +259,8 @@ select {
     background-color: #176c1b;
 }
 
-h1 {
-    font-size: medium;
+h1, p {
+    font-size: 16px;
     font-weight: 100;
 }
 
