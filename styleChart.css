@@ -259,6 +259,11 @@ select {
     background-color: #176c1b;
 }
 
+h1 {
+    font-size: medium;
+    font-weight: 100;
+}
+
 .objectInfo {
     position: fixed;
     color: #C0C0C0;
