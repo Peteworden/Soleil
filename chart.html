@@ -97,7 +97,11 @@
                         <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
                         <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
-                        <input type="radio" name="mode" value="live">ライブモード(beta)<input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
+                        <input type="radio" name="mode" value="live">ライブモード
+                        <input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/><br>
+                        <input type="radio" name="mode" value="ar">AR
+                        <input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
+                        <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
                     </div>
                     <div>
                         リアルタイム
@@ -228,6 +232,23 @@
             </p>
         </div>
 
+        <div id="setPicsFor360Div" class="setPicsFor360Div">
+            <input type="text" id="picsFor360" placeholder="5" value="5.2">
+            <button id="submitPicsFor360" type="button" onclick="setPicsFor360()">OK</button>
+            <div id="picsFor360text">
+                <h2>重要！　リロードのたびに設定が必要です！</h2>
+                <p>
+                    星図と重ねて表示する実際の風景の拡大率を星空と合わせるために、「一周360°がカメラの画角の横幅の何倍か」を上の欄に入力してください。<br>
+                    いったんカメラアプリを開き、スマホを横倒しにして、建物の角などのほぼスマホと同じ高さにある目印を画角の右端中央（左端中央）に入れます。<br>
+                    次にその状態で左端中央（右端中央）にあるものが右端中央（左端中央）に来るように、スマホの向きを変えます。<br>
+                    これを繰り返して、例えば1周がちょうど写真5枚分なら上の欄に5と記入します。<br>
+                    半時計周りに回って（つまりはじめの目印を右端中央に合わせて）6枚目で1周し、はじめに目印にしたものが右端から測って
+                    左右の画角の0.2倍の位置にあったなら5.2と入力します。
+                </p>
+            </div>
+            
+        </div>
+
         <div id="searchDiv" class="searchDiv">
             <input type="text" id="searchInput" placeholder="ここに入力して検索">
             <button id="closeSearch" type="button" onclick="closeSearch()">閉じる</button>
@@ -248,6 +269,10 @@
             <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
         </div>
         
+        <div>
+            <video id="arVideo"></video>
+        </div>
+
         <div class="result">
             <script src="chart.js"></script>
         </div>

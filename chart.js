@@ -5,6 +5,7 @@
 
 //星などの色を変える
 var darker = false;
+var skycolor = '#001';
 var starColor = '#FFF';
 var yellowColor = 'yellow';
 var objectColor = 'orange';
@@ -25,6 +26,7 @@ const realtimeElem = document.getElementsByName('realtime');
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+document.getElementById('setPicsFor360Div').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
 
@@ -147,63 +149,58 @@ function permitDeviceOrientationForSafari() {
         .catch(console.error);
 }
 var moving = false;
-function deviceOrientation(event) {
-    if (os == 'iphone' && loadAzm == 0) {
-        loadAzm = event.webkitCompassHeading;
-    }
-    var orientationTime2 = Date.now();
-    if (orientationTime2 - orientationTime1 > 100) {
-        orientationTime1 = orientationTime2;
-        if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
-            if (dev_a_array.length > 2) {
-                dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
-                dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
-                dev_c_sum += event.gamma*pi/180 - dev_c_array.pop();
-                dev_a_array.unshift(event.alpha*pi/180);
-                dev_b_array.unshift(event.beta*pi/180);
-                dev_c_array.unshift(event.gamma*pi/180);
-                moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
-                dev_a = dev_a_sum / 3;
-                dev_b = dev_b_sum / 3;
-                dev_c = dev_c_sum / 3;
-            } else {
-                dev_a_sum += event.alpha*pi/180;
-                dev_b_sum += event.beta*pi/180;
-                dev_c_sum += event.gamma*pi/180;
-                dev_a_array.unshift(event.alpha*pi/180);
-                dev_b_array.unshift(event.beta*pi/180);
-                dev_c_array.unshift(event.gamma*pi/180);
-                dev_a = dev_a_sum / dev_a_array.length;
-                dev_b = dev_b_sum / dev_b_array.length;
-                dev_c = dev_c_sum / dev_c_array.length;
-            }
-        } else {
-            dev_a = event.alpha*pi/180;
-            dev_b = event.beta*pi/180;
-            dev_c = event.gamma*pi/180;
-            dev_a_sum = dev_a + 0;
-            dev_b_sum = dev_b + 0;
-            dev_c_sum = dev_c + 0;
-            dev_a_array = [dev_a];
-            dev_b_array = [dev_b];
-            dev_c_array = [dev_c];
-        }
-        show_initial();
-    }
-}
 
+let picsFor360 = 5;
+let videoHeight = 1;
+let videoWidth = 1;
+
+let videoOn = false;
 function turnOnOffLiveMode (mode) {
-    if (mode == 'live') {
+    if (['live', 'ar'].includes(mode)) {
         if (os == 'iphone') {
             window.addEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
             window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
+        }
+        
+        if (mode == 'ar' && !videoOn) {
+            skycolor = "rgba(" + [0, 0, 1, 0.1] + ")";
+            var constraints = { audio: false, video: { facingMode: "environment" } };
+            navigator.mediaDevices.getUserMedia(constraints)
+            .then(
+                function(stream) {
+                    let video = document.getElementById('arVideo');
+                    video.srcObject = stream;
+                    video.onloadedmetadata = function(e) {
+                        video.play();
+                    };
+                    document.body.appendChild(video);
+                    setPicsFor360();
+                }
+            )
+            videoOn = true;
         }
     } else {    
         if (os == 'iphone') {
             window.removeEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
             window.removeEventListener("deviceorientationabsolute", deviceOrientation, true);
+        }
+
+        skycolor = '#001';
+        if (videoOn) {
+            var constraints = { audio: false, video: { facingMode: "environment" } };
+            navigator.mediaDevices.getUserMedia( constraints )
+            .then(
+                function( stream ) {
+                    let video = document.getElementById('arVideo');
+                    video.srcObject = stream;
+                    video.onloadedmetadata = function( e ) {
+                        stream.getVideoTracks()[0].stop();
+                    };
+                }
+            )
+            videoOn = false;
         }
     }
 }
@@ -270,22 +267,22 @@ var extra = [];
 let intervalId = null;
 
 const url = new URL(window.location.href);
-loadFiles();
-checkURL();
 
-function show_initial(){
-    if (xhrcheck == 14 && defaultcheck ==11) {
-        canvas.addEventListener("touchstart", ontouchstart);
-        canvas.addEventListener("touchmove", ontouchmove);
-        canvas.addEventListener('touchend', ontouchend);
-        canvas.addEventListener('touchcancel', ontouchcancel);
-        canvas.addEventListener('mousedown', onmousedown);
-        canvas.addEventListener('mouseup', onmouseup);
-        canvas.addEventListener('wheel', onwheel);
-        newSetting();
-        show_main();
+function changePicsFor360() {
+    document.getElementById('setPicsFor360Div').style.visibility = 'visible';
+}
+
+function setPicsFor360() {
+    let picsFor360Input = document.getElementById('picsFor360').value;
+    if (!isNaN(picsFor360Input) && 1 < parseFloat(picsFor360Input) < 20) {
+        videoHeight = 360 / parseFloat(picsFor360Input);
+        document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
+        document.getElementById('setPicsFor360Div').style.visibility = 'hidden';
+    } else {
+        alert('ほんまに？');
     }
 }
+setPicsFor360();
 
 //const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
@@ -612,11 +609,10 @@ function showObjectInfo(x, y) {
             const img = new Image();
             img.onload = function() {
                 document.getElementById('objectInfoImage').appendChild(img);
-                console.log(`https://peteworden.github.io/Soleil/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`)
                 found = true;
             };
             img.onerror = function() {
-                console.log(`画像が見つかりません: ${ext}`);
+                //console.log(`画像が見つかりません: ${ext}`);
             };
             img.src = `https://peteworden.github.io/Soleil/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`;
             if (found) {
@@ -657,6 +653,8 @@ function showObjectInfo(x, y) {
         }
     }
 }
+
+let timeSliderValue = 0;
 
 let date = new Date();
 const localDate = new Date(date - date.getTimezoneOffset() * 60000);
@@ -828,7 +826,6 @@ function show_JD_minus1(){
     realtimeOff();
 }
 
-let timeSliderValue = 0;
 timeSliderElem.addEventListener('input', function(){
     showingJD += (timeSliderElem.value - timeSliderValue) / 1440;
     timeSliderValue = timeSliderElem.value;                                                                                                               
@@ -937,6 +934,7 @@ function ontouchmove(e) {
                     [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
                 }
+                document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
                 rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
                 magLim = find_magLim(magkey1, magkey2);
                 zerosize = find_zerosize();
@@ -1070,6 +1068,7 @@ function onwheel(event) {
             [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
         }
+        document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
         rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
         magLim = find_magLim(magkey1, magkey2);
         zerosize = find_zerosize();
@@ -1082,6 +1081,22 @@ function onwheel(event) {
         url.searchParams.set('alt', cenAlt.toFixed(2));
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         history.replaceState('', '', url.href);
+    }
+}
+
+loadFiles();
+checkURL();
+function show_initial(){
+    if (xhrcheck == 14 && defaultcheck ==11) {
+        canvas.addEventListener("touchstart", ontouchstart);
+        canvas.addEventListener("touchmove", ontouchmove);
+        canvas.addEventListener('touchend', ontouchend);
+        canvas.addEventListener('touchcancel', ontouchcancel);
+        canvas.addEventListener('mousedown', onmousedown);
+        canvas.addEventListener('mouseup', onmouseup);
+        canvas.addEventListener('wheel', onwheel);
+        newSetting();
+        show_main();
     }
 }
 
@@ -1424,7 +1439,7 @@ function calculation(JD) {
 
 function show_main(){
     ctx.clearRect(0, 0, canvas.width,canvas.height);
-    ctx.fillStyle = '#001';
+    ctx.fillStyle = skycolor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     const pi = Math.PI;
@@ -1437,12 +1452,12 @@ function show_main(){
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
     var textAngle = 0;
-    if (mode == 'live') {
+    if (['live', 'ar'].includes(mode)) {
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
     }
     if (['AEP', 'EtP'].includes(mode)) {
         [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
-    } else if (['view', 'live'].includes(mode)) {
+    } else if (['view', 'live', 'ar'].includes(mode)) {
         [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
     }
 
@@ -1558,7 +1573,7 @@ function show_main(){
                     }
                 }
             }
-        } else if (mode == 'live') {
+        } else if (['live', 'ar'].includes(mode)) {
             var [scrRA1, scrDec1] = Ah2scrlive(...RADec2Ah(RA1, Dec1, theta));
             var [scrRA2, scrDec2] = Ah2scrlive(...RADec2Ah(RA2, Dec2, theta));
             if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
@@ -1704,7 +1719,7 @@ function show_main(){
                 drawStars1011(skyareas);
             }
         }
-    } else if (mode == 'live') {
+    } else if (['live', 'ar'].includes(mode)) {
         /*if (magLim > 6.5) {
             var skyareas = [[SkyArea(0, -89.9), SkyArea(359.9, 89.9)]];
             drawStars(skyareas);
@@ -1738,7 +1753,7 @@ function show_main(){
             if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                 drawFilledCircle(...coordSH(scrRA, scrDec), size(mag), c);
             }
-        } else if (mode == 'live') {
+        } else if (['live', 'ar'].includes(mode)) {
             var [A, h] = RADec2Ah(RA, Dec, theta);
             [scrRA, scrDec] = Ah2scrlive(A, h);
             if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -1775,7 +1790,7 @@ function show_main(){
                     ctx.fillText(constName, x-40, y-10);
                     infoList.push([constName + '座', x, y]);
                 }
-            } else if (mode == 'live') {
+            } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -1857,7 +1872,7 @@ function show_main(){
             [x, y] = coord(RAlist[i], Declist[i]);
         } else if (mode == 'view') {
             [x, y] = coordSH(...RADec2scrview(RAlist[i], Declist[i]));
-        } else if (mode == 'live') {
+        } else if (['live', 'ar'].includes(mode)) {
             [x, y] = coordSH(...Ah2scrlive(...RADec2Ah(RAlist[i], Declist[i], theta)));
         }
         // 枠内に入っていて
@@ -2225,7 +2240,7 @@ function show_main(){
                     if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
                         drawFilledCircle (...coordSH(scrRA, scrDec), size(mag));
                     }
-                } else if (mode == 'live') {
+                } else if (['live', 'ar'].includes(mode)) {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2262,7 +2277,7 @@ function show_main(){
                         var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle(...coordSH(scrRA, scrDec), size(mag));
                     }
-                } else if (mode == 'live') {
+                } else if (['live', 'ar'].includes(mode)) {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2304,7 +2319,7 @@ function show_main(){
                         var [x, y] = coordSH(scrRA, scrDec);
                         drawFilledCircle (x, y, r);
                     }
-                } else if (mode == 'live') {
+                } else if (['live', 'ar'].includes(mode)) {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
@@ -2343,7 +2358,7 @@ function show_main(){
                     var [x, y] = coordSH(scrRA, scrDec);
                     drawFilledCircle (x, y, r);
                 }
-            } else if (mode == 'live') {
+            } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
@@ -2387,7 +2402,7 @@ function show_main(){
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     drawObjects(name, ...coordSH(scrRA, scrDec), 0);
                 }
-            } else if (mode == 'live') {
+            } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2428,7 +2443,7 @@ function show_main(){
                     drawObjects(name, x, y, type);
                     infoList.push([name, x, y]);
                 }
-            } else if (mode == 'live') {
+            } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2472,7 +2487,7 @@ function show_main(){
                     drawObjects(name, x, y, type);
                     infoList.push([name, x, y]);
                 }
-            } else if (mode == 'live') {
+            } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2513,7 +2528,7 @@ function show_main(){
                         drawObjects(name, x, y, type);
                         infoList.push([name, x, y]);
                     }
-                } else if (mode == 'live') {
+                } else if (['live', 'ar'].includes(mode)) {
                     var [A, h] = RADec2Ah(RA, Dec, theta);
                     var [scrRA, scrDec] = Ah2scrlive(A, h);
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2555,7 +2570,7 @@ function show_main(){
                     var [x, y] = coordSH(scrRA, scrDec);
                     drawObjects(name, x, y, type);
                 }
-            } else if (mode == 'live') {
+            } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2639,7 +2654,7 @@ function show_main(){
             var [scrRA1, scrDec1] = RADec2scrview(RA1, Dec1);
             var [x1, y1] = coordSH(scrRA1, scrDec1);
             P = Math.atan2(y1-y, x1-x);
-        } else if (mode == 'live') {
+        } else if (['live', 'ar'].includes(mode)) {
             var P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
             var RA1 = (rm - 0.2*cos(P) / cos(dm)) * 180 / pi;
             var Dec1 = (dm - 0.2*sin(P)) * 180 / pi;
@@ -2785,7 +2800,7 @@ function newSetting() {
     }
 
     url.searchParams.set('magkey', document.getElementById('magLimitSlider').value);
-    if (mode == 'live') {
+    if (['live', 'ar'].includes(mode)) {
         magLimLim = 6.5;
     } else {
         magLimLim = 11;
@@ -3205,7 +3220,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('mode') && ['AEP', 'EtP', 'view', 'live'].includes(url.searchParams.get('mode'))) {
+    if (url.searchParams.has('mode') && ['AEP', 'EtP', 'view', 'live', 'ar'].includes(url.searchParams.get('mode'))) {
         mode = url.searchParams.get('mode');
         for (var i=0; i<zuhoElem.length; i++) {
             if (zuhoElem[i].value == mode) {
@@ -3232,7 +3247,7 @@ function checkURL() {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
         rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
-        if (mode == 'live') {
+        if (['live', 'ar'].includes(mode)) {
             magLimLim = 6.5;
         } else {
             magLimLim = 11;
@@ -3290,6 +3305,52 @@ function checkURL() {
     } else {
         let lon_obs = 135 * pi/180;
         defaultcheck++;
+        show_initial();
+    }
+}
+
+
+function deviceOrientation(event) {
+    if (os == 'iphone' && loadAzm == 0) {
+        loadAzm = event.webkitCompassHeading;
+    }
+    var orientationTime2 = Date.now();
+    if (orientationTime2 - orientationTime1 > 100) {
+        orientationTime1 = orientationTime2;
+        if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
+            if (dev_a_array.length > 2) {
+                dev_a_sum += event.alpha*pi/180 - dev_a_array.pop();
+                dev_b_sum += event.beta*pi/180 - dev_b_array.pop();
+                dev_c_sum += event.gamma*pi/180 - dev_c_array.pop();
+                dev_a_array.unshift(event.alpha*pi/180);
+                dev_b_array.unshift(event.beta*pi/180);
+                dev_c_array.unshift(event.gamma*pi/180);
+                moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
+                dev_a = dev_a_sum / 3;
+                dev_b = dev_b_sum / 3;
+                dev_c = dev_c_sum / 3;
+            } else {
+                dev_a_sum += event.alpha*pi/180;
+                dev_b_sum += event.beta*pi/180;
+                dev_c_sum += event.gamma*pi/180;
+                dev_a_array.unshift(event.alpha*pi/180);
+                dev_b_array.unshift(event.beta*pi/180);
+                dev_c_array.unshift(event.gamma*pi/180);
+                dev_a = dev_a_sum / dev_a_array.length;
+                dev_b = dev_b_sum / dev_b_array.length;
+                dev_c = dev_c_sum / dev_c_array.length;
+            }
+        } else {
+            dev_a = event.alpha*pi/180;
+            dev_b = event.beta*pi/180;
+            dev_c = event.gamma*pi/180;
+            dev_a_sum = dev_a + 0;
+            dev_b_sum = dev_b + 0;
+            dev_c_sum = dev_c + 0;
+            dev_a_array = [dev_a];
+            dev_b_array = [dev_b];
+            dev_c_array = [dev_c];
+        }
         show_initial();
     }
 }
