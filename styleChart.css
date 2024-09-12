@@ -341,6 +341,22 @@ h1, p {
     z-index: 1;
 }
 
+video {
+    position: absolute;
+    color: #FFFFFF;
+    margin: 0px;
+    top: 50%;
+    left: 50%;
+    -webkit-transform : translate(-50%,-50%);
+    transform : translate(-50%,-50%) translateY(15px);
+    width: auto;
+    height: 100%;
+    text-align: center;
+    overflow: scroll;
+    opacity: 0.5;
+    z-index: -1;
+}
+
 canvas {
     position: absolute;
     margin: 0px;

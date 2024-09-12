@@ -1,12 +1,16 @@
-<!--2023/10/21~10/22-->
+<!--2023/10/21~-->
 <html>
     <head>
         <title>星図</title>
         <meta charset="UTF-8">
+        <meta name="description" content="シンプルかつ高機能な11等級までのWeb星図。星座はもちろんメシエ天体、NGC天体などの検索機能もあり、指やマウスで直感的に操作できます。ネット環境があればURLにアクセスするだけでオンラインで使用可能。初心者から上級者まで、星空を眺めるすべての人の天体観測のおともに。">
+        <meta name="theme-color" content="#000000">
+        <meta name="msapplication-TileColor" content="#000000">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="styleChart.css">
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script>
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -38,16 +42,16 @@
                 </div>
 
                 <div class="mainSettingRows">
-                    <label><input type="text" id="yearText">年</label>
-                    <label><input type="text" id="monthText">月</label>
-                    <label><input type="text" id="dateText">日</label>
-                    <label><input type="text" id="hourText">時</label>
+                    <input type="datetime-local" id="dtl" name="dtl" value=""/>
+                    <label><input type="text" id="yearText">年<input type="text" id="monthText">月<input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">:<input type="text" id="minuteText"></label>
                     <script>
                         var ymdhm = new Date();
                         document.getElementById('yearText').value = ymdhm.getFullYear();
                         document.getElementById('monthText').value = ymdhm.getMonth() + 1;
                         document.getElementById('dateText').value = ymdhm.getDate();
-                        document.getElementById('hourText').value = ymdhm.getHours() + Math.round(ymdhm.getMinutes()*10/60)/10;
+                        document.getElementById('hourText').value = ymdhm.getHours();
+                        document.getElementById('minuteText').value = ymdhm.getMinutes();
                     </script>
                     <button type="button" onclick="now()">現在時刻</button>
                     <button type="button" onclick="show_JD_plus1()">１日進む</button>
@@ -93,17 +97,27 @@
                         <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
                         <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
-                        <input type="radio" name="mode" value="live">ライブモード<input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
+                        <input type="radio" name="mode" value="live">ライブモード(beta)<input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
+                    </div>
+                    <div>
+                        リアルタイム
+                        <input type="radio" name="realtime" value="off">オフ
+                        <input type="radio" name="realtime" value="radec">赤道座標固定
+                        <input type="radio" name="realtime" value="altazm" checked>高度方位固定
                     </div>
                     <ul>
+                        <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
-                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="50">°のとき）</li>
-                        <li><input type="checkbox" id="MessierCheck" checked>メシエ天体と見やすい天体
+                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="190">°のとき）</li>
+                        <li><input type="checkbox" id="objectInfoCheck" checked>クリックで詳細を見る</li>
+                        <br>
+                        <li><input type="checkbox" id="MessierCheck" checked>メシエ天体
                         （左右の視野&lt;<input type="text" id="MessierFrom" size="1" value="40">°のとき）</li>
-                        <li><input type="checkbox" id="choiceCheck" checked>その他、明るいNGC天体など
-                        （左右の視野&lt;<input type="text" id="choiceFrom" size="1" value="30">°のとき）</li>
+                        <li><input type="checkbox" id="recsCheck" checked>その他、明るいNGC天体など
+                        （左右の視野&lt;<input type="text" id="recsFrom" size="1" value="40">°のとき）</li>
                         <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
-                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="30">°のとき）</li>
+                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="50">°のとき）</li>
+                        <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
                     </ul>
                 </div>
@@ -130,6 +144,11 @@
                 説明など<br>これを開いた右下のボタンで閉じる
             </p>
 
+            <button id="openSearch" type="button" onclick="openSearch()">検索</button>
+
+            <h1>11等級までのWeb星図。星座はもちろんメシエ天体、NGC天体などの検索もでき、指やマウスで直感的に操作できます。ネット環境があればURLにアクセスするだけでオンラインで使用可能。星空を眺めるすべての人の天体観測のおともに。照</h4>
+            <p>---<a href="chartReadMe.html" target="_blank" rel="noopener">説明ページ（新しいタブ）</a>---</p>
+
             <p>
                 星雲・星団・銀河のマーク
                 <ul>
@@ -140,10 +159,9 @@
                     <li>×：記載なしまたはその他</li>
                 </ul>
             </p>
-            <p>
-                表示させている状態をURLで共有できます<br>
-                下の少し色が違うところからその天体に飛べます
-            </p>
+            <p>見ている星図の状態をURLで共有できます</p>
+            <p>画像の著作権は私にあります</p>
+            <p>下の少し色が違うところからその天体に飛べます</p>
             <p>
                 双眼鏡向けの天体(上４つは暗いところなら肉眼でも見られる)
                 <ul>
@@ -193,7 +211,7 @@
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6231')">NGC6231</button>(さそり座) 散開星団</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC6940')">NGC6940</button>(こぎつね座) 散開星団</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7009')">NGC7009</button>(みずがめ座) 土星状星雲</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペヤ座) 球状星団。イチオシらしい</li>
+                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペヤ座) 散開星団。イチオシらしい</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('馬頭星雲')">馬頭星雲</button>(オリオン座)</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('大マゼラン雲')">大マゼラン雲</button>(かじき座、テーブルさん座)</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('小マゼラン雲')">小マゼラン雲</button>(きょしちょう座)</li>
@@ -209,11 +227,28 @@
                 </ul>
             </p>
         </div>
+
+        <div id="searchDiv" class="searchDiv">
+            <input type="text" id="searchInput" placeholder="ここに入力して検索">
+            <button id="closeSearch" type="button" onclick="closeSearch()">閉じる</button>
+            <div id="suggestionButtonContainer"></div>
+        </div>
+
+        <div id="objectInfo" class="objectInfo">
+            <button id="closeObjectInfo" type="button" onclick="closeObjectInfo()">閉</button>
+            <div id="objectInfoName"></div>
+            <div id="objectInfoImage"></div>
+            <div id="objectInfoText"></div>
+        </div>
         
         <div id="coordtext" class="coordtext"></div>
+
+        <div id="showingData" class="showingData"></div>
+        <div id="timeSliderDiv" class="timeSliderDiv">
+            <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+        </div>
+        
         <div class="result">
             <script src="chart_beta.js"></script>
         </div>
-
-        <div id="showingData" class="showingData"></div>
 </html>
