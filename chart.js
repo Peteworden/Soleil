@@ -390,7 +390,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
     } else if (searchText.length == 1) { //1文字
-        if (!isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
+        if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
             for (let constName of CLnames) {
                 if (constName.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
                     suggestions1[0].push(`${constName}座`);
@@ -454,7 +454,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
         //星座
-        if (!isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
+        if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
             for (let constName of CLnames) {
                 if ((hiraganaToKatakana(constName)+'座').includes(searchText)) {
                     if (hiraganaToKatakana(constName+'座').startsWith(searchText)) {
@@ -617,6 +617,7 @@ function showObjectInfo(x, y) {
             }
         }
 
+        document.getElementById('objectInfoText').innerHTML = '';
         if (JPNplanets.includes(nearest[0])) {
             document.getElementById('objectInfoText').innerHTML = `<a href="https://peteworden.github.io/Soleil/SoleilWeb.html?time=${yearTextElem.value}-${monthTextElem.value}-${dateTextElem.value}-${hourTextElem.value}-${Math.floor(minuteTextElem.value/6.0)}&target=${ENGplanets[JPNplanets.indexOf(nearest[0])].split(' ').join('').split('/').join('')}&dark=1">Soleil Webでくわしく見る</a>`;
         } else if (nearest[0][0] == 'M') {
