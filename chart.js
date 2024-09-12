@@ -169,7 +169,7 @@ function turnOnOffLiveMode (mode) {
             window.removeEventListener("deviceorientationabsolute", deviceOrientation, true);
         }
     }
-    if (mode == 'ar') {
+    if (mode == 'ar' && !videoOn) {
         skycolor = "rgba(" + [0, 0, 1, 0.1] + ")";
         var constraints = { audio: false, video: { facingMode: "environment" } };
         navigator.mediaDevices.getUserMedia(constraints)
@@ -185,22 +185,20 @@ function turnOnOffLiveMode (mode) {
             }
         )
         videoOn = true;
-    } else {    
+    } else if (mode != 'ar' && videoOn) {
         skycolor = '#001';
-        if (videoOn) {
-            var constraints = { audio: false, video: { facingMode: "environment" } };
-            navigator.mediaDevices.getUserMedia( constraints )
-            .then(
-                function( stream ) {
-                    let video = document.getElementById('arVideo');
-                    video.srcObject = stream;
-                    video.onloadedmetadata = function( e ) {
-                        stream.getVideoTracks()[0].stop();
-                    };
-                }
-            )
-            videoOn = false;
-        }
+        var constraints = { audio: false, video: { facingMode: "environment" } };
+        navigator.mediaDevices.getUserMedia( constraints )
+        .then(
+            function( stream ) {
+                let video = document.getElementById('arVideo');
+                video.srcObject = stream;
+                video.onloadedmetadata = function( e ) {
+                    stream.getVideoTracks()[0].stop();
+                };
+            }
+        )
+        videoOn = false;
     }
 }
 
