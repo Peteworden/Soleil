@@ -162,31 +162,30 @@ function turnOnOffLiveMode (mode) {
         } else if (os == "android") {
             window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
         }
-        
-        if (mode == 'ar' && !videoOn) {
-            skycolor = "rgba(" + [0, 0, 1, 0.1] + ")";
-            var constraints = { audio: false, video: { facingMode: "environment" } };
-            navigator.mediaDevices.getUserMedia(constraints)
-            .then(
-                function(stream) {
-                    let video = document.getElementById('arVideo');
-                    video.srcObject = stream;
-                    video.onloadedmetadata = function(e) {
-                        video.play();
-                    };
-                    document.body.appendChild(video);
-                    setPicsFor360();
-                }
-            )
-            videoOn = true;
-        }
     } else {    
         if (os == 'iphone') {
             window.removeEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
             window.removeEventListener("deviceorientationabsolute", deviceOrientation, true);
         }
-
+    }
+    if (mode == 'ar') {
+        skycolor = "rgba(" + [0, 0, 1, 0.1] + ")";
+        var constraints = { audio: false, video: { facingMode: "environment" } };
+        navigator.mediaDevices.getUserMedia(constraints)
+        .then(
+            function(stream) {
+                let video = document.getElementById('arVideo');
+                video.srcObject = stream;
+                video.onloadedmetadata = function(e) {
+                    video.play();
+                };
+                document.body.appendChild(video);
+                setPicsFor360();
+            }
+        )
+        videoOn = true;
+    } else {    
         skycolor = '#001';
         if (videoOn) {
             var constraints = { audio: false, video: { facingMode: "environment" } };
