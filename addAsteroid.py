@@ -1,6 +1,8 @@
 """
 このプログラムの使い方（ネット環境が必要です）
-1.左上の右三角を押します
+
+Google Colabの場合
+1.Google Colabにコピー&ペーストして、左上の右三角を押します
 2.下にスクロールして「天体の名前（英語）や小惑星番号など：」というのが表示されていたら、
   枠の中にそれ（Takoyaki、31416など。marga*のようなあいまい検索もできます）を入力してEnter
 3.出力が1行だったとき
@@ -15,7 +17,6 @@
 
 import requests
 import json
-import tkinter.messagebox as mb
 from math import floor
 
 def JD_to_YMDH(JD): #TT-->JST として変換　TT-->TTのときはJDに-0.3742しておく
