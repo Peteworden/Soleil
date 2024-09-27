@@ -98,10 +98,10 @@
                         <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
                         <input type="radio" name="mode" value="live">ライブモード
-                        <input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/><br>
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
                         <input type="radio" name="mode" value="ar">AR
-                        <input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
                         <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/>
                     </div>
                     <div>
                         リアルタイム
@@ -123,6 +123,9 @@
                         （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="50">°のとき）</li>
                         <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
+                        <br>
+                        <!--<li><input type="checkbox" id="atmRefCheck">大気差（プラネタリウムモードのみ）</li>-->
+                        <li><input type="checkbox" id="demCheck">地形<input type="file" id="demFileInput" accept=".csv"><button id="openDemDescriptionDiv" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'visible'">説明</button></li>
                     </ul>
                 </div>
             </div>
@@ -217,8 +220,6 @@
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7009')">NGC7009</button>(みずがめ座) 土星状星雲</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペヤ座) 散開星団。イチオシらしい</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('馬頭星雲')">馬頭星雲</button>(オリオン座)</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('大マゼラン雲')">大マゼラン雲</button>(かじき座、テーブルさん座)</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('小マゼラン雲')">小マゼラン雲</button>(きょしちょう座)</li>
                 </ul>
             </p>
             <p>
@@ -250,7 +251,31 @@
                     左右の画角の0.2倍の位置にあったなら5.2と入力します。
                 </p>
             </div>
-            
+        </div>
+
+        <div id="demDescriptionDiv" class="demDescriptionDiv">
+            <button id="closeDemDescription" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'hidden'">OK</button>
+            <div class="demDescriptionText">
+                <h2>地形を表示(パソコン推奨)</h2>
+                <p>
+                    　周囲の山の形を緑の点で描画します。<br>
+                    　国土地理院の<a href="https://maps.gsi.go.jp/index_m.html" target="_blank" rel="noopener">地理院地図</a>にアクセスし、中央の十字を観測地点に合わせます。<br>
+                    　次に、そこから見えると思われる山があとで説明する赤枠に収まるように適宜縮尺を調整します。<br>
+                    　右上のヘルプの左にあるメニューから「ツール」を選択し「3D」をクリックして「小」の上にカーソルを乗せます（まだクリックしない）。
+                    パソコンの場合赤枠は左右の幅よりは小さいですが上下にははみ出ています。先ほどの山が枠内の辺付近に来るように縮尺を調整します。
+                    十字が観測地から動かないように注意してください。<br>
+                    　「3D」の「小」をクリックすると、別のタブで3Dの地図が見られます。下の「WebGL用ファイル」の行の右端にある「ダウンロード」をクリックし、
+                    　「標高ファイル dem.csv」をダウンロードします。ファイル名を地名に変えるといいと思います。<br>
+                    　星図に戻り、地形のチェックボックスにチェックを入れた上で、ファイル選択ボタンからさっきのファイルを選択し、設定画面のOKボタンで設定を閉じます。
+                </p>
+                <h2>注意</h2>
+                <p>
+                    近すぎる（距離が赤枠の1辺の1/257未満の）地形は表示されません。<br>
+                    観測地の標高を基準としているため高い建物に登ると見え方が変わる場合があります。<br>
+                    大気差は実装していないため、星図で地平線付近の星は0.5°くらい、2°の星は0.3°くらい、4°の星は0.2°くらい浮き上がって見えます。そのため星図では山に隠れていても見える場合があります。<br>
+                    見える範囲に対して赤枠が大きすぎた場合は点が疎になります。
+                </p>
+            </div>
         </div>
 
         <div id="searchDiv" class="searchDiv">

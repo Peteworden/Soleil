@@ -27,6 +27,7 @@ document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 document.getElementById('setPicsFor360Div').style.visibility = "hidden";
+document.getElementById('demDescriptionDiv').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
 
@@ -114,7 +115,7 @@ function init() {
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         orientationPermittion = false;
-        document.getElementById('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
+        document.getElementsByClassName('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
@@ -299,14 +300,7 @@ function linkExist(obj) {
                 break;
             }
         }
-    }/* else { //その他 
-        for (var i=0; i<choice.length/4; i++) {
-            if (obj == choice[4*i]) {
-                linkExist = true;
-                break;
-            }
-        }
-    }*/
+    }
     return linkExist;
 }
 
@@ -351,15 +345,7 @@ function link(obj) {
                     break;
                 }
             }
-        }/* else {
-            for (var i=0; i<choice.length/4; i++) {
-                if (obj == choice[4*i]) {
-                    cenRA = parseFloat(choice[4*i+1]);
-                    cenDec = parseFloat(choice[4*i+2]);
-                    break;
-                }
-            }
-        }*/
+        }
     }
     url.searchParams.set('RA', cenRA.toFixed(2));
     url.searchParams.set('Dec', cenDec.toFixed(2));
@@ -735,7 +721,7 @@ function YMDHM_to_JD(Y, M, D, H, Mi){
 }
 
 function darkerFunc() {
-    if (darker) { /*明るくする*/
+    if (darker) { //明るくする
         darker = false;
         starColor = '#FFF';
         yellowColor = 'yellow';
@@ -744,7 +730,7 @@ function darkerFunc() {
         textColor = 'white';
         specialObjectNameColor = '#FF8';
         document.getElementById('darkerbtntext').innerHTML = 'dark';
-    } else { /*暗くする*/
+    } else { //暗くする
         darker = true;
         starColor = '#C66';
         yellowColor = '#550';
@@ -762,7 +748,7 @@ function showSetting() {
     document.getElementById("descriptionBtn").setAttribute("disabled", true);
     document.getElementById('setting').style.visibility = "visible";
     if (os == 'iphone' && !orientationPermittion) {
-        document.getElementById('permitBtn').style.visibility = "visible";
+        document.getElementsByClassName('permitBtn').style.visibility = "visible";
     }
 }
 
@@ -771,7 +757,7 @@ function finishSetting() {
     show_main();
     document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
-    document.getElementById('permitBtn').style.visibility = "hidden";
+    document.getElementsByClassName('permitBtn').style.visibility = "hidden";
 }
 
 function descriptionFunc() {
@@ -1472,6 +1458,44 @@ function show_main(){
         }
     }
 
+    if (['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
+        const demReader = new FileReader();
+        demReader.onload = function(e) {
+            const dem = e.target.result.split(',').map(item => parseFloat(item));
+            if (dem.length == 257*257) {
+                const demAngle = [...Array(257*257)].map(() => Array(3).fill(0));
+                obsHeight = dem[257*128+128];
+                for (i=0; i<257; i++) {
+                    for (j=0; j<257; j++) {
+                        let demDist = Math.sqrt((j-128)*(j-128)+(128-i)*(128-i));
+                        if (demDist > 1){
+                            demAngle[257*i+j][0] = (Math.atan2(j-128, 128-i) * 180/pi + 360) % 360;
+                            demAngle[257*i+j][1] = Math.atan((dem[257*i+j]-obsHeight) * 257 / 100 / demDist) * 180/pi;
+                            demAngle[257*i+j][2] = demDist;
+                        }
+                    }
+                }
+                demAngle.sort((a, b) => a[2] - b[2]);
+                if (mode == 'view') {
+                    for (i=0; i<257*257; i++) {
+                        var [scrRA, scrDec] = RADec2scrview(...Ah2RADec(demAngle[i][0], demAngle[i][1], theta));
+                        if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                            drawFilledCircle (...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                        }
+                    }
+                } else if (['live', 'ar'].includes(mode)) {
+                    for (i=0; i<257*257; i++) {
+                        var [scrRA, scrDec] = Ah2scrlive(demAngle[i][0], demAngle[i][1]);
+                        if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                            drawFilledCircle(...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                        }
+                    }
+                }
+            }
+        };
+        demReader.readAsText(document.getElementById('demFileInput').files[0]);
+    }
+
     if (document.getElementById('center').checked) {
         ctx.beginPath();
         ctx.strokeStyle = starColor;
@@ -1586,8 +1610,6 @@ function show_main(){
     }
     ctx.stroke();
 
-    //drawMilkyWay();
-
     //Tycho
     if (mode == 'AEP') {
         var skyareas = [];
@@ -1687,6 +1709,9 @@ function show_main(){
                 let edgeDec = [];
                 for (j=0; j<=Math.ceil(3*rgEW); j++) {
                     for (i=0; i<=Math.ceil(3*rgNS); i++) {
+                        if (0 < i && i < Math.ceil(3*rgNS) && 0 < j && j < Math.ceil(3*rgEW)) {
+                            continue;
+                        }
                         [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                         [RA, Dec] = Ah2RADec(A, h, theta);
                         edgeRA.push(RA);
@@ -1697,7 +1722,7 @@ function show_main(){
                 Dec_min = Math.min(...edgeDec);
                 RA_max = Math.max(...edgeRA);
                 RA_min = Math.min(...edgeRA);
-                if (RA_max > 358 && RA_min < 2) {
+                if (RA_max > 330 && RA_min < 30) {
                     RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
                     RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
                     skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
@@ -1717,14 +1742,6 @@ function show_main(){
                 drawStars1011(skyareas);
             }
         }
-    } else if (['live', 'ar'].includes(mode)) {
-        /*if (magLim > 6.5) {
-            var skyareas = [[SkyArea(0, -89.9), SkyArea(359.9, 89.9)]];
-            drawStars(skyareas);
-            if (magLim > 10) {
-                drawStars1011(skyareas);
-            }
-        }*/
     }
 
     //HIP
@@ -1808,46 +1825,9 @@ function show_main(){
         writeBayer();
     }
 
-    //メシエ天体とポピュラー天体
     if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
-        //メシエ
         drawMessier();
-        //ポピュラー
-        /*for (i=0; i<choice.length/4; i++){
-            var name = choice[4*i];
-            if (popularList.indexOf(name) != -1) {
-                var RA = parseFloat(choice[4*i+1]);
-                var Dec = parseFloat(choice[4*i+2]);
-                var type = choice[4*i+3];
-                if (mode == 'AEP') {
-                    [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                    if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        drawObjects(name, ...coordSH(scrRA, scrDec), type);
-                    }
-                } else if (mode == 'EtP') {
-                    if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                        drawObjects(name, ...coord(RA, Dec), type);
-                    }
-                } else if (mode == 'view') {
-                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                    if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        drawObjects(name, ...coordSH(scrRA, scrDec), type);
-                    }
-                } else if (mode == 'live') {
-                    var [A, h] = RADec2Ah(RA, Dec, theta);
-                    [scrRA, scrDec] = Ah2scrlive(A, h);
-                    if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        drawObjects(name, ...coordSH(scrRA, scrDec), type);
-                    }
-                }
-            }
-        }*/
     }
-
-    // メシエ以外
-    /*if (document.getElementById('choiceCheck').checked && rgEW < 0.5 * document.getElementById('choiceFrom').value) {
-        drawChoice();
-    }*/
 
     if (document.getElementById('recsCheck').checked && rgEW < 0.5 * document.getElementById('recsFrom').value) {
         drawRecs();
@@ -2066,7 +2046,7 @@ function show_main(){
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
-    function RApos(RA) { //PythonでのadjustRA(RA)-piccenRAに相当
+    function RApos(RA) {
         return (RA + 540 - cenRA) % 360 - 180;
     }
 
@@ -2286,87 +2266,6 @@ function show_main(){
         }
     }
 
-    function drawMilkyWay1() {
-        ctx.fillStyle = '#FFFFFF10';
-        let rdeg = 1.5; //radius
-        let r = canvas.width / rgEW / 2 * rdeg;
-        let imax = parseInt(Tycho1011.length / 3);
-        for (j=0; j<Help1011.length; j++) {
-            var st = parseInt(Help1011[j]);
-            var fi = parseInt(Help1011[j+1]);
-            if (fi - st < 20) {continue;}
-            for (i=st; i<st+1; i++) {
-                var RA = parseFloat(Tycho1011[3*(i-1)]);
-                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
-                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
-                if (mag < 10) {continue;}
-                if (mode == 'AEP') {
-                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, r);
-                    }
-                } else if (mode == 'EtP') {
-                    if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
-                        var [x, y] = coord(RA, Dec);
-                        drawFilledCircle (x, y, r);
-                    }
-                } else if (mode == 'view') {
-                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, r);
-                    }
-                } else if (['live', 'ar'].includes(mode)) {
-                    var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2scrlive(A, h);
-                    if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, r);
-                    }
-                }    
-            }
-        }
-    }
-
-    function drawMilkyWay() {
-        ctx.fillStyle = '#FFFFFF01';
-        let rdeg = 1.5; //radius
-        let r = canvas.width / rgEW / 2 * rdeg;
-        let imax = parseInt(Tycho1011.length / 3);
-        for (i=0; i<imax; i++) {
-            var RA = parseFloat(Tycho1011[3*i]);
-            var Dec = parseFloat(Tycho1011[3*i+1]);
-            var mag = parseFloat(Tycho1011[3*i+2]);
-            if (mag < 10) {continue;}
-            if (mode == 'AEP') {
-                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawFilledCircle (x, y, r);
-                }
-            } else if (mode == 'EtP') {
-                if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
-                    var [x, y] = coord(RA, Dec);
-                    drawFilledCircle (x, y, r);
-                }
-            } else if (mode == 'view') {
-                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawFilledCircle (x, y, r);
-                }
-            } else if (['live', 'ar'].includes(mode)) {
-                var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2scrlive(A, h);
-                if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawFilledCircle (x, y, r);
-                }
-            }
-        }
-    }
-
     function writeBayer () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
@@ -2455,88 +2354,6 @@ function show_main(){
 
     function drawMessier () {
         drawJsonObjects(messier);
-        /*ctx.strokeStyle = objectColor;
-        ctx.fillStyle = objectColor;
-        for (i=0; i<110; i++){
-            var name = messier[i].name;
-            if (name == '') {
-                continue;
-            }
-            var RA = rahm2deg(messier[i].ra);
-            var Dec = decdm2deg(messier[i].dec);
-            var type = messier[i].class;
-            if (mode == 'AEP') {
-                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
-                }
-            } else if (mode == 'EtP') {
-                if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
-                    var [x, y] = coord(RA, Dec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
-                }
-            } else if (mode == 'view') {
-                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
-                }
-            } else if (['live', 'ar'].includes(mode)) {
-                var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2scrlive(A, h);
-                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
-                }
-            }
-        }*/
-    }
-
-    function drawChoice () {
-        ctx.strokeStyle = objectColor;
-        ctx.fillStyle = objectColor;
-        for (i=0; i<choice.length/4; i++){
-            var name = choice[4*i];
-            //if (popularList.indexOf(name) == -1) {
-                var RA = parseFloat(choice[4*i+1]);
-                var Dec = parseFloat(choice[4*i+2]);
-                var type = choice[4*i+3];
-                if (mode == 'AEP') {
-                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawObjects(name, x, y, type);
-                        infoList.push([name, x, y]);
-                    }
-                } else if (mode == 'EtP') {
-                    if (Math.abs(Dec-cenDec) < rgNS && Math.abs(RApos(RA)) < rgEW) {
-                        var [x, y] = coord(RA, Dec);
-                        drawObjects(name, x, y, type);
-                        infoList.push([name, x, y]);
-                    }
-                } else if (mode == 'view') {
-                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                    if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawObjects(name, x, y, type);
-                        infoList.push([name, x, y]);
-                    }
-                } else if (['live', 'ar'].includes(mode)) {
-                    var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2scrlive(A, h);
-                    if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawObjects(name, x, y, type);
-                        infoList.push([name, x, y]);
-                    }
-                }
-            //}
-        }
     }
 
     function drawRecs () {
@@ -3088,12 +2905,6 @@ function loadFiles() {
         messier = data
     });
 
-
-    // choice天体
-    /*loadFile("choice_forJS", xhrChoice);
-    function xhrChoice(data) {
-        choice = data.split(',');
-    }*/
     fetchJsonData('rec', function(data) {
         recs = data;
     });
