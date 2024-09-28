@@ -19,6 +19,8 @@ body {
     left: 50%;
     transform: translateX(-50%);
     bottom: 0;
+    width: auto;
+    height: 100%;
     z-index: 10;
 }
 

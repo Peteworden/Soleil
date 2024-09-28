@@ -41,14 +41,6 @@ const BIGHEIGHT = window.screen.height - 30;
 const NORMALWIDTH = window.innerWidth;
 const NORMALHEIGHT = window.innerHeight - 30;
 
-if (window.innerHeight > window.innerWidth) {
-    document.getElementById('welcomeImage').style.height = '100%';
-    document.getElementById('welcomeImage').style.width = 'auto';
-} else {
-    document.getElementById('welcomeImage').style.width = '100%';
-    document.getElementById('welcomeImage').style.height = 'auto';
-}
-
 function setCanvas (fullBool) {
     if (fullBool) {
         canvas.width = BIGWIDTH;
@@ -1080,7 +1072,6 @@ function onwheel(event) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('welcomeImage').style.display = 'none';
     loadFiles();
     checkURL();
 });
@@ -1095,6 +1086,7 @@ function show_initial(){
         canvas.addEventListener('mouseup', onmouseup);
         canvas.addEventListener('wheel', onwheel);
         newSetting();
+        document.getElementById('welcomeImage').style.display = 'none';
         show_main();
     }
 }
