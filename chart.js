@@ -1068,8 +1068,12 @@ function onwheel(event) {
     }
 }
 
-loadFiles();
-checkURL();
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('load');
+    loadFiles();
+    checkURL();
+});
+
 function show_initial(){
     if (xhrcheck == 14 && defaultcheck ==11) {
         canvas.addEventListener("touchstart", ontouchstart);
