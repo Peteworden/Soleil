@@ -13,6 +13,15 @@ body {
     position: relative;
 }
 
+.welcomeImage {
+    position: fixed;
+    margin: 0px;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 0;
+    z-index: 10;
+}
+
 .title {
     position: fixed;
     background-color: gray;

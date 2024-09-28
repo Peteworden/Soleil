@@ -41,6 +41,14 @@ const BIGHEIGHT = window.screen.height - 30;
 const NORMALWIDTH = window.innerWidth;
 const NORMALHEIGHT = window.innerHeight - 30;
 
+if (window.innerHeight > window.innerWidth) {
+    document.getElementById('welcomeImage').style.height = '100%';
+    document.getElementById('welcomeImage').style.width = 'auto';
+} else {
+    document.getElementById('welcomeImage').style.width = '100%';
+    document.getElementById('welcomeImage').style.height = 'auto';
+}
+
 function setCanvas (fullBool) {
     if (fullBool) {
         canvas.width = BIGWIDTH;
@@ -757,7 +765,10 @@ function finishSetting() {
     show_main();
     document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
-    document.getElementsByClassName('permitBtn').style.visibility = "hidden";
+    let permitBtns = document.getElementsByClassName('permitBtn');
+    for (i=0; i<permitBtns.length; i++) {
+        permitBtns[i].style.visibility = "hidden";
+    }
 }
 
 function descriptionFunc() {
@@ -1069,7 +1080,7 @@ function onwheel(event) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('load');
+    document.getElementById('welcomeImage').style.display = 'none';
     loadFiles();
     checkURL();
 });
