@@ -21,6 +21,7 @@ const hourTextElem = document.getElementById('hourText');
 const minuteTextElem = document.getElementById('minuteText');
 const timeSliderElem = document.getElementById('timeSlider');
 let zuhoElem = document.getElementsByName('mode');
+const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementsByName('realtime');
 
 document.getElementById('setting').style.visibility = "hidden";
@@ -107,21 +108,21 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
 
 var os, orientationPermittion=true, loadAzm=0;
 var orientationTime1 = Date.now();
-//window.addEventListener("DOMContentLoaded", init);
 init();
 function init() {
-    // 簡易的なOS判定
     os = detectOSSimply();
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         orientationPermittion = false;
-        document.getElementsByClassName('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
+        for (i=0; i<permitBtns.length; i++) {
+            permitBtns[i].addEventListener("click", permitDeviceOrientationForSafari);
+        }
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
     }
 }
-// 簡易OS判定
+
 function detectOSSimply() {
     let ret;
     if (
@@ -204,7 +205,7 @@ function turnOnOffLiveMode (mode) {
 }
 
 var mode;
-//AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き)
+//AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き), ar
 
 var showingJD = 0;
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext, theta;
@@ -281,8 +282,6 @@ function setPicsFor360() {
     }
 }
 setPicsFor360();
-
-//const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
 function linkExist(obj) {
     let linkExist = false;
@@ -748,7 +747,9 @@ function showSetting() {
     document.getElementById("descriptionBtn").setAttribute("disabled", true);
     document.getElementById('setting').style.visibility = "visible";
     if (os == 'iphone' && !orientationPermittion) {
-        document.getElementsByClassName('permitBtn').style.visibility = "visible";
+        for (i=0; i<permitBtns.length; i++) {
+            permitBtns[i].style.visibility = 'visible'
+        }
     }
 }
 
@@ -757,7 +758,6 @@ function finishSetting() {
     show_main();
     document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
-    let permitBtns = document.getElementsByClassName('permitBtn');
     for (i=0; i<permitBtns.length; i++) {
         permitBtns[i].style.visibility = "hidden";
     }
@@ -2982,7 +2982,6 @@ function loadFiles() {
 }
 
 function checkURL() {
-    // キーを指定し、クエリパラメータを取得
     if (url.searchParams.has('RA') && !isNaN(url.searchParams.get('RA'))) {
         cenRA = parseFloat(url.searchParams.get('RA'));
         defaultcheck++;
