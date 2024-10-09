@@ -1,7 +1,12 @@
 r""" 下のライブラリを必要に応じてインストールしてください。コマンドの例は以下です。
 エラーが出たら聞いてくれたら答えられるかもしれないし答えられないかもしれません。
 
-Windows, pipの場合:Windows PowerShellでPS C:\Users\~~~~~>の右にpip install matplotlib astroquery numpy datetime
+VSCodeの場合:調べてターミナルかPower Shellでpip install matplotlib astroquery datetime
+matplotlibをインストールするとnumpyもインストールされるが、されなかったらnumpyも (pip install numpy)
+右上の右三角で実行。うまくいかない場合はその右のvからRun Code
+
+Windows, pipの場合:Windows PowerShellでPS C:\Users\~~~~~>の右にpip install matplotlib astroquery datetime
+matplotlibをインストールするとnumpyもインストールされるが、されなかったらnumpyも (pip install numpy)
 installのあとに--userが必要な場合あり
 
 Google Colabでは実行できないみたいです（Tkinterが使えないらしい）
@@ -60,12 +65,7 @@ def show_message(event):
     message_label = tk.Label(root2, text=message, fg='white', bg='black')
     message_label.pack()
 
-ra_center_prev = 0
-dec_center_prev = 0
-ra_width_prev = 0
-dec_width_prev = 0
-mag_limit_prev = 13
-
+designation = np.empty(0)
 ra = np.empty(0)
 dec = np.empty(0)
 mag = np.empty(0)
@@ -80,6 +80,8 @@ a = 2.0
 b = 1.6
 c = 0.5
 
+time = 0
+
 dec_done = 0
 dec_next_list = []
 
@@ -89,12 +91,12 @@ done_flag = True
 
 def plot_stars(ra_center, ra_width, dec_max, mag_limit, ax):
     global a, b, c
-    global ra, dec, mag
+    global designation, ra, dec, mag
     global dec_next_list
     dec_min = dec_next_list[-1]
     while True:
         query = f"""
-        SELECT ra, dec, phot_g_mean_mag 
+        SELECT designation, ra, dec, phot_g_mean_mag 
         FROM gaiadr3.gaia_source 
         WHERE 1=CONTAINS(POINT('ICRS', ra, dec), BOX('ICRS', {ra_center}, {(dec_max + dec_min) / 2}, {ra_width}, {dec_max-dec_min}))
         AND phot_g_mean_mag < {mag_limit}
@@ -105,11 +107,17 @@ def plot_stars(ra_center, ra_width, dec_max, mag_limit, ax):
             dec_min = dec_max - (dec_max - dec_min) / 2
             dec_next_list.append(dec_min)
         else:
+            print(result)
+            designation = np.concatenate((designation, result['DESIGNATION'].data))
             ra = np.concatenate((ra, result['ra'].data))
             dec = np.concatenate((dec, result['dec'].data))
             mag = np.concatenate((mag, result['phot_g_mean_mag'].data))
             ax.scatter(ra, dec, s=a*(mag_limit-mag)**b+c, c='white')
             ax.scatter(ra_center, dec_center, s=2.5, c='red')
+            if len(result['DESIGNATION'].data) <= 30:
+                print()
+                for i in range(len(result['DESIGNATION'])):
+                    print(result['DESIGNATION'].data[i], result['ra'].data[i], result['dec'].data[i], result['phot_g_mean_mag'].data[i])
             return ax, len(result['ra'].data)
 
 def get_input():
@@ -149,28 +157,30 @@ def get_input():
         a = float(a_box.get())
         b = float(b_box.get())
         c = float(c_box.get())
+        time = time_box.get()
 
         chart_btn.config(state=tk.NORMAL)
 
-        return [ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c]
+        return [ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c, time]
     
     except:
         return 0
     
 def startDrawing(event):
-    global ra, dec, mag
-    global ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c
+    global designation, ra, dec, mag
+    global ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c, time
     global dec_done, dec_next_list, star_number
     global submitText, star_number_text
     global canvas
     global done_flag
 
-    changed = (get_input() != 0 and [ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c] == get_input())
+    changed = (get_input() != 0 and [ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c, time] == get_input())
 
     if done_flag and changed:
         return
     elif not changed:
-        [ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c] = get_input()
+        [ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c, time] = get_input()
+        designation = np.empty(0)
         ra = np.empty(0)
         dec = np.empty(0)
         mag = np.empty(0)
@@ -215,7 +225,24 @@ def startDrawing(event):
 
     star_number_text.set(f'{star_number} stars')
 
-def set_values(ra_center, ra_width, dec_center, dec_width, mag_limit, a=2.0, b=1.6, c=0.5):
+def set_time(now_flag):
+    if now_flag:
+        now = datetime.datetime.now(datetime.timezone.utc)
+        now_text = f'{str(now.year)}-{str(now.month)}-{str(now.day)} {str(now.hour)}:{str(now.minute)}:{str(now.second)}'
+        time_box.delete(0, tk.END)
+        time_box.insert(tk.END, now_text)
+
+def set_values(rc, rw, dc, dw, ml, a0=2.0, b0=1.6, c0=0.5):
+    global ra_center, ra_width, dec_center, dec_width, mag_limit, a, b, c
+    ra_center = rc
+    ra_width = rw
+    dec_center = dc
+    dec_width = dw
+    mag_limit = ml
+    a = a0
+    b = b0
+    c = c0
+
     raBox.delete(0, tk.END)
     raWidthBox.delete(0, tk.END)
     decBox.delete(0, tk.END)
@@ -250,11 +277,11 @@ def preset_combo_select(event):
     elif name == 'T CrB':
         set_values('15 59 30.2', 1, '25 55 13', 1, 14)
 
-def horizons(event):
+def set_horizons(k):
     if radioVar.get() != 2:
         return
     name = asteroidBox.get()
-    epoch = timeBox.get()
+    epoch = time_box.get()
     if name in ['Pluto', 'pluto', '冥王星']:
         name = 134340
     elif name in ['Neptune', 'neptune', '海王星']:
@@ -265,7 +292,10 @@ def horizons(event):
         name = 699
     try:
         ans = Horizons(id=name, location='500', epochs=f"'{epoch}'").ephemerides()
-        set_values(str(ans['RA'][0]), 1, str(ans['DEC'][0]), 1, 15)
+        if k == 0:
+            set_values(str(ans['RA'][0]), 1, str(ans['DEC'][0]), 1, 15)
+        elif k == 1:
+            set_values(str(ans['RA'][0]), ra_width, str(ans['DEC'][0]), dec_width, mag_limit, a, b, c)
         asteroidBtnText.set('OK')
         mb.showinfo('セットしたよ', '次の天体をセットしました：' + ans['targetname'][0])
     except ValueError as e:
@@ -274,9 +304,15 @@ def horizons(event):
     except:
         asteroidBtnText.set('SET')
 
+def horizons(event):
+    set_horizons(0)
+
+def change_time(event):
+    set_horizons(1)
+
 def open_chart(event):
     global ra_center, ra_width, dec_center
-    epoch = timeBox.get()
+    epoch = time_box.get()
     if len(epoch.split()) == 2:
         [epoch0, epoch1] = epoch.split()
         if len(epoch1.split(':')) == 3:
@@ -372,14 +408,14 @@ asteroidBtn = tk.Button(root, textvariable=asteroidBtnText, width=4)
 asteroidBtn.bind('<1>', horizons)
 asteroidBtn.place(x=180, y=400, anchor=tk.CENTER)
 
-now = datetime.datetime.now(datetime.timezone.utc)
-now_text = f'{str(now.year)}-{str(now.month)}-{str(now.day)} {str(now.hour)}:{str(now.minute)}:{str(now.second)}'
-
 timeLabel = tk.Label(root, text='時刻（世界時）', fg='white', bg='black')
 timeLabel.place(x=100, y=420, anchor=tk.N)
-timeBox = tk.Entry(root, width=20)
-timeBox.insert(tk.END, now_text)
-timeBox.place(x=100, y=440, anchor=tk.N)
+time_box = tk.Entry(root, width=18)
+time_box.place(x=80, y=450, anchor=tk.CENTER)
+set_time(True)
+time_only_button = tk.Button(root, text='時刻変更', width=6)
+time_only_button.bind('<1>', change_time)
+time_only_button.place(x=180, y=450, anchor=tk.CENTER)
 
 submitText = tk.StringVar(root)
 submitText.set('GO')
