@@ -21,11 +21,14 @@ const hourTextElem = document.getElementById('hourText');
 const minuteTextElem = document.getElementById('minuteText');
 const timeSliderElem = document.getElementById('timeSlider');
 let zuhoElem = document.getElementsByName('mode');
+const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementsByName('realtime');
 
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
+//document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 document.getElementById('setPicsFor360Div').style.visibility = "hidden";
+document.getElementById('demDescriptionDiv').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
 
@@ -105,21 +108,21 @@ document.getElementById('magLimitSlider').addEventListener('change', function(){
 
 var os, orientationPermittion=true, loadAzm=0;
 var orientationTime1 = Date.now();
-//window.addEventListener("DOMContentLoaded", init);
 init();
 function init() {
-    // 簡易的なOS判定
     os = detectOSSimply();
     if (os == "iphone") {
         // safari用。DeviceOrientation APIの使用をユーザに許可して貰う
         orientationPermittion = false;
-        document.getElementById('permitBtn').addEventListener("click", permitDeviceOrientationForSafari);
+        for (i=0; i<permitBtns.length; i++) {
+            permitBtns[i].addEventListener("click", permitDeviceOrientationForSafari);
+        }
         window.addEventListener("deviceorientation", deviceOrientation, true);
     } else if (os == "android") {
         window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
     }
 }
-// 簡易OS判定
+
 function detectOSSimply() {
     let ret;
     if (
@@ -202,7 +205,7 @@ function turnOnOffLiveMode (mode) {
 }
 
 var mode;
-//AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き)
+//AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き), ar
 
 var showingJD = 0;
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext, theta;
@@ -279,8 +282,6 @@ function setPicsFor360() {
     }
 }
 setPicsFor360();
-
-//const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
 function linkExist(obj) {
     let linkExist = false;
@@ -746,7 +747,9 @@ function showSetting() {
     document.getElementById("descriptionBtn").setAttribute("disabled", true);
     document.getElementById('setting').style.visibility = "visible";
     if (os == 'iphone' && !orientationPermittion) {
-        document.getElementById('permitBtn').style.visibility = "visible";
+        for (i=0; i<permitBtns.length; i++) {
+            permitBtns[i].style.visibility = 'visible'
+        }
     }
 }
 
@@ -755,7 +758,9 @@ function finishSetting() {
     show_main();
     document.getElementById("descriptionBtn").removeAttribute("disabled");
     document.getElementById('setting').style.visibility = "hidden";
-    document.getElementById('permitBtn').style.visibility = "hidden";
+    for (i=0; i<permitBtns.length; i++) {
+        permitBtns[i].style.visibility = "hidden";
+    }
 }
 
 function descriptionFunc() {
@@ -1066,8 +1071,11 @@ function onwheel(event) {
     }
 }
 
-loadFiles();
-checkURL();
+document.addEventListener('DOMContentLoaded', function() {
+    loadFiles();
+    checkURL();
+});
+
 function show_initial(){
     if (xhrcheck == 14 && defaultcheck ==11) {
         canvas.addEventListener("touchstart", ontouchstart);
@@ -1078,6 +1086,7 @@ function show_initial(){
         canvas.addEventListener('mouseup', onmouseup);
         canvas.addEventListener('wheel', onwheel);
         newSetting();
+        document.getElementById('welcomeImage').style.display = 'none';
         show_main();
     }
 }
@@ -1456,6 +1465,44 @@ function show_main(){
         }
     }
 
+    if (['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
+        const demReader = new FileReader();
+        demReader.onload = function(e) {
+            const dem = e.target.result.split(',').map(item => parseFloat(item));
+            if (dem.length == 257*257) {
+                const demAngle = [...Array(257*257)].map(() => Array(3).fill(0));
+                obsHeight = dem[257*128+128];
+                for (i=0; i<257; i++) {
+                    for (j=0; j<257; j++) {
+                        let demDist = Math.sqrt((j-128)*(j-128)+(128-i)*(128-i));
+                        if (demDist > 1){
+                            demAngle[257*i+j][0] = (Math.atan2(j-128, 128-i) * 180/pi + 360) % 360;
+                            demAngle[257*i+j][1] = Math.atan((dem[257*i+j]-obsHeight) * 257 / 100 / demDist) * 180/pi;
+                            demAngle[257*i+j][2] = demDist;
+                        }
+                    }
+                }
+                demAngle.sort((a, b) => a[2] - b[2]);
+                if (mode == 'view') {
+                    for (i=0; i<257*257; i++) {
+                        var [scrRA, scrDec] = RADec2scrview(...Ah2RADec(demAngle[i][0], demAngle[i][1], theta));
+                        if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                            drawFilledCircle (...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                        }
+                    }
+                } else if (['live', 'ar'].includes(mode)) {
+                    for (i=0; i<257*257; i++) {
+                        var [scrRA, scrDec] = Ah2scrlive(demAngle[i][0], demAngle[i][1]);
+                        if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                            drawFilledCircle(...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                        }
+                    }
+                }
+            }
+        };
+        demReader.readAsText(document.getElementById('demFileInput').files[0]);
+    }
+
     if (document.getElementById('center').checked) {
         ctx.beginPath();
         ctx.strokeStyle = starColor;
@@ -1570,8 +1617,6 @@ function show_main(){
     }
     ctx.stroke();
 
-    //drawMilkyWay();
-
     //Tycho
     if (mode == 'AEP') {
         var skyareas = [];
@@ -1671,6 +1716,9 @@ function show_main(){
                 let edgeDec = [];
                 for (j=0; j<=Math.ceil(3*rgEW); j++) {
                     for (i=0; i<=Math.ceil(3*rgNS); i++) {
+                        if (0 < i && i < Math.ceil(3*rgNS) && 0 < j && j < Math.ceil(3*rgEW)) {
+                            continue;
+                        }
                         [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                         [RA, Dec] = Ah2RADec(A, h, theta);
                         edgeRA.push(RA);
@@ -1681,7 +1729,7 @@ function show_main(){
                 Dec_min = Math.min(...edgeDec);
                 RA_max = Math.max(...edgeRA);
                 RA_min = Math.min(...edgeRA);
-                if (RA_max > 358 && RA_min < 2) {
+                if (RA_max > 330 && RA_min < 30) {
                     RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
                     RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
                     skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
@@ -2005,7 +2053,7 @@ function show_main(){
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
-    function RApos(RA) { //PythonでのadjustRA(RA)-piccenRAに相当
+    function RApos(RA) {
         return (RA + 540 - cenRA) % 360 - 180;
     }
 
@@ -2220,87 +2268,6 @@ function show_main(){
                     if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                         drawFilledCircle(...coordSH(scrRA, scrDec), size(mag));
                     }
-                }
-            }
-        }
-    }
-
-    function drawMilkyWay1() {
-        ctx.fillStyle = '#FFFFFF10';
-        let rdeg = 1.5; //radius
-        let r = canvas.width / rgEW / 2 * rdeg;
-        let imax = parseInt(Tycho1011.length / 3);
-        for (j=0; j<Help1011.length; j++) {
-            var st = parseInt(Help1011[j]);
-            var fi = parseInt(Help1011[j+1]);
-            if (fi - st < 20) {continue;}
-            for (i=st; i<st+1; i++) {
-                var RA = parseFloat(Tycho1011[3*(i-1)]);
-                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
-                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
-                if (mag < 10) {continue;}
-                if (mode == 'AEP') {
-                    var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, r);
-                    }
-                } else if (mode == 'EtP') {
-                    if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
-                        var [x, y] = coord(RA, Dec);
-                        drawFilledCircle (x, y, r);
-                    }
-                } else if (mode == 'view') {
-                    var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                    if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, r);
-                    }
-                } else if (['live', 'ar'].includes(mode)) {
-                    var [A, h] = RADec2Ah(RA, Dec, theta);
-                    var [scrRA, scrDec] = Ah2scrlive(A, h);
-                    if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
-                        var [x, y] = coordSH(scrRA, scrDec);
-                        drawFilledCircle (x, y, r);
-                    }
-                }    
-            }
-        }
-    }
-
-    function drawMilkyWay() {
-        ctx.fillStyle = '#FFFFFF01';
-        let rdeg = 1.5; //radius
-        let r = canvas.width / rgEW / 2 * rdeg;
-        let imax = parseInt(Tycho1011.length / 3);
-        for (i=0; i<imax; i++) {
-            var RA = parseFloat(Tycho1011[3*i]);
-            var Dec = parseFloat(Tycho1011[3*i+1]);
-            var mag = parseFloat(Tycho1011[3*i+2]);
-            if (mag < 10) {continue;}
-            if (mode == 'AEP') {
-                var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
-                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawFilledCircle (x, y, r);
-                }
-            } else if (mode == 'EtP') {
-                if (Math.abs(Dec-cenDec) < rgNS+rdeg && Math.abs(RApos(RA)) < rgEW+rdeg) {
-                    var [x, y] = coord(RA, Dec);
-                    drawFilledCircle (x, y, r);
-                }
-            } else if (mode == 'view') {
-                var [scrRA, scrDec] = RADec2scrview(RA, Dec);
-                if (Math.abs(scrDec) < rgNS+rdeg && Math.abs(scrRA) < rgEW+rdeg) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawFilledCircle (x, y, r);
-                }
-            } else if (['live', 'ar'].includes(mode)) {
-                var [A, h] = RADec2Ah(RA, Dec, theta);
-                var [scrRA, scrDec] = Ah2scrlive(A, h);
-                if (Math.abs(scrRA) < rgEW+rdeg && Math.abs(scrDec) < rgNS+rdeg) {
-                    var [x, y] = coordSH(scrRA, scrDec);
-                    drawFilledCircle (x, y, r);
                 }
             }
         }
@@ -2898,7 +2865,6 @@ function loadFiles() {
 }
 
 function checkURL() {
-    // キーを指定し、クエリパラメータを取得
     if (url.searchParams.has('RA') && !isNaN(url.searchParams.get('RA'))) {
         cenRA = parseFloat(url.searchParams.get('RA'));
         defaultcheck++;
