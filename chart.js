@@ -3,6 +3,9 @@
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
+const online = navigator.onLine;
+console.log(online)
+
 //星などの色を変える
 var darker = false;
 var skycolor = '#001';
@@ -24,9 +27,18 @@ let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementsByName('realtime');
 
+if (online) {
+    document.getElementById('fileBtn').style.visibility = "hidden";
+    document.getElementById('getFile').style.visibility = "hidden";
+} else {
+    document.getElementById('welcomeImage').style.visibility = "hidden";
+    document.getElementById('fullScreenBtn').style.visibility = "hidden";
+    document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+    alert('offline version\nSelect allInOne.txt from the file button')
+}
+
 document.getElementById('setting').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
-document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 document.getElementById('setPicsFor360Div').style.visibility = "hidden";
 document.getElementById('demDescriptionDiv').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
@@ -2768,65 +2780,6 @@ function realtimeAzmalt() {
 }
 
 function loadFiles() {
-    /*document.getElementById('coordtext').innerHTML = 'Fetching the ZIP file...';
-    fetch('https://peteworden.github.io/Soleil/allInOne.zip')
-        .then(response => {
-            document.getElementById('coordtext').innerHTML = 'ZIP file fetched, converting to arrayBuffer...';
-            response.arrayBuffer();
-        })
-        .then(buffer => {
-            document.getElementById('coordtext').innerHTML = 'arrayBuffer obtained, initializing JSZip...';
-            const jszip = new JSZip();
-            return jszip.loadAsync(buffer);
-        })
-        .then(zip => {
-            document.getElementById('coordtext').innerHTML = 'ZIP file loaded successfully!';
-            zip.forEach((relativePath, file) => {
-            file.async('string').then(content0 => {
-                console.log('File:', relativePath);
-                const content = content0.split('||||');
-                for (var i=0; i<14; i++) {
-                    let fn = content[i].split('::::')[0];
-                    var data = content[i].split('::::')[1];
-                    if (fn == 'StarsNewHIP_to6_5_forJS') {xhrHIP(data);}
-                    if (fn == 'StarsNew-Tycho-to10-2nd_forJS') {xhrTycho(data);}
-                    if (fn == 'TychoSearchHelper2nd_forJS') {xhrHelp(data);}
-                    if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {xhrTycho1011(data);}
-                    if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {xhrHelp1011(data);}
-                    if (fn == 'bsc_forJS') {xhrBSC(data);}
-                    if (fn == 'messier') {xhrMessier(data);}
-                    if (fn == 'choice_forJS') {xhrChoice(data);}
-                    if (fn == 'allNGC_forJS') {xhrNGC(data);}
-                    if (fn == 'ConstellationList') {xhrCLnames(data);}
-                    if (fn == 'ConstellationPositionNew_forJS') {xhrCLpos(data);}
-                    if (fn == 'Lines_light_forJS') {xhrCLlines(data);}
-                    if (fn == 'boundary_light_forJS') {xhrCLboundary(data);}
-                    if (fn == 'ExtraPlanet') {xhrExtra(data);}
-                    xhrcheck++;
-                    show_initial();
-                }
-            });
-            });
-        })
-        .catch(err => console.error('Error:', err));*/
-    function loadFile(filename, func) {
-        var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url_load);
-        xhr.send();
-        xhr.onreadystatechange = function() {
-            if(xhr.readyState === 4 && xhr.status === 200) {
-                func(xhr.responseText);
-                xhrcheck++;
-                console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt is ready`);
-                show_initial();
-                return 0;
-            }
-        }
-    }
-
-    //HIP
-    loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
     function xhrHIP(data) {
         const DataAry = data.split(',');
         var num_of_stars = DataAry.length / 4;
@@ -2842,33 +2795,7 @@ function loadFiles() {
         }
     }
 
-    //Tycho
-    loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho);
-    function xhrTycho(data) {
-        Tycho = data.split(',');
-    }
-
-    //Tycho helper
-    loadFile("TychoSearchHelper2nd_forJS", xhrHelp);
-    function xhrHelp(data) {
-        Help = data.split(',');
-    }
-
-    //Tycho 10~11 mag
-    loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011);
-    function xhrTycho1011(data) {
-        Tycho1011 = data.split(',');
-    }
-
-
-    //Tycho helper 10~11 mag
-    loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011);
-    function xhrHelp1011(data) {
-        Help1011 = data.split(',');
-    }
-
     //Bayer
-    loadFile("bsc_forJS", xhrBSC);
     function xhrBSC(data) {
         const BSC = data.split(',');
         BSCnum = BSC.length / 6;
@@ -2886,68 +2813,7 @@ function loadFiles() {
         }
     }
 
-    //Messier
-    function fetchJsonData(filename, func) {
-        fetch(`https://peteworden.github.io/Soleil/${filename}.json`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                func(data)
-                xhrcheck++;
-                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json is ready`);
-                show_initial();
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            });
-    }
-    function xhrMessier(data) {
-        messier = JSON.parse(data);
-    }
-    fetchJsonData('messier', function(data){
-        messier = data
-    });
-
-    fetchJsonData('rec', function(data) {
-        recs = data;
-    });
-
-    // NGC天体とIC天体
-    loadFile("allNGC_forJS", xhrNGC);
-    function xhrNGC(data) {
-        NGC = data.split(',');
-    }
-
-    //星座名
-    loadFile("ConstellationList", xhrCLnames);
-    function xhrCLnames(data) {
-        CLnames = data.split('\r\n');
-    }
-
-    //星座の位置
-    loadFile("ConstellationPositionNew_forJS", xhrCLpos);
-    function xhrCLpos(data) {
-        constPos = data.split(',');
-    }
-
-    //星座線
-    loadFile("Lines_light_forJS", xhrCLlines);
-    function xhrCLlines(data) {
-        lines = data.split(',');
-    }
-
-    //星座境界線
-    loadFile("boundary_light_forJS", xhrCLboundary);
-    function xhrCLboundary(data) {
-        boundary = data.split(',');
-    }
-
     //追加天体
-    loadFile("ExtraPlanet", xhrExtra);
     function xhrExtra(data) {
         extra = data.split('\n');
         for (var i=0; i<extra.length; i++) {
@@ -2978,6 +2844,132 @@ function loadFiles() {
         } else {
             defaultcheck++;
         }
+    }
+    if (online) {
+        function loadFile(filename, func) {
+            var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url_load);
+            xhr.send();
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState === 4 && xhr.status === 200) {
+                    func(xhr.responseText);
+                    xhrcheck++;
+                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt is ready`);
+                    show_initial();
+                    return 0;
+                }
+            }
+        }
+
+        //HIP
+        loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
+
+        //Tycho
+        loadFile("StarsNew-Tycho-to10-2nd_forJS", (data) => {
+            Tycho = data.split(',');
+        });
+
+        //Tycho helper
+        loadFile("TychoSearchHelper2nd_forJS", (data) => {
+            Help = data.split(',');
+        });
+
+        //Tycho 10~11 mag
+        loadFile("StarsNew-Tycho-from10to11-2nd_forJS", (data) => {
+            Tycho1011 = data.split(',');
+        });
+
+        //Tycho helper 10~11 mag
+        loadFile("TychoSearchHelper-from10to11-2nd_forJS", (data) => {
+            Help1011 = data.split(',');
+        });
+
+        //Bayer
+        loadFile("bsc_forJS", xhrBSC);
+
+        //Messier
+        function fetchJsonData(filename, func) {
+            fetch(`https://peteworden.github.io/Soleil/${filename}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                func(data)
+                xhrcheck++;
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json is ready`);
+                show_initial();
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+        fetchJsonData('messier', (data) => {
+            messier = data
+        });
+
+        fetchJsonData('rec', (data) => {
+            recs = data;
+        });
+
+        // NGC天体とIC天体
+        loadFile("allNGC_forJS", (data) => {
+            NGC = data.split(',');
+        });
+
+        //星座名
+        loadFile("ConstellationList", (data) => {
+            CLnames = data.split('\r\n');
+        });
+
+        //星座の位置
+        loadFile("ConstellationPositionNew_forJS", (data) => {
+            constPos = data.split(',');
+        });
+
+        //星座線
+        loadFile("Lines_light_forJS", (data) => {
+            lines = data.split(',');
+        });
+
+        //星座境界線
+        loadFile("boundary_light_forJS", (data) => {
+            boundary = data.split(',');
+        });
+
+        //追加天体
+        loadFile("ExtraPlanet", xhrExtra);
+    } else {
+        document.getElementById('getFile').addEventListener('change', function () {
+            let fr = new FileReader();
+            fr.onload = function () {
+                const content = fr.result.split('||||');
+                for (var i=0; i<14; i++) {
+                    fn = content[i].split('::::')[0];
+                    var data = content[i].split('::::')[1];
+                    if (fn == 'StarsNewHIP_to6_5_forJS') {xhrHIP(data);}
+                    if (fn == 'StarsNew-Tycho-to10-2nd_forJS') {Tycho = data.split(',');}
+                    if (fn == 'TychoSearchHelper2nd_forJS') {Help = data.split(',');}
+                    if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {Tycho1011 = data.split(',');}
+                    if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {Help1011 = data.split(',');}
+                    if (fn == 'bsc_forJS') {xhrBSC(data);}
+                    if (fn == 'messier') {messier = JSON.parse(data);}
+                    if (fn == 'rec') {recs = JSON.parse(data);}
+                    if (fn == 'allNGC_forJS') {NGC = data.split(',');}
+                    if (fn == 'ConstellationList') {CLnames = data.split('\r\n');}
+                    if (fn == 'ConstellationPositionNew_forJS') {constPos = data.split(',');}
+                    if (fn == 'Lines_light_forJS') {lines = data.split(',');}
+                    if (fn == 'boundary_light_forJS') {boundary = data.split(',');}
+                    if (fn == 'ExtraPlanet') {xhrExtra(data);}
+                    xhrcheck++;
+                    show_initial();
+                }
+            }
+            fr.readAsText(this.files[0]);
+        });
     }
 }
 
@@ -3169,5 +3161,12 @@ function deviceOrientation(event) {
         show_initial();
     }
 }
+
+document.getElementById('title').addEventListener('click', (event) => {
+    console.log(event.detail)
+    if (event.detail === 5) {
+        window.location.href = 'chart_beta.html';
+    }
+})
 
 document.body.appendChild(canvas);
