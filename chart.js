@@ -1444,6 +1444,7 @@ function show_main(){
     ctx.clearRect(0, 0, canvas.width,canvas.height);
     ctx.fillStyle = skycolor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    document.getElementById("coordtext").innerHTML = `cw=${canvas.width} ch=${canvas.height}`
     
     const pi = Math.PI;
     var x, y, scrRA, scrDec;
@@ -2059,7 +2060,7 @@ function show_main(){
     
     var coordtext = `${constellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
     document.getElementById("coordtext").style.color = textColor;
-    document.getElementById("coordtext").innerHTML = coordtext;
+    document.getElementById("coordtext").innerHTML += coordtext;
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
