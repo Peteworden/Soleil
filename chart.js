@@ -1444,7 +1444,6 @@ function show_main(){
     ctx.clearRect(0, 0, canvas.width,canvas.height);
     ctx.fillStyle = skycolor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    document.getElementById("coordtext").innerHTML = `cw=${canvas.width} ch=${canvas.height}`
     
     const pi = Math.PI;
     var x, y, scrRA, scrDec;
@@ -1557,78 +1556,80 @@ function show_main(){
     }
 
     //星座線
-    ctx.strokeStyle = lineColor;
-    ctx.beginPath();
-    const num_of_lines = lines.length / 5;
-    for (var i=0; i<num_of_lines; i++) {
-        var RA1 = parseFloat(lines[5*i+1]);
-        var Dec1 = parseFloat(lines[5*i+2]);
-        var RA2 = parseFloat(lines[5*i+3]);
-        var Dec2 = parseFloat(lines[5*i+4]);
-        if (mode == 'AEP') {
-            var [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
-            var [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
-            if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
-                if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
-                    if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
-                        ctx.moveTo(...coordSH(RA1_SH, Dec1_SH));
-                        ctx.lineTo(...coordSH(RA2_SH, Dec2_SH));
+    if (document.getElementById('constLineCheck').checked && rgEW < 0.5 * document.getElementById('constLineFrom').value) {
+        ctx.strokeStyle = lineColor;
+        ctx.beginPath();
+        const num_of_lines = lines.length / 5;
+        for (var i=0; i<num_of_lines; i++) {
+            var RA1 = parseFloat(lines[5*i+1]);
+            var Dec1 = parseFloat(lines[5*i+2]);
+            var RA2 = parseFloat(lines[5*i+3]);
+            var Dec2 = parseFloat(lines[5*i+4]);
+            if (mode == 'AEP') {
+                var [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
+                var [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
+                if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
+                    if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
+                        if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
+                            ctx.moveTo(...coordSH(RA1_SH, Dec1_SH));
+                            ctx.lineTo(...coordSH(RA2_SH, Dec2_SH));
+                        }
                     }
                 }
-            }
-        } else if (mode == 'EtP') {
-            function whetherDrawLine (RA1, Dec1, RA2, Dec2, a) {
-                if (Math.min(RA1, RA2)+a < cenRA+rgEW && Math.max(RA1, RA2)+a > cenRA-rgEW) {
-                    if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                        return true;
+            } else if (mode == 'EtP') {
+                function whetherDrawLine (RA1, Dec1, RA2, Dec2, a) {
+                    if (Math.min(RA1, RA2)+a < cenRA+rgEW && Math.max(RA1, RA2)+a > cenRA-rgEW) {
+                        if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                if (cenRA - rgEW < 0) {
+                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
+                        drawLines(RA1, Dec1, RA2, Dec2, 0);
+                    }
+                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, -360)) {
+                        drawLines(RA1, Dec1, RA2, Dec2, -360);
+                    }
+                } else if (cenRA + rgEW >= 360) {
+                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
+                        drawLines(RA1, Dec1, RA2, Dec2, 0);
+                    }
+                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 360)) {
+                        drawLines(RA1, Dec1, RA2, Dec2, 360);
+                    }
+                } else {
+                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
+                        drawLines(RA1, Dec1, RA2, Dec2, 0);
                     }
                 }
-                return false;
-            }
-            if (cenRA - rgEW < 0) {
-                if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
-                    drawLines(RA1, Dec1, RA2, Dec2, 0);
-                }
-                if (whetherDrawLine (RA1, Dec1, RA2, Dec2, -360)) {
-                    drawLines(RA1, Dec1, RA2, Dec2, -360);
-                }
-            } else if (cenRA + rgEW >= 360) {
-                if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
-                    drawLines(RA1, Dec1, RA2, Dec2, 0);
-                }
-                if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 360)) {
-                    drawLines(RA1, Dec1, RA2, Dec2, 360);
-                }
-            } else {
-                if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
-                    drawLines(RA1, Dec1, RA2, Dec2, 0);
-                }
-            }
-        } else if (mode == 'view') {
-            var [RA1_view, Dec1_view] = RADec2scrview(RA1, Dec1);
-            var [RA2_view, Dec2_view] = RADec2scrview(RA2, Dec2);
-            if (Math.min(RA1_view, RA2_view) < rgEW && Math.max(RA1_view, RA2_view) > -rgEW) {
-                if (Math.min(Dec1_view, Dec2_view) < rgNS && Math.max(Dec1_view, Dec2_view) > -rgNS) {
-                    if (Math.pow(RA2_view-RA1_view, 2) + Math.pow(Dec2_view-Dec1_view, 2) < 30*30) {
-                        ctx.moveTo(...coordSH(RA1_view, Dec1_view));
-                        ctx.lineTo(...coordSH(RA2_view, Dec2_view));
+            } else if (mode == 'view') {
+                var [RA1_view, Dec1_view] = RADec2scrview(RA1, Dec1);
+                var [RA2_view, Dec2_view] = RADec2scrview(RA2, Dec2);
+                if (Math.min(RA1_view, RA2_view) < rgEW && Math.max(RA1_view, RA2_view) > -rgEW) {
+                    if (Math.min(Dec1_view, Dec2_view) < rgNS && Math.max(Dec1_view, Dec2_view) > -rgNS) {
+                        if (Math.pow(RA2_view-RA1_view, 2) + Math.pow(Dec2_view-Dec1_view, 2) < 30*30) {
+                            ctx.moveTo(...coordSH(RA1_view, Dec1_view));
+                            ctx.lineTo(...coordSH(RA2_view, Dec2_view));
+                        }
                     }
                 }
-            }
-        } else if (['live', 'ar'].includes(mode)) {
-            var [scrRA1, scrDec1] = Ah2scrlive(...RADec2Ah(RA1, Dec1, theta));
-            var [scrRA2, scrDec2] = Ah2scrlive(...RADec2Ah(RA2, Dec2, theta));
-            if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
-                if (Math.min(scrDec1, scrDec2) < rgNS && Math.max(scrDec1, scrDec2) > -rgNS) {
-                    if (Math.pow(scrRA2-scrRA1, 2) + Math.pow(scrDec2-scrDec1, 2) < 30*30) {
-                        ctx.moveTo(...coordSH(scrRA1, scrDec1));
-                        ctx.lineTo(...coordSH(scrRA2, scrDec2));
+            } else if (['live', 'ar'].includes(mode)) {
+                var [scrRA1, scrDec1] = Ah2scrlive(...RADec2Ah(RA1, Dec1, theta));
+                var [scrRA2, scrDec2] = Ah2scrlive(...RADec2Ah(RA2, Dec2, theta));
+                if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
+                    if (Math.min(scrDec1, scrDec2) < rgNS && Math.max(scrDec1, scrDec2) > -rgNS) {
+                        if (Math.pow(scrRA2-scrRA1, 2) + Math.pow(scrDec2-scrDec1, 2) < 30*30) {
+                            ctx.moveTo(...coordSH(scrRA1, scrDec1));
+                            ctx.lineTo(...coordSH(scrRA2, scrDec2));
+                        }
                     }
                 }
             }
         }
+        ctx.stroke();
     }
-    ctx.stroke();
 
     //Tycho
     if (mode == 'AEP') {
@@ -1858,6 +1859,8 @@ function show_main(){
         drawNGC();
     }
 
+    //5030"/yr
+
     //惑星、惑星の名前
     ctx.font = '20px serif';
     ctx.textBaseline = 'bottom';
@@ -1878,21 +1881,27 @@ function show_main(){
             if (i == 0){ // 太陽
                 var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
                 drawFilledCircle(x, y, r, yellowColor);
-                ctx.fillStyle = specialObjectNameColor;
-                ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                if (document.getElementById('planetNameCheck').checked && rgEW < 0.5 * document.getElementById('planetNameFrom').value) {
+                    ctx.fillStyle = specialObjectNameColor;
+                    ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                }
                 infoList.push([JPNplanets[i], x, y]);
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
                     var r = drawMoon();
-                    ctx.fillStyle = specialObjectNameColor;
-                    ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                    if (document.getElementById('planetNameCheck').checked && rgEW < 0.5 * document.getElementById('planetNameFrom').value) {
+                        ctx.fillStyle = specialObjectNameColor;
+                        ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                    }
                     infoList.push(['月', x, y]);
                 }
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
                 drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
-                ctx.fillStyle = specialObjectNameColor;
-                ctx.fillText(JPNplanets[i], x, y);
+                if (document.getElementById('planetNameCheck').checked && rgEW < 0.5 * document.getElementById('planetNameFrom').value) {
+                    ctx.fillStyle = specialObjectNameColor;
+                    ctx.fillText(JPNplanets[i], x, y);
+                }
                 infoList.push([JPNplanets[i], x, y]);
             }
         }
@@ -2060,7 +2069,7 @@ function show_main(){
     
     var coordtext = `${constellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
     document.getElementById("coordtext").style.color = textColor;
-    document.getElementById("coordtext").innerHTML += coordtext;
+    document.getElementById("coordtext").innerHTML = coordtext;
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));

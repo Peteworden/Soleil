@@ -3,20 +3,19 @@
     <head>
         <title>星図</title>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
         <meta name="description" content="シンプルかつ高機能な11等級までのWeb星図。星座はもちろんメシエ天体、NGC天体などの検索機能もあり、指やマウスで直感的に操作できます。ネット環境があればURLにアクセスするだけでオンラインで使用可能。初心者から上級者まで、星空を眺めるすべての人の天体観測のおともに。">
         <meta name="theme-color" content="#000000">
         <meta name="msapplication-TileColor" content="#000000">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="styleChart.css">
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'G-WREGJRZRGT');
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WREGJRZRGT');
         </script>
     </head>
     <body>
@@ -114,7 +113,12 @@
                     <ul>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
-                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="190">°のとき）</li>
+                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="200">°のとき）</li>
+                        <li><input type="checkbox" id="constLineCheck" checked>星座線
+                        （左右の視野&lt;<input type="text" id="constLineFrom" size="1" value="200">°のとき）</li>
+                        <li><input type="checkbox" id="planetNameCheck" checked>太陽系天体名
+                        （左右の視野&lt;<input type="text" id="planetNameFrom" size="1" value="200">°のとき）</li>
+                        <br>
                         <li><input type="checkbox" id="objectInfoCheck" checked>クリックで詳細を見る</li>
                         <br>
                         <li><input type="checkbox" id="MessierCheck" checked>メシエ天体
