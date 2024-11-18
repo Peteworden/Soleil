@@ -325,7 +325,7 @@
         "dec": "+38 32.0",
         "vmag": "6.6",
         "class": "OC",
-        "description": ""
+        "description": "とても小さい"
     },
     {
         "name": "M30",
@@ -359,7 +359,7 @@
         "dec": "+40 52.0",
         "vmag": "8.2",
         "class": "Gx",
-        "description": ""
+        "description": "淡いが条件がよければ望遠鏡で見える"
     },
     {
         "name": "M33",
@@ -382,7 +382,7 @@
         "dec": "+42 47.0",
         "vmag": "5.2",
         "class": "OC",
-        "description": ""
+        "description": "明るく、満月ぐらいの大きさがある。きれいだった"
     },
     {
         "name": "M35",
@@ -393,7 +393,7 @@
         "dec": "+24 20.0",
         "vmag": "5.1",
         "class": "OC",
-        "description": "明るい散開星団。市街地だとふたご座の1番星やη星が見えないので、けっこう難しい。"
+        "description": "明るい散開星団。市街地だとふたご座の1番星やη星が見えないのでけっこう難しいが、星が多くてきれい。"
     },
     {
         "name": "M36",
@@ -404,7 +404,7 @@
         "dec": "+34 8.0",
         "vmag": "6.0",
         "class": "OC",
-        "description": ""
+        "description": "きれい"
     },
     {
         "name": "M37",
@@ -415,7 +415,7 @@
         "dec": "+32 33.0",
         "vmag": "5.6",
         "class": "OC",
-        "description": ""
+        "description": "星がとても密集していてよかった。"
     },
     {
         "name": "M38",
@@ -426,7 +426,7 @@
         "dec": "+35 50.0",
         "vmag": "6.4",
         "class": "OC",
-        "description": ""
+        "description": "よくセットにされるM36、M37と比べると暗め"
     },
     {
         "name": "M39",
@@ -437,7 +437,7 @@
         "dec": "+48 26.0",
         "vmag": "4.6",
         "class": "OC",
-        "description": ""
+        "description": "ミニすばる"
     },
     {
         "name": "M40",
@@ -494,7 +494,7 @@
         "dec": "+19 59.0",
         "vmag": "3.1",
         "class": "OC",
-        "description": "プレセペ星団。双眼鏡だとたくさんの星が集まっていてきれい。ふたご座のポルックスとしし座のレグルスの中央の、少しポルックス・プロキオン寄りにある。"
+        "description": "プレセペ星団。双眼鏡だとたくさんの星が集まっていてきれい。ポルックスとレグルスから辿るとよい。私が自分で望遠鏡を動かして見たおそらく最初の星団で、天文にはまったきっかけの一つ。"
     },
     {
         "name": "M45",
@@ -517,7 +517,7 @@
         "dec": "-14 49.0",
         "vmag": "6.1",
         "class": "OC",
-        "description": ""
+        "description": "かなり暗かったが、たくさんの星が見えた。惑星状星雲NGC2438を含む。"
     },
     {
         "name": "M47",
@@ -528,7 +528,7 @@
         "dec": "-14 30.0",
         "vmag": "4.4",
         "class": "OC",
-        "description": ""
+        "description": "明るい散開星団"
     },
     {
         "name": "M48",
@@ -539,7 +539,7 @@
         "dec": "-05 48.0",
         "vmag": "5.8",
         "class": "OC",
-        "description": ""
+        "description": "花火みたいだなと思った"
     },
     {
         "name": "M49",
@@ -561,7 +561,7 @@
         "dec": "-08 20.0",
         "vmag": "5.9",
         "class": "OC",
-        "description": ""
+        "description": "空の孤島って感じがした。よく見つけたな"
     },
     {
         "name": "M51",
@@ -585,7 +585,7 @@
         "dec": "+61 35.0",
         "vmag": "6.9",
         "class": "OC",
-        "description": ""
+        "description": "星雲状、7cm高倍率で分解"
     },
     {
         "name": "M53",
@@ -756,7 +756,7 @@
         "dec": "+11 49.0",
         "vmag": "6.9",
         "class": "OC",
-        "description": ""
+        "description": "なぜか星図がずれていますが、修正をサボっています。"
     },
     {
         "name": "M68",
@@ -833,7 +833,7 @@
         "dec": "+15 47.0",
         "vmag": "9.2",
         "class": "Gx",
-        "description": ""
+        "description": "とてもかすか"
     },
     {
         "name": "M75",
@@ -849,13 +849,16 @@
     {
         "name": "M76",
         "alt_name": [
-            "NGC650-1"
+            "NGC650",
+            "NGC650-1",
+            "しょうあれいじょう星雲",
+            "小亜鈴状星雲"
         ],
         "ra": "01 42.4",
         "dec": "+51 34.0",
         "vmag": "11.5",
         "class": "Pl",
-        "description": ""
+        "description": "小亜鈴状星雲"
     },
     {
         "name": "M77",
@@ -866,7 +869,7 @@
         "dec": "-00 1.0",
         "vmag": "8.8",
         "class": "Gx",
-        "description": ""
+        "description": "東側にくっつくように10.7等級の星"
     },
     {
         "name": "M78",
@@ -877,7 +880,7 @@
         "dec": "+00 3.0",
         "vmag": "8.0",
         "class": "Nb",
-        "description": ""
+        "description": "ウルトラマンの故郷？星が２つ見える。すぐ北にNGC2071がある。"
     },
     {
         "name": "M79",
@@ -1047,7 +1050,7 @@
         "dec": "-23 52.0",
         "vmag": "6.2",
         "class": "OC",
-        "description": ""
+        "description": "小さくて暗いけどたくさんの星が見えた"
     },
     {
         "name": "M94",
@@ -1160,7 +1163,7 @@
         "dec": "+60 42.0",
         "vmag": "7.4",
         "class": "OC",
-        "description": ""
+        "description": "4つぐらいしか見えない"
     },
     {
         "name": "M104",
@@ -1238,6 +1241,6 @@
         "dec": "+41 41.0",
         "vmag": "8.0",
         "class": "Gx",
-        "description": ""
+        "description": "とても淡い。南北に長い"
     }
 ]
