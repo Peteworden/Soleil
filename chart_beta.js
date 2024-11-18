@@ -27,11 +27,11 @@ let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementsByName('realtime');
 
+document.getElementById('welcomeImage').style.visibility = "hidden";
 if (online) {
     document.getElementById('fileBtn').style.visibility = "hidden";
     document.getElementById('getFile').style.visibility = "hidden";
 } else {
-    document.getElementById('welcomeImage').style.visibility = "hidden";
     //document.getElementById('fullScreenBtn').style.visibility = "hidden";
     alert('offline version\nSelect allInOne.txt from the file button')
 }
