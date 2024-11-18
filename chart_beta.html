@@ -3,29 +3,30 @@
     <head>
         <title>星図</title>
         <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
         <meta name="description" content="シンプルかつ高機能な11等級までのWeb星図。星座はもちろんメシエ天体、NGC天体などの検索機能もあり、指やマウスで直感的に操作できます。ネット環境があればURLにアクセスするだけでオンラインで使用可能。初心者から上級者まで、星空を眺めるすべての人の天体観測のおともに。">
         <meta name="theme-color" content="#000000">
         <meta name="msapplication-TileColor" content="#000000">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <link rel="stylesheet" href="styleChart.css">
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <script>
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-        
-          gtag('config', 'G-WREGJRZRGT');
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-WREGJRZRGT');
         </script>
     </head>
     <body>
+        <img id="welcomeImage" class="welcomeImage" src="welcome0928.jpg">
         <div class="title" id="title">
             <ul>
-                <li><h3>実験</h3></li>
+                <li><h3>星図</h3></li>
                 <li><a href="PeteHOME.html">HOME</a></li>
                 <li><a href="SoleilWeb.html?dark=1">Soleil</a></li>
                 <li><button id="darkerBtn" class="darkerBtn" type="button" onclick="darkerFunc()"><div id="darkerbtntext"></div></li>
+                <li><button id="fileBtn" style="display:block;width:40px; height:25px;" onclick="document.getElementById('getFile').click()">file</button><input type="file" id="getFile" accept="*.txt" /></li>
             </ul>
         </div>
 
@@ -54,8 +55,8 @@
                         document.getElementById('minuteText').value = ymdhm.getMinutes();
                     </script>
                     <button type="button" onclick="now()">現在時刻</button>
-                    <button type="button" onclick="show_JD_plus1()">１日進む</button>
-                    <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+                    <button type="button" onclick="show_JD_plus1()">+１日</button>
+                    <button type="button" onclick="show_JD_minus1()">-１日</button>
                 </div>
                 
                 <div class="mainSettingRows">
@@ -87,6 +88,7 @@
                         <option>西経</option>
                     </select>
                     <label><input type="text" id="lon" size="1" value="135">°</label>
+                    <button type="button" onclick="here()">現在地</button>
                 </div>
 
                 <div class="mainSettingRows">
@@ -97,7 +99,11 @@
                         <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
                         <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
-                        <input type="radio" name="mode" value="live">ライブモード(beta)<input type="button" id="permitBtn" value="許可" style="visibility: hidden;"/>
+                        <input type="radio" name="mode" value="live">ライブモード
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
+                        <input type="radio" name="mode" value="ar">AR
+                        <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/>
                     </div>
                     <div>
                         リアルタイム
@@ -107,18 +113,28 @@
                     </div>
                     <ul>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
+                        <li><input type="checkbox" id="starNameCheck" checked>恒星名
+                            （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）</li>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
-                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="190">°のとき）</li>
+                            （左右の視野<input type="text" id="constNameFrom" size="1" value="90">°以下のとき）</li>
+                        <li><input type="checkbox" id="constLineCheck" checked>星座線
+                            （左右の視野<input type="text" id="constLineFrom" size="1" value="180">°以下のとき）</li>
+                        <li><input type="checkbox" id="planetNameCheck" checked>太陽系天体名
+                            （左右の視野<input type="text" id="planetNameFrom" size="1" value="180">°以下のとき）</li>
+                        <br>
                         <li><input type="checkbox" id="objectInfoCheck" checked>クリックで詳細を見る</li>
                         <br>
                         <li><input type="checkbox" id="MessierCheck" checked>メシエ天体
-                        （左右の視野&lt;<input type="text" id="MessierFrom" size="1" value="40">°のとき）</li>
+                            （左右の視野<input type="text" id="MessierFrom" size="1" value="40">°以下のとき）</li>
                         <li><input type="checkbox" id="recsCheck" checked>その他、明るいNGC天体など
-                        （左右の視野&lt;<input type="text" id="recsFrom" size="1" value="40">°のとき）</li>
+                            （左右の視野<input type="text" id="recsFrom" size="1" value="40">°以下のとき）</li>
                         <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
-                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="50">°のとき）</li>
+                            （左右の視野<input type="text" id="allNGCFrom" size="1" value="50">°以下のとき）</li>
                         <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
+                        <br>
+                        <!--<li><input type="checkbox" id="atmRefCheck">大気差（プラネタリウムモードのみ）</li>-->
+                        <li><input type="checkbox" id="demCheck">地形<input type="file" id="demFileInput" accept=".csv"><button id="openDemDescriptionDiv" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'visible'">説明</button></li>
                     </ul>
                 </div>
             </div>
@@ -213,8 +229,6 @@
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7009')">NGC7009</button>(みずがめ座) 土星状星雲</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('NGC7789')">NGC7789</button>(カシオペヤ座) 散開星団。イチオシらしい</li>
                     <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('馬頭星雲')">馬頭星雲</button>(オリオン座)</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('大マゼラン雲')">大マゼラン雲</button>(かじき座、テーブルさん座)</li>
-                    <li><button id="linkBtn" class="linkBtn" type="button" onclick="link('小マゼラン雲')">小マゼラン雲</button>(きょしちょう座)</li>
                 </ul>
             </p>
             <p>
@@ -226,6 +240,52 @@
                     <li><a href="https://www.heavens-above.com/Comets.aspx?lat=35&lng=135.8&loc=Unnamed&alt=0&tz=JapST&cul=ja" target="_blank" rel="noopener">Heavens-Above 彗星</a></li>
                 </ul>
             </p>
+            <p>
+                Data of stars are provided by the Hipparcos Catalogue (European Space Agency (ESA)), Tycho-2 Catalogue (ESA), Messier Catalogue and NGC Catalogue available through the High Energy Astrophysics Science Archive Research Center (HEASARC), operated by NASA/GSFC. 星座関係はAstro Commons (星座線は改変)から。惑星はJPLのApproximate Positions of the Planets、太陽系小天体はSmall-Body Database Lookupから。詳細は<a href="https://peteworden.github.io/Soleil/chartReadMe.html">ここ</a>
+            </a>
+            </p>
+        </div>
+
+        <div id="setPicsFor360Div" class="setPicsFor360Div">
+            <input type="text" id="picsFor360" placeholder="5" value="5.2">
+            <button id="submitPicsFor360" type="button" onclick="setPicsFor360()">OK</button>
+            <div id="picsFor360text">
+                <h2>重要！　リロードのたびに設定が必要です！</h2>
+                <p>
+                    星図と重ねて表示する実際の風景の拡大率を星空と合わせるために、「一周360°がカメラの画角の横幅の何倍か」を上の欄に入力してください。<br>
+                    いったんカメラアプリを開き、スマホを横倒しにして、建物の角などのほぼスマホと同じ高さにある目印を画角の右端中央（左端中央）に入れます。<br>
+                    次にその状態で左端中央（右端中央）にあるものが右端中央（左端中央）に来るように、スマホの向きを変えます。<br>
+                    これを繰り返して、例えば1周がちょうど写真5枚分なら上の欄に5と記入します。<br>
+                    半時計周りに回って（つまりはじめの目印を右端中央に合わせて）6枚目で1周し、はじめに目印にしたものが右端から測って
+                    左右の画角の0.2倍の位置にあったなら5.2と入力します。
+                </p>
+            </div>
+        </div>
+
+        <div id="demDescriptionDiv" class="demDescriptionDiv">
+            <button id="closeDemDescription" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'hidden'">OK</button>
+            <div class="demDescriptionText">
+                <h2>地形を表示(パソコン推奨)</h2>
+                <p>
+                    　周囲の山の形を緑の点で描画します。<br>
+                    　国土地理院の<a href="https://maps.gsi.go.jp/index_m.html" target="_blank" rel="noopener">地理院地図</a>にアクセスし、中央の十字を観測地点に合わせます。<br>
+                    　次に、そこから見えると思われる山があとで説明する赤枠に収まるように適宜縮尺を調整します。<br>
+                    　右上のヘルプの左にあるメニューから「ツール」を選択し「3D」をクリックして「小」の上にカーソルを乗せます（まだクリックしない）。
+                    パソコンの場合赤枠は左右の幅よりは小さいですが上下にははみ出ています。先ほどの山が枠内の辺付近に来るように縮尺を調整します。
+                    十字が観測地から動かないように注意してください。<br>
+                    　「3D」の「小」をクリックすると、別のタブで3Dの地図が見られます。下の「WebGL用ファイル」の行の右端にある「ダウンロード」をクリックし、
+                    　「標高ファイル dem.csv」をダウンロードします。ファイル名を地名に変えるといいと思います。<br>
+                    　星図に戻り、地形のチェックボックスにチェックを入れた上で、ファイル選択ボタンからさっきのファイルを選択し、設定画面のOKボタンで設定を閉じます。
+                </p>
+                <h2>注意</h2>
+                <p>
+                    近すぎる（距離が赤枠の1辺の1/257未満の）地形は表示されません。<br>
+                    観測地の標高を基準としているため高い建物に登ると見え方が変わる場合があります。<br>
+                    大気差は実装していないため、星図で地平線付近の星は0.5°くらい、2°の星は0.3°くらい、4°の星は0.2°くらい浮き上がって見えます。そのため星図では山に隠れていても見える場合があります。<br>
+                    緯度経度を正確に設定してください。方角や高度は緯度や経度と同じくらいのオーダーでずれます。
+                    見える範囲に対して赤枠が大きすぎた場合は点が疎になります。
+                </p>
+            </div>
         </div>
 
         <div id="searchDiv" class="searchDiv">
@@ -248,6 +308,10 @@
             <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
         </div>
         
+        <div>
+            <video id="arVideo"></video>
+        </div>
+
         <div class="result">
             <script src="chart_beta.js"></script>
         </div>
