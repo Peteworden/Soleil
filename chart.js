@@ -1,3 +1,4 @@
+
 //2023/10/21 ~
 
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
@@ -27,17 +28,17 @@ let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementsByName('realtime');
 
+document.getElementById('welcomeImage').style.visibility = "hidden";
 if (online) {
     document.getElementById('fileBtn').style.visibility = "hidden";
     document.getElementById('getFile').style.visibility = "hidden";
 } else {
-    document.getElementById('welcomeImage').style.visibility = "hidden";
-    document.getElementById('fullScreenBtn').style.visibility = "hidden";
-    document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+    //document.getElementById('fullScreenBtn').style.visibility = "hidden";
     alert('offline version\nSelect allInOne.txt from the file button')
 }
 
 document.getElementById('setting').style.visibility = "hidden";
+document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 document.getElementById('description').style.visibility = "hidden";
 document.getElementById('setPicsFor360Div').style.visibility = "hidden";
 document.getElementById('demDescriptionDiv').style.visibility = "hidden";
@@ -84,12 +85,15 @@ var dev_a_array = new Array(), dev_b_array = new Array(), dev_c_array = new Arra
 if (canvas.width < canvas.height) {
     var rgEW = 20;
     var rgNS = rgEW * canvas.height / canvas.width;
+    document.getElementById('constNameFrom').value = "90";
+    document.getElementById('MessierFrom').value = "60";
+    document.getElementById('recsFrom').value = "50";
 } else {
     var rgNS = 20;
     var rgEW = rgNS * canvas.width / canvas.height;
     document.getElementById('constNameFrom').value = "180";
-    document.getElementById('MessierFrom').value = "100";
-    document.getElementById('recsFrom').value = "80";
+    document.getElementById('MessierFrom').value = "180";
+    document.getElementById('recsFrom').value = "120";
 }
 
 const minrg = 0.3;
@@ -99,7 +103,7 @@ var rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
 
 var magLimtext;
 var magLimLim = 11;
-var magkey1=11.0, magkey2=1.8;//key1は10~13
+var magkey1 = 11.0, magkey2 = 1.8;//key1は10~13
 function find_magLim(a, b) {
     var magLim = Math.min(Math.max(a - b * Math.log(Math.min(rgEW, rgNS)), 5), magLimLim);
     magLimtext = `~${magLim.toFixed(1)}等級`;
@@ -239,8 +243,9 @@ var BSCDecary = Array(1);
 var FSs = Array(1);
 var Bayers = Array(1);
 var BayerNums = Array(1);
-var messier  = Array(4 * 110);
-let recs;
+var starNames;
+var messier;
+var recs;
 var NGC = [];
 var CLnames = [];
 var constPos = [];
@@ -825,6 +830,30 @@ function show_JD_minus1(){
     realtimeOff();
 }
 
+function here() {
+    function success(position) {
+        const latitude = Math.round(position.coords.latitude*100)/100;
+        const longitude = Math.round(position.coords.longitude*100)/100;
+        if (latitude < 0) {
+            document.getElementById('NSCombo').options[1].selected = true;
+        } else {
+            document.getElementById('NSCombo').options[0].selected = true;
+        }
+        document.getElementById('lat').value = Math.abs(latitude);
+        if (longitude < 0) {
+            document.getElementById('EWCombo').options[1].selected = true;
+        } else {
+            document.getElementById('EWCombo').options[0].selected = true;
+        }
+        document.getElementById('lon').value = Math.abs(longitude);
+    }
+    if (!navigator.geolocation) {
+        alert("お使いのブラウザは位置情報に対応していません");
+    } else {
+        navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
+    }
+}
+
 timeSliderElem.addEventListener('input', function(){
     showingJD += (timeSliderElem.value - timeSliderValue) / 1440;
     timeSliderValue = timeSliderElem.value;                                                                                                               
@@ -1089,7 +1118,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function show_initial(){
-    if (xhrcheck == 14 && defaultcheck ==11) {
+    if (xhrcheck == 15 && defaultcheck ==11) {
         canvas.addEventListener("touchstart", ontouchstart);
         canvas.addEventListener("touchmove", ontouchmove);
         canvas.addEventListener('touchend', ontouchend);
@@ -1556,7 +1585,7 @@ function show_main(){
     }
 
     //星座線
-    if (document.getElementById('constLineCheck').checked && rgEW < 0.5 * document.getElementById('constLineFrom').value) {
+    if (document.getElementById('constLineCheck').checked && rgEW <= 0.5 * document.getElementById('constLineFrom').value) {
         ctx.strokeStyle = lineColor;
         ctx.beginPath();
         const num_of_lines = lines.length / 5;
@@ -1765,6 +1794,10 @@ function show_main(){
         }
     }
 
+    if (document.getElementById('starNameCheck').checked && rgEW <= 0.5 * document.getElementById('starNameFrom').value) {
+        writeStarNames();
+    }
+
     //HIP
     ctx.fillStyle = starColor;
     for (i=0; i<HIPRAary.length; i++){
@@ -1800,7 +1833,7 @@ function show_main(){
 
     // 星座名
     ctx.font = '20px times new roman';
-    if (document.getElementById('constNameCheck').checked && rgEW < 0.5 * document.getElementById('constNameFrom').value) {
+    if (document.getElementById('constNameCheck').checked && rgEW <= 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
         for (i=0; i<89; i++){
             var RA = parseFloat(constPos[2*i]);
@@ -1846,16 +1879,16 @@ function show_main(){
         writeBayer();
     }
 
-    if (document.getElementById('MessierCheck').checked && rgEW < 0.5 * document.getElementById('MessierFrom').value) {
+    if (document.getElementById('MessierCheck').checked && rgEW <= 0.5 * document.getElementById('MessierFrom').value) {
         drawMessier();
     }
 
-    if (document.getElementById('recsCheck').checked && rgEW < 0.5 * document.getElementById('recsFrom').value) {
+    if (document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value) {
         drawRecs();
     }
 
     // メシエ以外
-    if (document.getElementById('allNGCCheck').checked && rgEW < 0.5 * document.getElementById('allNGCFrom').value) {
+    if (document.getElementById('allNGCCheck').checked && rgEW <= 0.5 * document.getElementById('allNGCFrom').value) {
         drawNGC();
     }
 
@@ -1881,7 +1914,7 @@ function show_main(){
             if (i == 0){ // 太陽
                 var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
                 drawFilledCircle(x, y, r, yellowColor);
-                if (document.getElementById('planetNameCheck').checked && rgEW < 0.5 * document.getElementById('planetNameFrom').value) {
+                if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
                     ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                 }
@@ -1889,7 +1922,7 @@ function show_main(){
             } else if (i == 9) { // 月(地球から見たときだけ)
                 if (Obs_num == 3) {
                     var r = drawMoon();
-                    if (document.getElementById('planetNameCheck').checked && rgEW < 0.5 * document.getElementById('planetNameFrom').value) {
+                    if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
                         ctx.fillStyle = specialObjectNameColor;
                         ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                     }
@@ -1898,7 +1931,7 @@ function show_main(){
             } else if (i != 9) {// 太陽と月以外
                 var mag = Vlist[i];
                 drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
-                if (document.getElementById('planetNameCheck').checked && rgEW < 0.5 * document.getElementById('planetNameFrom').value) {
+                if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
                     ctx.fillStyle = specialObjectNameColor;
                     ctx.fillText(JPNplanets[i], x, y);
                 }
@@ -2191,7 +2224,7 @@ function show_main(){
         ctx.fill();
     }
 
-    function size (mag) {
+    function size(mag) {
         if (mag > magLim) {
             return zerosize / (magLim + 1);
         } else {
@@ -2338,9 +2371,9 @@ function show_main(){
         }
     }
 
-    function drawJsonObjects (data) {
-        ctx.strokeStyle = objectColor;
-        ctx.fillStyle = objectColor;
+    function drawJsonObjects (data, func, color=objectColor) {
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
         for (i=0; i<data.length; i++){
             var name = data[i].name;
             if (name == '') {
@@ -2348,45 +2381,64 @@ function show_main(){
             }
             var RA = rahm2deg(data[i].ra);
             var Dec = decdm2deg(data[i].dec);
-            var type = data[i].class;
             if (mode == 'AEP') {
                 var [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
+                    func(i, name, x, y);
                 }
             } else if (mode == 'EtP') {
                 if (Math.abs(RApos(RA)) < rgEW && Math.abs(Dec-cenDec) < rgNS) {
                     var [x, y] = coord(RA, Dec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
+                    func(i, name, x, y);
                 }
             } else if (mode == 'view') {
                 var [scrRA, scrDec] = RADec2scrview(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
+                    func(i, name, x, y);
                 }
             } else if (['live', 'ar'].includes(mode)) {
                 var [A, h] = RADec2Ah(RA, Dec, theta);
                 var [scrRA, scrDec] = Ah2scrlive(A, h);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
                     var [x, y] = coordSH(scrRA, scrDec);
-                    drawObjects(name, x, y, type);
-                    infoList.push([name, x, y]);
+                    func(i, name, x, y);
                 }
             }
         }
     }
 
+    function writeStarNames () {
+        const tier_range = [180, 120];
+        drawJsonObjects(
+            starNames,
+            function(i, name, x, y) {
+                infoList.push([name, x, y]);
+                if (2*Math.max(rgNS, rgEW) <= tier_range[starNames[i].tier-1]) {
+                    if (size(2) > 4) {
+                        drawObjects(name, x, y, 0);
+                    } else {
+                        drawObjects(name, x, y, 1);
+                    }
+                }
+            },
+            textColor
+        );
+    }
+
     function drawMessier () {
-        drawJsonObjects(messier);
+        drawJsonObjects(messier, function(i, name, x, y) {
+            drawObjects(name, x, y, messier[i].class);
+            infoList.push([name, x, y]);
+        });
     }
 
     function drawRecs () {
-        drawJsonObjects(recs)
+        drawJsonObjects(recs, function(i, name, x, y) {
+            drawObjects(name, x, y, recs[i].class);
+            infoList.push([name, x, y]);
+        })
     }
 
     function drawNGC () {
@@ -2917,11 +2969,16 @@ function loadFiles() {
                 console.error('There was a problem with the fetch operation:', error);
             });
         }
-        fetchJsonData('messier', (data) => {
-            messier = data
+
+        fetchJsonData('data/starname', (data) => {
+            starNames = data;
+        })
+
+        fetchJsonData('data/messier', (data) => {
+            messier = data;
         });
 
-        fetchJsonData('rec', (data) => {
+        fetchJsonData('data/rec', (data) => {
             recs = data;
         });
 
@@ -2966,6 +3023,7 @@ function loadFiles() {
                     if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {Tycho1011 = data.split(',');}
                     if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {Help1011 = data.split(',');}
                     if (fn == 'bsc_forJS') {xhrBSC(data);}
+                    if (fn == 'starname') {starNames = JSON.parse(data);}
                     if (fn == 'messier') {messier = JSON.parse(data);}
                     if (fn == 'rec') {recs = JSON.parse(data);}
                     if (fn == 'allNGC_forJS') {NGC = data.split(',');}
@@ -2988,6 +3046,8 @@ function checkURL() {
         cenRA = parseFloat(url.searchParams.get('RA'));
         defaultcheck++;
         show_initial();
+    } else if (localStorage.getItem('RA') != null) {
+        1+1;
     } else {
         url.searchParams.set('RA', cenRA);
         defaultcheck++;

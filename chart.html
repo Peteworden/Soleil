@@ -55,8 +55,8 @@
                         document.getElementById('minuteText').value = ymdhm.getMinutes();
                     </script>
                     <button type="button" onclick="now()">現在時刻</button>
-                    <button type="button" onclick="show_JD_plus1()">１日進む</button>
-                    <button type="button" onclick="show_JD_minus1()">１日戻る</button>
+                    <button type="button" onclick="show_JD_plus1()">+１日</button>
+                    <button type="button" onclick="show_JD_minus1()">-１日</button>
                 </div>
                 
                 <div class="mainSettingRows">
@@ -88,6 +88,7 @@
                         <option>西経</option>
                     </select>
                     <label><input type="text" id="lon" size="1" value="135">°</label>
+                    <button type="button" onclick="here()">現在地</button>
                 </div>
 
                 <div class="mainSettingRows">
@@ -112,21 +113,23 @@
                     </div>
                     <ul>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
+                        <li><input type="checkbox" id="starNameCheck" checked>恒星名
+                            （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）</li>
                         <li><input type="checkbox" id="constNameCheck" checked>星座名
-                        （左右の視野&lt;<input type="text" id="constNameFrom" size="1" value="200">°のとき）</li>
+                            （左右の視野<input type="text" id="constNameFrom" size="1" value="90">°以下のとき）</li>
                         <li><input type="checkbox" id="constLineCheck" checked>星座線
-                        （左右の視野&lt;<input type="text" id="constLineFrom" size="1" value="200">°のとき）</li>
+                            （左右の視野<input type="text" id="constLineFrom" size="1" value="180">°以下のとき）</li>
                         <li><input type="checkbox" id="planetNameCheck" checked>太陽系天体名
-                        （左右の視野&lt;<input type="text" id="planetNameFrom" size="1" value="200">°のとき）</li>
+                            （左右の視野<input type="text" id="planetNameFrom" size="1" value="180">°以下のとき）</li>
                         <br>
                         <li><input type="checkbox" id="objectInfoCheck" checked>クリックで詳細を見る</li>
                         <br>
                         <li><input type="checkbox" id="MessierCheck" checked>メシエ天体
-                        （左右の視野&lt;<input type="text" id="MessierFrom" size="1" value="40">°のとき）</li>
+                            （左右の視野<input type="text" id="MessierFrom" size="1" value="40">°以下のとき）</li>
                         <li><input type="checkbox" id="recsCheck" checked>その他、明るいNGC天体など
-                        （左右の視野&lt;<input type="text" id="recsFrom" size="1" value="40">°のとき）</li>
+                            （左右の視野<input type="text" id="recsFrom" size="1" value="40">°以下のとき）</li>
                         <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
-                        （左右の視野&lt;<input type="text" id="allNGCFrom" size="1" value="50">°のとき）</li>
+                            （左右の視野<input type="text" id="allNGCFrom" size="1" value="50">°以下のとき）</li>
                         <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
                         <br>
