@@ -2416,9 +2416,13 @@ function show_main(){
         drawJsonObjects(
             starNames,
             function(i, name, x, y) {
+                infoList.push([name, x, y]);
                 if (2*Math.max(rgNS, rgEW) <= tier_range[starNames[i].tier-1]) {
-                    drawObjects(name, x, y, 0);
-                    infoList.push([name, x, y]);
+                    if (size(2) > 4) {
+                        drawObjects(name, x, y, 0);
+                    } else {
+                        drawObjects(name, x, y, 1);
+                    }
                 }
             },
             textColor
@@ -2511,14 +2515,15 @@ function show_main(){
             ctx.lineTo(x+5, y+3);
             ctx.lineTo(x  , y-6);
         } else if (type == 0) {
-            document.getElementById('title').innerHTML = 'type=0 ';
+            document.getElementById('title').innerHTML = '0 ';
         } else {
             ctx.moveTo(x-4, y-4);
             ctx.lineTo(x+4, y+4);
             ctx.moveTo(x-4, y+4);
             ctx.lineTo(x+4, y-4);
         }
-        document.getElementById('title').innerHTML += type;
+        console.log(type);
+        document.getElementById('title').innerHTML = type;
         ctx.stroke();
         ctx.fillText(name, x+5, y-5);
     }
