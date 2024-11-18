@@ -2223,7 +2223,7 @@ function show_main(){
         ctx.fill();
     }
 
-    function size (mag) {
+    function size(mag) {
         if (mag > magLim) {
             return zerosize / (magLim + 1);
         } else {
@@ -2511,13 +2511,14 @@ function show_main(){
             ctx.lineTo(x+5, y+3);
             ctx.lineTo(x  , y-6);
         } else if (type == 0) {
-            1;
+            document.getElementById('title').innerHTML = 'type=0 ';
         } else {
             ctx.moveTo(x-4, y-4);
             ctx.lineTo(x+4, y+4);
             ctx.moveTo(x-4, y+4);
             ctx.lineTo(x+4, y-4);
         }
+        document.getElementById('title').innerHTML += type;
         ctx.stroke();
         ctx.fillText(name, x+5, y-5);
     }
