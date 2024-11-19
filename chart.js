@@ -77,7 +77,7 @@ var cenRA = 270;
 var cenDec = -25;
 var cenAzm = 180;
 var cenAlt = 60;
-var dev_a = 180 * pi/180; 
+var dev_a = 180 * pi/180;
 var dev_b = 120 * pi/180;
 var dev_c = 0 * pi/180;
 var dev_a_array = new Array(), dev_b_array = new Array(), dev_c_array = new Array(), dev_a_sum=0, dev_b_sum=0, dev_c_sum=0;
@@ -180,7 +180,7 @@ function turnOnOffLiveMode (mode) {
         } else if (os == "android") {
             window.addEventListener("deviceorientationabsolute", deviceOrientation, true);
         }
-    } else {    
+    } else {
         if (os == 'iphone') {
             window.removeEventListener("deviceorientation", deviceOrientation, true);
         } else if (os == "android") {
@@ -445,7 +445,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         } else if (!["M", "N", "I"].includes(searchText)){
             for (m of messier) {
                 for (alt of m.alt_name) {
-                    if (alt.length > 0 && hiraganaToKatakana(alt[0]) == searchText) {    
+                    if (alt.length > 0 && hiraganaToKatakana(alt[0]) == searchText) {
                         suggestions1[0].push(m.name);
                         suggestions1[1].push(m.name);
                     }
@@ -790,8 +790,8 @@ function descriptionFunc() {
     }
 }
 
-function toggleFullscreen() {  
-    let elem = document.documentElement;    
+function toggleFullscreen() {
+    let elem = document.documentElement;
     elem
     .requestFullscreen({ navigationUI: "show" })
     .then(() => {})
@@ -856,7 +856,7 @@ function here() {
 
 timeSliderElem.addEventListener('input', function(){
     showingJD += (timeSliderElem.value - timeSliderValue) / 1440;
-    timeSliderValue = timeSliderElem.value;                                                                                                               
+    timeSliderValue = timeSliderElem.value;
     let [y, m, d, h, mi] = JD_to_YMDHM(showingJD);
     setYMDHM(y, m, d, h, mi);
     realtimeOff();
@@ -1207,7 +1207,7 @@ function calculation(JD) {
             Distlist[i] = dist;
         }
     }
-    
+
     //明るさを計算
     const ES_2 = X**2 + Y**2 + Z**2;
     for (n=0; n<planets.length; n++) {
@@ -1236,7 +1236,7 @@ function calculation(JD) {
                 if (i <= 163.7) {V = -4.384 - 0.001044 * i + 0.0003687 * i**2 - 2.814e-6 * i**3 + 8.938e-9 * i**4 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
                 else {V = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i**2 + 5 * Math.log10(dist * Math.sqrt(PS_2))}
                 Vlist[2] = V;
-            }    
+            }
             else if (n == 3) {
                 Vlist[3] = 1
             }
@@ -1267,13 +1267,13 @@ function calculation(JD) {
                 Vlist[6] = V;
             }
             else if (n == 7) {
-                PS_2 = x**2 + y**2 + z**2;                
+                PS_2 = x**2 + y**2 + z**2;
                 if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
                 else{i = 0}
                 if (i < 3.1) {V = -7.110 + 0.00009617 * i**2 + 0.0001045 * i**2+ 5 * Math.log10(dist * Math.sqrt(PS_2))}
                 else{V = 5.6}
                 Vlist[7] = V;
-            }    
+            }
             else if (n == 8) {
                 PS_2 = x**2 + y**2 + z**2;
                 if (Obs_num != 0) {i = Math.acos((PS_2 + dist**2 - ES_2) / (2 * dist * Math.sqrt(PS_2))) * 180/ pi}
@@ -1295,7 +1295,7 @@ function calculation(JD) {
                 Vlist[n] = V;
             }
             else{Vlist[n] = 100}  //n=9（月）を含む
-        }        
+        }
         else{ //観測地自体
             Vlist[n] = 0;
         }
@@ -1339,7 +1339,7 @@ function calculation(JD) {
         var i = (planet[4] + planet[10] * (JD - T) / 36525) * pi / 180;
         var node = (planet[5] + planet[11] * (JD - T) / 36525) * pi / 180; //Ω
         var M0 = planet[6] * pi / 180;
-    
+
         var Ax = a *                     ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
         var Bx = a * Math.sqrt(1-e**2) * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
         var Ay = a *                     ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
@@ -1357,14 +1357,14 @@ function calculation(JD) {
             }
             E = newE;
         }
-        
+
         var cE_e = cos(E) - e;
         var sE = sin(E);
-        
+
         var x = Ax * cE_e + Bx * sE;
         var y = Ay * cE_e + By * sE;
         var z = Az * cE_e + Bz * sE;
-        
+
         return [x, y, z];
     }
 
@@ -1380,7 +1380,7 @@ function calculation(JD) {
         var i = 5.1454 * pi/180;
         var D = Mm + wm + Nm - Ms - ws;
         var F = Mm + wm;
-        
+
         var E = Mm + e * sin(Mm);
         if (Math.abs(E - Mm) > 0.000001) {
             var newE = Mm + e * sin(E);
@@ -1395,14 +1395,14 @@ function calculation(JD) {
 
         var v = Math.atan2(yv, xv);
         var dist = Math.sqrt(xv**2 + yv**2);
-        
+
         var xh = dist * (cos(Nm) * cos(v+wm) - sin(Nm) * sin(v+wm) * cos(i));
         var yh = dist * (sin(Nm) * cos(v+wm) + cos(Nm) * sin(v+wm) * cos(i));
         var zh = dist * sin(v+wm) * sin(i);
-        
+
         var lon_moon = Math.atan2(yh, xh);
         var lat_moon = Math.atan2(zh, Math.sqrt(xh**2 + yh**2));
-        
+
         lon_moon +=(- 1.274*sin(Mm - 2*D)
                     + 0.658*sin(2*D)
                     - 0.186*sin(Ms)
@@ -1423,7 +1423,7 @@ function calculation(JD) {
         dist += -0.58*cos(Mm - 2*D) - 0.46*cos(2*D); //地球半径
 
         lon_moon -= 0.0002437 * (JD - 2451545.0) / 365.25; //lon, latはJ2000.0
-        
+
         var Xe = cos(lat_moon) * cos(lon_moon)                             * dist * 6378.14 / 1.49598e8; //au
         var Ye = (-sin(lat_moon) * sine + cos(lat_moon) * sin(lon_moon) * cose) * dist * 6378.14 / 1.49598e8; //au
         var Ze = (sin(lat_moon) * cose + cos(lat_moon) * sin(lon_moon) * sine)  * dist * 6378.14 / 1.49598e8; //au
@@ -1445,14 +1445,14 @@ function calculation(JD) {
         var peri = planet[3] * pi / 180; //ω
         var i = planet[4] * pi / 180;
         var node = planet[5] * pi / 180; //Ω
-    
+
         var Ax =     q * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
         var Bx = 2 * q * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
         var Ay =     q * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
         var By = 2 * q * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
         var Az =     q * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
         var Bz = 2 * q * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
-        
+
         var b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (JD - tp));
         if (Math.tan(b/2) >= 0) {
             var g = Math.atan(Math.pow(Math.tan(b/2), 1/3));
@@ -1464,7 +1464,7 @@ function calculation(JD) {
         var x = Ax * (1 - tanv2**2) + Bx * tanv2;
         var y = Ay * (1 - tanv2**2) + By * tanv2;
         var z = Az * (1 - tanv2**2) + Bz * tanv2;
-        
+
         return [x, y, z];
     }
 }
@@ -1473,13 +1473,13 @@ function show_main(){
     ctx.clearRect(0, 0, canvas.width,canvas.height);
     ctx.fillStyle = skycolor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+
     const pi = Math.PI;
     var x, y, scrRA, scrDec;
     infoList = [];
 
     var JD = showingJD;
-    
+
     var t = (JD - 2451545.0) / 36525;
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
@@ -1570,7 +1570,7 @@ function show_main(){
             }
         }
     }
-    
+
     var constellation = "";
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
@@ -1740,8 +1740,8 @@ function show_main(){
             if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
                 var minDec = Math.min(
                     Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1], 
-                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1], 
+                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
                     Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
                 );
                 skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
@@ -2099,7 +2099,7 @@ function show_main(){
     } else {
         var Dectext = `赤緯 -${Math.floor(-cenDec)}° ${Math.round((-cenDec-Math.floor(-cenDec))*60)}' (J2000.0) `;
     }
-    
+
     var coordtext = `${constellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
     document.getElementById("coordtext").style.color = textColor;
     document.getElementById("coordtext").innerHTML = coordtext;
@@ -2131,10 +2131,10 @@ function show_main(){
         } else {
             RA *= pi/180;
             Dec *= pi/180;
-            
+
             var cenRA_rad = cenRA * pi/180;
             var cenDec_rad = cenDec * pi/180;
-            
+
             var a = sin(cenDec_rad)*cos(Dec)*cos(RA-cenRA_rad) - cos(cenDec_rad)*sin(Dec);
             var b =                 cos(Dec)*sin(RA-cenRA_rad);
             var c = cos(cenDec_rad)*cos(Dec)*cos(RA-cenRA_rad) + sin(cenDec_rad)*sin(Dec);
@@ -2152,9 +2152,10 @@ function show_main(){
         Dec *= pi/180;
         var [x, y, z] = Ry(Rz(Ry([-cos(t)*cos(Dec), sin(t)*cos(Dec), sin(Dec)], pi/2-lat_obs), cenAzm*pi/180), cenAlt*pi/180-pi/2);
         var b = Math.acos(z) * 180/pi;
-        var a = Math.atan2(y, x);
-        var scrRA = b * sin(a);
-        var scrDec = -b * cos(a);
+        //var a = Math.atan2(y, x);
+        var isr = b / Math.sqrt(x ** 2 + y ** 2);
+        var scrRA = y * isr;
+        var scrDec = -x * isr;
         return [scrRA, scrDec];
     }
 
@@ -2163,9 +2164,9 @@ function show_main(){
         h *= pi/180;
         var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
         var b = Math.acos(-z) * 180/pi;
-        var a = Math.atan2(y, x);
-        var scrRA = -b * cos(a);
-        var scrDec = b * sin(a);
+        //var a = Math.atan2(y, x);
+        var scrRA = -b * x / Math.sqrt(x ** 2 + y ** 2);
+        var scrDec = b * y / Math.sqrt(x ** 2 + y ** 2);
         return [scrRA, scrDec];
     }
 
@@ -2177,7 +2178,7 @@ function show_main(){
             var thetaSH = Math.atan2(scrRA, -scrDec);
             var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
             var cenDec_rad = cenDec * pi/180;
-            
+
             var a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
             var b =                  sin(r)*sin(thetaSH);
             var c = -cos(cenDec_rad)*sin(r)*cos(thetaSH) + sin(cenDec_rad)*cos(r);
@@ -2195,7 +2196,7 @@ function show_main(){
         } else {
             var thetaSH = Math.atan2(scrRA, -scrDec); //地球から見て下から始めて時計回り
             var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
-            
+
             var cenAzm_rad = cenAzm * pi/180;
             var cenAlt_rad = cenAlt * pi/180;
             var [x, y, z] = Rz(Ry([sin(r)*cos(thetaSH), sin(r)*sin(thetaSH), cos(r)], pi/2-cenAlt_rad), -cenAzm_rad);
@@ -2620,7 +2621,7 @@ function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸�
         var thetaSH = Math.atan2(scrRA, -scrDec);
         var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
         var cenDec_rad = cenDec * pi/180;
-        
+
         var a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
         var b =                  sin(r)*sin(thetaSH);
         var c = -cos(cenDec_rad)*sin(r)*cos(thetaSH) + sin(cenDec_rad)*cos(r);
@@ -2638,7 +2639,7 @@ function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の�
     } else {
         var thetaSH = Math.atan2(scrRA, -scrDec); //地球から見て下から始めて時計回り
         var r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * pi / 180;
-        
+
         var cenAzm_rad = cenAzm * pi/180;
         var cenAlt_rad = cenAlt * pi/180;
         var [x, y, z] = Rz(Ry([sin(r)*cos(thetaSH), sin(r)*sin(thetaSH), cos(r)], pi/2-cenAlt_rad), -cenAzm_rad);
@@ -2682,7 +2683,7 @@ function newSetting() {
     if (Obs_num == 3) {
         if (url.searchParams.has('observer')) {
             url.searchParams.delete('observer');
-        }   
+        }
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
     }

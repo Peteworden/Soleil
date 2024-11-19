@@ -95,7 +95,7 @@ input[type="file"] {
 }
 
 .setting {
-    position: absolute;
+    position: fixed;
     color: #C0C0C0;
     background-color: #2C0B0B;
     padding: 10px;
@@ -258,7 +258,7 @@ select {
 
 .descriptionBtn {
     background-color: transparent;
-    position: absolute;
+    position: fixed;
     border: 0;
     bottom: 10px;
     right: 5px;
@@ -269,7 +269,7 @@ select {
 }
 
 .description {
-    position: absolute;
+    position: fixed;
     color: #C0C0C0;
     background-color: #2C0B0B;
     padding: 10px 10px;
@@ -426,7 +426,7 @@ h1, p {
 
 .fullScreenBtn {
     background-color: transparent;
-    position: absolute;
+    position: fixed;
     border: 0;
     bottom: 10px;
     right: 60px;
@@ -438,7 +438,7 @@ h1, p {
 
 .exitFullScreenBtn {
     background-color: transparent;
-    position: absolute;
+    position: fixed;
     border: 0;
     bottom: 10px;
     right: 60px;
@@ -484,7 +484,7 @@ canvas {
 }
 
 .showingData {
-    position: absolute;
+    position: fixed;
     font-size: 16px;
     font-weight: 100;
     color: #fff;
@@ -495,7 +495,7 @@ canvas {
 }
 
 .timeSliderDiv {
-    position: absolute;
+    position: fixed;
     width: 80%;
     height: 20px;
     bottom: 6px;
