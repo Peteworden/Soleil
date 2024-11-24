@@ -42,7 +42,7 @@
                     <button id="showBtn" class="showBtn" type="button" onclick="finishSetting()">OK</button>
                 </div>
 
-                <div class="mainSettingRows">
+                <div class="setTime">
                     <input type="datetime-local" id="dtl" name="dtl" value=""/>
                     <label><input type="text" id="yearText">年<input type="text" id="monthText">月<input type="text" id="dateText">日</label>
                     <label><input type="text" id="hourText">:<input type="text" id="minuteText"></label>
@@ -59,7 +59,7 @@
                     <button type="button" onclick="show_JD_minus1()">-１日</button>
                 </div>
                 
-                <div class="mainSettingRows">
+                <div class="set-observation-planet">
                     <label>視点：</label>
                     <select id="observer">
                         <option>太陽</option>
@@ -77,7 +77,7 @@
                     </select>
                 </div>
                 
-                <div class="mainSettingRows">
+                <div class="set-observation-site">
                     <select id="NSCombo">
                         <option selected>北緯</option>
                         <option>南緯</option>
@@ -91,10 +91,11 @@
                     <button type="button" onclick="here()">現在地</button>
                 </div>
 
+                <div class="set-mag-limit">
+                    <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
+                </div>
+
                 <div class="mainSettingRows">
-                    <div>
-                        <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
-                    </div>
                     <div class="zuho" id="zuho">
                         <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
                         <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
@@ -103,7 +104,7 @@
                         <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
                         <input type="radio" name="mode" value="ar">AR
                         <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
-                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/>
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
                     </div>
                     <div>
                         リアルタイム
@@ -113,27 +114,46 @@
                     </div>
                     <ul>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
-                        <li><input type="checkbox" id="starNameCheck" checked>恒星名
-                            （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）</li>
-                        <li><input type="checkbox" id="constNameCheck" checked>星座名
-                            （左右の視野<input type="text" id="constNameFrom" size="1" value="90">°以下のとき）</li>
-                        <li><input type="checkbox" id="constLineCheck" checked>星座線
-                            （左右の視野<input type="text" id="constLineFrom" size="1" value="180">°以下のとき）</li>
-                        <li><input type="checkbox" id="planetNameCheck" checked>太陽系天体名
-                            （左右の視野<input type="text" id="planetNameFrom" size="1" value="180">°以下のとき）</li>
+                        <li>
+                            <input type="checkbox" id="starNameCheck" checked>恒星名
+                            （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="constNameCheck" checked>星座名
+                            （左右の視野<input type="text" id="constNameFrom" size="1" value="90">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="constLineCheck" checked>星座線
+                            （左右の視野<input type="text" id="constLineFrom" size="1" value="180">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="planetNameCheck" checked>太陽系天体名
+                            （左右の視野<input type="text" id="planetNameFrom" size="1" value="180">°以下のとき）
+                        </li>
                         <br>
                         <li><input type="checkbox" id="objectInfoCheck" checked>クリックで詳細を見る</li>
                         <br>
-                        <li><input type="checkbox" id="MessierCheck" checked>メシエ天体
-                            （左右の視野<input type="text" id="MessierFrom" size="1" value="40">°以下のとき）</li>
-                        <li><input type="checkbox" id="recsCheck" checked>その他、明るいNGC天体など
-                            （左右の視野<input type="text" id="recsFrom" size="1" value="40">°以下のとき）</li>
-                        <li><input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
-                            （左右の視野<input type="text" id="allNGCFrom" size="1" value="50">°以下のとき）</li>
+                        <li>
+                            <input type="checkbox" id="MessierCheck" checked>メシエ天体
+                            （左右の視野<input type="text" id="MessierFrom" size="1" value="40">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="recsCheck" checked>その他、明るいNGC天体など
+                            （左右の視野<input type="text" id="recsFrom" size="1" value="40">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
+                            （左右の視野<input type="text" id="allNGCFrom" size="1" value="50">°以下のとき）
+                        </li>
                         <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
                         <br>
                         <!--<li><input type="checkbox" id="atmRefCheck">大気差（プラネタリウムモードのみ）</li>-->
+                        <input type="checkbox" id="aovCheck">画角
+                        <div class="aov-radio" id="aovRadio">
+                            <input type="radio" name="aov" value="85-cmos" checked>85+CMOS<br>
+                            <input type="radio" name="aov" value="128-cmos">128+CMOS<br>
+                        </div>
                         <li><input type="checkbox" id="demCheck">地形<input type="file" id="demFileInput" accept=".csv"><button id="openDemDescriptionDiv" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'visible'">説明</button></li>
                     </ul>
                 </div>
@@ -303,9 +323,14 @@
         
         <div id="coordtext" class="coordtext"></div>
 
-        <div id="showingData" class="showingData"></div>
-        <div id="timeSliderDiv" class="timeSliderDiv">
-            <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+        <div class="info-lb">
+            <div id="showingData" class="showingData"></div>
+            <div id="aovSliderDiv" class="aovSliderDiv">
+                <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1">
+            </div>
+            <div id="timeSliderDiv" class="timeSliderDiv">
+                <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+            </div>
         </div>
         
         <div>

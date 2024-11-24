@@ -1,11 +1,8 @@
-
 //2023/10/21 ~
-
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
 const online = navigator.onLine;
-console.log(online)
 
 //星などの色を変える
 var darker = false;
@@ -23,6 +20,7 @@ const monthTextElem = document.getElementById('monthText');
 const dateTextElem = document.getElementById('dateText');
 const hourTextElem = document.getElementById('hourText');
 const minuteTextElem = document.getElementById('minuteText');
+const aovSliderElem = document.getElementById('aovSlider');
 const timeSliderElem = document.getElementById('timeSlider');
 let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
@@ -321,14 +319,12 @@ function linkExist(obj) {
 }
 
 function link(obj) {
-    console.log(obj)
     if (!obj) {
         console.error('Invalid input:', obj);
         return;
     }
     let frag = false;
     for (i=0; i<recs.length; i++) {
-        console.log(recs[i].name, recs[i].name == obj)
         if (recs[i].name == obj) {
             cenRA = rahm2deg(recs[i].ra);
             cenDec = decdm2deg(recs[i].dec);
@@ -853,6 +849,10 @@ function here() {
         navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
     }
 }
+
+aovSliderElem.addEventListener('input', function() {
+    show_main();
+})
 
 timeSliderElem.addEventListener('input', function(){
     showingJD += (timeSliderElem.value - timeSliderValue) / 1440;
@@ -1542,6 +1542,16 @@ function show_main(){
             }
         };
         demReader.readAsText(document.getElementById('demFileInput').files[0]);
+    }
+
+    if (document.getElementById('aovCheck').checked) {
+        drawAov();
+        if (document.getElementById('aovSliderDiv').style.display == 'none') {
+            document.getElementById('aovSliderDiv').style.display = 'block';
+        }
+    }
+    if (!document.getElementById('aovCheck').checked && document.getElementById('aovSliderDiv').style.display != 'none') {
+        document.getElementById('aovSliderDiv').style.display = 'none';
     }
 
     if (document.getElementById('center').checked) {
@@ -2579,6 +2589,37 @@ function show_main(){
         }
         return r;
     }
+
+    function drawAov() {
+        let aovs = [['85-cmos', 1.80, 1.24], ['128-cmos', 1.36, 0.91]];
+        if (document.getElementById('aovCheck').checked && ['AEP', 'view'].includes(mode)) {
+            let aovLabel = '';
+            for (i=0; i<document.getElementsByName('aov').length; i++){
+                if (document.getElementsByName('aov').item(i).checked){
+                    aovLabel = document.getElementsByName('aov').item(i).value;
+                }
+            }
+            for (var aov of aovs) {
+                if (aovLabel == aov[0]) {
+                    let aovRotation = aovSliderElem.value * pi / 180;
+                    let w1 =  aov[1] * cos(aovRotation) + aov[2] * sin(aovRotation);
+                    let w2 =  aov[1] * cos(aovRotation) - aov[2] * sin(aovRotation);
+                    let h1 = -aov[1] * sin(aovRotation) + aov[2] * cos(aovRotation);
+                    let h2 = -aov[1] * sin(aovRotation) - aov[2] * cos(aovRotation);
+                    ctx.fillStyle = 'rgba(255, 255, 0, 0.1)';
+                    ctx.strokeStyle = 'orange';
+                    ctx.beginPath();
+                    ctx.moveTo(canvas.width*(1.0-w1/2.0/rgEW)/2.0, canvas.height*(1.0-h1/2.0/rgNS)/2.0);
+                    ctx.lineTo(canvas.width*(1.0+w2/2.0/rgEW)/2.0, canvas.height*(1.0+h2/2.0/rgNS)/2.0);
+                    ctx.lineTo(canvas.width*(1.0+w1/2.0/rgEW)/2.0, canvas.height*(1.0+h1/2.0/rgNS)/2.0);
+                    ctx.lineTo(canvas.width*(1.0-w2/2.0/rgEW)/2.0, canvas.height*(1.0-h2/2.0/rgNS)/2.0);
+                    ctx.lineTo(canvas.width*(1.0-w1/2.0/rgEW)/2.0, canvas.height*(1.0-h1/2.0/rgNS)/2.0);
+                    ctx.fill();
+                    ctx.stroke();
+                }
+            }
+        }
+    }
 }
 
 function rahm2deg(rahmtext) {
@@ -3045,10 +3086,13 @@ function loadFiles() {
 function checkURL() {
     if (url.searchParams.has('RA') && !isNaN(url.searchParams.get('RA'))) {
         cenRA = parseFloat(url.searchParams.get('RA'));
+        localStorage.setItem('RA', cenRA);
         defaultcheck++;
         show_initial();
     } else if (localStorage.getItem('RA') != null) {
-        1+1;
+        cenRA = parseFloat(localStorage.getItem('RA'));
+        defaultcheck++;
+        show_initial();
     } else {
         url.searchParams.set('RA', cenRA);
         defaultcheck++;
@@ -3057,6 +3101,11 @@ function checkURL() {
 
     if (url.searchParams.has('Dec') && !isNaN(url.searchParams.get('Dec'))) {
         cenDec = parseFloat(url.searchParams.get('Dec'));
+        localStorage.setItem('Dec', cenDec);
+        defaultcheck++;
+        show_initial();
+    } else if (localStorage.getItem('Dec') != null) {
+        cenDec = parseFloat(localStorage.getItem('Dec'));
         defaultcheck++;
         show_initial();
     } else {
@@ -3234,7 +3283,6 @@ function deviceOrientation(event) {
 }
 
 document.getElementById('title').addEventListener('click', (event) => {
-    console.log(event.detail)
     if (event.detail === 5) {
         window.location.href = 'chart_beta.html';
     }

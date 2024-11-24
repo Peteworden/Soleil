@@ -125,6 +125,26 @@ input {
     background-color: #8F5A3C;
 }
 
+.mainSettingRows {
+    text-align: left;
+}
+
+.setTime {
+    text-align: center;
+}
+
+.set-observation-planet {
+    text-align: center;
+}
+
+.set-observation-site {
+    text-align: center;
+}
+
+.set-mag-limit {
+    text-align: center;
+}
+
 .zuho {
     text-align: left;
 }
@@ -133,6 +153,10 @@ ul {
     padding: 0;
     list-style-type: none;
     text-align: left;
+}
+
+.aov-radio {
+    margin-left: 20px;
 }
 
 .setPicsFor360Div {
@@ -483,25 +507,40 @@ canvas {
     z-index: 1;
 }
 
-.showingData {
+.info-lb {
     position: fixed;
     font-size: 16px;
     font-weight: 100;
     color: #fff;
     width: 80%;
-    height: 20px;
-    bottom: 26px;
-    z-index: 1;
-}
-
-.timeSliderDiv {
-    position: fixed;
-    width: 80%;
-    height: 20px;
     bottom: 6px;
     z-index: 1;
 }
 
+.showingData {
+    font-size: 16px;
+    font-weight: 100;
+    color: #fff;
+    width: 80%;
+    height: 20px;
+    z-index: 1;
+}
+
+.aovSliderDiv {
+    margin: 0;
+    padding: 0;
+    height: 20px;
+    accent-color: orange;
+}
+.aovSlider {
+    width: 80%;
+}
+
+.timeSliderDiv {
+    margin: 0;
+    padding: 0;
+    height: 20px;
+}
 .timeSlider {
     text-align: center;
     width: 80%;
