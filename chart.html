@@ -4,7 +4,7 @@
         <title>星図</title>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-        <meta name="description" content="シンプルかつ高機能な11等級までのWeb星図。星座はもちろんメシエ天体、NGC天体などの検索機能もあり、指やマウスで直感的に操作できます。ネット環境があればURLにアクセスするだけでオンラインで使用可能。初心者から上級者まで、星空を眺めるすべての人の天体観測のおともに。">
+        <meta name="description" content="指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。">
         <meta name="theme-color" content="#000000">
         <meta name="msapplication-TileColor" content="#000000">
         <link rel="stylesheet" href="styleChart.css">
@@ -182,7 +182,7 @@
 
             <button id="openSearch" type="button" onclick="openSearch()">検索</button>
 
-            <h1>11等級までのWeb星図。星座はもちろんメシエ天体、NGC天体などの検索もでき、指やマウスで直感的に操作できます。ネット環境があればURLにアクセスするだけでオンラインで使用可能。星空を眺めるすべての人の天体観測のおともに。照</h4>
+            <h1>指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。</h4>
             <p>---<a href="chartReadMe.html" target="_blank" rel="noopener">説明ページ（新しいタブ）</a>---</p>
 
             <p>
@@ -196,7 +196,7 @@
                 </ul>
             </p>
             <p>見ている星図の状態をURLで共有できます</p>
-            <p>画像の著作権は私にあります</p>
+            <p>画像は私の撮影です</p>
             <p>下の少し色が違うところからその天体に飛べます</p>
             <p>
                 双眼鏡向けの天体(上４つは暗いところなら肉眼でも見られる)
@@ -318,7 +318,31 @@
             <button id="closeObjectInfo" type="button" onclick="closeObjectInfo()">閉</button>
             <div id="objectInfoName"></div>
             <div id="objectInfoImage"></div>
-            <div id="objectInfoText"></div>
+            <div id="objectInfoText">
+            </div>
+            <div id="planetTrack" class="object-info-track">
+                <div>
+                    <input type="checkbox" id="planetTrackCheck">移動を描画
+                    <br>
+                    <label>左：<input type="text" id="trackSpan" value="1" size="2"><select id="trackUnit"><option>日</option><option>時間</option></select>ごとに前後それぞれ<input type="text" id="trackDuration" value="30" size="4">日</label>
+                </div>
+                <div class="planet-track-time-container">
+                    <label><input  type="checkbox" id="planetTrackTimeCheck" checked disabled>日時を表示</label>
+                    <div class="track-time-radio-container" id="trackTimeRadioContainer">
+                        <label><input type="text" id="trackTextSpan" value="5" size="2">個ごとに</label><br>
+                        <input type="radio" name="trackTime" value="ymd">年月日<br>
+                        <input type="radio" name="trackTime" value="ymdh">年月日時<br>
+                        <input type="radio" name="trackTime" value="ymdhi">年月日時分<br>
+                        <input type="radio" name="trackTime" value="md">月日<br>
+                        <input type="radio" name="trackTime" value="mdh" checked>月日時<br>
+                        <input type="radio" name="trackTime" value="mdhi">月日時分<br>
+                        <input type="radio" name="trackTime" value="d">日<br>
+                        <input type="radio" name="trackTime" value="dh">日時<br>
+                        <input type="radio" name="trackTime" value="dhi">日時分<br>
+                        <input type="radio" name="trackTime" value="hi">時分<br>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <div id="coordtext" class="coordtext"></div>

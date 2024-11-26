@@ -448,6 +448,31 @@ h1, p {
     color: #C0C0C0;
 }
 
+.object-info-track {
+    display: none;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    padding: 0;
+    width: 90%;
+}
+
+.object-info-track select {
+    margin: 5px;
+    width: 4em;
+}
+
+.track-time-radio-container {
+    text-align: left;
+}
+
+.planet-track-time-container {
+    display: inline-flex;
+    margin: auto;
+    gap: 10px;
+}
+
 .fullScreenBtn {
     background-color: transparent;
     position: fixed;
@@ -527,6 +552,7 @@ canvas {
 }
 
 .aovSliderDiv {
+    display: none;
     margin: 0;
     padding: 0;
     height: 20px;
