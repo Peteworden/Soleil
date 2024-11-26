@@ -1014,10 +1014,7 @@ function ontouchend(e) {
         localStorage.setItem('alt', cenAlt.toFixed(2));
         localStorage.setItem('area', (2*rgEW).toFixed(2));
     }
-    /*if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && Math.sqrt(Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2)) < Math.min(canvas.width, canvas.height) / 10))) {
-        showObjectInfo(preX - canvas.offsetLeft, preY - canvas.offsetTop);
-    }*/
-    if (e.touches.length.toString() == '0' && !pinchFrag && !dragFrag) {
+    if (e.touches.length.toString() == '0' && !pinchFrag && (!dragFrag || (dragFrag && Math.sqrt(Math.pow(moveX-startX, 2) + Math.pow(moveY-startY, 2)) < Math.min(canvas.width, canvas.height) / 10))) {
         showObjectInfo(preX - canvas.offsetLeft, preY - canvas.offsetTop);
     }
     if (e.touches.length === 0) {
