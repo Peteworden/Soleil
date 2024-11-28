@@ -8,9 +8,9 @@
         <meta name="theme-color" content="#000000">
         <meta name="msapplication-TileColor" content="#000000">
         <link rel="stylesheet" href="styleChart.css">
-        <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <!-- Google tag (gtag.js) -->
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -98,7 +98,7 @@
                 <div class="mainSettingRows">
                     <div class="zuho" id="zuho">
                         <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
-                        <input type="radio" name="mode" value="view" checked>プラネタリウムモード（ドラッグ操作）<br>
+                        <input type="radio" name="mode" value="view" checked>プラネタリウムモード<br>
                         <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
                         <input type="radio" name="mode" value="live">ライブモード
                         <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
@@ -114,6 +114,8 @@
                     </div>
                     <ul>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
+                        <li><input type="checkbox" id="gridCheck" checked>グリッド（プラネモード）</li>
+                        <br>
                         <li>
                             <input type="checkbox" id="starNameCheck" checked>恒星名
                             （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）
@@ -125,6 +127,10 @@
                         <li>
                             <input type="checkbox" id="constLineCheck" checked>星座線
                             （左右の視野<input type="text" id="constLineFrom" size="1" value="180">°以下のとき）
+                        </li>
+                        <br>
+                        <li>
+                            <input type="checkbox" id="planetCheck" checked>太陽系天体
                         </li>
                         <li>
                             <input type="checkbox" id="planetNameCheck" checked>太陽系天体名
@@ -364,4 +370,5 @@
         <div class="result">
             <script src="chart.js"></script>
         </div>
+    </body>
 </html>
