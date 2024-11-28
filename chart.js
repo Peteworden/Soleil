@@ -365,7 +365,7 @@ function link(obj) {
     url.searchParams.set('RA', cenRA.toFixed(2));
     url.searchParams.set('Dec', cenDec.toFixed(2));
     localStorage.setItem('RA', cenRA.toFixed(2));
-    localStorage.set('Dec', cenDec.toFixed(2));
+    localStorage.setItem('Dec', cenDec.toFixed(2));
     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
     url.searchParams.set('azm', cenAzm.toFixed(2));
     url.searchParams.set('alt', cenAlt.toFixed(2));
@@ -1496,7 +1496,6 @@ function show_main(){
     var t = (JD - 2451545.0) / 36525;
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
-    console.log(cenRA, cenDec, cenAzm, cenAlt);
     if (['live', 'ar'].includes(mode)) {
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
     }
@@ -1926,129 +1925,131 @@ function show_main(){
     ctx.textBaseline = 'bottom';
     ctx.textAlign = 'left';
 
-    for (i=0; i<JPNplanets.length; i++){
-        if (mode == 'AEP') {
-            [x, y] = coordSH(...RADec2scrAEP(RAlist[i], Declist[i]));
-        } else if (mode == 'EtP') {
-            [x, y] = coord(RAlist[i], Declist[i]);
-        } else if (mode == 'view') {
-            [x, y] = coordSH(...RADec2scrview(RAlist[i], Declist[i]));
-        } else if (['live', 'ar'].includes(mode)) {
-            [x, y] = coordSH(...Ah2scrlive(...RADec2Ah(RAlist[i], Declist[i], theta)));
-        }
-        // 枠内に入っていて
-        if (i != Obs_num && 0 < x < canvas.width && 0 < y < canvas.height) {
-            if (i == 0){ // 太陽
-                var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
-                drawFilledCircle(x, y, r, yellowColor);
-                if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
-                    ctx.fillStyle = specialObjectNameColor;
-                    ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
-                }
-                infoList.push([JPNplanets[i], x, y]);
-            } else if (i == 9) { // 月(地球から見たときだけ)
-                if (Obs_num == 3) {
-                    var r = drawMoon();
+    if (document.getElementById('planetCheck').checked) {
+        for (i=0; i<JPNplanets.length; i++){
+            if (mode == 'AEP') {
+                [x, y] = coordSH(...RADec2scrAEP(RAlist[i], Declist[i]));
+            } else if (mode == 'EtP') {
+                [x, y] = coord(RAlist[i], Declist[i]);
+            } else if (mode == 'view') {
+                [x, y] = coordSH(...RADec2scrview(RAlist[i], Declist[i]));
+            } else if (['live', 'ar'].includes(mode)) {
+                [x, y] = coordSH(...Ah2scrlive(...RADec2Ah(RAlist[i], Declist[i], theta)));
+            }
+            // 枠内に入っていて
+            if (i != Obs_num && 0 < x < canvas.width && 0 < y < canvas.height) {
+                if (i == 0){ // 太陽
+                    var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
+                    drawFilledCircle(x, y, r, yellowColor);
                     if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
                         ctx.fillStyle = specialObjectNameColor;
                         ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
                     }
-                    infoList.push(['月', x, y]);
+                    infoList.push([JPNplanets[i], x, y]);
+                } else if (i == 9) { // 月(地球から見たときだけ)
+                    if (Obs_num == 3) {
+                        var r = drawMoon();
+                        if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
+                            ctx.fillStyle = specialObjectNameColor;
+                            ctx.fillText(JPNplanets[i], x+Math.max(0.8*r, 10), y-Math.max(0.8*r, 10));
+                        }
+                        infoList.push(['月', x, y]);
+                    }
+                } else if (i != 9) {// 太陽と月以外
+                    var mag = Vlist[i];
+                    drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
+                    if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
+                        ctx.fillStyle = specialObjectNameColor;
+                        ctx.fillText(JPNplanets[i], x, y);
+                    }
+                    infoList.push([JPNplanets[i], x, y]);
                 }
-            } else if (i != 9) {// 太陽と月以外
-                var mag = Vlist[i];
-                drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
-                if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
-                    ctx.fillStyle = specialObjectNameColor;
-                    ctx.fillText(JPNplanets[i], x, y);
-                }
-                infoList.push([JPNplanets[i], x, y]);
             }
         }
-    }
 
-    if (document.getElementById('planetTrackCheck').checked) {
-        let trackJD = JD;
-        let trackSpan = parseFloat(document.getElementById('trackSpan').value);
-        if (document.getElementById('trackUnit').value == '時間') {
-            trackSpan /= 24.0;
-        }
-        let trackDuration = parseFloat(document.getElementById('trackDuration').value);
-        let trackElem = planets[JPNplanets.indexOf(trackPlanet)]
-        function drawPlanetMotion(trackJD) {
-            let [X, Y, Z] = calc(planets[Obs_num], trackJD);
-            let [x, y, z] = calc(trackElem, trackJD);
-            let [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-            if (mode == 'AEP') {
-                [x, y] = coordSH(...RADec2scrAEP(ra, dec));
-            } else if (mode == 'EtP') {
-                [x, y] = coord(ra, dec);
-            } else if (mode == 'view') {
-                [x, y] = coordSH(...RADec2scrview(ra, dec));
-            } else if (['live', 'ar'].includes(mode)) {
-                [x, y] = coordSH(...Ah2scrlive(...RADec2Ah(ra, dec, theta)));
+        if (document.getElementById('planetTrackCheck').checked) {
+            let trackJD = JD;
+            let trackSpan = parseFloat(document.getElementById('trackSpan').value);
+            if (document.getElementById('trackUnit').value == '時間') {
+                trackSpan /= 24.0;
             }
-            // 枠内に入っていて
-            if (0 < x && x < canvas.width && 0 < y && y < canvas.height) {
-                if (!(trackPlanet == '月' && ObsPlanet != '地球')) {
-                    ctx.strokeStyle = 'lightgreen'
-                    ctx.beginPath();
-                    ctx.moveTo(x-3, y-3);
-                    ctx.lineTo(x+3, y+3);
-                    ctx.moveTo(x-3, y+3);
-                    ctx.lineTo(x+3, y-3);
-                    ctx.stroke();
-                    if (document.getElementById('planetTrackTimeCheck').checked && k % document.getElementById('trackTextSpan').value == 0) {
-                        let trackDateType = '';
-                        for (i=0; i<trackDateElem.length; i++) {
-                            if (trackDateElem[i].checked) {
-                                trackDateType = trackDateElem[i].value;
+            let trackDuration = parseFloat(document.getElementById('trackDuration').value);
+            let trackElem = planets[JPNplanets.indexOf(trackPlanet)]
+            function drawPlanetMotion(trackJD) {
+                let [X, Y, Z] = calc(planets[Obs_num], trackJD);
+                let [x, y, z] = calc(trackElem, trackJD);
+                let [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+                if (mode == 'AEP') {
+                    [x, y] = coordSH(...RADec2scrAEP(ra, dec));
+                } else if (mode == 'EtP') {
+                    [x, y] = coord(ra, dec);
+                } else if (mode == 'view') {
+                    [x, y] = coordSH(...RADec2scrview(ra, dec));
+                } else if (['live', 'ar'].includes(mode)) {
+                    [x, y] = coordSH(...Ah2scrlive(...RADec2Ah(ra, dec, theta)));
+                }
+                // 枠内に入っていて
+                if (0 < x && x < canvas.width && 0 < y && y < canvas.height) {
+                    if (!(trackPlanet == '月' && ObsPlanet != '地球')) {
+                        ctx.strokeStyle = 'lightgreen'
+                        ctx.beginPath();
+                        ctx.moveTo(x-3, y-3);
+                        ctx.lineTo(x+3, y+3);
+                        ctx.moveTo(x-3, y+3);
+                        ctx.lineTo(x+3, y-3);
+                        ctx.stroke();
+                        if (document.getElementById('planetTrackTimeCheck').checked && k % document.getElementById('trackTextSpan').value == 0) {
+                            let trackDateType = '';
+                            for (i=0; i<trackDateElem.length; i++) {
+                                if (trackDateElem[i].checked) {
+                                    trackDateType = trackDateElem[i].value;
+                                }
                             }
-                        }
-                        let ymdhm = JD_to_YMDHM(trackJD);
-                        let trackDateText = '';
-                        ctx.font = '16px serif'
-                        if (trackDateType == 'ymd') {
-                            trackDateText = `${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]}`;
-                        } else if (trackDateType == 'ymdh') {
-                            trackDateText =`${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]} ${Math.round(ymdhm[3]+ymdhm[4]/60)}時`;
-                        } else if (trackDateType == 'ymdhi') {
-                            trackDateText = `${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]} ${ymdhm[3]}:${ymdhm[4]}`;
-                        } else if (trackDateType == 'md') {
-                            trackDateText = `${ymdhm[1]}/${ymdhm[2]}`;
-                        } else if (trackDateType == 'mdh') {
-                            trackDateText = `${ymdhm[1]}/${ymdhm[2]} ${Math.round(ymdhm[3]+ymdhm[4]/60)}時`;
-                        } else if (trackDateType == 'mdhi') {
-                            trackDateText = `${ymdhm[1]}/${ymdhm[2]} ${ymdhm[3]}:${ymdhm[4]}`;
-                        } else if (trackDateType == 'd') {
-                            trackDateText = `${ymdhm[2]}日`;
-                        } else if (trackDateType == 'dh') {
-                            trackDateText = `${ymdhm[2]}日 ${Math.round(ymdhm[3]+ymdhm[4]/60)}時`;
-                        } else if (trackDateType == 'dhi') {
-                            trackDateText = `${ymdhm[2]}日 ${ymdhm[3]}:${ymdhm[4]}`;
-                        } else if (trackDateType == 'hi') {
-                            trackDateText = `${ymdhm[3]}:${ymdhm[4]}`;
-                        }
-                        ctx.fillText(trackDateText, x+5, y-5);
-                    } 
+                            let ymdhm = JD_to_YMDHM(trackJD);
+                            let trackDateText = '';
+                            ctx.font = '16px serif'
+                            if (trackDateType == 'ymd') {
+                                trackDateText = `${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]}`;
+                            } else if (trackDateType == 'ymdh') {
+                                trackDateText =`${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]} ${Math.round(ymdhm[3]+ymdhm[4]/60)}時`;
+                            } else if (trackDateType == 'ymdhi') {
+                                trackDateText = `${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]} ${ymdhm[3]}:${ymdhm[4]}`;
+                            } else if (trackDateType == 'md') {
+                                trackDateText = `${ymdhm[1]}/${ymdhm[2]}`;
+                            } else if (trackDateType == 'mdh') {
+                                trackDateText = `${ymdhm[1]}/${ymdhm[2]} ${Math.round(ymdhm[3]+ymdhm[4]/60)}時`;
+                            } else if (trackDateType == 'mdhi') {
+                                trackDateText = `${ymdhm[1]}/${ymdhm[2]} ${ymdhm[3]}:${ymdhm[4]}`;
+                            } else if (trackDateType == 'd') {
+                                trackDateText = `${ymdhm[2]}日`;
+                            } else if (trackDateType == 'dh') {
+                                trackDateText = `${ymdhm[2]}日 ${Math.round(ymdhm[3]+ymdhm[4]/60)}時`;
+                            } else if (trackDateType == 'dhi') {
+                                trackDateText = `${ymdhm[2]}日 ${ymdhm[3]}:${ymdhm[4]}`;
+                            } else if (trackDateType == 'hi') {
+                                trackDateText = `${ymdhm[3]}:${ymdhm[4]}`;
+                            }
+                            ctx.fillText(trackDateText, x+5, y-5);
+                        } 
+                    }
                 }
             }
-        }
-        let k = 0;
-        while (trackJD - trackSpan >= showingJD - trackDuration) {
-            trackJD -= trackSpan;
-            k--;
-            drawPlanetMotion(trackJD, k);
-        }
-        trackJD = JD;
-        while (trackJD + trackSpan <= showingJD + trackDuration) {
-            trackJD += trackSpan;
-            k++;
-            drawPlanetMotion(trackJD, k);
+            let k = 0;
+            while (trackJD - trackSpan >= showingJD - trackDuration) {
+                trackJD -= trackSpan;
+                k--;
+                drawPlanetMotion(trackJD, k);
+            }
+            trackJD = JD;
+            while (trackJD + trackSpan <= showingJD + trackDuration) {
+                trackJD += trackSpan;
+                k++;
+                drawPlanetMotion(trackJD, k);
+            }
         }
     }
 
-    if (mode == 'view') {
+    if (mode == 'view' && document.getElementById('gridCheck').checked) {
         var minAlt = Math.max(-90, Math.min(SHtoAh(rgEW, -rgNS)[1], cenAlt-rgNS));
         var maxAlt = Math.min( 90, Math.max(SHtoAh(rgEW,  rgNS)[1], cenAlt+rgNS));
 
@@ -3077,7 +3078,7 @@ function loadFiles() {
     }
     if (online) {
         function loadFile(filename, func) {
-            var url_load = "https://peteworden.github.io/Soleil/" + filename + ".txt";
+            var url_load = "https://peteworden.github.io/Soleil/data/" + filename + ".txt";
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url_load);
             xhr.send();
@@ -3093,34 +3094,34 @@ function loadFiles() {
         }
 
         //HIP
-        loadFile("StarsNewHIP_to6_5_forJS", xhrHIP);
+        loadFile("hip_65", xhrHIP);
 
         //Tycho
-        loadFile("StarsNew-Tycho-to10-2nd_forJS", (data) => {
+        loadFile("tycho2_100", (data) => {
             Tycho = data.split(',');
         });
 
         //Tycho helper
-        loadFile("TychoSearchHelper2nd_forJS", (data) => {
+        loadFile("tycho2_100_helper", (data) => {
             Help = data.split(',');
         });
 
         //Tycho 10~11 mag
-        loadFile("StarsNew-Tycho-from10to11-2nd_forJS", (data) => {
+        loadFile("tycho2_100-110", (data) => {
             Tycho1011 = data.split(',');
         });
 
         //Tycho helper 10~11 mag
-        loadFile("TychoSearchHelper-from10to11-2nd_forJS", (data) => {
+        loadFile("tycho2_100-110_helper", (data) => {
             Help1011 = data.split(',');
         });
 
         //Bayer
-        loadFile("bsc_forJS", xhrBSC);
+        loadFile("brights", xhrBSC);
 
         //Messier
         function fetchJsonData(filename, func) {
-            fetch(`https://peteworden.github.io/Soleil/${filename}.json`)
+            fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -3138,68 +3139,68 @@ function loadFiles() {
             });
         }
 
-        fetchJsonData('data/starname', (data) => {
+        fetchJsonData('starname', (data) => {
             starNames = data;
         })
 
-        fetchJsonData('data/messier', (data) => {
+        fetchJsonData('messier', (data) => {
             messier = data;
         });
 
-        fetchJsonData('data/rec', (data) => {
+        fetchJsonData('rec', (data) => {
             recs = data;
         });
 
         // NGC天体とIC天体
-        loadFile("allNGC_forJS", (data) => {
+        loadFile("ngc", (data) => {
             NGC = data.split(',');
         });
 
         //星座名
-        loadFile("ConstellationList", (data) => {
+        loadFile("constellation_names", (data) => {
             CLnames = data.split('\r\n');
         });
 
         //星座の位置
-        loadFile("ConstellationPositionNew_forJS", (data) => {
+        loadFile("constellation_coordinates", (data) => {
             constPos = data.split(',');
         });
 
         //星座線
-        loadFile("Lines_light_forJS", (data) => {
+        loadFile("constellation_lines", (data) => {
             lines = data.split(',');
         });
 
         //星座境界線
-        loadFile("boundary_light_forJS", (data) => {
+        loadFile("constellation_boundaries", (data) => {
             boundary = data.split(',');
         });
 
         //追加天体
-        loadFile("ExtraPlanet", xhrExtra);
+        loadFile("additional_objects", xhrExtra);
     } else {
         document.getElementById('getFile').addEventListener('change', function () {
             let fr = new FileReader();
             fr.onload = function () {
                 const content = fr.result.split('||||');
-                for (var i=0; i<14; i++) {
+                for (var i=0; i<15; i++) {
                     fn = content[i].split('::::')[0];
                     var data = content[i].split('::::')[1];
-                    if (fn == 'StarsNewHIP_to6_5_forJS') {xhrHIP(data);}
-                    if (fn == 'StarsNew-Tycho-to10-2nd_forJS') {Tycho = data.split(',');}
-                    if (fn == 'TychoSearchHelper2nd_forJS') {Help = data.split(',');}
-                    if (fn == 'StarsNew-Tycho-from10to11-2nd_forJS') {Tycho1011 = data.split(',');}
-                    if (fn == 'TychoSearchHelper-from10to11-2nd_forJS') {Help1011 = data.split(',');}
-                    if (fn == 'bsc_forJS') {xhrBSC(data);}
+                    if (fn == 'hip_65') {xhrHIP(data);}
+                    if (fn == 'tycho2_100') {Tycho = data.split(',');}
+                    if (fn == 'tycho2_100_helper') {Help = data.split(',');}
+                    if (fn == 'tycho2_100-110_helper') {Tycho1011 = data.split(',');}
+                    if (fn == 'tycho2_100-110_helper') {Help1011 = data.split(',');}
+                    if (fn == 'brights') {xhrBSC(data);}
                     if (fn == 'starname') {starNames = JSON.parse(data);}
                     if (fn == 'messier') {messier = JSON.parse(data);}
                     if (fn == 'rec') {recs = JSON.parse(data);}
-                    if (fn == 'allNGC_forJS') {NGC = data.split(',');}
-                    if (fn == 'ConstellationList') {CLnames = data.split('\r\n');}
-                    if (fn == 'ConstellationPositionNew_forJS') {constPos = data.split(',');}
-                    if (fn == 'Lines_light_forJS') {lines = data.split(',');}
-                    if (fn == 'boundary_light_forJS') {boundary = data.split(',');}
-                    if (fn == 'ExtraPlanet') {xhrExtra(data);}
+                    if (fn == 'ngc') {NGC = data.split(',');}
+                    if (fn == 'constellation_names') {CLnames = data.split('\r\n');}
+                    if (fn == 'constellation_coordinates') {constPos = data.split(',');}
+                    if (fn == 'constellation_lines') {lines = data.split(',');}
+                    if (fn == 'constellation_boundaries') {boundary = data.split(',');}
+                    if (fn == 'additional_objects') {xhrExtra(data);}
                     xhrcheck++;
                     show_initial();
                 }
