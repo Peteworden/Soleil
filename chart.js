@@ -2520,13 +2520,12 @@ function show_main(){
     }
 
     function writeStarNames () {
-        const tier_range = [180, 120];
+        const tier_range = [180, 90, 60, 40];
         drawJsonObjects(
             starNames,
             function(i, name, x, y) {
-                infoList.push([name, x, y]);
                 if (2*Math.max(rgNS, rgEW) <= tier_range[starNames[i].tier-1]) {
-                    drawObjects(name, x, y, 1, fontsize=20);
+                    drawObjects(name, x, y+15, 0, fontsize=20);
                 }
             },
             textColor

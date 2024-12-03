@@ -12,6 +12,18 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
         <!-- Google tag (gtag.js) -->
         <script>
+            if (navigator.onLine) {
+                var link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css'; // オンラインリソースのURL
+                document.head.appendChild(link);
+
+                // node.js スクリプトの追加
+                var script = document.createElement('script');
+                script.src = 'https://cdn.jsdelivr.net/npm/some-node-library.js'; // オンラインリソースのURL
+                document.head.appendChild(script);
+            }
+
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
