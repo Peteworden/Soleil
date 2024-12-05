@@ -248,6 +248,7 @@ var starNames;
 var messier;
 var recs;
 var NGC = [];
+var constellations;
 var CLnames = [];
 var constPos = [];
 var lines = [];
@@ -354,9 +355,9 @@ function link(obj) {
             }
         } else if (obj.slice(-1) == '座') {
             for (i=0; i<89; i++){
-                if (obj == CLnames[i] + '座') {
-                    cenRA = parseFloat(constPos[2*i]);
-                    cenDec = parseFloat(constPos[2*i+1]);
+                if (obj == constellations[i].JPNname + '座') {
+                    cenRA = constellations[i].ra;
+                    cenDec = constellations[i].dec;
                     break;
                 }
             }
@@ -396,10 +397,10 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions2 = [[], []];
     } else if (searchText.length == 1) { //1文字
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
-            for (let constName of CLnames) {
-                if (constName.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
-                    suggestions1[0].push(`${constName}座`);
-                    suggestions1[1].push(`${constName}座`);
+            for (i=0; i<89; i++) {
+                if (constellations[i].JPNname.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
+                    suggestions1[0].push(`${constellations[i].JPNname}座`);
+                    suggestions1[1].push(`${constellations[i].JPNName}座`);
                 }
             }
         }
@@ -460,14 +461,14 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions2 = [[], []];
         //星座
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
-            for (let constName of CLnames) {
-                if ((hiraganaToKatakana(constName)+'座').includes(searchText)) {
-                    if (hiraganaToKatakana(constName+'座').startsWith(searchText)) {
-                        suggestions1[0].push(`${constName}座`);
-                        suggestions1[1].push(`${constName}座`);
+            for (i=0; i<89; i++) {
+                if ((hiraganaToKatakana(constellations[i].JPNname)+'座').includes(searchText)) {
+                    if (hiraganaToKatakana(constellations[i].JPNname+'座').startsWith(searchText)) {
+                        suggestions1[0].push(`${constellations[i].JPNname}座`);
+                        suggestions1[1].push(`${constellations[i].JPNname}座`);
                     } else {
-                        suggestions2[0].push(`${constName}座`);
-                        suggestions2[1].push(`${constName}座`);
+                        suggestions2[0].push(`${constellations[i].JPNname}座`);
+                        suggestions2[1].push(`${constellations[i].JPNname}座`);
                     }
                 }
             }
@@ -630,6 +631,7 @@ function showObjectInfo(x, y) {
             trackPlanet = nearest[0];
             document.getElementById('planetTrack').style.display = 'inline-block';
             document.getElementById('objectInfoText').innerHTML +=  `<a href="https://peteworden.github.io/Soleil/SoleilWeb.html?time=${yearTextElem.value}-${monthTextElem.value}-${dateTextElem.value}-${hourTextElem.value}-${Math.floor(minuteTextElem.value/6.0)}&target=${ENGplanets[JPNplanets.indexOf(nearest[0])].split(' ').join('').split('/').join('')}&dark=1">Soleil Webでくわしく見る</a>`;
+            return;
         } else if (nearest[0][0] == 'M') {
             if (messier[parseInt(nearest[0].slice(1))-1].description.length > 0) {
                 document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))-1].description;
@@ -640,6 +642,13 @@ function showObjectInfo(x, y) {
                 document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${wikiSpecial[1][wikiSpecial[0].indexOf(parseInt(nearest[0].slice(1)))]}">Wikipedia</a>`;
             } else {
                 document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
+            }
+        } else if (nearest[0].endsWith('座')) {
+            for (i=0; i<89; i++) {
+                if (constellations[i].JPNname + '座' == nearest[0]) {
+                    let constellation = constellations[i];
+                    document.getElementById('objectInfoText').innerHTML += `<br>ラテン語名：${constellation.IAUname}<br>略称：${constellation.abbr}<br>`
+                }
             }
         } else {
             for (let rec of recs) {
@@ -656,6 +665,7 @@ function showObjectInfo(x, y) {
                     } else {
                         document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.wiki}">Wikipedia</a>`;
                     }
+                    return;
                 }
             }
         }
@@ -1165,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function show_initial(){
-    if (xhrcheck == 15 && defaultcheck ==11) {
+    if (xhrcheck == 13 && defaultcheck ==11) {
         canvas.addEventListener("touchstart", ontouchstart);
         canvas.addEventListener("touchmove", ontouchmove);
         canvas.addEventListener('touchend', ontouchend);
@@ -1593,16 +1603,16 @@ function show_main(){
         }
     }
 
-    var constellation = "";
+    var centerConstellation = "";
     for (var i=0; i<89; i++) {
         if (A[i] == 1) {
-            constellation = CLnames[i] + "座  ";
+            centerConstellation = constellations[i].JPNname + "座  ";
             break;
         }
         if (cenDec > 0) {
-            constellation = "こぐま座  ";
+            centerConstellation = "こぐま座  ";
         } else {
-            constellation = "はちぶんぎ座  ";
+            centerConstellation = "はちぶんぎ座  ";
         }
     }
 
@@ -1610,70 +1620,71 @@ function show_main(){
     if (document.getElementById('constLineCheck').checked && rgEW <= 0.5 * document.getElementById('constLineFrom').value) {
         ctx.strokeStyle = lineColor;
         ctx.beginPath();
-        const num_of_lines = lines.length / 5;
-        for (var i=0; i<num_of_lines; i++) {
-            var RA1 = parseFloat(lines[5*i+1]);
-            var Dec1 = parseFloat(lines[5*i+2]);
-            var RA2 = parseFloat(lines[5*i+3]);
-            var Dec2 = parseFloat(lines[5*i+4]);
-            if (mode == 'AEP') {
-                var [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
-                var [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
-                if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
-                    if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
-                        if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
-                            ctx.moveTo(...coordSH(RA1_SH, Dec1_SH));
-                            ctx.lineTo(...coordSH(RA2_SH, Dec2_SH));
+        for (i=0; i<89; i++) {
+            for (let line of constellations[i].lines) {
+                var RA1 = line[0];
+                var Dec1 = line[1];
+                var RA2 = line[2];
+                var Dec2 = line[3];
+                if (mode == 'AEP') {
+                    var [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
+                    var [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
+                    if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
+                        if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
+                            if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
+                                ctx.moveTo(...coordSH(RA1_SH, Dec1_SH));
+                                ctx.lineTo(...coordSH(RA2_SH, Dec2_SH));
+                            }
                         }
                     }
-                }
-            } else if (mode == 'EtP') {
-                function whetherDrawLine (RA1, Dec1, RA2, Dec2, a) {
-                    if (Math.min(RA1, RA2)+a < cenRA+rgEW && Math.max(RA1, RA2)+a > cenRA-rgEW) {
-                        if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
-                            return true;
+                } else if (mode == 'EtP') {
+                    function whetherDrawLine (RA1, Dec1, RA2, Dec2, a) {
+                        if (Math.min(RA1, RA2)+a < cenRA+rgEW && Math.max(RA1, RA2)+a > cenRA-rgEW) {
+                            if (Math.min(Dec1, Dec2) < cenDec+rgNS && Math.max(Dec1, Dec2) > cenDec-rgNS) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+                    if (cenRA - rgEW < 0) {
+                        if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
+                            drawLines(RA1, Dec1, RA2, Dec2, 0);
+                        }
+                        if (whetherDrawLine (RA1, Dec1, RA2, Dec2, -360)) {
+                            drawLines(RA1, Dec1, RA2, Dec2, -360);
+                        }
+                    } else if (cenRA + rgEW >= 360) {
+                        if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
+                            drawLines(RA1, Dec1, RA2, Dec2, 0);
+                        }
+                        if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 360)) {
+                            drawLines(RA1, Dec1, RA2, Dec2, 360);
+                        }
+                    } else {
+                        if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
+                            drawLines(RA1, Dec1, RA2, Dec2, 0);
                         }
                     }
-                    return false;
-                }
-                if (cenRA - rgEW < 0) {
-                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
-                        drawLines(RA1, Dec1, RA2, Dec2, 0);
-                    }
-                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, -360)) {
-                        drawLines(RA1, Dec1, RA2, Dec2, -360);
-                    }
-                } else if (cenRA + rgEW >= 360) {
-                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
-                        drawLines(RA1, Dec1, RA2, Dec2, 0);
-                    }
-                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 360)) {
-                        drawLines(RA1, Dec1, RA2, Dec2, 360);
-                    }
-                } else {
-                    if (whetherDrawLine (RA1, Dec1, RA2, Dec2, 0)) {
-                        drawLines(RA1, Dec1, RA2, Dec2, 0);
-                    }
-                }
-            } else if (mode == 'view') {
-                var [RA1_view, Dec1_view] = RADec2scrview(RA1, Dec1);
-                var [RA2_view, Dec2_view] = RADec2scrview(RA2, Dec2);
-                if (Math.min(RA1_view, RA2_view) < rgEW && Math.max(RA1_view, RA2_view) > -rgEW) {
-                    if (Math.min(Dec1_view, Dec2_view) < rgNS && Math.max(Dec1_view, Dec2_view) > -rgNS) {
-                        if (Math.pow(RA2_view-RA1_view, 2) + Math.pow(Dec2_view-Dec1_view, 2) < 30*30) {
-                            ctx.moveTo(...coordSH(RA1_view, Dec1_view));
-                            ctx.lineTo(...coordSH(RA2_view, Dec2_view));
+                } else if (mode == 'view') {
+                    var [RA1_view, Dec1_view] = RADec2scrview(RA1, Dec1);
+                    var [RA2_view, Dec2_view] = RADec2scrview(RA2, Dec2);
+                    if (Math.min(RA1_view, RA2_view) < rgEW && Math.max(RA1_view, RA2_view) > -rgEW) {
+                        if (Math.min(Dec1_view, Dec2_view) < rgNS && Math.max(Dec1_view, Dec2_view) > -rgNS) {
+                            if (Math.pow(RA2_view-RA1_view, 2) + Math.pow(Dec2_view-Dec1_view, 2) < 30*30) {
+                                ctx.moveTo(...coordSH(RA1_view, Dec1_view));
+                                ctx.lineTo(...coordSH(RA2_view, Dec2_view));
+                            }
                         }
                     }
-                }
-            } else if (['live', 'ar'].includes(mode)) {
-                var [scrRA1, scrDec1] = Ah2scrlive(...RADec2Ah(RA1, Dec1, theta));
-                var [scrRA2, scrDec2] = Ah2scrlive(...RADec2Ah(RA2, Dec2, theta));
-                if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
-                    if (Math.min(scrDec1, scrDec2) < rgNS && Math.max(scrDec1, scrDec2) > -rgNS) {
-                        if (Math.pow(scrRA2-scrRA1, 2) + Math.pow(scrDec2-scrDec1, 2) < 30*30) {
-                            ctx.moveTo(...coordSH(scrRA1, scrDec1));
-                            ctx.lineTo(...coordSH(scrRA2, scrDec2));
+                } else if (['live', 'ar'].includes(mode)) {
+                    var [scrRA1, scrDec1] = Ah2scrlive(...RADec2Ah(RA1, Dec1, theta));
+                    var [scrRA2, scrDec2] = Ah2scrlive(...RADec2Ah(RA2, Dec2, theta));
+                    if (Math.min(scrRA1, scrRA2) < rgEW && Math.max(scrRA1, scrRA2) > -rgEW) {
+                        if (Math.min(scrDec1, scrDec2) < rgNS && Math.max(scrDec1, scrDec2) > -rgNS) {
+                            if (Math.pow(scrRA2-scrRA1, 2) + Math.pow(scrDec2-scrDec1, 2) < 30*30) {
+                                ctx.moveTo(...coordSH(scrRA1, scrDec1));
+                                ctx.lineTo(...coordSH(scrRA2, scrDec2));
+                            }
                         }
                     }
                 }
@@ -1862,9 +1873,9 @@ function show_main(){
     if (document.getElementById('constNameCheck').checked && rgEW <= 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
         for (i=0; i<89; i++){
-            var RA = parseFloat(constPos[2*i]);
-            var Dec = parseFloat(constPos[2*i+1]);
-            var constName = CLnames[i];
+            var RA = parseFloat(constellations[i].ra);
+            var Dec = parseFloat(constellations[i].dec);
+            var constName = constellations[i].JPNname;
             if (mode == 'AEP') {
                 [scrRA, scrDec] = RADec2scrAEP(RA, Dec);
                 if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
@@ -2209,7 +2220,7 @@ function show_main(){
         var Dectext = `赤緯 -${Math.floor(-cenDec)}° ${Math.round((-cenDec-Math.floor(-cenDec))*60)}' (J2000.0) `;
     }
 
-    var coordtext = `${constellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
+    var coordtext = `${centerConstellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
     document.getElementById("coordtext").style.color = textColor;
     document.getElementById("coordtext").innerHTML = coordtext;
 
@@ -2686,7 +2697,7 @@ function show_main(){
     }
 
     function drawAov() {
-        let aovs = [['85-cmos', 1.80, 1.24], ['128-cmos', 1.36, 0.91]];
+        let aovs = [['85-cmos', 3.34, 3.27], ['128-cmos', 1.36, 0.91]];
         if (document.getElementById('aovCheck').checked && ['AEP', 'view'].includes(mode)) {
             let aovLabel = '';
             for (i=0; i<document.getElementsByName('aov').length; i++){
@@ -3140,10 +3151,14 @@ function loadFiles() {
 
         fetchJsonData('starname', (data) => {
             starNames = data;
-        })
+        });
 
         fetchJsonData('messier', (data) => {
             messier = data;
+        });
+
+        fetchJsonData('constellation', (data) => {
+            constellations = data;
         });
 
         fetchJsonData('rec', (data) => {
@@ -3153,21 +3168,6 @@ function loadFiles() {
         // NGC天体とIC天体
         loadFile("ngc", (data) => {
             NGC = data.split(',');
-        });
-
-        //星座名
-        loadFile("constellation_names", (data) => {
-            CLnames = data.split('\r\n');
-        });
-
-        //星座の位置
-        loadFile("constellation_coordinates", (data) => {
-            constPos = data.split(',');
-        });
-
-        //星座線
-        loadFile("constellation_lines", (data) => {
-            lines = data.split(',');
         });
 
         //星座境界線
@@ -3182,7 +3182,7 @@ function loadFiles() {
             let fr = new FileReader();
             fr.onload = function () {
                 const content = fr.result.split('||||');
-                for (var i=0; i<15; i++) {
+                for (var i=0; i<13; i++) {
                     fn = content[i].split('::::')[0];
                     var data = content[i].split('::::')[1];
                     if (fn == 'hip_65') {xhrHIP(data);}
@@ -3195,9 +3195,7 @@ function loadFiles() {
                     if (fn == 'messier') {messier = JSON.parse(data);}
                     if (fn == 'rec') {recs = JSON.parse(data);}
                     if (fn == 'ngc') {NGC = data.split(',');}
-                    if (fn == 'constellation_names') {CLnames = data.split('\r\n');}
-                    if (fn == 'constellation_coordinates') {constPos = data.split(',');}
-                    if (fn == 'constellation_lines') {lines = data.split(',');}
+                    if (fn == 'constellation') {constellations = JSON.parse(data)}
                     if (fn == 'constellation_boundaries') {boundary = data.split(',');}
                     if (fn == 'additional_objects') {xhrExtra(data);}
                     xhrcheck++;
