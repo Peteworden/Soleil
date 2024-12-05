@@ -228,7 +228,9 @@ var showingJD = 0;
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext, theta;
 
 var xhrcheck = 0;
+var xhrimpcheck = 0;
 var defaultcheck = 0;
+var loaded = [];
 
 var HIPRAary = Array(1);
 var HIPDecary = Array(1);
@@ -1175,17 +1177,24 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function show_initial(){
-    if (xhrcheck == 13 && defaultcheck ==11) {
-        canvas.addEventListener("touchstart", ontouchstart);
-        canvas.addEventListener("touchmove", ontouchmove);
-        canvas.addEventListener('touchend', ontouchend);
-        canvas.addEventListener('touchcancel', ontouchcancel);
-        canvas.addEventListener('mousedown', onmousedown);
-        canvas.addEventListener('mouseup', onmouseup);
-        canvas.addEventListener('wheel', onwheel);
-        newSetting();
-        document.getElementById('welcomeImage').style.display = 'none';
-        show_main();
+    if (xhrimpcheck == 5 && defaultcheck == 11) {
+        if (xhrcheck == 13) {
+            document.getElementById('loadingtext').style.display = 'none';
+            show_main();
+        } else {
+            canvas.addEventListener("touchstart", ontouchstart);
+            canvas.addEventListener("touchmove", ontouchmove);
+            canvas.addEventListener('touchend', ontouchend);
+            canvas.addEventListener('touchcancel', ontouchcancel);
+            canvas.addEventListener('mousedown', onmousedown);
+            canvas.addEventListener('mouseup', onmouseup);
+            canvas.addEventListener('wheel', onwheel);
+            document.getElementById("settingBtn").removeAttribute("disabled");
+            document.getElementById("descriptionBtn").removeAttribute("disabled");
+            newSetting();
+            document.getElementById('welcomeImage').style.display = 'none';
+            show_main();
+        }
     }
 }
 
@@ -1568,6 +1577,7 @@ function show_main(){
 
     if (document.getElementById('aovCheck').checked) {
         drawAov();
+        console.log(document.getElementById('aovSliderDiv').style.display);
         if (document.getElementById('aovSliderDiv').style.display == 'none') {
             document.getElementById('aovSliderDiv').style.display = 'block';
         }
@@ -1694,135 +1704,137 @@ function show_main(){
     }
 
     //Tycho
-    if (mode == 'AEP') {
-        var skyareas = [];
-        if (magLim > 6.5) {
-            var minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
-            var maxDec = Math.min( 90, Math.max(scr2RADec(rgEW,  rgNS)[1], cenDec+rgNS));
+    if (Tycho.length != 0 && Help.length != 0) {
+        if (mode == 'AEP') {
+            var skyareas = [];
+            if (magLim > 6.5) {
+                var minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
+                var maxDec = Math.min( 90, Math.max(scr2RADec(rgEW,  rgNS)[1], cenDec+rgNS));
 
-            if (minDec == -90) {
-                skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
-            } else if (maxDec == 90) {
-                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
-            } else {
-                var RArange1 = (scr2RADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
-                var RArange2 = (scr2RADec(rgEW,     0)[0] - cenRA + 360) % 360;
-                var RArange3 = (scr2RADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
-                var RArange = Math.max(RArange1, RArange2, RArange3);
-
-                if (cenRA - RArange < 0) {
-                    var skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                    [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
-                    for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
-                    }
-                } else if (cenRA + RArange > 360) {
-                    var skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                    [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
-                    for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
-                    }
+                if (minDec == -90) {
+                    skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
+                } else if (maxDec == 90) {
+                    skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
                 } else {
-                    var skyareas = [[SkyArea(cenRA-RArange, minDec), SkyArea(cenRA+RArange, minDec)]];
-                    for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                    }
-                }
-            }
-            drawStars(skyareas);
-            if (magLim > 10) {
-                drawStars1011(skyareas);
-            }
-        }
-    } else if (mode == 'EtP') { //正距円筒図法
-        if (magLim > 6.5) {
-            if (cenRA - rgEW < 0) {
-                //skyareasは[[a, b]]のaの領域とbの領域を両方含む
-                var skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)],
-                                [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
-                for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                    skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
-                }
-            } else if (cenRA + rgEW >= 360) {
-                var skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
-                                [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
-                for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                    skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
-                }
-            } else {
-                var skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
-                for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                }
-            }
-            drawStars(skyareas);
-            if (magLim > 10) {
-                drawStars1011(skyareas);
-            }
-        }
-    } else if (mode == 'view') {
-        var skyareas = [];
-        if (magLim > 6.5) {
-            skyareas = [];
-            var [scrRA_NP, scrDec_NP] = RADec2scrview(0, 90);
-            var [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
-            if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
-                var minDec = Math.min(
-                    Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
-                );
-                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
-            } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
-                var maxDec = Math.max(
-                    Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
-                );
-                skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
-            } else {
-                var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
-                let edgeRA = [];
-                let edgeDec = [];
-                for (j=0; j<=Math.ceil(3*rgEW); j++) {
-                    for (i=0; i<=Math.ceil(3*rgNS); i++) {
-                        if (0 < i && i < Math.ceil(3*rgNS) && 0 < j && j < Math.ceil(3*rgEW)) {
-                            continue;
+                    var RArange1 = (scr2RADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
+                    var RArange2 = (scr2RADec(rgEW,     0)[0] - cenRA + 360) % 360;
+                    var RArange3 = (scr2RADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
+                    var RArange = Math.max(RArange1, RArange2, RArange3);
+
+                    if (cenRA - RArange < 0) {
+                        var skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
+                                        [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
+                        for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                            skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                         }
-                        [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
-                        [RA, Dec] = Ah2RADec(A, h, theta);
-                        edgeRA.push(RA);
-                        edgeDec.push(Dec);
+                    } else if (cenRA + RArange > 360) {
+                        var skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
+                                        [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
+                        for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                            skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                        }
+                    } else {
+                        var skyareas = [[SkyArea(cenRA-RArange, minDec), SkyArea(cenRA+RArange, minDec)]];
+                        for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                        }
                     }
                 }
-                Dec_max = Math.max(...edgeDec);
-                Dec_min = Math.min(...edgeDec);
-                RA_max = Math.max(...edgeRA);
-                RA_min = Math.min(...edgeRA);
-                if (RA_max > 330 && RA_min < 30) {
-                    RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
-                    RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
-                    skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
-                    for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                drawStars(skyareas);
+                if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+                    drawStars1011(skyareas);
+                }
+            }
+        } else if (mode == 'EtP') { //正距円筒図法
+            if (magLim > 6.5) {
+                if (cenRA - rgEW < 0) {
+                    //skyareasは[[a, b]]のaの領域とbの領域を両方含む
+                    var skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)],
+                                    [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
+                    for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
+                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                    }
+                } else if (cenRA + rgEW >= 360) {
+                    var skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
+                                    [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
+                    for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else {
-                    skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
-                    for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                    var skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
+                    for (var i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     }
                 }
+                drawStars(skyareas);
+                if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+                    drawStars1011(skyareas);
+                }
             }
-            drawStars(skyareas);
-            if (magLim > 10) {
-                drawStars1011(skyareas);
+        } else if (mode == 'view') {
+            var skyareas = [];
+            if (magLim > 6.5) {
+                skyareas = [];
+                var [scrRA_NP, scrDec_NP] = RADec2scrview(0, 90);
+                var [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
+                if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
+                    var minDec = Math.min(
+                        Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
+                        Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
+                        Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
+                        Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
+                    );
+                    skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
+                } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
+                    var maxDec = Math.max(
+                        Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
+                        Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
+                        Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
+                        Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
+                    );
+                    skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
+                } else {
+                    var RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
+                    let edgeRA = [];
+                    let edgeDec = [];
+                    for (j=0; j<=Math.ceil(3*rgEW); j++) {
+                        for (i=0; i<=Math.ceil(3*rgNS); i++) {
+                            if (0 < i && i < Math.ceil(3*rgNS) && 0 < j && j < Math.ceil(3*rgEW)) {
+                                continue;
+                            }
+                            [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
+                            [RA, Dec] = Ah2RADec(A, h, theta);
+                            edgeRA.push(RA);
+                            edgeDec.push(Dec);
+                        }
+                    }
+                    Dec_max = Math.max(...edgeDec);
+                    Dec_min = Math.min(...edgeDec);
+                    RA_max = Math.max(...edgeRA);
+                    RA_min = Math.min(...edgeRA);
+                    if (RA_max > 330 && RA_min < 30) {
+                        RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
+                        RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
+                        skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
+                        for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                            skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                        }
+                    } else {
+                        skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
+                        for (var i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                            skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                        }
+                    }
+                }
+                drawStars(skyareas);
+                if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+                    drawStars1011(skyareas);
+                }
             }
         }
     }
@@ -1912,7 +1924,7 @@ function show_main(){
     ctx.strokeStyle = objectColor;
     ctx.fillStyle = objectColor;
 
-    if (document.getElementById('BayerFSCheck').checked) {
+    if (document.getElementById('BayerFSCheck').checked && BayerNums.length != 0) {
         writeBayer();
     }
 
@@ -1920,12 +1932,12 @@ function show_main(){
         drawMessier();
     }
 
-    if (document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value) {
+    if (document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value && typeof recs !== 'undefined') {
         drawRecs();
     }
 
     // メシエ以外
-    if (document.getElementById('allNGCCheck').checked && rgEW <= 0.5 * document.getElementById('allNGCFrom').value) {
+    if (document.getElementById('allNGCCheck').checked && rgEW <= 0.5 * document.getElementById('allNGCFrom').value && NGC.length != 0) {
         drawNGC();
     }
 
@@ -2041,7 +2053,7 @@ function show_main(){
                                 trackDateText = `${ymdhm[3]}:${ymdhm[4]}`;
                             }
                             ctx.fillText(trackDateText, x+5, y-5);
-                        } 
+                        }
                     }
                 }
             }
@@ -2697,7 +2709,7 @@ function show_main(){
     }
 
     function drawAov() {
-        let aovs = [['85-cmos', 3.34, 3.27], ['128-cmos', 1.36, 0.91]];
+        let aovs = [['85-cmos', 3.34, 2.27], ['128-cmos', 1.36, 0.91]];
         if (document.getElementById('aovCheck').checked && ['AEP', 'view'].includes(mode)) {
             let aovLabel = '';
             for (i=0; i<document.getElementsByName('aov').length; i++){
@@ -3087,7 +3099,7 @@ function loadFiles() {
         }
     }
     if (online) {
-        function loadFile(filename, func) {
+        function loadFile(filename, func, impflag=false) {
             var url_load = "https://peteworden.github.io/Soleil/data/" + filename + ".txt";
             var xhr = new XMLHttpRequest();
             xhr.open('GET', url_load);
@@ -3096,15 +3108,59 @@ function loadFiles() {
                 if(xhr.readyState === 4 && xhr.status === 200) {
                     func(xhr.responseText);
                     xhrcheck++;
-                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt is ready`);
+                    if (impflag) {
+                       xhrimpcheck++;
+                    }
+                    loaded.push(filename);
+                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
                     show_initial();
                     return 0;
                 }
             }
         }
 
+        function fetchJsonData(filename, func, impflag=false) {
+            fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                func(data)
+                xhrcheck++;
+                if (impflag) {
+                    xhrimpcheck++;
+                }
+                loaded.push(filename)
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json`);
+                show_initial();
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+
         //HIP
-        loadFile("hip_65", xhrHIP);
+        loadFile("hip_65", xhrHIP, true);
+
+        fetchJsonData('constellation', (data) => {
+            constellations = data;
+        }, true);
+
+        //星座境界線
+        loadFile("constellation_boundaries", (data) => {
+            boundary = data.split(',');
+        }, true);
+
+        fetchJsonData('starname', (data) => {
+            starNames = data;
+        }, true);
+
+        fetchJsonData('messier', (data) => {
+            messier = data;
+        }, true);
 
         //Tycho
         loadFile("tycho2_100", (data) => {
@@ -3126,40 +3182,11 @@ function loadFiles() {
             Help1011 = data.split(',');
         });
 
+        //追加天体
+        loadFile("additional_objects", xhrExtra);
+
         //Bayer
         loadFile("brights", xhrBSC);
-
-        //Messier
-        function fetchJsonData(filename, func) {
-            fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                func(data)
-                xhrcheck++;
-                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json is ready`);
-                show_initial();
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            });
-        }
-
-        fetchJsonData('starname', (data) => {
-            starNames = data;
-        });
-
-        fetchJsonData('messier', (data) => {
-            messier = data;
-        });
-
-        fetchJsonData('constellation', (data) => {
-            constellations = data;
-        });
 
         fetchJsonData('rec', (data) => {
             recs = data;
@@ -3169,14 +3196,6 @@ function loadFiles() {
         loadFile("ngc", (data) => {
             NGC = data.split(',');
         });
-
-        //星座境界線
-        loadFile("constellation_boundaries", (data) => {
-            boundary = data.split(',');
-        });
-
-        //追加天体
-        loadFile("additional_objects", xhrExtra);
     } else {
         document.getElementById('getFile').addEventListener('change', function () {
             let fr = new FileReader();
@@ -3185,18 +3204,18 @@ function loadFiles() {
                 for (var i=0; i<13; i++) {
                     fn = content[i].split('::::')[0];
                     var data = content[i].split('::::')[1];
-                    if (fn == 'hip_65') {xhrHIP(data);}
+                    if (fn == 'hip_65') {xhrHIP(data); xhrimpcheck++;}
                     if (fn == 'tycho2_100') {Tycho = data.split(',');}
                     if (fn == 'tycho2_100_helper') {Help = data.split(',');}
                     if (fn == 'tycho2_100-110_helper') {Tycho1011 = data.split(',');}
                     if (fn == 'tycho2_100-110_helper') {Help1011 = data.split(',');}
                     if (fn == 'brights') {xhrBSC(data);}
-                    if (fn == 'starname') {starNames = JSON.parse(data);}
-                    if (fn == 'messier') {messier = JSON.parse(data);}
+                    if (fn == 'starname') {starNames = JSON.parse(data); xhrimpcheck++;}
+                    if (fn == 'messier') {messier = JSON.parse(data); xhrimpcheck++;}
                     if (fn == 'rec') {recs = JSON.parse(data);}
                     if (fn == 'ngc') {NGC = data.split(',');}
-                    if (fn == 'constellation') {constellations = JSON.parse(data)}
-                    if (fn == 'constellation_boundaries') {boundary = data.split(',');}
+                    if (fn == 'constellation') {constellations = JSON.parse(data); xhrimpcheck++;}
+                    if (fn == 'constellation_boundaries') {boundary = data.split(','); xhrimpcheck++;}
                     if (fn == 'additional_objects') {xhrExtra(data);}
                     xhrcheck++;
                     show_initial();

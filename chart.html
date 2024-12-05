@@ -36,14 +36,14 @@
             <ul>
                 <li><h3>星図</h3></li>
                 <li><a href="PeteHOME.html">HOME</a></li>
-                <li><a href="SoleilWeb.html?dark=1">Soleil</a></li>
+                <div id="loadingtext">Loading...</div>
                 <li><button id="darkerBtn" class="darkerBtn" type="button" onclick="darkerFunc()"><div id="darkerbtntext"></div></li>
                 <li><button id="fileBtn" style="display:block;width:40px; height:25px;" onclick="document.getElementById('getFile').click()">file</button><input type="file" id="getFile" accept="*.txt" /></li>
             </ul>
         </div>
 
         <div>
-            <button id="settingBtn" class="settingBtn" type="button" onclick="showSetting()">
+            <button id="settingBtn" class="settingBtn" type="button" onclick="showSetting()" disabled>
                 <img src="settingBtn.png" alt="設定">
             </button>
         </div>
@@ -187,7 +187,7 @@
                 <!--rgb(247, 206, 206) 48px-->
                 <img src="exitFullScreenBtn.png" alt="全画面表示終了">
             </button>
-            <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()">
+            <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()" disabled>
                 <!--rgb(247, 206, 206) 48px-->
                 <img src="descriptionBtn.png" alt="説明">
             </button>
