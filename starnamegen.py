@@ -32,11 +32,32 @@ def binary_search(arr: list, target: int):
 def hms2hm(hms: list[float]):
     h: int = int(hms[0])
     m: float = hms[1] + hms[2] / 60
+    m = round(m, 1)
     if m >= 60:
         h += 1
         m -= 60
-    m = round(m, 1)
+    if h > 24:
+        h -= 24
     return str(h) + ' ' + str(m)
+
+
+def dms2dm(dms: list[str]):
+    d: int = int(dms[0])
+    m: float = int(dms[1]) + float(dms[2]) / 60
+    m = round(m, 1)
+    if dms[0][0] == "-":
+        if m >= 60:
+            d -= 1
+            m -= 60
+        if d == 0:
+            return '-' + str(d) + ' ' + str(m)
+        else:
+            return str(d) + ' ' + str(m)
+    else:
+        if m >= 60:
+            d += 1
+            m -= 60
+        return str(d) + ' ' + str(m)
 
 
 for i in range(len(name)):
@@ -46,7 +67,7 @@ for i in range(len(name)):
     if row < 0:
         continue
     ra: str = hms2hm(list(map(float, HIP[row]['ra'].split(' '))))
-    dec: str = hms2hm(list(map(float, HIP[row]['dec'].split(' '))))
+    dec: str = dms2dm(list(HIP[row]['dec'].split(' ')))
     mag: int = round(float(HIP[row]['vmag']))
     if mag < 1:
         mag = 1

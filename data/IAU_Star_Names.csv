@@ -74,12 +74,12 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Miaplacidus,HR 3685,45238,β Car
 ,Tapecue,HD 63765,38041,
 ,Achird,HR 219,3821,η Cas
-,Caph,HR 21,746,β Cas
+カフ,Caph,HR 21,746,β Cas
 ,Castula,HR 265,4422,υ2 Cas
 ,Fulu,HR 153,2920,ζ Cas
 ,Nushagak,HD 17156,13192,
 ,Ruchbah,HR 403,6686,δ Cas
-,Schedar,HR 168,3179,α Cas
+シェダル,Schedar,HR 168,3179,α Cas
 ,Segin,HR 0542,8886,ε Cas
 ハダル,Hadar,HR 5267,68702,β Cen
 ,Leepwal,HD 121263,68002,ζ Cen
@@ -88,10 +88,10 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Nyamien,WASP-15,0,
 プロキシマ・ケンタウリ,Proxima Centauri,GJ 551,70890,α Cen
 リギル・ケンタウルス,Rigil Kentaurus,HR 5459,71683,α Cen
-,Toliman,HR 5460,71681,α Cen
+トリマン,Toliman,HR 5460,71681,α Cen
 ,Uklun,HD 102117,57291,
-,Alderamin,HR 8162,105199,α Cep
-,Alfirk,HR 8238,106032,β Cep
+アルデラミン,Alderamin,HR 8162,105199,α Cep
+アルフィルク,Alfirk,HR 8238,106032,β Cep
 ,Algedi,HR 7754,100064,α2 Cep
 ,Errai,HR 8974,116727,γ Cep
 ,Garnet Star,HR 8316,107259,µ Cep
@@ -118,7 +118,7 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Wezen,HR 2693,34444,δ CMa
 ,Gomeisa,HR 2845,36188,β CMi
 プロキオン,Procyon,HR 2943,37279,α CMi
-,Acubens,HR 3572,44066,α Cnc
+アクベンス,Acubens,HR 3572,44066,α Cnc
 ,Asellus Australis,HR 3461,42911,δ Cnc
 ,Asellus Borealis,HR 3449,42806,γ Cnc
 ,Copernicus,HR 3522,43587,55 Cnc
@@ -131,16 +131,16 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Tegmine,HR 3208,40167,ζ Cnc
 ,Elkurud,HR 2177,29034,θ Col
 ,Kosjenka,WASP-63,,
-,Phact,HR 1956,26634,α Col
+ファクト,Phact,HR 1956,26634,α Col
 ,Wazn,HR 2040,27628,β Col
 ,Diadem,HR 4968,64241,α Com
 ,Phyllon Kissinou,23 Com,61394,
 ,Meridiana,HR 7254,94114,α CrA
-,Alphecca,HR 5793,76267,α CrB
+アルフェッカ,Alphecca,HR 5793,76267,α CrB
 ,Kamuy,HD 145457,79219,
 ,Moldoveanu,XO-1,0,
-,Nusakan,HR 5747,75695,β CrB
-,Alkes,HR 4287,53740,α Crt
+ヌサカン,Nusakan,HR 5747,75695,β CrB
+アルケス,Alkes,HR 4287,53740,α Crt
 ,Amansinaya,WASP-34,0,_ Crt
 ,Hunahpú,HD 98219,55174,
 アクルクス,Acrux,HR 4730,60718,α Cru
@@ -151,8 +151,8 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Tupã,HD 108147,60644,
 ,Alchiba,HR 4623,59199,α Crv
 ,Algorab,HR 4757,60965,δ Crv
-,Gienah,HR 4662,59803,γ Crv
-,Kraz,HR 4786,61359,β Crv
+ギェナー,Gienah,HR 4662,59803,γ Crv
+クラズ,Kraz,HR 4786,61359,β Crv
 ,Chara,HR 4785,61317,β CVn
 コル・カロリ,Cor Caroli,HR 4915,63125,α2 CVn
 ,Komondor,HAT-P-12,,
@@ -168,7 +168,7 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Moriah,HAT-P-23,0,
 ,Musica,HR 8030,103527,18 Del
 ,Rotanev,HR 7882,101769,β Del
-,Sualocin,HR 7906,101958,α Del
+スアロキン,Sualocin,HR 7906,101958,α Del
 ,Naledi,WASP-62,0,
 ,Aldhibah,HR 6396,83895,ζ Dra
 ,Alrakis,HR 6370,83608,μ Dra
@@ -223,7 +223,7 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Tejat,HR 2286,30343,μ Gem
 ,Wasat,HR 2777,35550,δ Gem
 ,Aldhanab,HR 8353,108085,γ Gru
-,Alnair,HR 8425,109268,α Gru
+アルナイル,Alnair,HR 8425,109268,α Gru
 ,Itonda,HD 208487,108375,
 ,Tiaki,HR 8636,112122,β Gru
 ,Cujam,HR 6117,80463,ω Her
@@ -237,7 +237,7 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Pipoltr,TrES-3,0,V1434 Her
 ,Rasalgethi,HR 6406,84345,α1 Her
 ,Sarin,HR 6410,84379,δ Her
-,Alphard,HR 3748,46390,α Hya
+アルファルド,Alphard,HR 3748,46390,α Hya
 ,Ashlesha,HR 3482,43109,ε Hya
 ,Felis,HR 3923,48615,
 ,Filetdor,WASP-166,,
@@ -266,7 +266,7 @@ Japanese Name,Proper Name,Designation,HIP,Bayer ID
 ,Subra,HR 3852,47508,ο Leo
 ,Yunü (Yunu),HD 87837,49637,31 Leo
 ,Zosma,HR 4357,54872,δ Leo
-,Arneb,HR 1865,25985,α Lep
+アルネブ,Arneb,HR 1865,25985,α Lep
 ,Nihal,HR 1829,25606,β Lep
 ,Brachium,HR 5603,73714,σ Lib
 ,Zubenelgenubi,HR 5531,72622,α2 Lib
