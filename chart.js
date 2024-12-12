@@ -68,9 +68,9 @@ function setCanvas (fullBool) {
     if (rgEW != null && rgNS != null) {
         rgNS = rgEW * canvas.height / canvas.width;
     }
-    if (xhrcheck != null && defaultcheck != null && xhrcheck >= 10 && defaultcheck == 11) {
+    /*if (xhrcheck != null && defaultcheck != null && xhrcheck >= 10 && defaultcheck == 11) {
         show_main();
-    }
+    }*/
 }
 setCanvas(false);
 
@@ -400,7 +400,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
     } else if (searchText.length == 1) { //1文字
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
             for (i=0; i<89; i++) {
-                if (constellations[i].JPNname.length != 0 && hiraganaToKatakana(constName[0]) == searchText) {
+                if (constellations[i].JPNname.length != 0 && hiraganaToKatakana(constellations[i].JPNname) == searchText) {
                     suggestions1[0].push(`${constellations[i].JPNname}座`);
                     suggestions1[1].push(`${constellations[i].JPNName}座`);
                 }
