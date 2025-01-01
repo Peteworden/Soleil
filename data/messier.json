@@ -3,6 +3,7 @@
         "name": "M1",
         "alt_name": [
             "かに星雲",
+            "Crab Nebula",
             "NGC1952"
         ],
         "ra": "05 34.5",
@@ -36,53 +37,60 @@
     {
         "name": "M4",
         "alt_name": [
+            "Spider Globular Cluster",
             "NGC6121"
         ],
         "ra": "16 23.6",
         "dec": "-26 32.0",
         "vmag": "5.9",
         "class": "Gb",
-        "description": "球状星団。アンタレスのすぐ近くにあるため見つけやすい。"
+        "description": "球状星団。アンタレスのすぐ近くにあるため見つけやすい。Spider Globular Cluster"
     },
     {
         "name": "M5",
         "alt_name": [
+            "Rose Cluster",
             "NGC5904"
         ],
         "ra": "15 18.6",
         "dec": "+02 5.0",
         "vmag": "5.8",
         "class": "Gb",
-        "description": ""
+        "description": "Rose Cluster"
     },
     {
         "name": "M6",
         "alt_name": [
+            "バタフライ星団",
+            "Butterfly Cluster",
             "NGC6405"
         ],
         "ra": "17 40.1",
         "dec": "-32 13.0",
         "vmag": "4.2",
         "class": "OC",
-        "description": ""
+        "description": "バタフライ星団"
     },
     {
         "name": "M7",
         "alt_name": [
+            "トレミー星団",
+            "Ptolemy's Cluster",
             "NGC6475"
         ],
         "ra": "17 53.9",
         "dec": "-34 49.0",
         "vmag": "3.3",
         "class": "OC",
-        "description": ""
+        "description": "トレミー星団。トレミーはプトレマイオスのこと。"
     },
     {
         "name": "M8",
         "alt_name": [
             "NGC6523",
             "干潟星雲",
-            "ひがた星雲"
+            "ひがた星雲",
+            "Lagoon Nebula"
         ],
         "ra": "18 3.8",
         "dec": "-24 23.0",
@@ -115,13 +123,14 @@
     {
         "name": "M11",
         "alt_name": [
+            "Wild Duck Cluster",
             "NGC6705"
         ],
         "ra": "18 51.1",
         "dec": "-06 16.0",
         "vmag": "5.8",
         "class": "OC",
-        "description": ""
+        "description": "Wild Duck Cluster"
     },
     {
         "name": "M12",
@@ -137,13 +146,14 @@
     {
         "name": "M13",
         "alt_name": [
+            "Great Hercules Cluster",
             "NGC6205"
         ],
         "ra": "16 41.7",
         "dec": "+36 28.0",
         "vmag": "5.9",
         "class": "Gb",
-        "description": "とても明るく見やすい球状星団。ベガとアークトゥルスからかんむり座α星アルフェッカを見つけて、ベガとアルフェッカの間のアルフェッカ寄り、ヘルクレス座η星とζ星を1:2に内分する位置で見当をつけよう。"
+        "description": "とても明るく見やすい球状星団。ベガとアークトゥルスからかんむり座α星、ヘルクレス座η星とζ星を見つけて、ヘルクレス座η星とζ星を1:2に内分する位置で見当をつけるといいと思います。"
     },
     {
         "name": "M14",
@@ -159,19 +169,21 @@
     {
         "name": "M15",
         "alt_name": [
+            "Great Pegasus Cluster",
             "NGC7078"
         ],
         "ra": "21 30.0",
         "dec": "+12 10.0",
         "vmag": "6.4",
         "class": "Gb",
-        "description": ""
+        "description": "秋の球状星団と言えばこれ"
     },
     {
         "name": "M16",
         "alt_name": [
             "NGC6611",
-            "わし星雲"
+            "わし星雲",
+            "Eagle Nebula"
         ],
         "ra": "18 18.8",
         "dec": "-13 47.0",
@@ -183,7 +195,12 @@
         "name": "M17",
         "alt_name": [
             "NGC6618",
-            "オメガ星雲"
+            "オメガ星雲",
+            "Omega Nebula",
+            "Swan Nebula",
+            "Horseshoe Nebula",
+            "Lobster Nebula",
+            "Chechmark Nebula"
         ],
         "ra": "18 20.8",
         "dec": "-16 11.0",
@@ -194,6 +211,7 @@
     {
         "name": "M18",
         "alt_name": [
+            "Black Swan Cluster",
             "NGC6613"
         ],
         "ra": "18 19.9",
@@ -218,7 +236,8 @@
         "alt_name": [
             "NGC6514",
             "三裂星雲",
-            "さんれつ星雲"
+            "さんれつ星雲",
+            "Trifid Nebula"
         ],
         "ra": "18 2.6",
         "dec": "-23 2.0",
@@ -229,17 +248,19 @@
     {
         "name": "M21",
         "alt_name": [
+            "Webb's Cross Cluster",
             "NGC6531"
         ],
         "ra": "18 4.6",
         "dec": "-22 30.0",
         "vmag": "5.9",
         "class": "OC",
-        "description": ""
+        "description": "Webb's Cross Cluster"
     },
     {
         "name": "M22",
         "alt_name": [
+            "Great Saggittarius Cluster",
             "NGC6656"
         ],
         "ra": "18 36.4",
@@ -262,7 +283,8 @@
     {
         "name": "M24",
         "alt_name": [
-            ""
+            "スタークラウド",
+            "Small Sagittarius Star Cloud"
         ],
         "ra": "18 16.9",
         "dec": "-18 29.0",
@@ -297,6 +319,7 @@
         "alt_name": [
             "亜鈴状星雲",
             "あれい状星雲",
+            "Dumbbell Nebula",
             "NGC6853"
         ],
         "ra": "19 59.6",
@@ -319,36 +342,39 @@
     {
         "name": "M29",
         "alt_name": [
+            "Cooling Tower Cluster",
             "NGC6913"
         ],
         "ra": "20 23.9",
         "dec": "+38 32.0",
         "vmag": "6.6",
         "class": "OC",
-        "description": "とても小さい"
+        "description": "Cooling Tower Cluster。とても小さい"
     },
     {
         "name": "M30",
         "alt_name": [
+            "Jellyfish Cluster",
             "NGC7099"
         ],
         "ra": "21 40.4",
         "dec": "-23 11.0",
         "vmag": "7.5",
         "class": "Gb",
-        "description": ""
+        "description": "Jellyfish Cluster"
     },
     {
         "name": "M31",
         "alt_name": [
             "アンドロメダ銀河",
+            "Andromeda Galaxy",
             "NGC224"
         ],
         "ra": "00 42.7",
         "dec": "+41 16.0",
         "vmag": "3.4",
         "class": "Gx",
-        "description": "とても有名な銀河。暗い空なら肉眼でも見える。まずペガススの四辺形を見つけて、アンドロメダ座を東にα、δ、βとたどったあと、直角に曲がって北にμ、νと進むと、そのもう少し行ったところにある。"
+        "description": "アンドロメダ銀河。暗い空なら肉眼でも見える。まずペガススの四辺形を見つけて、アンドロメダ座を東にα、δ、βとたどったあと、直角に曲がって北にμ、νと進むと、そのもう少し行ったところにある。"
     },
     {
         "name": "M32",
@@ -365,61 +391,67 @@
         "name": "M33",
         "alt_name": [
             "NGC598",
-            "さんかく座銀河"
+            "さんかく座銀河",
+            "Triangulum Galaxy"
         ],
         "ra": "01 33.9",
         "dec": "+30 39.0",
         "vmag": "5.7",
         "class": "Gx",
-        "description": "割と明るいが大きく広がっているのでなかなか見るのが難しい。暗いところに行くと双眼鏡で見ることができる（大台ケ原で見えた）。"
+        "description": "さんかく座銀河。等級で見ると比較的明るいが大きく広がっているのでなかなか見るのが難しい。暗いところに行くと双眼鏡で見ることができる（大台ケ原で見えた）。"
     },
     {
         "name": "M34",
         "alt_name": [
+            "Spiral Cluster",
             "NGC1039"
         ],
         "ra": "02 42.0",
         "dec": "+42 47.0",
         "vmag": "5.2",
         "class": "OC",
-        "description": "明るく、満月ぐらいの大きさがある。きれいだった"
+        "description": "Spiral Cluster。明るく、満月ぐらいの大きさがある。きれいだった"
     },
     {
         "name": "M35",
         "alt_name": [
+            "Shoe Buckle Cluster",
             "NGC2168"
         ],
         "ra": "06 8.9",
         "dec": "+24 20.0",
         "vmag": "5.1",
         "class": "OC",
-        "description": "明るい散開星団。市街地だとふたご座の1番星やη星が見えないのでけっこう難しいが、星が多くてきれい。"
+        "description": "Shoe Buckle Cluster。明るい散開星団。市街地だとふたご座の1番星やη星が見えないのでけっこう難しいが、星が多くてきれい。"
     },
     {
         "name": "M36",
         "alt_name": [
-            "NGC1960"
+            "NGC1960",
+            "Pinwheel Cluster"
         ],
         "ra": "05 36.1",
         "dec": "+34 8.0",
         "vmag": "6.0",
         "class": "OC",
-        "description": "きれい"
+        "description": "Pinwheel Cluster。きれい"
     },
     {
         "name": "M37",
         "alt_name": [
+            "Salt and Pepper Cluster",
             "NGC2099"
         ],
         "ra": "05 52.4",
         "dec": "+32 33.0",
         "vmag": "5.6",
         "class": "OC",
-        "description": "星がとても密集していてよかった。"
+        "description": "Salt and Pepper Cluster。星がとても密集していてよかった。"
     },
     {
         "name": "M38",
         "alt_name": [
+            "Starfish Cluster",
             "NGC1912"
         ],
         "ra": "05 28.7",
@@ -442,29 +474,32 @@
     {
         "name": "M40",
         "alt_name": [
-            ""
+            "ウィンネッケ4",
+            "Winnecke 4"
         ],
         "ra": "12 22.4",
         "dec": "+58 5.0",
         "vmag": "8.0",
         "class": "?",
-        "description": "二重星"
+        "description": "ウィンネッケ4。二重星。でも確かに星雲ぽく見える。"
     },
     {
         "name": "M41",
         "alt_name": [
+            "Litter Beehive Cluster",
             "NGC2287"
         ],
         "ra": "06 47.0",
         "dec": "-20 44.0",
         "vmag": "4.5",
         "class": "OC",
-        "description": "散開星団。双眼鏡でシリウスを端っこに入れると反対側の端っこで同時に見ることができる。"
+        "description": "散開星団。双眼鏡でシリウスを端っこに入れると反対側の端っこで同時に見ることができる。Litter Beehive Cluster"
     },
     {
         "name": "M42",
         "alt_name": [
             "オリオン大星雲",
+            "Great Orion Nebula",
             "NGC1976"
         ],
         "ra": "05 35.4",
@@ -476,18 +511,21 @@
     {
         "name": "M43",
         "alt_name": [
+            "De Mairan's Nebula",
             "NGC1982"
         ],
         "ra": "05 35.6",
         "dec": "-05 16.0",
         "vmag": "9.0",
         "class": "Nb",
-        "description": ""
+        "description": "De Mairan's Nebula"
     },
     {
         "name": "M44",
         "alt_name": [
             "プレセペ星団",
+            "Beehive Cluster",
+            "Praesepe",
             "NGC2632"
         ],
         "ra": "08 40.1",
@@ -500,7 +538,8 @@
         "name": "M45",
         "alt_name": [
             "すばる",
-            "プレアデス星団"
+            "プレアデス星団",
+            "Pleiades"
         ],
         "ra": "03 47.0",
         "dec": "+24 7.0",
@@ -555,19 +594,21 @@
     {
         "name": "M50",
         "alt_name": [
+            "Heart-Shaped Cluster",
             "NGC2323"
         ],
         "ra": "07 3.2",
         "dec": "-08 20.0",
         "vmag": "5.9",
         "class": "OC",
-        "description": "空の孤島って感じがした。よく見つけたな"
+        "description": "Heart-Shaped Cluster。空の孤島って感じがした。よく見つけたな"
     },
     {
         "name": "M51",
         "alt_name": [
             "子持ち銀河",
             "こもち銀河",
+            "Whirlpool Galaxy",
             "NGC5194-5"
         ],
         "ra": "13 29.9",
@@ -579,13 +620,14 @@
     {
         "name": "M52",
         "alt_name": [
+            "Scorpion Cluster",
             "NGC7654"
         ],
         "ra": "23 24.2",
         "dec": "+61 35.0",
         "vmag": "6.9",
         "class": "OC",
-        "description": "星雲状、7cm高倍率で分解"
+        "description": "星雲状、7cm高倍率で分解。Scorpion Cluster"
     },
     {
         "name": "M53",
@@ -612,13 +654,14 @@
     {
         "name": "M55",
         "alt_name": [
+            "Specter Cluster",
             "NGC6809"
         ],
         "ra": "19 40.0",
         "dec": "-30 58.0",
         "vmag": "7.0",
         "class": "Gb",
-        "description": ""
+        "description": "Specter Cluster"
     },
     {
         "name": "M56",
@@ -635,15 +678,17 @@
         "name": "M57",
         "alt_name": [
             "リング星雲",
+            "リングじょう星雲",
             "環状星雲",
             "かんじょう星雲",
+            "Ring Nebula",
             "NGC6720"
         ],
         "ra": "18 53.6",
         "dec": "+33 2.0",
         "vmag": "9.0",
         "class": "Pl",
-        "description": "リング星雲や環状星雲と呼ばれる惑星状星雲。恒星とあまり変わらないくらい小さいが、9.0等級と小望遠鏡でも見える明るさ。こと座のβ星と、γ星の少しβ星側にある星との中央にあり、近くの恒星と直角二等辺三角形を作っている。"
+        "description": "リング（状）星雲や環状星雲と呼ばれる惑星状星雲。恒星とあまり変わらないくらい小さいが、9.0等級と小望遠鏡でも見える明るさ。こと座のβ星と、γ星の少しβ星側にある星との中央にあり、近くの恒星と直角二等辺三角形を作っている。"
     },
     {
         "name": "M58",
@@ -681,30 +726,33 @@
     {
         "name": "M61",
         "alt_name": [
+            "Swelling Spiral Galaxy",
             "NGC4303"
         ],
         "ra": "12 21.9",
         "dec": "+04 28.0",
         "vmag": "9.7",
         "class": "Gx",
-        "description": ""
+        "description": "Swelling Spiral Galaxy"
     },
     {
         "name": "M62",
         "alt_name": [
+            "Flickering Globular Cluster",
             "NGC6266"
         ],
         "ra": "17 1.2",
         "dec": "-30 7.0",
         "vmag": "6.6",
         "class": "Gb",
-        "description": ""
+        "description": "Flickering Globular Cluster"
     },
     {
         "name": "M63",
         "alt_name": [
             "NGC5055",
-            "ひまわり銀河"
+            "ひまわり銀河",
+            "Sunflower Galaxy"
         ],
         "ra": "13 15.8",
         "dec": "+42 2.0",
@@ -717,7 +765,8 @@
         "alt_name": [
             "NGC4826",
             "黒眼銀河",
-            "くろめ銀河"
+            "くろめ銀河",
+            "Black Eye Galaxy"
         ],
         "ra": "12 56.7",
         "dec": "+21 41.0",
@@ -728,7 +777,8 @@
     {
         "name": "M65",
         "alt_name": [
-            "NGC3623"
+            "NGC3623",
+            "Leo Triplet"
         ],
         "ra": "11 18.9",
         "dec": "+13 5.0",
@@ -739,7 +789,8 @@
     {
         "name": "M66",
         "alt_name": [
-            "NGC3627"
+            "NGC3627",
+            "Leo Triplet"
         ],
         "ra": "11 20.2",
         "dec": "+12 59.0",
@@ -750,13 +801,15 @@
     {
         "name": "M67",
         "alt_name": [
+            "King Cobra Cluster",
+            "Golden Eye Cluster",
             "NGC2682"
         ],
-        "ra": "08 50.4",
-        "dec": "+11 49.0",
+        "ra": "08 51.3",
+        "dec": "+11 48.0",
         "vmag": "6.9",
         "class": "OC",
-        "description": "なぜか星図がずれていますが、修正をサボっています。"
+        "description": ""
     },
     {
         "name": "M68",
@@ -794,13 +847,14 @@
     {
         "name": "M71",
         "alt_name": [
+            "Angelfish Cluster",
             "NGC6838"
         ],
         "ra": "19 53.8",
         "dec": "+18 47.0",
         "vmag": "8.3",
         "class": "Gb",
-        "description": ""
+        "description": "Angelfish Cluster"
     },
     {
         "name": "M72",
@@ -827,13 +881,14 @@
     {
         "name": "M74",
         "alt_name": [
+            "Phantom Galaxy",
             "NGC628"
         ],
         "ra": "01 36.7",
         "dec": "+15 47.0",
         "vmag": "9.2",
         "class": "Gx",
-        "description": "とてもかすか"
+        "description": "ファントム銀河。とてもかすか"
     },
     {
         "name": "M75",
@@ -852,7 +907,8 @@
             "NGC650",
             "NGC650-1",
             "しょうあれいじょう星雲",
-            "小亜鈴状星雲"
+            "小亜鈴状星雲",
+            "Little Dumbbell Nebula"
         ],
         "ra": "01 42.4",
         "dec": "+51 34.0",
@@ -863,7 +919,9 @@
     {
         "name": "M77",
         "alt_name": [
-            "NGC1068"
+            "NGC1068",
+            "Cetus A",
+            "Squid Galaxy"
         ],
         "ra": "02 42.7",
         "dec": "-00 1.0",
@@ -908,6 +966,7 @@
         "name": "M81",
         "alt_name": [
             "NGC3031",
+            "Bode's Galaxy",
             "ボーデの銀河"
         ],
         "ra": "09 55.6",
@@ -921,7 +980,8 @@
         "alt_name": [
             "NGC3034",
             "葉巻銀河",
-            "はまき銀河"
+            "はまき銀河",
+            "Cigar galaxy"
         ],
         "ra": "09 55.8",
         "dec": "+69 41.0",
@@ -934,7 +994,8 @@
         "alt_name": [
             "NGC5236",
             "南の回転花火銀河",
-            "みなみのかいてんはなび銀河"
+            "みなみのかいてんはなび銀河",
+            "Southern Pinwheel Galaxy"
         ],
         "ra": "13 37.0",
         "dec": "-29 52.0",
@@ -978,7 +1039,9 @@
     {
         "name": "M87",
         "alt_name": [
-            "NGC4486"
+            "NGC4486",
+            "Virgo A",
+            "Smoking Gun Galaxy"
         ],
         "ra": "12 30.8",
         "dec": "+12 24.0",
@@ -1044,7 +1107,8 @@
     {
         "name": "M93",
         "alt_name": [
-            "NGC2447"
+            "NGC2447",
+            "Critter Cluster"
         ],
         "ra": "07 44.6",
         "dec": "-23 52.0",
@@ -1055,7 +1119,9 @@
     {
         "name": "M94",
         "alt_name": [
-            "NGC4736"
+            "NGC4736",
+            "Cat's Eye Galaxy",
+            "Crocodile Eye Galaxy"
         ],
         "ra": "12 50.9",
         "dec": "+41 7.0",
@@ -1089,7 +1155,8 @@
         "name": "M97",
         "alt_name": [
             "NGC3587",
-            "ふくろう星雲"
+            "ふくろう星雲",
+            "Owl Nebula"
         ],
         "ra": "11 14.8",
         "dec": "+55 1.0",
@@ -1111,7 +1178,8 @@
     {
         "name": "M99",
         "alt_name": [
-            "NGC4254"
+            "NGC4254",
+            "St. Catherine's Wheel Galaxy"
         ],
         "ra": "12 18.8",
         "dec": "+14 25.0",
@@ -1122,7 +1190,8 @@
     {
         "name": "M100",
         "alt_name": [
-            "NGC4321"
+            "NGC4321",
+            "Mirror Galaxy"
         ],
         "ra": "12 22.9",
         "dec": "+15 49.0",
@@ -1135,7 +1204,8 @@
         "alt_name": [
             "NGC5457",
             "回転花火銀河",
-            "かいてんはなび銀河"
+            "かいてんはなび銀河",
+            "Pinwheel Galaxy"
         ],
         "ra": "14 3.2",
         "dec": "+54 21.0",
@@ -1169,7 +1239,8 @@
         "name": "M104",
         "alt_name": [
             "NGC4594",
-            "ソンブレロ銀河"
+            "ソンブレロ銀河",
+            "Sombrero Galaxy"
         ],
         "ra": "12 40.0",
         "dec": "-11 37.0",
@@ -1202,7 +1273,8 @@
     {
         "name": "M107",
         "alt_name": [
-            "NGC6171"
+            "NGC6171",
+            "Crucifix Cluster"
         ],
         "ra": "16 32.5",
         "dec": "-13 3.0",
@@ -1213,7 +1285,8 @@
     {
         "name": "M108",
         "alt_name": [
-            "NGC3556"
+            "NGC3556",
+            "Surfboard Galaxy"
         ],
         "ra": "11 11.5",
         "dec": "+55 40.0",
@@ -1224,7 +1297,8 @@
     {
         "name": "M109",
         "alt_name": [
-            "NGC3992"
+            "NGC3992",
+            "Vacuum Cleaner Galaxy"
         ],
         "ra": "11 57.6",
         "dec": "+53 23.0",
