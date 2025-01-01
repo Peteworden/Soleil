@@ -329,7 +329,16 @@ function link(obj) {
         console.error('Invalid input:', obj);
         return;
     }
+    // 見つかったかどうかのフラグ
     let frag = false;
+    for (i=0; i<starNames.length; i++) {
+        if (starNames[i].name == obj) {
+            cenRA = rahm2deg(starNames[i].ra);
+            cenDec = decdm2deg(starNames[i].dec);
+            frag = true;
+            break;
+        }
+    }
     for (i=0; i<recs.length; i++) {
         if (recs[i].name == obj) {
             cenRA = rahm2deg(recs[i].ra);
@@ -390,7 +399,7 @@ function closeSearch() {
 }
 
 document.getElementById('searchInput').addEventListener('input', function() {
-    let searchText = hiraganaToKatakana(document.getElementById('searchInput').value.toUpperCase());
+    let searchText = toUpperCaseOrKatakana(document.getElementById('searchInput').value);
     let suggestions1 = [[], []];
     let suggestions2 = [[], []];
     let recsugs = [];
@@ -399,31 +408,52 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions2 = [[], []];
     } else if (searchText.length == 1) { //1文字
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
+            // 星座
             for (i=0; i<89; i++) {
-                if (constellations[i].JPNname.length != 0 && hiraganaToKatakana(constellations[i].JPNname) == searchText) {
+                if (constellations[i].JPNname.length && toUpperCaseOrKatakana(constellations[i].JPNname[0]) == searchText) {
                     suggestions1[0].push(`${constellations[i].JPNname}座`);
-                    suggestions1[1].push(`${constellations[i].JPNName}座`);
+                    suggestions1[1].push(`${constellations[i].JPNname}座`);
+                }
+            }
+            // 恒星
+            for (i=0; i<starNames.length; i++) {
+                if (starNames[i].name.length && toUpperCaseOrKatakana(starNames[i].name[0]) == searchText) {
+                    suggestions1[0].push(starNames[i].name);
+                    suggestions1[1].push(starNames[i].name);
                 }
             }
         }
+        // Mをつけてメシエになるとき
         if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
             suggestions1[0].push(`M${searchText}`);
             suggestions1[1].push(`M${searchText}`);
         }
+        // 文字
         if (isNaN(searchText)) {
+            if (!["M", "N", "I"].includes(searchText)) {
+                for (m of messier) {
+                    for (alt of m.alt_name) {
+                        if (alt.length > 0 && toUpperCaseOrKatakana(alt[0]) == searchText) {
+                            suggestions1[0].push(m.name);
+                            suggestions1[1].push(m.name);
+                        }
+                    }
+                }
+            }
+
             for (let rec of recs) {
-                if (hiraganaToKatakana(rec.name[0]) == searchText) {
+                if (rec.name.length && toUpperCaseOrKatakana(rec.name[0]) == searchText) {
                     suggestions1[0].push(rec.name);
                     suggestions1[1].push(rec.name);
                 }
                 for (let alt of rec.alt_name) {
-                    if (hiraganaToKatakana(alt[0].toUpperCase()) == searchText) {
+                    if (alt.length && toUpperCaseOrKatakana(alt[0]) == searchText) {
                         suggestions1[0].push(`${rec.name}(${alt})`);
                         suggestions1[1].push(rec.name);
                     }
                 }
             }
-        } else {
+        } else { // 数字
             for (let rec of recs) {
                 if ([`NGC${searchText}`, `IC${searchText}`, `Cr${searchText}`].includes(rec.name)) {
                     suggestions1[0].push(rec.name);
@@ -438,8 +468,6 @@ document.getElementById('searchInput').addEventListener('input', function() {
                     }
                 }
             }
-        }
-        if (!isNaN(searchText)) {
             if (1 <= parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
                 suggestions1[0].push(`NGC${searchText}`);
                 suggestions1[1].push(`NGC${searchText}`);
@@ -448,15 +476,6 @@ document.getElementById('searchInput').addEventListener('input', function() {
                 suggestions1[0].push(`IC${searchText}`);
                 suggestions1[1].push(`IC${searchText}`);
             }
-        } else if (!["M", "N", "I"].includes(searchText)){
-            for (m of messier) {
-                for (alt of m.alt_name) {
-                    if (alt.length > 0 && hiraganaToKatakana(alt[0]) == searchText) {
-                        suggestions1[0].push(m.name);
-                        suggestions1[1].push(m.name);
-                    }
-                }
-            }
         }
     } else {
         suggestions1 = [[], []];
@@ -464,8 +483,8 @@ document.getElementById('searchInput').addEventListener('input', function() {
         //星座
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
             for (i=0; i<89; i++) {
-                if ((hiraganaToKatakana(constellations[i].JPNname)+'座').includes(searchText)) {
-                    if (hiraganaToKatakana(constellations[i].JPNname+'座').startsWith(searchText)) {
+                if ((toUpperCaseOrKatakana(constellations[i].JPNname)+'座').includes(searchText)) {
+                    if (toUpperCaseOrKatakana(constellations[i].JPNname+'座').startsWith(searchText)) {
                         suggestions1[0].push(`${constellations[i].JPNname}座`);
                         suggestions1[1].push(`${constellations[i].JPNname}座`);
                     } else {
@@ -487,18 +506,18 @@ document.getElementById('searchInput').addEventListener('input', function() {
         }
         if (isNaN(searchText)) {
             for (let rec of recs) {
-                if (hiraganaToKatakana(rec.name).startsWith(searchText)) {
+                if (toUpperCaseOrKatakana(rec.name).startsWith(searchText)) {
                     suggestions1[0].push(rec.name);
                     suggestions1[1].push(rec.name);
-                } else if (hiraganaToKatakana(rec.name).includes(searchText)) {
+                } else if (toUpperCaseOrKatakana(rec.name).includes(searchText)) {
                     suggestions2[0].push(rec.name);
                     suggestions2[1].push(rec.name);
                 }
                 for (let alt of rec.alt_name) {
-                    if (hiraganaToKatakana(alt.toUpperCase()).startsWith(searchText)) {
+                    if (toUpperCaseOrKatakana(alt).startsWith(searchText)) {
                         suggestions1[0].push(rec.name);
                         suggestions1[1].push(rec.name);
-                    } else if (hiraganaToKatakana(alt.toUpperCase()).includes(searchText)) {
+                    } else if (toUpperCaseOrKatakana(alt).includes(searchText)) {
                         suggestions2[0].push(rec.name);
                         suggestions2[1].push(rec.name);
                     }
@@ -541,8 +560,8 @@ document.getElementById('searchInput').addEventListener('input', function() {
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText[0])){
             for (m of messier) {
                 for (alt of m.alt_name) {
-                    if (hiraganaToKatakana(alt).includes(searchText)) {
-                        if (hiraganaToKatakana(alt).startsWith(searchText)) {
+                    if (toUpperCaseOrKatakana(alt).includes(searchText)) {
+                        if (toUpperCaseOrKatakana(alt).startsWith(searchText)) {
                             suggestions1[0].push(m.name);
                             suggestions1[1].push(m.name);
                         } else {
@@ -580,9 +599,21 @@ document.getElementById('searchInput').addEventListener('input', function() {
     }
 });
 
-function hiraganaToKatakana(str) {
-    return str.replace(/[\u3041-\u309F]/g, function(char) {
-        return String.fromCharCode(char.charCodeAt(0) + 0x60);
+function toUpperCaseOrKatakana(str) {
+    if (str == null) {
+        console.log('Invalid input:', str);
+    }
+    return str.replace(/[\u3041-\u309F]|[a-z]/g, function(char) {
+        // アルファベットの場合は大文字に変換
+        if (char >= 'a' && char <= 'z') {
+            return char.toUpperCase();
+        }
+        // ひらがなの場合はカタカナに変換
+        else if (char >= '\u3041' && char <= '\u309F') {
+            return String.fromCharCode(char.charCodeAt(0) + 0x60);
+        }
+        // その他の文字はそのまま返す
+        return char;
     });
 }
 
@@ -613,14 +644,14 @@ function showObjectInfo(x, y) {
 
         let found = false;
         document.getElementById('objectInfoImage').innerHTML = "";
-        for (let ext of ["jpg", "JPG"]) {
+        for (let ext of ["jpg"]) {
             const img = new Image();
             img.onload = function() {
                 document.getElementById('objectInfoImage').appendChild(img);
                 found = true;
             };
             img.onerror = function() {
-                //console.log(`画像が見つかりません: ${ext}`);
+                console.log(`画像が見つかりません: ${ext}`);
             };
             img.src = `https://peteworden.github.io/Soleil/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`;
             if (found) {
@@ -1512,7 +1543,7 @@ function show_main(){
 
     var JD = showingJD;
 
-    var t = (JD - 2451545.0) / 36525;
+    var t = (JD - 0.0008 - 2451545.0) / 36525;
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
 
     if (['live', 'ar'].includes(mode)) {
@@ -1577,7 +1608,6 @@ function show_main(){
 
     if (document.getElementById('aovCheck').checked) {
         drawAov();
-        console.log(document.getElementById('aovSliderDiv').style.display);
         if (document.getElementById('aovSliderDiv').style.display == 'none') {
             document.getElementById('aovSliderDiv').style.display = 'block';
         }
@@ -2283,23 +2313,29 @@ function show_main(){
         var t = theta - RA * pi/180;
         Dec *= pi/180;
         var [x, y, z] = Ry(Rz(Ry([-cos(t)*cos(Dec), sin(t)*cos(Dec), sin(Dec)], pi/2-lat_obs), cenAzm*pi/180), cenAlt*pi/180-pi/2);
-        var b = Math.acos(z) * 180/pi;
-        //var a = Math.atan2(y, x);
-        var isr = b / Math.sqrt(x ** 2 + y ** 2);
-        var scrRA = y * isr;
-        var scrDec = -x * isr;
-        return [scrRA, scrDec];
+        if (z >= 1) {
+            return [0, 0];
+        } else {
+            var b = Math.acos(z) * 180/pi;
+            var isr = b / Math.sqrt(x ** 2 + y ** 2);
+            var scrRA = y * isr;
+            var scrDec = -x * isr;
+            return [scrRA, scrDec];
+        }
     }
 
     function Ah2scrlive (A, h) {
         A = (A - loadAzm - 90) * pi / 180;
         h *= pi/180;
         var [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
-        var b = Math.acos(-z) * 180/pi;
-        //var a = Math.atan2(y, x);
-        var scrRA = -b * x / Math.sqrt(x ** 2 + y ** 2);
-        var scrDec = b * y / Math.sqrt(x ** 2 + y ** 2);
-        return [scrRA, scrDec];
+        if (-z >= 1) {
+            return [0, 0];
+        } else {
+            var b = Math.acos(-z) * 180/pi;
+            var scrRA = -b * x / Math.sqrt(x ** 2 + y ** 2);
+            var scrDec = b * y / Math.sqrt(x ** 2 + y ** 2);
+            return [scrRA, scrDec];
+        }
     }
 
     function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
@@ -2361,7 +2397,8 @@ function show_main(){
         if (mag > magLim) {
             return zerosize / (magLim + 1);
         } else {
-            return zerosize * (magLim + 1 - mag) / (magLim + 1);
+            return zerosize / (magLim + 1) + zerosize* (1 - 1 / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
+            //return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
 
@@ -2372,18 +2409,25 @@ function show_main(){
         } else if (bv == 'nodata') {
             c = starColor;
         } else {
-            bv = parseFloat(bv);
-            if (bv > 1.4) {
-                c = '#ff9999';
-            } else if (bv > 0.8) {
-                c = '#ffcc99';
-            } else if (bv > 0.6) {
-                c = '#ffffcc';
-            } else if (bv > 0) {
-                c = starColor;
-            } else if (bv > -0.33) {
-                c = '#ccffff';
-            }
+            bv = Math.max(-0.4, Math.min(2.0, parseFloat(bv)));
+
+            let r = 0, g = 0, b = 0;
+
+            if (bv < 0.4) r = 0.5 + 0.5 * (bv + 0.4) / 0.8;
+            else r = 1.0;
+
+            if (bv < 0) g = 1.0 + bv;
+            else if (bv < 0.4) g = 1.0;
+            else g = 1.0 - 0.75 * (bv - 0.4) / 1.6;
+
+            if (bv < 0.4) b = 1.0;
+            else b = 1.0 - (bv - 0.4) / 1.6;
+
+            r = Math.round(r * 255);
+            g = Math.round(g * 255);
+            b = Math.round(b * 255);
+
+            c = `rgba(${r}, ${g}, ${b}, 1)`;
         }
         return c;
     }
