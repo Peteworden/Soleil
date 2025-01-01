@@ -2978,6 +2978,7 @@ function setRealtime() {
         }
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('time', `${y}-${m}-${d}-${h}-${mi}`);
+        localStorage.setItem('realtime', 'off');
     } else if (realtimeElem[1].checked) {
         timeSliderElem.style.visibility = 'hidden';
         var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
@@ -2991,6 +2992,7 @@ function setRealtime() {
         setYMDHM(y, m, d, h, mi);
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('time', `${y}-${m}-${d}-${h}-${mi}`);
+        localStorage.setItem('realtime', 'radec');
     } else if (realtimeElem[2].checked) {
         timeSliderElem.style.visibility = 'hidden';
         var [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
@@ -3004,6 +3006,7 @@ function setRealtime() {
         setYMDHM(y, m, d, h, mi);
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('time', `${y}-${m}-${d}-${h}-${mi}`);
+        localStorage.setItem('realtime', 'azmalt');
     }
     history.replaceState('', '', url.href);
 }
@@ -3026,6 +3029,7 @@ function realtimeOff() {
     }
     url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
     localStorage.setItem('time', `${y}-${m}-${d}-${h}-${mi}`);
+    localStorage.setItem('realtime', 'off');
 }
 
 function realtimeRadec() {
@@ -3036,6 +3040,7 @@ function realtimeRadec() {
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('time', `${y}-${m}-${d}-${h}-${mi}`);
+        localStorage.setItem('realtime', 'radec');
         history.replaceState('', '', url.href);
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
@@ -3053,6 +3058,7 @@ function realtimeAzmalt() {
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.padStart(2, '0')} (JST) ${lattext} ${lontext}`;
         url.searchParams.set('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('time', `${y}-${m}-${d}-${h}-${mi}`);
+        localStorage.setItem('realtime', 'azmalt');
         history.replaceState('', '', url.href);
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
@@ -3350,13 +3356,27 @@ function checkURL() {
         realtimeOff();
         defaultcheck++;
         show_initial();
-    } else if (localStorage.getItem('time') != null) {
-        var [y, m, d, h, mi] = localStorage.getItem('time').split('-');
-        setYMDHM(y, m, d, h, mi);
-        showingJD = YMDHM_to_JD(y, m, d, h, mi);
-        realtimeOff();
-        defaultcheck++;
-        show_initial();
+    } else if (localStorage.getItem('realtime') != null) {
+        if (localStorage.getItem('realtime') == 'off' && localStorage.getItem('time') != null) {
+            var [y, m, d, h, mi] = localStorage.getItem('time').split('-');
+            setYMDHM(y, m, d, h, mi);
+            showingJD = YMDHM_to_JD(y, m, d, h, mi);
+            realtimeOff();
+            defaultcheck++;
+            show_initial();
+        } else if (localStorage.getItem('realtime') == 'radec') {
+            realtimeRadec();
+            defaultcheck++;
+            show_initial();
+        } else if (localStorage.getItem('realtime') == 'azmalt') {
+            realtimeAzmalt();
+            defaultcheck++;
+            show_initial();
+        } else {
+            now();
+            defaultcheck++;
+            show_initial();
+        }
     } else {
         now();
         defaultcheck++;
