@@ -1,0 +1,299 @@
+<!--2023/12/08-->
+<html>
+    <head>
+        <title>StarGuessr</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <link rel="stylesheet" href="styleStarGuessr.css">
+    </head>
+    <body>
+        <!--<h3 id="title">星座探し　
+            <a href="PeteHOME.html">HOME</a>　
+            <a id="chart" href=""></a>
+        </h3>-->
+        <div class="title" id="title">
+            <ul>
+                <li><h3>StarGuessr</h3></li>
+                <li><a href="PeteHOME.html">HOME</a></li>
+                <div id="loadingtext">Loading...</div>
+                <a id="chart" href=""></a>
+                <li><button id="fileBtn" style="display:block;width:40px; height:25px;" onclick="document.getElementById('getFile').click()">file</button><input type="file" id="getFile" accept="*.txt" /></li>
+            </ul>
+        </div>
+
+        <div id="drawBtn" class="drawBtn">
+            <button class="drawBtn1" type="button" onclick="clearCanvas()"><img src="スタンダードなゴミ箱アイコン.png" alt="消去"></button>
+            <button class="drawBtn2" type="button" onclick="prevCanvas()"><img src="返信矢印1.png" alt="戻る"></button>
+            <button class="drawBtn3" type="button" onclick="nextCanvas()"><img src="共有矢印.png" alt="次"></button>
+        </div>
+            
+        </div>
+
+        <div>
+            <button id="answerBtn" class="answerBtn" type="button" onclick="showAnswer()">ANS</button>
+        </div>
+
+        <div>
+            <button id="nextBtn" class="nextBtn" type="button" onclick="showNext()">NEXT</button>
+        </div>
+
+        <div id="coordtext" class="coordtext"></div>
+        
+
+
+
+
+        <div>
+            <button id="settingBtn" class="settingBtn" type="button" onclick="showSetting()" disabled>
+                <img src="settingBtn.png" alt="設定">
+            </button>
+        </div>
+
+        <div id="setting" class="setting">
+            <div class="settingBlock">
+                <div>
+                    <button id="showBtn" class="showBtn" type="button" onclick="finishSetting()">OK</button>
+                </div>
+
+                <div class="setTime">
+                    <input type="datetime-local" id="dtl" name="dtl" value=""/>
+                    <label><input type="text" id="yearText">年<input type="text" id="monthText">月<input type="text" id="dateText">日</label>
+                    <label><input type="text" id="hourText">:<input type="text" id="minuteText"></label>
+                    <script>
+                        var ymdhm = new Date();
+                        document.getElementById('yearText').value = ymdhm.getFullYear();
+                        document.getElementById('monthText').value = ymdhm.getMonth() + 1;
+                        document.getElementById('dateText').value = ymdhm.getDate();
+                        document.getElementById('hourText').value = ymdhm.getHours();
+                        document.getElementById('minuteText').value = ymdhm.getMinutes();
+                    </script>
+                    <button type="button" onclick="now()">現在時刻</button>
+                    <button type="button" onclick="show_JD_plus1()">+１日</button>
+                    <button type="button" onclick="show_JD_minus1()">-１日</button>
+                </div>
+                
+                <div class="set-observation-planet">
+                    <label>視点：</label>
+                    <select id="observer">
+                        <option>太陽</option>
+                        <option>水星</option>
+                        <option>金星</option>
+                        <option selected>地球</option>
+                        <option>火星</option>
+                        <option>木星</option>
+                        <option>土星</option>
+                        <option>天王星</option>
+                        <option>海王星</option>
+                        <option>月</option>
+                        <option>Ceres</option>
+                        <option>Vesta</option>
+                    </select>
+                </div>
+                
+                <div class="set-observation-site">
+                    <select id="NSCombo">
+                        <option selected>北緯</option>
+                        <option>南緯</option>
+                    </select>
+                    <label><input type="text" id="lat" size="1" value="35">°</label>
+                    <select id="EWCombo">
+                        <option selected>東経</option>
+                        <option>西経</option>
+                    </select>
+                    <label><input type="text" id="lon" size="1" value="135">°</label>
+                    <button type="button" onclick="here()">現在地</button>
+                </div>
+
+                <div class="set-mag-limit">
+                    <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
+                </div>
+
+                <div class="mainSettingRows">
+                    <div class="zuho" id="zuho">
+                        <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
+                        <input type="radio" name="mode" value="view" checked>プラネタリウムモード<br>
+                        <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
+                        <input type="radio" name="mode" value="live">ライブモード
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
+                        <input type="radio" name="mode" value="ar">AR
+                        <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
+                        <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
+                    </div>
+                    <div>
+                        リアルタイム
+                        <input type="radio" name="realtime" value="off">オフ
+                        <input type="radio" name="realtime" value="radec">赤道座標固定
+                        <input type="radio" name="realtime" value="altazm" checked>高度方位固定
+                    </div>
+                    <ul>
+                        <li><input type="checkbox" id="center" checked>中心位置</li>
+                        <li><input type="checkbox" id="gridCheck" checked>グリッド（プラネモード）</li>
+                        <br>
+                        <li>
+                            <input type="checkbox" id="starNameCheck" checked>恒星名
+                            （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="constNameCheck" checked>星座名
+                            （左右の視野<input type="text" id="constNameFrom" size="1" value="90">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="constLineCheck" checked>星座線
+                            （左右の視野<input type="text" id="constLineFrom" size="1" value="180">°以下のとき）
+                        </li>
+                        <br>
+                        <li>
+                            <input type="checkbox" id="planetCheck" checked>太陽系天体
+                        </li>
+                        <li>
+                            <input type="checkbox" id="planetNameCheck" checked>太陽系天体名
+                            （左右の視野<input type="text" id="planetNameFrom" size="1" value="180">°以下のとき）
+                        </li>
+                        <br>
+                        <li><input type="checkbox" id="objectInfoCheck" checked>クリックで詳細を見る</li>
+                        <br>
+                        <li>
+                            <input type="checkbox" id="MessierCheck" checked>メシエ天体
+                            （左右の視野<input type="text" id="MessierFrom" size="1" value="40">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="recsCheck" checked>その他、明るいNGC天体など
+                            （左右の視野<input type="text" id="recsFrom" size="1" value="40">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
+                            （左右の視野<input type="text" id="allNGCFrom" size="1" value="50">°以下のとき）
+                        </li>
+                        <li>
+                            <input type="checkbox" id="radioSourcesCheck">電波源（Coming soon）
+                        </li>
+                        <br>
+                        <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
+                        <br>
+                        <!--<li><input type="checkbox" id="atmRefCheck">大気差（プラネタリウムモードのみ）</li>-->
+                        <input type="checkbox" id="aovCheck">画角
+                        <div class="aov-radio" id="aovRadio">
+                            <input type="radio" name="aov" value="85-cmos" checked>85+CMOS<br>
+                            <input type="radio" name="aov" value="128-cmos">128+CMOS<br>
+                        </div>
+                        <li><input type="checkbox" id="demCheck">地形<input type="file" id="demFileInput" accept=".csv"><button id="openDemDescriptionDiv" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'visible'">説明</button></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="fullScreenBtn.png" alt="全画面表示">
+            </button>
+            <button id="exitFullScreenBtn" class="exitFullScreenBtn" type="button" onclick="exitFullScreenFunc()">
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="exitFullScreenBtn.png" alt="全画面表示終了">
+            </button>
+            <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()" disabled>
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="descriptionBtn.png" alt="説明">
+            </button>
+        </div>
+
+        <div id="description" class="description">
+            <p>
+                説明など<br>これを開いた右下のボタンで閉じる
+            </p>
+
+            <button id="openSearch" type="button" onclick="openSearch()">検索</button>
+            
+            
+
+            
+            </p>
+            <p>
+                Data of stars are provided by the Hipparcos Catalogue (European Space Agency (ESA)), Tycho-2 Catalogue (ESA), Messier Catalogue and NGC Catalogue available through the High Energy Astrophysics Science Archive Research Center (HEASARC), operated by NASA/GSFC. 星座関係はAstro Commons (星座線は改変)から。惑星はJPLのApproximate Positions of the Planets、太陽系小天体はSmall-Body Database Lookupから。詳細は<a href="https://peteworden.github.io/Soleil/chartReadMe.html">ここ</a>
+            </a>
+            </p>
+        </div>
+
+        <div id="setPicsFor360Div" class="setPicsFor360Div">
+            <input type="text" id="picsFor360" placeholder="5" value="5.2">
+            <button id="submitPicsFor360" type="button" onclick="setPicsFor360()">OK</button>
+            <div id="picsFor360text">
+                <h2>重要！　リロードのたびに設定が必要です！</h2>
+                <p>
+                    星図と重ねて表示する実際の風景の拡大率を星空と合わせるために、「一周360°がカメラの画角の横幅の何倍か」を上の欄に入力してください。<br>
+                    いったんカメラアプリを開き、スマホを横倒しにして、建物の角などのほぼスマホと同じ高さにある目印を画角の右端中央（左端中央）に入れます。<br>
+                    次にその状態で左端中央（右端中央）にあるものが右端中央（左端中央）に来るように、スマホの向きを変えます。<br>
+                    これを繰り返して、例えば1周がちょうど写真5枚分なら上の欄に5と記入します。<br>
+                    半時計周りに回って（つまりはじめの目印を右端中央に合わせて）6枚目で1周し、はじめに目印にしたものが右端から測って
+                    左右の画角の0.2倍の位置にあったなら5.2と入力します。
+                </p>
+            </div>
+        </div>
+
+        <div id="demDescriptionDiv" class="demDescriptionDiv">
+            <button id="closeDemDescription" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'hidden'">OK</button>
+            <div class="demDescriptionText">
+                
+            </div>
+        </div>
+
+        <div id="searchDiv" class="searchDiv">
+            <input type="text" id="searchInput" placeholder="ここに入力して検索">
+            <button id="closeSearch" type="button" onclick="closeSearch()">閉じる</button>
+            <div id="suggestionButtonContainer"></div>
+        </div>
+
+        <div id="objectInfo" class="objectInfo">
+            <button id="closeObjectInfo" type="button" onclick="closeObjectInfo()">閉</button>
+            <div id="objectInfoName"></div>
+            <div id="objectInfoImage"></div>
+            <div id="objectInfoText">
+            </div>
+            <div id="planetTrack" class="object-info-track">
+                <div>
+                    <input type="checkbox" id="planetTrackCheck">移動を描画
+                    <br>
+                    <label>左：<input type="text" id="trackSpan" value="1" size="2"><select id="trackUnit"><option>日</option><option>時間</option></select>ごとに前後それぞれ<input type="text" id="trackDuration" value="30" size="4">日</label>
+                </div>
+                <div class="planet-track-time-container">
+                    <label><input  type="checkbox" id="planetTrackTimeCheck" checked disabled>日時を表示</label>
+                    <div class="track-time-radio-container" id="trackTimeRadioContainer">
+                        <label><input type="text" id="trackTextSpan" value="5" size="2">個ごとに</label><br>
+                        <input type="radio" name="trackTime" value="ymd">年月日<br>
+                        <input type="radio" name="trackTime" value="ymdh">年月日時<br>
+                        <input type="radio" name="trackTime" value="ymdhi">年月日時分<br>
+                        <input type="radio" name="trackTime" value="md">月日<br>
+                        <input type="radio" name="trackTime" value="mdh" checked>月日時<br>
+                        <input type="radio" name="trackTime" value="mdhi">月日時分<br>
+                        <input type="radio" name="trackTime" value="d">日<br>
+                        <input type="radio" name="trackTime" value="dh">日時<br>
+                        <input type="radio" name="trackTime" value="dhi">日時分<br>
+                        <input type="radio" name="trackTime" value="hi">時分<br>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="coordtext" class="coordtext"></div>
+
+        <div class="info-lb">
+            <div id="showingData" class="showingData"></div>
+            <div id="aovSliderDiv" class="aovSliderDiv">
+                <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1">
+            </div>
+            <div id="timeSliderDiv" class="timeSliderDiv">
+                <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+            </div>
+        </div>
+        
+        <div>
+            <video id="arVideo"></video>
+        </div>
+
+
+        <div id="showingData" class="showingData"></div>
+
+        <div class="result">
+            <script src="starGuessr.js"></script>
+        </div>
+</html>
