@@ -955,7 +955,7 @@ function ontouchstart(e) {
         ctx.strokeStyle = defColor;
         setLocalStoreage();
         canvas.addEventListener('mousemove', onmousemove, false);
-        canvas.addEventListener('touchmove', ontouchmove, false);
+        canvas.addEventListener('touchmove', onmousemove, false);
     }
 };
 
@@ -1034,7 +1034,7 @@ function onmousedown(e){
     ctx.strokeStyle = defColor;
     setLocalStoreage();
     canvas.addEventListener('mousemove', onmousemove, false);
-    canvas.addEventListener('touchmove', ontouchmove, false);
+    canvas.addEventListener('touchmove', onmousemove, false);
 }
 
 function onmousemove(e) {
@@ -1080,7 +1080,7 @@ function onmouseup(e){
 function onleave(e) {
     drawFrag = false;
     canvas.removeEventListener('mousemove', onmousemove, false);
-    canvas.removeEventListener('touchmove', ontouchmove, false);
+    canvas.removeEventListener('touchmove', onmousemove, false);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1095,7 +1095,7 @@ function show_initial(){
             show_main();
         } else {
             canvas.addEventListener("touchstart", ontouchstart);
-            canvas.addEventListener("touchmove", ontouchmove);
+            canvas.addEventListener("touchmove", onmousemove);
             canvas.addEventListener('touchend', ontouchend);
             canvas.addEventListener('touchcancel', ontouchcancel);
             canvas.addEventListener('mousedown', onmousedown);
