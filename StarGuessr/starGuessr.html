@@ -14,10 +14,9 @@
         <div class="title" id="title">
             <ul>
                 <li><h3>StarGuessr</h3></li>
-                <li><a href="PeteHOME.html">HOME</a></li>
+                <li><a href="../PeteHOME.html">HOME</a></li>
                 <div id="loadingtext">Loading...</div>
                 <a id="chart" href=""></a>
-                <li><button id="fileBtn" style="display:block;width:40px; height:25px;" onclick="document.getElementById('getFile').click()">file</button><input type="file" id="getFile" accept="*.txt" /></li>
             </ul>
         </div>
 
@@ -183,17 +182,9 @@
         </div>
 
         <div>
-            <button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
-                <!--rgb(247, 206, 206) 48px-->
-                <img src="fullScreenBtn.png" alt="全画面表示">
-            </button>
-            <button id="exitFullScreenBtn" class="exitFullScreenBtn" type="button" onclick="exitFullScreenFunc()">
-                <!--rgb(247, 206, 206) 48px-->
-                <img src="exitFullScreenBtn.png" alt="全画面表示終了">
-            </button>
             <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()" disabled>
                 <!--rgb(247, 206, 206) 48px-->
-                <img src="descriptionBtn.png" alt="説明">
+                <img src="../descriptionBtn.png" alt="説明">
             </button>
         </div>
 
@@ -278,12 +269,6 @@
 
         <div class="info-lb">
             <div id="showingData" class="showingData"></div>
-            <div id="aovSliderDiv" class="aovSliderDiv">
-                <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1">
-            </div>
-            <div id="timeSliderDiv" class="timeSliderDiv">
-                <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
-            </div>
         </div>
         
         <div>
