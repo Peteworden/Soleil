@@ -128,6 +128,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let updates = [
+    {time: '2025-01-09T16:00:00+09:00', text: ['C/2024 G3(ATLAS彗星)などが加わりました']},
     {time: '2025-01-09T14:30:00+09:00', text: ['これを作りました']}
 ];
 
@@ -1352,12 +1353,14 @@ function show_main(){
 
     var Astr = "";
     var hstr = "";
+    console.log(ObsPlanet)
     if (ObsPlanet == "地球") {
         var [A, h] = RADec2Ah(cenRA, cenDec, theta);
         const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
         Astr = `方位角 ${A.toFixed(1)}°(${direc}) `;
         hstr = `高度 ${h.toFixed(1)}° `;
+        console.log(Astr, hstr);
         if (moving) {
             hstr += ' wait...';
         }
@@ -3166,9 +3169,7 @@ function checkURL() {
     }
 
     if (localStorage.getItem('lastVisit') != null) {
-        console.log(localStorage.getItem('lastVisit'));
         lastVisitDate = new Date(localStorage.getItem('lastVisit'));
-        console.log(lastVisitDate);
         const currentDate = new Date();
         localStorage.setItem('lastVisit', currentDate.toISOString());
     } else {
