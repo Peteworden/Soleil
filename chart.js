@@ -3158,7 +3158,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (localStorage.getItem('lastVisit') == null) {
+    if (localStorage.getItem('lastVisit') != null) {
         lastVisitDate = new Date(localStorage.getItem('lastVisit'));
         const currentDate = new Date();
         localStorage.setItem('lastVisit', currentDate.toISOString());
