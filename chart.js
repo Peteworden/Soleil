@@ -1171,12 +1171,12 @@ function calculation(JD) {
 
 function calc(planet, JD) {
     if (planet == Sun) {
-        return [0, 0, 0]
+        return [0, 0, 0];
     } else if (planet == Moon) {
-        let [x, y, z] = cal_Ellipse(Earth, JD)
-        let Xe, Ye, Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon
+        let [x, y, z] = cal_Ellipse(Earth, JD);
+        let Xe, Ye, Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon;
         [Xe, Ye, Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon] = calculate_Moon(JD, lat_obs, theta);
-        return [x+Xe, y+Ye, z+Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon]
+        return [x+Xe, y+Ye, z+Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon];
     } else {
         let e = planet[2];
         if (e <= 0.99) {
@@ -3053,19 +3053,14 @@ function checkURL() {
         show_initial();
     } else if (localStorage.getItem('realtime') != null) {
         if (localStorage.getItem('realtime') == 'radec') {
-            realtimeRadec();
-            defaultcheck++;
-            show_initial();
-        } else if (localStorage.getItem('realtime') == 'azmalt') {
-            realtimeAzmalt();
-            defaultcheck++;
-            show_initial();
-        } else {
-            now();
-            realtimeOff();
-            defaultcheck++;
-            show_initial();
+            realtimeElem[2].checked = false;
+            realtimeElem[1].checked = true;
+        } else if (localStorage.getItem('realtime') == 'off') {
+            realtimeElem[2].checked = false;
+            realtimeElem[0].checked = true;
         }
+        defaultcheck++;
+        show_initial();
     } else {
         now();
         defaultcheck++;
