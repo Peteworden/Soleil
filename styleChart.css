@@ -75,7 +75,7 @@ input[type="file"] {
 .darkerBtn {
     background-color: black;
     color: white;
-    position: absolute;
+    position: fixed;
     border: 0;
     width: 50px;
     height: 25px;
@@ -84,7 +84,7 @@ input[type="file"] {
 
 .settingBtn {
     background-color: transparent;
-    position: absolute;
+    position: fixed;
     border: 0;
     top: 10px;
     right: 5px;
@@ -310,6 +310,57 @@ select {
     z-index: 2;
 }
 
+#openSearch
+
+#bookmarkUrlDiv p {
+    margin: 0 5px;
+}
+#bookmarkUrlBox {
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+#bookmarkUrl {
+    margin: 10px 5px;
+}
+#copyMessage {
+    visibility: hidden;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 5px;
+    padding: 10px;
+    position: fixed;
+    z-index: 1;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.5s, visibility 0.5s;
+}
+#copyMessage.show {
+    visibility: visible;
+    opacity: 1;
+}
+#copyButton {
+    background-color: transparent;
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+    width: auto;;
+}
+
+#copyButton i {
+    margin-right: 8px;
+}
+
 .linkBtn {
     background-color: #8B4513;
     border: 0;
@@ -324,6 +375,7 @@ select {
 }
 
 #openSearch {
+    margin: 10px 5px;
     width: 100px;
     height: 40px;
     color: whitesmoke;
@@ -342,7 +394,7 @@ select {
 }
 
 .searchDiv input {
-    position: absolute;
+    position: fixed;
     top: 10px;
     left: 50%;
     transform: translateX(-50%);
@@ -395,7 +447,7 @@ h1, p {
     font-weight: 100;
 }
 
-.recentUpdates {
+.news {
     position: fixed;
     color: #C0C0C0;
     background-color: #2C0B0B;
@@ -411,12 +463,12 @@ h1, p {
     z-index: 3;
 }
 
-.recentUpdates ul {
+.news ul {
     list-style-type: disc;
     padding-left: 20px;
 }
 
-#closeRecentUpdates {
+#closeNews {
     position: absolute;
     border: 0;
     top: 10px;
@@ -530,7 +582,7 @@ h1, p {
 }
 
 video {
-    position: absolute;
+    position: fixed;
     color: #FFFFFF;
     margin: 0px;
     top: 50%;
@@ -546,7 +598,7 @@ video {
 }
 
 canvas {
-    position: absolute;
+    position: fixed;
     margin: 0px;
     width: 100%;
     top: 30px;
@@ -554,7 +606,7 @@ canvas {
 }
 
 .coordtext {
-    position: absolute;
+    position: fixed;
     font-size: 16px;
     color: #fff;
     width: 80%;

@@ -15,7 +15,9 @@
             if (navigator.onLine) {
                 var link = document.createElement('link');
                 link.rel = 'stylesheet';
-                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css'; // オンラインリソースのURL
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css';
+                document.head.appendChild(link);
+                link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css";
                 document.head.appendChild(link);
 
                 // node.js スクリプトの追加
@@ -202,7 +204,15 @@
             </p>
 
             <button id="openSearch" type="button" onclick="openSearch()">検索</button>
-            
+
+            <div id="bookmarkUrlDiv">
+                ブックマークなどを作成する際は下のリンクをご使用ください↓
+                <div id="bookmarkUrlBox">
+                    <p id="bookmarkUrl">https://peteworden.github.io/Soleil/chart.html</p> 
+                    <button id="copyButton"><i class="fas fa-copy"></i></button>
+                    <div id="copyMessage">copied!</div>
+                </div>
+            </div>            
             <p>
                 星を見ているときによく使っているリンク(別ウィンドウで開きます)<br>
                 <ul>
@@ -341,10 +351,10 @@
             <div id="suggestionButtonContainer"></div>
         </div>
 
-        <div id="recentUpdates" class="recentUpdates">
-            <button id="closeRecentUpdates" type="button" onclick="closeRecentUpdates()">×</button>
-            <h2>Recent Updates</h2>
-            <div id="recentUpdatesText"></div>
+        <div id="news" class="news">
+            <button id="closeNews" type="button" onclick="closeNews()">×</button>
+            <h2>news</h2>
+            <div id="newsText"></div>
         </div>
 
         <div id="objectInfo" class="objectInfo">

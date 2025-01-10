@@ -39,7 +39,7 @@ document.getElementById('description').style.visibility = "hidden";
 document.getElementById('setPicsFor360Div').style.visibility = "hidden";
 document.getElementById('demDescriptionDiv').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
-document.getElementById('recentUpdates').style.visibility = "hidden";
+document.getElementById('news').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
 document.getElementById('darkerbtntext').innerHTML = 'dark';
 
@@ -76,7 +76,7 @@ let theta;
 var mode; //AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き), ar
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
 
-let Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
+let Ms, ws, lon_moon, lat_moon, dist_Sun;
 
 // データ
 
@@ -127,9 +127,9 @@ let xhrimpcheck = 0;
 let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
-let updates = [
-    {time: '2025-01-09T16:00:00+09:00', text: ['C/2024 G3(ATLAS彗星)などが加わりました']},
-    {time: '2025-01-09T14:30:00+09:00', text: ['これを作りました']}
+let news = [
+    {time: '2025-01-11T00:00:00+09:00', text: ['月が表示されないバグを修正。小豆ありがとう', 'リロード時の時刻設定を現在時刻にしました', '右下の?ボタンにブックマーク用のURLを書きました。少し前にご意見フォームも設置しています']},
+    {time: '2025-01-09T16:00:00+09:00', text: ['C/2024 G3(ATLAS彗星)などが加わりました']}
 ];
 
 // リアルタイム
@@ -1023,10 +1023,8 @@ function calculation(JD) {
         var planet = planets[i];
         if (i == 9) {
             [x, y, z] = calc(Earth, JD);
-            var Xe, Ye, Ze;
-            let ra_Moon, dec_Moon, dist_Moon;
-            [Xe, Ye, Ze, ra_Moon, dec_Moon, dist_Moon, Ms, ws, lon_moon, lat_moon] = calc(Moon, JD);
-            solarSystemBodies[9] = {x: x+Xe, y: y+Ye, z: z+Ze, ra: ra_Moon, dec: dec_Moon, dist: dist_Moon, mag: 100};
+            [x, y, z, ra, dec, dist, Ms, ws, lon_moon, lat_moon] = calc(Moon, JD); // xyzは太陽基準
+            solarSystemBodies[9] = {x: x, y: y, z: z, ra: ra, dec: dec, dist: dist, mag: 100};
         } else {
             [x, y, z] = calc(planet, JD);
             [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
@@ -1176,11 +1174,11 @@ function calc(planet, JD) {
         return [0, 0, 0]
     } else if (planet == Moon) {
         let [x, y, z] = cal_Ellipse(Earth, JD)
-        let Xe, Ye, Ze, RA, Dec
-        [Xe, Ye, Ze, RA, Dec, dist_Moon, Ms, ws, lon_moon, lat_moon] = calculate_Moon(JD, lat_obs, theta);
-        return [x+Xe, y+Ye, z+Ze]
+        let Xe, Ye, Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon
+        [Xe, Ye, Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon] = calculate_Moon(JD, lat_obs, theta);
+        return [x+Xe, y+Ye, z+Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon]
     } else {
-        var e = planet[2];
+        let e = planet[2];
         if (e <= 0.99) {
             return cal_Ellipse(planet, JD);
         } else {
@@ -1334,7 +1332,7 @@ function show_main(){
     let x, y;
     let ra, dec, mag;
     let scrRA, scrDec;
-    let inFlag;
+    let inFlag = false;
     infoList = [];
 
     var JD = showingJD;
@@ -1353,17 +1351,19 @@ function show_main(){
 
     var Astr = "";
     var hstr = "";
-    console.log(ObsPlanet)
     if (ObsPlanet == "地球") {
         var [A, h] = RADec2Ah(cenRA, cenDec, theta);
         const direcs = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西', '北'];
         var direc = direcs[Math.floor((A + 11.25) / 22.5)];
         Astr = `方位角 ${A.toFixed(1)}°(${direc}) `;
         hstr = `高度 ${h.toFixed(1)}° `;
-        console.log(Astr, hstr);
         if (moving) {
             hstr += ' wait...';
         }
+    }
+
+    if (mode == 'view' && document.getElementById('gridCheck').checked) {
+        drawGrid();
     }
 
     if (['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
@@ -1753,10 +1753,6 @@ function show_main(){
         }
     }
 
-    if (mode == 'view' && document.getElementById('gridCheck').checked) {
-        drawGrid();
-    }
-
     var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${((cenRA-15*Math.floor(cenRA/15))*4).toFixed(1)}m `;
     if (cenDec >= 0) {
         var Dectext = `赤緯 +${Math.floor(cenDec)}° ${Math.round((cenDec-Math.floor(cenDec))*60)}' (J2000.0) `;
@@ -2140,7 +2136,7 @@ function show_main(){
         var ds = solarSystemBodies[0].dec * pi/180;
         var rm = solarSystemBodies[9].ra * pi/180;
         var dm = solarSystemBodies[9].dec * pi/180;
-        var r = Math.max(canvas.width * (0.259 / (dist_Moon / 384400)) / rgEW / 2, 13);
+        var r = Math.max(canvas.width * (0.259 / (solarSystemBodies[9].dist / 384400)) / rgEW / 2, 13);
         var lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
         var k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
 
@@ -3056,14 +3052,7 @@ function checkURL() {
         defaultcheck++;
         show_initial();
     } else if (localStorage.getItem('realtime') != null) {
-        if (localStorage.getItem('realtime') == 'off' && localStorage.getItem('time') != null) {
-            var [y, m, d, h, mi] = localStorage.getItem('time').split('-');
-            setYMDHM(y, m, d, h, mi);
-            showingJD = YMDHM_to_JD(y, m, d, h, mi);
-            realtimeOff();
-            defaultcheck++;
-            show_initial();
-        } else if (localStorage.getItem('realtime') == 'radec') {
+        if (localStorage.getItem('realtime') == 'radec') {
             realtimeRadec();
             defaultcheck++;
             show_initial();
@@ -3073,6 +3062,7 @@ function checkURL() {
             show_initial();
         } else {
             now();
+            realtimeOff();
             defaultcheck++;
             show_initial();
         }
@@ -3168,7 +3158,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (localStorage.getItem('lastVisit') != null) {
+    if (localStorage.getItem('lastVisit') == null) {
         lastVisitDate = new Date(localStorage.getItem('lastVisit'));
         const currentDate = new Date();
         localStorage.setItem('lastVisit', currentDate.toISOString());
@@ -3183,7 +3173,7 @@ function checkURL() {
             lastVisitDate.setMonth(month - 1);
         }
     }
-    showRecentUpdates(lastVisitDate);
+    showNews(lastVisitDate);
 }
 
 // デバイスの向きに応じた表示
@@ -3281,33 +3271,43 @@ function deviceOrientation(event) {
 }
 
 
-function showRecentUpdates(lastVisit) {
-    const recentUpdatesText = document.getElementById('recentUpdatesText');
-    recentUpdatesText.innerHTML = '';
-    for (let i = 0; i < updates.length; i++) {
-        let updateTime = new Date(updates[i].time);
-        if (updateTime > lastVisit) {
-            const updateDiv = document.createElement('div');
-            updateDiv.className = 'update';
-
-            const updateTime = document.createElement('p');
-            const updateDate = new Date(updates[i].time);
-            const formattedDate = updateDate.toISOString().split('T')[0];
-            updateTime.textContent = `${formattedDate}`;
-            updateDiv.appendChild(updateTime);
-
-            const updateTextList = document.createElement('ul');
-            updates[i].text.forEach(text => {
-                const listItem = document.createElement('li');
-                listItem.textContent = text;
-                updateTextList.appendChild(listItem);
-            });
-            updateDiv.appendChild(updateTextList);
-            recentUpdatesText.appendChild(updateDiv);
+function showNews(lastVisit) {
+    const newsText = document.getElementById('newsText');
+    newsText.innerHTML = '';
+    let newsDate = '';
+    let newsDiv, newsTextList;
+    for (let i = 0; i < news.length; i++) {
+        let newsTime = new Date(news[i].time);
+        if (newsTime > lastVisit) {
+            if (news[i].time.split('T')[0] == newsDate) {
+                news[i].text.forEach(text => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = text;
+                    newsTextList.appendChild(listItem);
+                });
+            } else {
+                if (newsDiv) {
+                    newsDiv.appendChild(newsTextList);
+                    newsText.appendChild(newsDiv);
+                }
+                newsDiv = document.createElement('div'); // 年月日と内容
+                newsDate = news[i].time.split('T')[0];
+                let newsDateElem = document.createElement('p')
+                newsDateElem.textContent = `${newsDate}`;
+                newsDiv.appendChild(newsDateElem);
+                newsTextList = document.createElement('ul');
+                news[i].text.forEach(text => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = text;
+                    newsTextList.appendChild(listItem);
+                });
+            }
         }
     }
-    if (recentUpdatesText.innerHTML.length > 0) {
-        document.getElementById('recentUpdates').style.visibility = 'visible';
+    if (newsDiv) {
+        newsDiv.appendChild(newsTextList);
+        newsText.appendChild(newsDiv);
+        document.getElementById('news').style.visibility = 'visible';
     }
 }
 
@@ -3367,6 +3367,19 @@ function descriptionFunc() {
     }
 }
 
+document.getElementById('copyButton').addEventListener('click', function() {
+    const url = document.getElementById('bookmarkUrl').innerText;
+    navigator.clipboard.writeText(url).then(function() {
+        const message = document.getElementById('copyMessage');
+        message.classList.add('show');
+        setTimeout(function() {
+            message.classList.remove('show');
+        }, 2000);
+    }, function(err) {
+        console.error('URLのコピーに失敗しました', err);
+    });
+});
+
 function toggleFullscreen() {
     let elem = document.documentElement;
     elem
@@ -3402,8 +3415,8 @@ function closeSearch() {
     document.getElementById('searchDiv').style.visibility = "hidden";
 }
 
-function closeRecentUpdates() {
-    document.getElementById('recentUpdates').style.visibility = "hidden";
+function closeNews() {
+    document.getElementById('news').style.visibility = "hidden";
 }
 
 function closeObjectInfo() {
