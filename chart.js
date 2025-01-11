@@ -76,7 +76,7 @@ let theta;
 var mode; //AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き), ar
 var ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
 
-let Ms, ws, lon_moon, lat_moon, dist_Sun;
+let Ms, ws, lon_moon, lat_moon;
 
 // データ
 
@@ -1015,9 +1015,8 @@ function calculation(JD) {
     theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs; //rad
 
     [X, Y, Z] = calc(planets[Obs_num], JD);
-    let [ra_Sun, dec_Sun, dist_Sun] = xyz_to_RADec(-X, -Y, -Z);
-    solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra_Sun, dec: dec_Sun, dist: dist_Sun, mag: 100};
-    dist_Sun = dist;
+    [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
+    solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
     for (i=1; i<planets.length; i++) {
         var planet = planets[i];
@@ -1702,7 +1701,7 @@ function show_main(){
             // 枠内に入っていて
             if (i != Obs_num && inFlag) {
                 if (i == 0){ // 太陽
-                    var r = Math.max(canvas.width * (0.267 / dist_Sun) / rgEW / 2, 13);
+                    var r = Math.max(canvas.width * (0.267 / solarSystemBodies[0].dist) / rgEW / 2, 13);
                     drawFilledCircle(x, y, r, yellowColor);
                     if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
                         ctx.fillStyle = specialObjectNameColor;
