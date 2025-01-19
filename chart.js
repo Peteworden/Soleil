@@ -1011,8 +1011,7 @@ function calculation(JD) {
     let x, y, z;
     let dist;
     let X, Y, Z;
-    var t = (JD - 2451545.0) / 36525;
-    theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs; //rad
+    let theta = hourAngle(JD, lon_obs);
 
     [X, Y, Z] = calc(planets[Obs_num], JD);
     [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
@@ -1323,6 +1322,12 @@ function calc(planet, JD) {
     }
 }
 
+function riseSetTime(planet, JD, timezone=9) {
+    if (planet == Sun) {
+        1;
+    }
+}
+
 function show_main(){
     ctx.clearRect(0, 0, canvas.width,canvas.height);
     ctx.fillStyle = skycolor;
@@ -1335,10 +1340,7 @@ function show_main(){
     infoList = [];
 
     var JD = showingJD;
-
-    var t = (JD - 0.0008 - 2451545.0) / 36525;
-    theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
-
+    let theta = hourAngle(JD, lon_obs);
     if (['live', 'ar'].includes(mode)) {
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
     }
@@ -1741,13 +1743,13 @@ function show_main(){
             while (trackJD - trackSpan >= showingJD - trackDuration) {
                 trackJD -= trackSpan;
                 k--;
-                drawPlanetMotion(trackJD, k);
+                drawPlanetMotion(trackElem, trackJD, k);
             }
             trackJD = JD;
             while (trackJD + trackSpan <= showingJD + trackDuration) {
                 trackJD += trackSpan;
                 k++;
-                drawPlanetMotion(trackJD, k);
+                drawPlanetMotion(trackElem, trackJD, k);
             }
         }
     }
@@ -2185,7 +2187,7 @@ function show_main(){
         return r;
     }
 
-    function drawPlanetMotion(trackJD, k) {
+    function drawPlanetMotion(trackElem, trackJD, k) {
         let [X, Y, Z] = calc(planets[Obs_num], trackJD);
         let [x, y, z] = calc(trackElem, trackJD);
         let [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
@@ -2452,6 +2454,11 @@ function decdm2deg(decdmtext) {
         dec *= -1;
     }
     return dec;
+}
+
+function hourAngle(JD_TT, lon_obs) {
+    let t = (JD_TT - 2451545.0) / 36525;
+    return ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs; //rad
 }
 
 // 座標変換
