@@ -29,8 +29,8 @@ const trackDateElem = document.getElementsByName('trackTime');
 
 document.getElementById('welcomeImage').style.visibility = "hidden";
 if (online) {
-    document.getElementById('fileBtn').style.visibility = "hidden";
-    document.getElementById('getFile').style.visibility = "hidden";
+    // document.getElementById('fileBtn').style.visibility = "hidden";
+    // document.getElementById('getFile').style.visibility = "hidden";
 } else {
     alert('offline version\nSelect allInOne.txt from the file button')
 }
@@ -82,7 +82,7 @@ let Ms, ws, lon_moon, lat_moon;
 
 // データ
 
-let hips;
+let hips = [];
 let Tycho = new Array(980634);
 let Help = new Array(64801);
 let Tycho1011 = new Array(1602511);
@@ -237,7 +237,7 @@ function permitDeviceOrientationForSafari() {
                 orientationPermittion = true;
             }
         })
-        .catch(console.error);n 
+        .catch(console.error);
 }
 
 const url = new URL(window.location.href);
@@ -269,8 +269,8 @@ function linkExist(obj) {
             }
         }
     } else if ((obj.startsWith('NGC') && !isNaN(obj.substr(3))) || (obj.startsWith('IC') && !isNaN(obj.substr(2)))) {
-        for (i=0; i<NGC.length/5; i++) {
-            if (NGC[5*i] == obj) {
+        for (i=0; i<NGC.length; i+=5) {
+            if (NGC[i] == obj) {
                 linkExist = true;
                 break;
             }
@@ -313,10 +313,10 @@ function link(obj) {
                 }
             }
         } else if ((obj.startsWith('NGC') && !isNaN(obj.substr(3))) || (obj.startsWith('IC') && !isNaN(obj.substr(2)))) {
-            for (i=0; i<NGC.length/5; i++) {
-                if (NGC[5*i] == obj) {
-                    cenRA = parseFloat(NGC[5*i+1]);
-                    cenDec = parseFloat(NGC[5*i+2]);
+            for (i=0; i<NGC.length; i+=5) {
+                if (NGC[i] == obj) {
+                    cenRA = +NGC[i+1];
+                    cenDec = +NGC[i+2];
                     break;
                 }
             }
@@ -987,23 +987,26 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function show_initial(){
+    function ready() {
+        newSetting();
+        canvas.addEventListener("touchstart", ontouchstart);
+        canvas.addEventListener("touchmove", ontouchmove);
+        canvas.addEventListener('touchend', ontouchend);
+        canvas.addEventListener('touchcancel', ontouchcancel);
+        canvas.addEventListener('mousedown', onmousedown);
+        canvas.addEventListener('mouseup', onmouseup);
+        canvas.addEventListener('wheel', onwheel);
+        document.getElementById("settingBtn").removeAttribute("disabled");
+        document.getElementById("descriptionBtn").removeAttribute("disabled");
+        document.getElementById('welcomeImage').style.display = 'none';
+        show_main();
+    }
     if (xhrimpcheck == 5 && defaultcheck == 11) {
         if (xhrcheck == 13) {
             document.getElementById('loadingtext').style.display = 'none';
-            show_main();
+            ready();
         } else {
-            canvas.addEventListener("touchstart", ontouchstart);
-            canvas.addEventListener("touchmove", ontouchmove);
-            canvas.addEventListener('touchend', ontouchend);
-            canvas.addEventListener('touchcancel', ontouchcancel);
-            canvas.addEventListener('mousedown', onmousedown);
-            canvas.addEventListener('mouseup', onmouseup);
-            canvas.addEventListener('wheel', onwheel);
-            document.getElementById("settingBtn").removeAttribute("disabled");
-            document.getElementById("descriptionBtn").removeAttribute("disabled");
-            newSetting();
-            document.getElementById('welcomeImage').style.display = 'none';
-            show_main();
+            ready();
         }
     }
 }
@@ -1011,12 +1014,11 @@ function show_initial(){
 //位置推算とURLの書き換え
 function calculation(JD) {
     let x, y, z;
-    let dist;
     let X, Y, Z;
     let theta = hourAngle(JD, lon_obs);
 
     [X, Y, Z] = calc(planets[Obs_num], JD);
-    [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
+    let [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
     solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
     for (i=1; i<planets.length; i++) {
@@ -1643,10 +1645,11 @@ function show_main(){
         drawFilledCircle(x, y, size(mag), c);
         //回折による光の筋みたいなのを作りたい
     }
-    for (i=0; i<hips.length; i++){
-        if (hips[i].mag > magLim) continue;
-        [x, y, inFlag] = xyIfInCanvas(hips[i].ra, hips[i].dec);
-        if (inFlag) drawHIPstar(x, y, hips[i].mag, bv2color(hips[i].bv));
+    hips_magfilter = hips.filter(hip => hip.mag <= magLim);
+    for (i=0; i<hips_magfilter.length; i++){
+        let hip = hips_magfilter[i];
+        [x, y, inFlag] = xyIfInCanvas(hip.ra, hip.dec);
+        if (inFlag) drawHIPstar(x, y, hip.mag, bv2color(hip.bv));
     }
 
     // 星座名
@@ -1654,8 +1657,8 @@ function show_main(){
     if (document.getElementById('constNameCheck').checked && rgEW <= 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
         for (i=0; i<89; i++){
-            ra = parseFloat(constellations[i].ra);
-            dec = parseFloat(constellations[i].dec);
+            ra = +constellations[i].ra;
+            dec = +constellations[i].dec;
             [x, y, inFlag] = xyIfInCanvas(ra, dec);
             if (inFlag) {
                 let constName = constellations[i].JPNname;
@@ -1887,26 +1890,22 @@ function show_main(){
         let c;
         if (darker) {
             c = starColor;
-        } else if (bv == 'nodata') {
+        } else if (bv == 9) {
             c = starColor;
         } else {
             bv = Math.max(-0.4, Math.min(2.0, parseFloat(bv)));
             let r = 0, g = 0, b = 0;
-
             if (bv < 0.4) r = 0.5 + 0.5 * (bv + 0.4) / 0.8;
             else r = 1.0;
-
             if (bv < 0) g = 1.0 + bv;
             else if (bv < 0.4) g = 1.0;
             else g = 1.0 - 0.75 * (bv - 0.4) / 1.6;
-
             if (bv < 0.4) b = 1.0;
             else b = 1.0 - (bv - 0.4) / 1.6;
 
             r = Math.round(r * 255);
             g = Math.round(g * 255);
             b = Math.round(b * 255);
-
             c = `rgba(${r}, ${g}, ${b}, 1)`;
         }
         return c;
@@ -2123,8 +2122,8 @@ function show_main(){
         ctx.fillStyle = objectColor;
         for (i=0; i<NGC.length/5; i++){
             let name = NGC[5*i];
-            let ra = parseFloat(NGC[5*i+1]);
-            let dec = parseFloat(NGC[5*i+2]);
+            let ra = +NGC[5*i+1];
+            let dec = +NGC[5*i+2];
             let type = NGC[5*i+4];
             [x, y, inFlag] = xyIfInCanvas(ra, dec);
             if (inFlag) {
@@ -2776,16 +2775,16 @@ function loadFiles() {
     // BSCRAary, BSCDecary, FSs, Bayers, BayerNums
     // ENGplanets, JPNplanets, planets, document.getElementById('observer')
     // hip_65, constellations, ...
+
     function xhrHIP(data) {
-        const hipData = data.split(',');
-        hips = Array(hipData.length/4)
-        for (i=0; i<hipData.length/4; i++){
-            hips[i] = {
-                ra: parseFloat(hipData[4 * i]),
-                dec: parseFloat(hipData[4 * i + 1]),
-                mag: parseFloat(hipData[4 * i + 2]),
-                bv: hipData[4 * i + 3]
-            };
+        const hipData = data.split(',').map(Number);
+        for (i=0; i<hipData.length; i+=4){
+            hips.push({
+                ra: hipData[i] * 0.01,
+                dec: hipData[i+1] * 0.01,
+                mag: hipData[i+2] * 0.1,
+                bv: hipData[i+3] * 0.1
+            });
         }
     }
 
@@ -2799,8 +2798,8 @@ function loadFiles() {
         Bayers = Array(BSCnum);
         BayerNums = Array(BSCnum);
         for (i=0; i<BSCnum; i++){
-            BSCRAary[i] = parseFloat(BSC[6*i]);
-            BSCDecary[i] = parseFloat(BSC[6*i+1]);
+            BSCRAary[i] = +BSC[6*i];
+            BSCDecary[i] = +BSC[6*i+1];
             FSs[i] = BSC[6*i+2];
             Bayers[i] = BSC[6*i+3];
             BayerNums[i] = BSC[6*i+4];
@@ -2897,6 +2896,28 @@ function loadFiles() {
             });
         }
 
+        // デバッグ用。テキストファイル専用。getfileに関連するjsの2行をコメントアウトする。
+        // 公開時コメントアウトの解除を忘れないように！
+        // 例
+        // document.getElementById('getFile').addEventListener('change', function(event) {
+        //     loadFileForDebug(event, 'localhip', xhrHIP, true)
+        // })
+        function loadFileForDebug(event, filename, func, impflag=false) {
+            let fr = new FileReader();
+            fr.onload = function () {
+                const content = fr.result;
+                func(content);
+                xhrcheck++;
+                if (impflag) {
+                   xhrimpcheck++;
+                }
+                loaded.push(filename);
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                show_initial();
+            }
+            fr.readAsText(event.target.files[0]);
+        }
+
         //HIP
         loadFile("hip_65", xhrHIP, true);
 
@@ -2960,7 +2981,7 @@ function loadFiles() {
                     fn = content[i].split('::::')[0];
                     let data = content[i].split('::::')[1];
                     if (fn == 'hip_65') {xhrHIP(data); xhrimpcheck++;}
-                    if(fn === 'tycho2_100') Tycho = data.split(',').map(Number);
+                    if (fn === 'tycho2_100') Tycho = data.split(',').map(Number);
                     if (fn == 'tycho2_100_helper') Help = data.split(',').map(Number);
                     if (fn == 'tycho2_100-110_helper') Tycho1011 = data.split(',').map(Number);
                     if (fn == 'tycho2_100-110_helper') Help1011 = data.split(',').map(Number);
