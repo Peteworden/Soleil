@@ -2,6 +2,7 @@
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
+
 const online = navigator.onLine;
 
 // 定数
@@ -29,8 +30,8 @@ const trackDateElem = document.getElementsByName('trackTime');
 
 document.getElementById('welcomeImage').style.visibility = "hidden";
 if (online) {
-    // document.getElementById('fileBtn').style.visibility = "hidden";
-    // document.getElementById('getFile').style.visibility = "hidden";
+    document.getElementById('fileBtn').style.visibility = "hidden";
+    document.getElementById('getFile').style.visibility = "hidden";
 } else {
     alert('offline version\nSelect allInOne.txt from the file button')
 }
@@ -61,11 +62,7 @@ let cenRA = 270;
 let cenDec = -25;
 let cenAzm = 180;
 let cenAlt = 60;
-let dev_a = 180 * deg2rad;
-let dev_b = 120 * deg2rad;
-let dev_c = 0 * deg2rad;
-let dev_a_array = [], dev_b_array = [], dev_c_array = [];
-let dev_a_sum = 0, dev_b_sum = 0, dev_c_sum = 0;
+let dev = [180*deg2rad, 120*deg2rad, 0*deg2rad];
 
 const minrg = 0.3;
 const maxrg = 90;
@@ -285,6 +282,7 @@ function link(obj) {
         console.error('Invalid input:', obj);
         return;
     }
+    console.log(cenRA, cenDec);
     // 見つかったかどうかのフラグ
     let flag = false;
     for (i=0; i<starNames.length; i++) {
@@ -332,7 +330,7 @@ function link(obj) {
     }
     setUrlAndLocalStorage('RA', cenRA.toFixed(2));
     setUrlAndLocalStorage('Dec', cenDec.toFixed(2));
-    [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
+    [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, hourAngle(showingJD, lon_obs));
     setUrlAndLocalStorage('azm', cenAzm.toFixed(2));
     setUrlAndLocalStorage('alt', cenAlt.toFixed(2));
     history.replaceState('', '', url.href);
@@ -1444,7 +1442,7 @@ function show_main(){
     //星座判定
     let centerConstellation = determineConstellation(cenRA, cenDec);
 
-    //星座線
+    //line //星座線
     if (document.getElementById('constLineCheck').checked && rgEW <= 0.5 * document.getElementById('constLineFrom').value) {
         ctx.strokeStyle = lineColor;
         ctx.beginPath();
@@ -1528,14 +1526,14 @@ function show_main(){
 
                 if (cenRA - RArange < 0) {
                     skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                    [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
+                                [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
                     for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else if (cenRA + RArange > 360) {
                     skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                    [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
+                                [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
                     for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
@@ -1555,14 +1553,14 @@ function show_main(){
             if (cenRA - rgEW < 0) {
                 //skyareasは[[a, b]]のaの領域とbの領域を両方含む
                 skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)],
-                                [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
+                            [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
                 for (let i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                 }
             } else if (cenRA + rgEW >= 360) {
                 skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
-                                [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
+                            [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
                 for (let i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
@@ -1775,8 +1773,8 @@ function show_main(){
     }
 
     function coord(RA, Dec) {
-        let x = canvas.width * (0.5 - RApos(RA) / rgEW / 2);
-        let y = canvas.height * (0.5 - (Dec - cenDec) / rgNS / 2);
+        let x = canvas.width * (0.5 - RApos(RA) / rgEW * 0.5);
+        let y = canvas.height * (0.5 - (Dec - cenDec) / rgNS * 0.5);
         return [x, y];
     }
 
@@ -1816,7 +1814,7 @@ function show_main(){
             return [0, 0];
         } else {
             let b = Math.acos(z) * rad2deg;
-            let isr = b / Math.sqrt(x ** 2 + y ** 2);
+            let isr = b * Math.pow(x**2 + y**2, -0.5);
             let scrRA = y * isr;
             let scrDec = -x * isr;
             return [scrRA, scrDec];
@@ -1826,20 +1824,20 @@ function show_main(){
     function Ah2scrlive (A, h) {
         A = (A - loadAzm - 90) * deg2rad;
         h *= deg2rad;
-        let [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev_a), -dev_b), -dev_c);
+        let [x, y, z] = Ry(Rx(Rz([cos(A)*cos(h), -sin(A)*cos(h), sin(h)], -dev[0]), -dev[1]), -dev[2]);
         if (-z >= 1) {
             return [0, 0];
         } else {
             let b = Math.acos(-z) * rad2deg;
-            let scrRA = -b * x / Math.sqrt(x ** 2 + y ** 2);
-            let scrDec = b * y / Math.sqrt(x ** 2 + y ** 2);
+            let scrRA = -b * x * Math.pow(x**2 + y**2, -0.5);
+            let scrDec = b * y * Math.pow(x**2 + y**2, -0.5);
             return [scrRA, scrDec];
         }
     }
 
     function coordSH (scrRA, scrDec) {
-        let x = canvas.width * (0.5 - scrRA / rgEW / 2);
-        let y = canvas.height * (0.5 - scrDec / rgNS / 2);
+        let x = canvas.width * (0.5 - scrRA / rgEW * 0.5);
+        let y = canvas.height * (0.5 - scrDec / rgNS * 0.5);
         return [x, y];
     }
 
@@ -1913,14 +1911,14 @@ function show_main(){
 
     function determineConstellation(cenRA, cenDec) {
         let a = Array(89).fill(0);
-        for (let i=0; i<boundary.length/5; i++) {
-            let Dec1 = boundary[5*i+2];
-            let Dec2 = boundary[5*i+4];
+        for (let i=0; i<boundary.length; i+=5) {
+            let Dec1 = boundary[i+2];
+            let Dec2 = boundary[i+4];
             if (Math.min(Dec1, Dec2) <= cenDec && cenDec < Math.max(Dec1, Dec2)) {
-                let RA1 = boundary[5*i+1];
-                let RA2 = boundary[5*i+3];
+                let RA1 = boundary[i+1];
+                let RA2 = boundary[i+3];
                 if (cenRA >= (cenDec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
-                    let No = boundary[5*i] - 1;
+                    let No = boundary[i] - 1;
                     a[No] = (a[No] + 1) % 2;
                 }
             }
@@ -2078,9 +2076,7 @@ function show_main(){
         ctx.fillStyle = color;
         for (i=0; i<data.length; i++){
             let name = data[i].name;
-            if (name == '') {
-                continue;
-            }
+            if (name == '') continue;
             let ra = rahm2deg(data[i].ra);
             let dec = decdm2deg(data[i].dec);
             [x, y, inFlag] = xyIfInCanvas(ra, dec);
@@ -2120,14 +2116,12 @@ function show_main(){
     function drawNGC () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
-        for (i=0; i<NGC.length/5; i++){
-            let name = NGC[5*i];
-            let ra = +NGC[5*i+1];
-            let dec = +NGC[5*i+2];
-            let type = NGC[5*i+4];
-            [x, y, inFlag] = xyIfInCanvas(ra, dec);
+        for (i=0; i<NGC.length; i+=5){
+            let ra = +NGC[i+1];
+            let dec = +NGC[i+2];
+            let [x, y, inFlag] = xyIfInCanvas(ra, dec);
             if (inFlag) {
-                drawObjects(name, x, y, type);
+                drawObjects(NGC[i], x, y, NGC[i+4]);
             }
         }
     }
@@ -2137,7 +2131,7 @@ function show_main(){
         let ds = solarSystemBodies[0].dec * deg2rad;
         let rm = solarSystemBodies[9].ra * deg2rad;
         let dm = solarSystemBodies[9].dec * deg2rad;
-        let r = Math.max(canvas.width * (0.259 / (solarSystemBodies[9].dist / 384400)) / rgEW / 2, 13);
+        let r = Math.max(canvas.width * (0.259 / (solarSystemBodies[9].dist / 384400)) / rgEW * 0.5, 13);
         let lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
         let k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
 
@@ -2262,7 +2256,7 @@ function show_main(){
             }
         }
 
-        let A, h, scrRA0, scrDec0, scrRA1, scrDec1, drawnFlag=false;
+        let A, h, scrRA0, scrDec0, scrRA1, scrDec1
         if (maxAlt == 90) {
             for (i=Math.floor(minAlt/altGridIv); i<Math.ceil(90/altGridIv); i++) {
                 h = i * altGridIv;
@@ -2429,22 +2423,31 @@ function sin(a){return Math.sin(a)}
 function cos(a){return Math.cos(a)}
 
 function Rx([x, y, z], a) {
-    return [x, cos(a)*y-sin(a)*z, sin(a)*y+cos(a)*z];
+    let s = sin(a);
+    let c = cos(a);
+    let ans = [x, c*y-s*z, s*y+c*z]
+    return ans;
 }
 
 function Ry ([x, y, z], a) {
-    return [cos(a)*x+sin(a)*z, y, -sin(a)*x+cos(a)*z];
+    let s = sin(a);
+    let c = cos(a);
+    let ans = [c*x+s*z, y, -s*x+c*z]
+    return ans;
 }
 
 function Rz ([x, y, z], a) {
-    return [cos(a)*x-sin(a)*y, sin(a)*x+cos(a)*y, z];
+    let s = sin(a);
+    let c = cos(a);
+    let ans = [c*x-s*y, s*x+c*y, z];
+    return ans;
 }
 
 // 角度の単位変換
 
 function rahm2deg(rahmtext) {
     let rahm = rahmtext.split(' ').map(Number);
-    return rahm[0] * 15 + rahm[1] / 4;
+    return rahm[0] * 15 + rahm[1] * 0.25;
 }
 
 function decdm2deg(decdmtext) {
@@ -2458,7 +2461,8 @@ function decdm2deg(decdmtext) {
 
 function hourAngle(JD_TT, lon_obs) {
     let t = (JD_TT - 2451545.0) / 36525;
-    return ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs; //rad
+    let ans = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs; //rad
+    return ans;
 }
 
 // 座標変換
@@ -2520,7 +2524,7 @@ function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の�
 function screen2liveAh (scrRA, scrDec) {
     let scrTheta = Math.atan2(scrDec, -scrRA); //画面上で普通に極座標
     let r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * deg2rad;
-    let [x, y, z] = Rz(Rx(Ry([sin(r)*cos(scrTheta), sin(r)*sin(scrTheta), -cos(r)], dev_c), dev_b), dev_a);
+    let [x, y, z] = Rz(Rx(Ry([sin(r)*cos(scrTheta), sin(r)*sin(scrTheta), -cos(r)], dev[2]), dev[1]), dev[0]);
     let h = Math.asin(z) * rad2deg;
     let A = ((Math.atan2(-y, x) * rad2deg + loadAzm + 90) % 360 + 360) % 360;
     return [A, h];
@@ -3255,40 +3259,56 @@ function deviceOrientation(event) {
     let orientationTime2 = Date.now();
     if (orientationTime2 - orientationTime1 > 100) {
         orientationTime1 = orientationTime2;
-        if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
-            if (dev_a_array.length > 2) {
-                dev_a_sum += event.alpha*deg2rad - dev_a_array.pop();
-                dev_b_sum += event.beta*deg2rad - dev_b_array.pop();
-                dev_c_sum += event.gamma*deg2rad - dev_c_array.pop();
-                dev_a_array.unshift(event.alpha*deg2rad);
-                dev_b_array.unshift(event.beta*deg2rad);
-                dev_c_array.unshift(event.gamma*deg2rad);
-                moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
-                dev_a = dev_a_sum / 3;
-                dev_b = dev_b_sum / 3;
-                dev_c = dev_c_sum / 3;
+        let eventAngle = [event.alpha, event.beta, event.gamma];
+        let devArray = [[], [], []];
+        if (Math.max(Math.abs(dev[0]-eventAngle[0]), Math.abs(dev[1]-eventAngle[1]), Math.abs(dev[2]-eventAngle[2])) < 10) {
+            if (devArray[0].length > 2) {
+                devArray = devArray.map((val, index) => val.unshift(eventAngle[index]*deg2rad));
+                moving = (Math.abs(devArray[0].reduce((acc, val) => acc + val, 0) / 3 - dev[0]) > 0.2);
+                dev = devArray.map(arr => arr.reduce((acc, val) => acc + val, 0) / 3);
             } else {
-                dev_a_sum += event.alpha*deg2rad;
-                dev_b_sum += event.beta*deg2rad;
-                dev_c_sum += event.gamma*deg2rad;
-                dev_a_array.unshift(event.alpha*deg2rad);
-                dev_b_array.unshift(event.beta*deg2rad);
-                dev_c_array.unshift(event.gamma*deg2rad);
-                dev_a = dev_a_sum / dev_a_array.length;
-                dev_b = dev_b_sum / dev_b_array.length;
-                dev_c = dev_c_sum / dev_c_array.length;
+                devArray = devArray.map((val, index) => val.unshift(eventAngle[index]*deg2rad));
+                dev = devArray.map(arr => arr.reduce((acc, val) => acc + val, 0) / devArray[0].length);
             }
         } else {
-            dev_a = event.alpha*deg2rad;
-            dev_b = event.beta*deg2rad;
-            dev_c = event.gamma*deg2rad;
-            dev_a_sum = dev_a + 0;
-            dev_b_sum = dev_b + 0;
-            dev_c_sum = dev_c + 0;
-            dev_a_array = [dev_a];
-            dev_b_array = [dev_b];
-            dev_c_array = [dev_c];
+            dev = eventAngle.map(val => val * deg2rad);
+            devArray = [[dev[0]], [dev[1]], [dev[2]]];
         }
+
+        // if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
+        //     if (dev_a_array.length > 2) {
+        //         dev_a_sum += event.alpha*deg2rad - dev_a_array.pop();
+        //         dev_b_sum += event.beta*deg2rad - dev_b_array.pop();
+        //         dev_c_sum += event.gamma*deg2rad - dev_c_array.pop();
+        //         dev_a_array.unshift(event.alpha*deg2rad);
+        //         dev_b_array.unshift(event.beta*deg2rad);
+        //         dev_c_array.unshift(event.gamma*deg2rad);
+        //         moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
+        //         dev_a = dev_a_sum / 3;
+        //         dev_b = dev_b_sum / 3;
+        //         dev_c = dev_c_sum / 3;
+        //     } else {
+        //         dev_a_sum += event.alpha*deg2rad;
+        //         dev_b_sum += event.beta*deg2rad;
+        //         dev_c_sum += event.gamma*deg2rad;
+        //         dev_a_array.unshift(event.alpha*deg2rad);
+        //         dev_b_array.unshift(event.beta*deg2rad);
+        //         dev_c_array.unshift(event.gamma*deg2rad);
+        //         dev_a = dev_a_sum / dev_a_array.length;
+        //         dev_b = dev_b_sum / dev_b_array.length;
+        //         dev_c = dev_c_sum / dev_c_array.length;
+        //     }
+        // } else {
+        //     dev_a = event.alpha*deg2rad;
+        //     dev_b = event.beta*deg2rad;
+        //     dev_c = event.gamma*deg2rad;
+        //     dev_a_sum = dev_a + 0;
+        //     dev_b_sum = dev_b + 0;
+        //     dev_c_sum = dev_c + 0;
+        //     dev_a_array = [dev_a];
+        //     dev_b_array = [dev_b];
+        //     dev_c_array = [dev_c];
+        // }
         show_initial();
     }
 }
