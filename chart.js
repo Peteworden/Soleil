@@ -24,6 +24,7 @@ let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementsByName('realtime');
 const trackDateElem = document.getElementsByName('trackTime');
+const starNameElem = document.getElementsByName('starName');
 
 // 要素の表示/非表示
 
@@ -132,6 +133,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-02-08T19:00:00+09:00', text: ['以前から日本語名を表示できた(Thanks to ToE42)90個の星を含む428個の星の英語名を収録しました。天文冬の陣2024でいただいた意見をもとにした改良です']},
     {time: '2025-02-08T16:00:00+09:00', text: ['これまではヒッパルコス星表とティコ第2星表を使っていましたが、後者をやめガイア星表を使うことにしました', '最微等級が11.0等級から11.5等級になりました。多すぎる場合は設定のスライダーで調整してください', '恒星の位置の精度が0.01°から0.001°になりました']},
     {time: '2025-01-11T00:00:00+09:00', text: ['月が表示されないバグを修正。小豆ありがとう', 'リロード時の時刻設定を現在時刻にしました', '右下の?ボタンにブックマーク用のURLを書きました。少し前にご意見フォームも設置しています']},
     {time: '2025-01-09T16:00:00+09:00', text: ['C/2024 G3(ATLAS彗星)などが加わりました']}
@@ -288,13 +290,12 @@ function link(obj) {
         console.error('Invalid input:', obj);
         return;
     }
-    console.log(cenRA, cenDec);
     // 見つかったかどうかのフラグ
     let flag = false;
     for (i=0; i<starNames.length; i++) {
-        if (starNames[i].name == obj) {
-            cenRA = rahm2deg(starNames[i].ra);
-            cenDec = decdm2deg(starNames[i].dec);
+        if (starNames[i].name == obj || starNames[i].jpnname == obj) {
+            cenRA = starNames[i].ra;
+            cenDec = starNames[i].dec;
             flag = true;
             break;
         }
@@ -354,7 +355,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
     } else if (searchText.length == 1) { //1文字
-        if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
+        if (isNaN(searchText)) {
             // 星座
             for (i=0; i<89; i++) {
                 if (constellations[i].JPNname.length && toUpperCaseOrKatakana(constellations[i].JPNname[0]) == searchText) {
@@ -364,9 +365,13 @@ document.getElementById('searchInput').addEventListener('input', function() {
             }
             // 恒星
             for (i=0; i<starNames.length; i++) {
-                if (starNames[i].name.length && toUpperCaseOrKatakana(starNames[i].name[0]) == searchText) {
-                    suggestions1[0].push(starNames[i].name);
-                    suggestions1[1].push(starNames[i].name);
+                if (toUpperCaseOrKatakana(starNames[i].name[0]) == searchText) {
+                    suggestions2[0].push(starNames[i].name);
+                    suggestions2[1].push(starNames[i].name);
+                }
+                if (starNames[i].jpnname && toUpperCaseOrKatakana(starNames[i].jpnname[0]) == searchText) {
+                    suggestions1[0].push(starNames[i].jpnname);
+                    suggestions1[1].push(starNames[i].jpnname);
                 }
             }
         }
@@ -377,25 +382,23 @@ document.getElementById('searchInput').addEventListener('input', function() {
         }
         // 文字
         if (isNaN(searchText)) {
-            if (!["M", "N", "I"].includes(searchText)) {
-                for (m of messier) {
-                    for (alt of m.alt_name) {
-                        if (alt.length > 0 && toUpperCaseOrKatakana(alt[0]) == searchText) {
-                            suggestions1[0].push(m.name);
-                            suggestions1[1].push(m.name);
-                        }
+            for (m of messier) {
+                for (alt of m.alt_name) {
+                    if (alt.length && toUpperCaseOrKatakana(alt[0]) == searchText && !alt[0].startsWith('NGC') && !alt[0].startsWith('IC')) {
+                        suggestions1[0].push(m.name);
+                        suggestions1[1].push(m.name);
                     }
                 }
             }
 
             for (let rec of recs) {
-                if (rec.name.length && toUpperCaseOrKatakana(rec.name[0]) == searchText) {
+                if (rec.name.length && toUpperCaseOrKatakana(rec.name[0]) == searchText && !rec.name[0].startsWith('NGC') && !rec.name[0].startsWith('IC')) {
                     suggestions1[0].push(rec.name);
                     suggestions1[1].push(rec.name);
                 }
                 for (let alt of rec.alt_name) {
-                    if (alt.length && toUpperCaseOrKatakana(alt[0]) == searchText) {
-                        suggestions1[0].push(`${rec.name}(${alt})`);
+                    if (alt.length && toUpperCaseOrKatakana(alt[0]) == searchText && !alt[0].startsWith('NGC') && !alt[0].startsWith('IC')) {
+                        suggestions1[0].push(rec.name);
                         suggestions1[1].push(rec.name);
                     }
                 }
@@ -427,8 +430,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
     } else {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
-        //星座
-        if (isNaN(searchText) && !["M", "N", "I"].includes(searchText)) {
+        if (isNaN(searchText)) {
             for (i=0; i<89; i++) {
                 if ((toUpperCaseOrKatakana(constellations[i].JPNname)+'座').includes(searchText)) {
                     if (toUpperCaseOrKatakana(constellations[i].JPNname+'座').startsWith(searchText)) {
@@ -437,6 +439,27 @@ document.getElementById('searchInput').addEventListener('input', function() {
                     } else {
                         suggestions2[0].push(`${constellations[i].JPNname}座`);
                         suggestions2[1].push(`${constellations[i].JPNname}座`);
+                    }
+                }
+            }
+            // 恒星
+            for (i=0; i<starNames.length; i++) {
+                if (toUpperCaseOrKatakana(starNames[i].name).includes(searchText)) {
+                    if (toUpperCaseOrKatakana(starNames[i].name).startsWith(searchText)) {
+                        suggestions2[0].push(starNames[i].name);
+                        suggestions2[1].push(starNames[i].name);
+                    } else {
+                        suggestions2[0].push(starNames[i].name);
+                        suggestions2[1].push(starNames[i].name);
+                    }
+                }
+                if (starNames[i].jpnname && toUpperCaseOrKatakana(starNames[i].jpnname).includes(searchText)) {
+                    if (toUpperCaseOrKatakana(starNames[i].jpnname).startsWith(searchText)) {
+                        suggestions1[0].push(starNames[i].jpnname);
+                        suggestions1[1].push(starNames[i].jpnname);
+                    } else {
+                        suggestions2[0].push(starNames[i].jpnname);
+                        suggestions2[1].push(starNames[i].jpnname);
                     }
                 }
             }
@@ -503,7 +526,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
             suggestions1[0].push(searchText);
             suggestions1[1].push(searchText);
         }
-        //数字ではないがM, N, I始まりではないとき
+        //M, N, I以外から始まり数字でないとき
         if (isNaN(searchText) && !["M", "N", "I"].includes(searchText[0])){
             for (m of messier) {
                 for (alt of m.alt_name) {
@@ -1661,7 +1684,10 @@ function show_main(){
         }
     }
 
-    if (document.getElementById('starNameCheck').checked && rgEW <= 0.5 * document.getElementById('starNameFrom').value) {
+    // if (document.getElementById('starNameCheck').checked && rgEW <= 0.5 * document.getElementById('starNameFrom').value) {
+    //     writeStarNames();
+    // }
+    if (!starNameElem[0].checked) {
         writeStarNames();
     }
 
@@ -2134,16 +2160,27 @@ function show_main(){
     }
 
     function writeStarNames () {
-        const tier_range = [180, 90, 60, 40];
-        drawJsonObjects(
-            starNames,
-            function(i, name, x, y) {
-                if (2*Math.max(rgNS, rgEW) <= tier_range[starNames[i].tier-1]) {
-                    drawObjects(name, x, y+15, 0, fontsize=20);
+        const tier_range = [180, 90, 60, 40, 30, 30];
+        let tierLimitUmu = starNameElem[1].checked;
+        ctx.strokeStyle = textColor;
+        ctx.fillStyle = textColor;
+        for (i=0; i<starNames.length; i++){
+            let d = starNames[i]
+            let tier = d.tier
+            if (tierLimitUmu && tier > 1) continue;
+            if (2*Math.max(rgNS, rgEW) > tier_range[tier-1]) continue;
+            let ra = d.ra;
+            let dec = d.dec;
+            [x, y, inFlag] = xyIfInCanvas(ra, dec);
+            if (inFlag) {
+                let size = 20 - 1 * tier;
+                if (d.jpnname) {
+                    drawObjects(d.jpnname, x, y+15, 0, fontsize=size);
+                } else {
+                    drawObjects(d.name, x, y+15, 0, fontsize=size);
                 }
-            },
-            textColor
-        );
+            }
+        }
     }
 
     function drawMessier () {
@@ -3044,7 +3081,7 @@ function loadFiles() {
             boundary = data.split(',').map(Number);
         }, true);
 
-        loadJsonData('starname', (data) => {
+        loadJsonData('starnames', (data) => {
             starNames = data;
         }, true);
 
