@@ -2,7 +2,6 @@
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
-
 const online = navigator.onLine;
 
 // 定数
@@ -80,6 +79,12 @@ let Ms, ws, lon_moon, lat_moon;
 // データ
 
 let hips = [];
+let gaia100 = new Array(505972);
+let gaia100_help = new Array(64801);
+let gaia101_110 = new Array(800359);
+let gaia101_110_help = new Array(64801);
+let gaia111_115 = new Array(666677);
+let gaia111_115_help = new Array(64801);
 let Tycho = new Array(980634);
 let Help = new Array(64801);
 let Tycho1011 = new Array(1602511);
@@ -127,6 +132,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-02-08T16:00:00+09:00', text: ['これまではヒッパルコス星表とティコ第2星表を使っていましたが、後者をやめガイア星表を使うことにしました', '最微等級が11.0等級から11.5等級になりました。多すぎる場合は設定のスライダーで調整してください', '恒星の位置の精度が0.01°から0.001°になりました']},
     {time: '2025-01-11T00:00:00+09:00', text: ['月が表示されないバグを修正。小豆ありがとう', 'リロード時の時刻設定を現在時刻にしました', '右下の?ボタンにブックマーク用のURLを書きました。少し前にご意見フォームも設置しています']},
     {time: '2025-01-09T16:00:00+09:00', text: ['C/2024 G3(ATLAS彗星)などが加わりました']}
 ];
@@ -183,8 +189,8 @@ if (canvas.width < canvas.height) {
 rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
 
 let magLimtext;
-let magLimLim = 11;
-let magkey1 = 11.0, magkey2 = 1.8;//key1は10~13
+let magLimLim = 11.5;
+let magkey1 = 11.5, magkey2 = 1.8;//key1は10~13
 let magLim = determinMagLim(magkey1, magkey2);
 let zerosize = determinZerosize();
 
@@ -741,7 +747,7 @@ let dragFlag = false;
 
 // タッチ開始
 function ontouchstart(e) {
-    e.preventDefault();
+    // e.preventDefault();
     if (e.touches.length === 1) {
         pinchFlag = false;
         dragFlag = false;
@@ -1000,7 +1006,7 @@ function show_initial(){
         show_main();
     }
     if (xhrimpcheck == 5 && defaultcheck == 11) {
-        if (xhrcheck == 13) {
+        if (xhrcheck == 15) {
             document.getElementById('loadingtext').style.display = 'none';
             ready();
         } else {
@@ -1013,7 +1019,7 @@ function show_initial(){
 function calculation(JD) {
     let x, y, z;
     let X, Y, Z;
-    let theta = hourAngle(JD, lon_obs);
+    theta = hourAngle(JD, lon_obs);
 
     [X, Y, Z] = calc(planets[Obs_num], JD);
     let [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
@@ -1508,7 +1514,8 @@ function show_main(){
     }
 
     //Tycho
-    if (magLim > 6.5 && Tycho.length != 0 && Help.length != 0) {
+    if (magLim > 6.5 && gaia100[0] != undefined && gaia100_help[0] != undefined) {
+    // if (magLim > 6.5 && Tycho.length != 0 && Help.length != 0) {
         let skyareas = [];
         if (mode == 'AEP') {
             let minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
@@ -1545,10 +1552,17 @@ function show_main(){
                     }
                 }
             }
-            drawStars(skyareas);
-            if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
-                drawStars1011(skyareas);
+            drawGaia(gaia100, gaia100_help, skyareas);
+            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+                drawGaia(gaia101_110, gaia101_110_help, skyareas);
+                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
+                }
             }
+            // drawStars(skyareas);
+            // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+            //     drawStars1011(skyareas);
+            // }
         } else if (mode == 'EtP') { //正距円筒図法
             if (cenRA - rgEW < 0) {
                 //skyareasは[[a, b]]のaの領域とbの領域を両方含む
@@ -1571,10 +1585,17 @@ function show_main(){
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                 }
             }
-            drawStars(skyareas);
-            if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
-                drawStars1011(skyareas);
+            drawGaia(gaia100, gaia100_help, skyareas);
+            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+                drawGaia(gaia101_110, gaia101_110_help, skyareas);
+                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
+                }
             }
+            // drawStars(skyareas);
+            // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+            //     drawStars1011(skyareas);
+            // }
         } else if (mode == 'view') {
             let [scrRA_NP, scrDec_NP] = RADec2scrview(0, 90);
             let [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
@@ -1626,10 +1647,17 @@ function show_main(){
                     }
                 }
             }
-            drawStars(skyareas);
-            if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
-                drawStars1011(skyareas);
+            drawGaia(gaia100, gaia100_help, skyareas);
+            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+                drawGaia(gaia101_110, gaia101_110_help, skyareas);
+                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
+                }
             }
+            // drawStars(skyareas);
+            // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+            //     drawStars1011(skyareas);
+            // }
         }
     }
 
@@ -1651,7 +1679,7 @@ function show_main(){
     }
 
     // 星座名
-    ctx.font = '20px times new roman';
+    ctx.font = '16px serif';
     if (document.getElementById('constNameCheck').checked && rgEW <= 0.5 * document.getElementById('constNameFrom').value) {
         ctx.fillStyle = textColor;
         for (i=0; i<89; i++){
@@ -1762,7 +1790,7 @@ function show_main(){
     document.getElementById("coordtext").style.color = textColor;
     document.getElementById("coordtext").innerHTML = coordtext;
 
-    function SkyArea(RA, Dec) { //(RA, Dec)はHelper2ndで↓行目（0始まり）の行数からのブロックに入ってる
+    function SkyArea(RA, Dec) { //(RA, Dec)はHelperで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
     }
 
@@ -1879,7 +1907,7 @@ function show_main(){
         if (mag > magLim) {
             return zerosize / (magLim + 1);
         } else {
-            return zerosize / (magLim + 1) + zerosize* (1 - 1 / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
+            return zerosize / (magLim + 1) + zerosize * 0.8 * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
             //return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
@@ -1888,7 +1916,7 @@ function show_main(){
         let c;
         if (darker) {
             c = starColor;
-        } else if (bv == 9) {
+        } else if (bv == -10) {
             c = starColor;
         } else {
             bv = Math.max(-0.4, Math.min(2.0, parseFloat(bv)));
@@ -1953,6 +1981,28 @@ function show_main(){
         ctx.fill();
     }
 
+    function drawGaia(gaia, help, skyareas) {
+        ctx.fillStyle = starColor;
+        ctx.beginPath();
+        for (let arearange of skyareas) {
+            let st = help[arearange[0]];
+            let fi = help[arearange[1]+1];
+            for (i=st; i<fi; i++) {
+                let data = gaia[i];
+                let mag = data[2] * 0.1;
+                if (mag >= magLim) continue;
+                let ra = data[0] * 0.001;
+                let dec = data[1] * 0.001;
+                let [x, y, inFlag] = xyIfInCanvas(ra, dec);
+                if (inFlag) {
+                    ctx.moveTo(x, y);
+                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
+                }
+            }
+        }
+        ctx.fill();
+    }
+
     // drawFilledCircleを使わない方が僅かに速い
     function drawStars (skyareas) {
         ctx.fillStyle = starColor;
@@ -2000,21 +2050,18 @@ function show_main(){
     function writeBayer () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
+        const Greeks = ['Alp', 'Bet', 'Gam', 'Del', 'Eps', 'Zet', 'Eta', 'The', 'Iot', 'Kap', 'Lam', 'Mu', 'Nu', 'Xi', 'Omc', 'Pi', 'Rho', 'Sig', 'Tau', 'Ups', 'Phi', 'Chi', 'Psi', 'Ome'];
+        const GreekLetters = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω'];
         for (i=0; i<BSCnum; i++){
             let ra = BSCRAary[i];
             let dec = BSCDecary[i];
-            const Greeks = ['Alp', 'Bet', 'Gam', 'Del', 'Eps', 'Zet', 'Eta', 'The', 'Iot', 'Kap', 'Lam', 'Mu', 'Nu', 'Xi', 'Omc', 'Pi', 'Rho', 'Sig', 'Tau', 'Ups', 'Phi', 'Chi', 'Psi', 'Ome'];
-            const GreekLetters = ['α', 'β', 'γ', 'δ', 'ε', 'ζ', 'η', 'θ', 'ι', 'κ', 'λ', 'μ', 'ν', 'ξ', 'ο', 'π', 'ρ', 'σ', 'τ', 'υ', 'φ', 'χ', 'ψ', 'ω'];
+            let name;
             if (Bayers[i] != '') {
-                let name = GreekLetters[Greeks.indexOf(Bayers[i])];
-                if (BayerNums[i] != '') {
-                    name += BayerNums[i];
-                }
-                if (FSs[i] != '') {
-                    name += '(' + FSs[i] + ')';
-                }
+                name = GreekLetters[Greeks.indexOf(Bayers[i])];
+                if (BayerNums[i] != '') name += BayerNums[i];
+                if (FSs[i] != '') name += '(' + FSs[i] + ')';
             } else {
-                let name = FSs[i];
+                name = FSs[i];
             }
             [x, y, inFlag] = xyIfInCanvas(ra, dec);
             if (inFlag) {
@@ -2134,31 +2181,32 @@ function show_main(){
         let r = Math.max(canvas.width * (0.259 / (solarSystemBodies[9].dist / 384400)) / rgEW * 0.5, 13);
         let lon_sun = Ms + 0.017 * sin(Ms + 0.017 * sin(Ms)) + ws;
         let k = (1 - cos(lon_sun-lon_moon) * cos(lat_moon)) / 2;
+        let P, RA1, Dec1, A1, h1, scrRA1, scrDec1, x1, y1
 
         //Pは赤経の負方向（右）から月を時計回りに見て黄色から黒になるところの角度
         if (mode == 'AEP') {
-            let P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
-            let RA1 = (rm - 0.2*cos(P) / cos(dm)) * rad2deg;
-            let Dec1 = (dm - 0.2*sin(P)) * rad2deg;
-            let [scrRA1, scrDec1] = RADec2scrAEP(RA1, Dec1);
-            let [x1, y1] = coordSH(scrRA1, scrDec1);
+            P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            RA1 = (rm - 0.2*cos(P) / cos(dm)) * rad2deg;
+            Dec1 = (dm - 0.2*sin(P)) * rad2deg;
+            [scrRA1, scrDec1] = RADec2scrAEP(RA1, Dec1);
+            [x1, y1] = coordSH(scrRA1, scrDec1);
             P = Math.atan2(y1-y, x1-x);
         } else if (mode == 'EtP') {
-            let P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
         } else if (mode == 'view') {
-            let P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
-            let RA1 = (rm - 0.2*cos(P) / cos(dm)) * rad2deg;
-            let Dec1 = (dm - 0.2*sin(P)) * rad2deg;
-            let [scrRA1, scrDec1] = RADec2scrview(RA1, Dec1);
-            let [x1, y1] = coordSH(scrRA1, scrDec1);
+            P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            RA1 = (rm - 0.2*cos(P) / cos(dm)) * rad2deg;
+            Dec1 = (dm - 0.2*sin(P)) * rad2deg;
+            [scrRA1, scrDec1] = RADec2scrview(RA1, Dec1);
+            [x1, y1] = coordSH(scrRA1, scrDec1);
             P = Math.atan2(y1-y, x1-x);
         } else if (['live', 'ar'].includes(mode)) {
-            let P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
-            let RA1 = (rm - 0.2*cos(P) / cos(dm)) * rad2deg;
-            let Dec1 = (dm - 0.2*sin(P)) * rad2deg;
-            let [A1, h1] = RADec2Ah(RA1, Dec1, theta);
-            let [scrRA1, scrDec1] = Ah2scrlive(A1, h1);
-            let [x1, y1] = coordSH(scrRA1, scrDec1);
+            P = Math.atan2(cos(ds)*sin(rm-rs), -sin(dm)*cos(ds)*cos(rm-rs)+cos(dm)*sin(ds));
+            RA1 = (rm - 0.2*cos(P) / cos(dm)) * rad2deg;
+            Dec1 = (dm - 0.2*sin(P)) * rad2deg;
+            [A1, h1] = RADec2Ah(RA1, Dec1, theta);
+            [scrRA1, scrDec1] = Ah2scrlive(A1, h1);
+            [x1, y1] = coordSH(scrRA1, scrDec1);
             P = Math.atan2(y1-y, x1-x);
         }
 
@@ -2616,7 +2664,7 @@ function newSetting() {
     if (['live', 'ar'].includes(mode)) {
         magLimLim = 6.5;
     } else {
-        magLimLim = 11;
+        magLimLim = 11.5;
     }
     magLim = determinMagLim(magkey1, magkey2);
     zerosize = determinZerosize();
@@ -2750,7 +2798,7 @@ function realtimeRadec() {
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         calculation(showingJD);
-        [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
+        [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, hourAngle(showingJD, lon_obs));
         show_main();
     }
 }
@@ -2767,9 +2815,27 @@ function realtimeAzmalt() {
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         calculation(showingJD);
-        [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
+        [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, hourAngle(showingJD, lon_obs));
         show_main();
     }
+}
+
+function filterData(data, ranges) {
+    return data.filter(row => {
+        const ra = +row[0];
+        if (ra >= ranges.raRange[0] && ra <= ranges.raRange[1]) {
+            const dec = +row[1];
+            if(dec >= ranges.decRange[0] && dec <= ranges.decRange[1]) {
+                const mag = +row[2];
+                if (mag >= ranges.magRange[0] && mag <= ranges.magRange[1]) {
+                    return true;
+                }
+                return false;
+            }
+            return false;
+        }
+        return false;
+    });
 }
 
 
@@ -2784,10 +2850,10 @@ function loadFiles() {
         const hipData = data.split(',').map(Number);
         for (i=0; i<hipData.length; i+=4){
             hips.push({
-                ra: hipData[i] * 0.01,
-                dec: hipData[i+1] * 0.01,
+                ra: hipData[i] * 0.001,
+                dec: hipData[i+1] * 0.001,
                 mag: hipData[i+2] * 0.1,
-                bv: hipData[i+3] * 0.1
+                bv: hipData[i+3] * 0.1 //割って-10（もともと-100）ならNaN
             });
         }
     }
@@ -2877,7 +2943,7 @@ function loadFiles() {
             }
         }
 
-        function fetchJsonData(filename, func, impflag=false) {
+        function loadJsonData(filename, func, impflag=false) {
             fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
             .then(response => {
                 if (!response.ok) {
@@ -2893,6 +2959,31 @@ function loadFiles() {
                 }
                 loaded.push(filename)
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.json`);
+                show_initial();
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+        
+        function loadCsvData(filename, func, impflag=false) {
+            fetch(`https://peteworden.github.io/Soleil/data/${filename}.csv`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                let rows = text.trim().split('\n');
+                let data = rows.map(row => row.split(",").map(Number));
+                func(data)
+                xhrcheck++;
+                if (impflag) {
+                    xhrimpcheck++;
+                }
+                loaded.push(filename)
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.csv`);
                 show_initial();
             })
             .catch(error => {
@@ -2921,11 +3012,30 @@ function loadFiles() {
             }
             fr.readAsText(event.target.files[0]);
         }
+        function loadCSVForDebug(event, filename,func, impflag=false) {
+            const file = e.target.files[0];
+            if (file) {
+                const fr = new FileReader();
+                fr.onload = function(event) {
+                    const csvText = event.target.result;
+                    const data = parseCSV(csvText);
+                    func(data)
+                    xhrcheck++;
+                    if (impflag) {
+                       xhrimpcheck++;
+                    }
+                    loaded.push(filename);
+                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                    show_initial();
+                };
+                reader.readAsText(file);
+            }
+        }
 
         //HIP
         loadFile("hip_65", xhrHIP, true);
 
-        fetchJsonData('constellation', (data) => {
+        loadJsonData('constellation', (data) => {
             constellations = data;
         }, true);
 
@@ -2934,33 +3044,53 @@ function loadFiles() {
             boundary = data.split(',').map(Number);
         }, true);
 
-        fetchJsonData('starname', (data) => {
+        loadJsonData('starname', (data) => {
             starNames = data;
         }, true);
 
-        fetchJsonData('messier', (data) => {
+        loadJsonData('messier', (data) => {
             messier = data;
         }, true);
 
+        //gaia offlineはまだ
+        loadCsvData('gaia_-100', (data) => {
+            gaia100 = data;
+        });
+        loadFile("gaia_-100_helper", (data) => {
+            gaia100_help = data.split(',').map(Number);
+        });
+        loadCsvData('gaia_101-110', (data) => {
+            gaia101_110 = data;
+        });
+        loadFile("gaia_101-110_helper", (data) => {
+            gaia101_110_help = data.split(',').map(Number);
+        });
+        loadCsvData('gaia_111-115', (data) => {
+            gaia111_115 = data;
+        });
+        loadFile("gaia_111-115_helper", (data) => {
+            gaia111_115_help = data.split(',').map(Number);
+        });
+
         //Tycho
-        loadFile("tycho2_100", (data) => {
-            Tycho = data.split(',').map(Number);
-        });
+        // loadFile("tycho2_100", (data) => {
+        //     Tycho = data.split(',').map(Number);
+        // });
 
-        //Tycho helper
-        loadFile("tycho2_100_helper", (data) => {
-            Help = data.split(',').map(Number);
-        });
+        // //Tycho helper
+        // loadFile("tycho2_100_helper", (data) => {
+        //     Help = data.split(',').map(Number);
+        // });
 
-        //Tycho 10~11 mag
-        loadFile("tycho2_100-110", (data) => {
-            Tycho1011 = data.split(',').map(Number);
-        });
+        // //Tycho 10~11 mag
+        // loadFile("tycho2_100-110", (data) => {
+        //     Tycho1011 = data.split(',').map(Number);
+        // });
 
-        //Tycho helper 10~11 mag
-        loadFile("tycho2_100-110_helper", (data) => {
-            Help1011 = data.split(',').map(Number);
-        });
+        // //Tycho helper 10~11 mag
+        // loadFile("tycho2_100-110_helper", (data) => {
+        //     Help1011 = data.split(',').map(Number);
+        // });
 
         //追加天体
         loadFile("additional_objects", xhrExtra);
@@ -2968,7 +3098,7 @@ function loadFiles() {
         //Bayer
         loadFile("brights", xhrBSC);
 
-        fetchJsonData('rec', (data) => {
+        loadJsonData('rec', (data) => {
             recs = data;
         });
 
@@ -3129,7 +3259,7 @@ function checkURL() {
         if (['live', 'ar'].includes(mode)) {
             magLimLim = 6.5;
         } else {
-            magLimLim = 11;
+            magLimLim = 11.5;
         }
         magLim = determinMagLim(magkey1, magkey2);
         zerosize = determinZerosize();
