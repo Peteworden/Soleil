@@ -133,6 +133,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-03-23T23:15:00+09:00', text: ['この星図のいい名前を募集しています！', '星が消えるバグ、恒星時の計算式のずれを修正しました']},
     {time: '2025-02-08T19:00:00+09:00', text: ['以前から日本語名を表示できた(Thanks to ToE42)90個の星を含む428個の星の英語名を収録しました。天文冬の陣2024でいただいた意見をもとにした改良です']},
     {time: '2025-02-08T16:00:00+09:00', text: ['これまではヒッパルコス星表とティコ第2星表を使っていましたが、後者をやめガイア星表を使うことにしました', '最微等級が11.0等級から11.5等級になりました。多すぎる場合は設定のスライダーで調整してください', '恒星の位置の精度が0.01°から0.001°になりました']},
     {time: '2025-01-11T00:00:00+09:00', text: ['月が表示されないバグを修正。小豆ありがとう', 'リロード時の時刻設定を現在時刻にしました', '右下の?ボタンにブックマーク用のURLを書きました。少し前にご意見フォームも設置しています']},
@@ -1644,17 +1645,22 @@ function show_main(){
                 let edgeDec = [];
                 for (j=0; j<=Math.ceil(3*rgEW); j++) {
                     for (i=0; i<=Math.ceil(3*rgNS); i++) {
-                        if (0 < i && i < Math.ceil(3*rgNS) && 0 < j && j < Math.ceil(3*rgEW)) continue;
-                        [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
-                        [ra, dec] = Ah2RADec(A, h, theta);
-                        edgeRA.push(ra);
-                        edgeDec.push(dec);
+                        if (i == 0 || i == Math.ceil(3*rgNS) || j == 0 || j == Math.ceil(3*rgEW)) {
+                            [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
+                            [ra, dec] = Ah2RADec(A, h, theta);
+                            edgeRA.push(ra);
+                            edgeDec.push(dec);
+                            if (i * (i - Math.ceil(3*rgNS)) == 0 && j * (j - Math.ceil(3*rgEW)) == 0) {
+                                console.log(A, h, ra, dec);
+                            }
+                        }
                     }
                 }
                 Dec_max = Math.max(...edgeDec);
                 Dec_min = Math.min(...edgeDec);
                 RA_max = Math.max(...edgeRA);
                 RA_min = Math.min(...edgeRA);
+                console.log(RA_max, RA_min, Dec_max, Dec_min);
                 if (RA_max > 330 && RA_min < 30) {
                     RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
                     RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
@@ -1670,13 +1676,14 @@ function show_main(){
                     }
                 }
             }
+            console.log(skyareas);
             drawGaia(gaia100, gaia100_help, skyareas);
-            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
-                drawGaia(gaia101_110, gaia101_110_help, skyareas);
-                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
-                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
-                }
-            }
+            // if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+            //     drawGaia(gaia101_110, gaia101_110_help, skyareas);
+            //     if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+            //         drawGaia(gaia111_115, gaia111_115_help, skyareas);
+            //     }
+            // }
             // drawStars(skyareas);
             // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
             //     drawStars1011(skyareas);
@@ -1697,12 +1704,12 @@ function show_main(){
         drawFilledCircle(x, y, size(mag), c);
         //回折による光の筋みたいなのを作りたい
     }
-    hips_magfilter = hips.filter(hip => hip.mag <= magLim);
-    for (i=0; i<hips_magfilter.length; i++){
-        let hip = hips_magfilter[i];
-        [x, y, inFlag] = xyIfInCanvas(hip.ra, hip.dec);
-        if (inFlag) drawHIPstar(x, y, hip.mag, bv2color(hip.bv));
-    }
+    var hips_magfilter = hips.filter(hip => hip.mag <= magLim);
+    // for (i=0; i<hips_magfilter.length; i++){
+    //     let hip = hips_magfilter[i];
+    //     [x, y, inFlag] = xyIfInCanvas(hip.ra, hip.dec);
+    //     if (inFlag) drawHIPstar(x, y, hip.mag, bv2color(hip.bv));
+    // }
 
     // 星座名
     ctx.font = '16px serif';
@@ -2010,15 +2017,24 @@ function show_main(){
     function drawGaia(gaia, help, skyareas) {
         ctx.fillStyle = starColor;
         ctx.beginPath();
+        console.log(help.length, SkyArea(146.5, -58.5), help[SkyArea(146.5, -58.5)]);
         for (let arearange of skyareas) {
+            console.log(arearange);
+            // help[0] = 0
+            // help[1<=i<180*360] = i番目の領域に入る直前までの星の数
+            // help[180*360] = gaia.length
             let st = help[arearange[0]];
             let fi = help[arearange[1]+1];
+            console.log(st, fi);
             for (i=st; i<fi; i++) {
                 let data = gaia[i];
                 let mag = data[2] * 0.1;
                 if (mag >= magLim) continue;
                 let ra = data[0] * 0.001;
                 let dec = data[1] * 0.001;
+                if (ra == 150.608 && dec == 69.041) {
+                    console.log('oh');
+                }
                 let [x, y, inFlag] = xyIfInCanvas(ra, dec);
                 if (inFlag) {
                     ctx.moveTo(x, y);
@@ -2546,7 +2562,8 @@ function decdm2deg(decdmtext) {
 
 function hourAngle(JD_TT, lon_obs) {
     let t = (JD_TT - 2451545.0) / 36525;
-    let ans = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs; //rad
+    let ans = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs - 0.0203; //rad
+    console.log(ans*rad2deg % 360);
     return ans;
 }
 
