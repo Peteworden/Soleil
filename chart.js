@@ -33,7 +33,9 @@ if (online) {
     document.getElementById('fileBtn').style.visibility = "hidden";
     document.getElementById('getFile').style.visibility = "hidden";
 } else {
-    alert('offline version\nSelect allInOne.txt from the file button')
+    alert('Sorry, this star chart is unablable offline now.');
+    document.getElementById('fileBtn').style.visibility = "hidden";
+    document.getElementById('getFile').style.visibility = "hidden";
 }
 
 document.getElementById('setting').style.visibility = "hidden";
@@ -636,10 +638,12 @@ function showObjectInfo(x, y) {
             } else {
                 document.getElementById('objectInfoText').innerHTML = 'no description';
             }
-            if (wikiSpecial[0].includes(parseInt(nearest[0].slice(1)))) {
-                document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${wikiSpecial[1][wikiSpecial[0].indexOf(parseInt(nearest[0].slice(1)))]}">Wikipedia</a>`;
-            } else {
-                document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
+            if (online) {
+                if (wikiSpecial[0].includes(parseInt(nearest[0].slice(1)))) {
+                    document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${wikiSpecial[1][wikiSpecial[0].indexOf(parseInt(nearest[0].slice(1)))]}">Wikipedia</a>`;
+                } else {
+                    document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
+                }
             }
         } else if (nearest[0].endsWith('座')) {
             for (i=0; i<89; i++) {
@@ -656,12 +660,14 @@ function showObjectInfo(x, y) {
                     } else {
                         document.getElementById('objectInfoText').innerHTML = 'no description';
                     }
-                    if (rec.wiki == null) {
-                        document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.name}">Wikipedia</a>`;
-                    } else if (rec.wiki.startsWith("http")){
-                        document.getElementById('objectInfoText').innerHTML += `<br><a href="${rec.wiki}">${rec.wiki}</a>`
-                    } else {
-                        document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.wiki}">Wikipedia</a>`;
+                    if (online) {
+                        if (rec.wiki == null) {
+                            document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.name}">Wikipedia</a>`;
+                        } else if (rec.wiki.startsWith("http")){
+                            document.getElementById('objectInfoText').innerHTML += `<br><a href="${rec.wiki}">${rec.wiki}</a>`
+                        } else {
+                            document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.wiki}">Wikipedia</a>`;
+                        }
                     }
                     return;
                 }
@@ -2009,24 +2015,18 @@ function show_main(){
     function drawGaia(gaia, help, skyareas) {
         ctx.fillStyle = starColor;
         ctx.beginPath();
-        console.log(help.length, SkyArea(146.5, -58.5), help[SkyArea(146.5, -58.5)]);
         for (let arearange of skyareas) {
-            console.log(arearange);
             // help[0] = 0
             // help[1<=i<180*360] = i番目の領域に入る直前までの星の数
             // help[180*360] = gaia.length
             let st = help[arearange[0]];
             let fi = help[arearange[1]+1];
-            console.log(st, fi);
             for (i=st; i<fi; i++) {
                 let data = gaia[i];
                 let mag = data[2] * 0.1;
                 if (mag >= magLim) continue;
                 let ra = data[0] * 0.001;
                 let dec = data[1] * 0.001;
-                if (ra == 150.608 && dec == 69.041) {
-                    console.log('oh');
-                }
                 let [x, y, inFlag] = xyIfInCanvas(ra, dec);
                 if (inFlag) {
                     ctx.moveTo(x, y);
@@ -2555,7 +2555,6 @@ function decdm2deg(decdmtext) {
 function hourAngle(JD_TT, lon_obs) {
     let t = (JD_TT - 2451545.0) / 36525;
     let ans = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs - 0.0203; //rad
-    console.log(ans*rad2deg % 360);
     return ans;
 }
 
