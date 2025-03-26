@@ -7,25 +7,13 @@
         <meta name="description" content="指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。">
         <meta name="theme-color" content="#000000">
         <meta name="msapplication-TileColor" content="#000000">
-        <link rel="stylesheet" href="styleChart.css">
+        <link rel="stylesheet" href="styles/styleChart.css">
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-        <link rel="apple-touch-icon" sizes="57x57" href="./images/icon/apple-icon-57x57.png">
-        <link rel="apple-touch-icon" sizes="60x60" href="./images/icon/apple-icon-60x60.png">
-        <link rel="apple-touch-icon" sizes="72x72" href="./images/icon/apple-icon-72x72.png">
-        <link rel="apple-touch-icon" sizes="76x76" href="./images/icon/apple-icon-76x76.png">
-        <link rel="apple-touch-icon" sizes="114x114" href="./images/icon/apple-icon-114x114.png">
-        <link rel="apple-touch-icon" sizes="120x120" href="./images/icon/apple-icon-120x120.png">
-        <link rel="apple-touch-icon" sizes="144x144" href="./images/icon/apple-icon-144x144.png">
-        <link rel="apple-touch-icon" sizes="152x152" href="./images/icon/apple-icon-152x152.png">
-        <link rel="apple-touch-icon" sizes="180x180" href="./images/icon/apple-icon-180x180.png">
-        <link rel="icon" type="image/png" sizes="192x192"  href="./images/icon/android-icon-192x192.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="./images/icon/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="96x96" href="./images/icon/favicon-96x96.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="./images/icon/favicon-16x16.png">
-        <link rel="manifest" href="./images/icon/manifest.json">
-        <meta name="msapplication-TileColor" content="#ffffff">
-        <meta name="msapplication-TileImage" content="./images/icon/ms-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="images/icon/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="images/icon/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="images/icon/favicon-16x16.png">
+        <link rel="manifest" href="images/icon/site.webmanifest">
         <!-- Google tag (gtag.js) -->
         <script>
             if (navigator.onLine) {
@@ -49,7 +37,7 @@
         </script>
     </head>
     <body>
-        <img id="welcomeImage" class="welcomeImage" src="welcome0928.jpg">
+        <img id="welcomeImage" class="welcomeImage" src="images/welcome0928.jpg">
         <div class="title" id="title">
             <ul>
                 <li><h3>星図</h3></li>
@@ -62,7 +50,7 @@
 
         <div>
             <button id="settingBtn" class="settingBtn" type="button" onclick="showSetting()" disabled>
-                <img src="settingBtn.png" alt="設定">
+                <img src="images/settingBtn.png" alt="設定">
             </button>
         </div>
 
@@ -147,15 +135,14 @@
                         <li><input type="checkbox" id="gridCheck" checked>グリッド（プラネモード）</li>
                         <br>
                         <li>
-                            <input type="checkbox" id="starNameCheck" checked>恒星名
-                            （左右の視野<input type="text" id="starNameFrom" size="1" value="180">°以下のとき）
+                            <div>
+                                恒星名
+                                <input type="radio" name="starName" value="no">なし
+                                <input type="radio" name="starName" value="bright" checked>2等星まで
+                                <input type="radio" name="starName" value="all">すべて
+                            </div>
                         </li>
-                        <div>
-                            恒星名
-                            <input type="radio" name="starName" value="no">なし
-                            <input type="radio" name="starName" value="bright" checked>2等星まで
-                            <input type="radio" name="starName" value="all">すべて
-                        </div>
+                        
                         <li>
                             <input type="checkbox" id="constNameCheck" checked>星座名
                             （左右の視野<input type="text" id="constNameFrom" size="1" value="90">°以下のとき）
@@ -208,15 +195,15 @@
         <div>
             <button id="fullScreenBtn" class="fullScreenBtn" type="button" onclick="fullScreenFunc()">
                 <!--rgb(247, 206, 206) 48px-->
-                <img src="fullScreenBtn.png" alt="全画面表示">
+                <img src="images/fullScreenBtn.png" alt="全画面表示">
             </button>
             <button id="exitFullScreenBtn" class="exitFullScreenBtn" type="button" onclick="exitFullScreenFunc()">
                 <!--rgb(247, 206, 206) 48px-->
-                <img src="exitFullScreenBtn.png" alt="全画面表示終了">
+                <img src="images/exitFullScreenBtn.png" alt="全画面表示終了">
             </button>
             <button id="descriptionBtn" class="descriptionBtn" type="button" onclick="descriptionFunc()" disabled>
                 <!--rgb(247, 206, 206) 48px-->
-                <img src="descriptionBtn.png" alt="説明">
+                <img src="images/descriptionBtn.png" alt="説明">
             </button>
         </div>
 
