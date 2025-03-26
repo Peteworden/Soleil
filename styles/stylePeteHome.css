@@ -1,0 +1,250 @@
+/* webフォント */
+@import url('https://fonts.googleapis.com/css2?family=M+PLUS+1p:wght@100;300;400;500;700;800;900&display=swap');
+
+
+
+*{
+    box-sizing:border-box; /* これは有用な初期設定 */
+ /* border-radius:10px; */
+ /* outline:dashed 1px #eee8; */ 
+    /* ⬆ */
+    font-family:"M PLUS 1p" 
+}
+
+
+
+
+body {
+    background: linear-gradient(
+      45deg, #18186b, rgb(135, 112, 189));
+    background: linear-gradient(45deg,
+                rgba(40,62,154,1) 0%,
+                rgba(91,63,177,1) 50%,
+                rgba(113,67,163,1) 100%);
+    margin: 0px;
+    
+    /* ⬇3つ　コンテンツが少ないページでもfooterが画面最下部に来るようにするための設定。しょうみこのページでは必要ない */
+    display: flex;
+    flex-direction: column;
+    min-height:100vh;
+}
+
+
+/* ──────────ヘッダー────────── */
+header {
+    height: 150px;
+    background-color: rgb(4, 4, 48);
+    text-align: center;
+}
+header h1 {
+    margin: 0px;
+    color: whitesmoke;
+    font-size: 40px;
+    font-weight:900;
+    line-height:150px;
+}
+.no {
+    font-size: 35px;
+}
+.he {
+    font-size: 50px;
+ /* color: coral; */
+    color: #fd8;
+}
+
+
+/* ──────────メイン────────── */
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+
+.pages {
+    text-align: center;
+    /* レスポンシブ対応が難しいので、ページイントロをflexで横一列にするのをやめた(縦に並べた)。その結果div.pagesにあてるスタイルはなくなった */
+}
+
+/* 各ページイントロ */
+.pageIntro {
+    text-align: center;
+    margin: 20px;
+    border: 3px solid #88d9; /* 黄色#fd8 */
+    border-radius: 2rem;
+    background: lavender;
+    overflow:hidden; /* これを親要素にあてることで、子要素が親要素からはみ出た時、その部分を見えなくする。ページイントロのタイトルdivがはみ出るので、それを隠している */
+}
+
+.box_title_pageIntro {
+    min-height:60px;
+    background:#303058;
+    position:relative;
+    
+    & + .box_title_pageIntro{
+        border-top:solid 2px #88d;
+        /* 上のボックスとの境界に分割線を入れている */
+    }
+}
+
+/* タイトル文字と右向き三角 */
+.link_title_pageIntro{ /* ⬅このclassの付与先はaタグ */
+    font-size:1.6em;
+    font-weight:800;
+    text-decoration:none; /* リンクの下線をこれでなくせる */
+    color:#ddf; /* タイトルの文字色 */
+    text-shadow:0px 2px 0px #2248;
+    transition:0.3s;
+}
+.link_title_pageIntro div{
+    display:inline-block;
+    width:20em;
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%, -50%);
+    
+    & span{
+        color:#88d;
+        display:inline-block;
+        margin-left:20px;
+        font-size:0.5em;
+        transform:translate(0%, -20%);
+        transition:0s;
+    }
+}
+.link_title_pageIntro{
+    /* ホバー等の操作によって色が変わる*/
+    &:hover{
+        color:#fd8;
+        text-shadow:0px 0px 10px #fa68;
+        & span{
+            color:#fd8;
+        }
+    }
+    
+    &:active{
+        color:#eb5;
+        & span{
+            color:#eb5;
+        }
+    }
+    /* ⬆アンド記号は便利 */
+}
+
+
+.description_pageIntro{
+    text-align: center;
+    font-weight:500;
+    color:#334;
+    text-shadow:
+      0px 1px 0px #3341;
+}
+
+.imgWide {
+    margin: 10px;
+    max-width: 80%;
+    height: auto;
+}
+
+.imgTall {
+    margin: 10px;
+    max-width: 30%;
+    height: auto;
+}
+
+/* 境界を独立させた */
+.borderLine_over_comments{
+    margin:30px 0;
+    height:3px;
+    background: linear-gradient(90deg,
+                rgba(76,31,199,0) 0%,
+                rgba(120,88,211,1) 10%,
+                rgba(132,94,215,1) 90%,
+                rgba(81,37,209,0) 100%);
+}
+
+/* footerの中身をmain内の新規divに移動 */
+.comments {
+    margin: 20px 10px;
+   /* border-top: 3px solid #fde7;*/
+}
+
+.comments > div{
+    display: inline-block;
+    margin: 10px;
+    padding-left: 10px;
+    border-left: solid 4px #88d;
+    color: whitesmoke;
+    text-shadow: 0 1px 0 #2246;
+}
+
+.comments a {
+    text-decoration:none;
+}
+
+/* GitHubに飛ぶボタン */
+.btn_link_github{
+    display:inline-block;
+    padding:3px 8px;
+    margin:0;
+    background:lavender;
+    border:solid 1.5px #224;
+    border-radius:15px;
+    box-shadow:0 3px 0 #224; 
+    transform:translate(0, -3px);
+    cursor:pointer;
+}
+.btn_link_github span{
+    display:inline-block;
+    color:#224;
+    font-weight:800;
+    font-size:0.8em;
+    text-shadow:none;
+    transform:translate(0, -1px);
+}
+
+.btn_link_github:hover{
+    box-shadow:none;
+    transform:translate(0px, 0px);
+}
+.btn_link_github:active{
+    background:#88d;
+    box-shadow:inset 0 3px 0 #224; 
+    & span{
+        transform:translate(0, 2px);
+    }
+}
+
+
+/* ──────────フッター────────── */
+footer{
+    margin-top:auto;
+    height:180px;
+    background:rgb(4, 4, 48);
+}
+
+/* SNSのリンクを並べる */
+.box_sns_footer{
+    padding:30px;
+}
+
+.box_sns_footer p{
+    color:#fffa;
+    font-weight:500;
+    font-size:1.5em;
+    margin:10px 0;
+}
+/* アイコン */
+.icons_sns_footer a {
+    display: inline-block;
+    width: 50px;
+    opacity: 1;
+}
+
+.icons_sns_footer a:not(:last-child) {
+    margin-right: 16px;
+}
+
+.icons_sns_footer svg{
+    fill:#fffa;
+}

@@ -1,0 +1,66 @@
+body {
+    margin: 0px;
+}
+
+header {
+    color: whitesmoke;
+    background-color: rgb(4, 4, 48);
+    text-align: center;
+    height: 150px;
+    display: flex;
+}
+
+.headerHome {
+    text-align: center;
+    width: 100px;
+    height: 60px;
+    line-height: 60px;
+    background-color: lightyellow;
+    margin: 45px 25px;
+    border-radius: 1rem;
+}
+
+header h1 {
+    width: 100%;
+    text-align: center;
+    font-size: 40px;
+    margin: 0px;
+    line-height: 150px;
+}
+
+.titleCenterizer {
+    width: 150px;
+    height: 150px;
+}
+
+.CQtop {
+    text-align: center;
+    padding: 20px;
+    background: linear-gradient(45deg, #18186b, rgb(135, 112, 189));
+}
+
+h2, h3, p {
+    margin: 20px;
+}
+
+ol li {
+    margin-top: 20px;
+}
+
+ol li ul li {
+    list-style-type: none;
+    margin-top: 0px;
+}
+
+ol li ol li {
+    list-style-type: lower-roman;
+    margin-top: 0px;
+}
+
+.backLink {
+    width: 30%;
+    padding: 10px;
+    margin: 20px 20px;
+    border: 1px solid #333;
+    background: lightyellow;
+}

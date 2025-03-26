@@ -1,10 +1,93 @@
 //2023/12/08~
 
-const starColor = '#FFF'
-const yellowColor = 'yellow'
-//'yellow'は全部yellowColorにする
+const online = navigator.onLine;
 
+// 定数
 const pi = Math.PI;
+const rad2deg = 180 / pi;
+const deg2rad = pi / 180;
+const eps = 0.4090926; //黄道傾斜角
+const sine = sin(eps);
+const cose = cos(eps);
+
+// html要素
+const yearTextElem = document.getElementById('yearText');
+const monthTextElem = document.getElementById('monthText');
+const dateTextElem = document.getElementById('dateText');
+const hourTextElem = document.getElementById('hourText');
+const minuteTextElem = document.getElementById('minuteText');
+const aovSliderElem = document.getElementById('aovSlider');
+const timeSliderElem = document.getElementById('timeSlider');
+let zuhoElem = document.getElementsByName('mode');
+const permitBtns = document.getElementsByClassName('permitBtn');
+const realtimeElem = document.getElementsByName('realtime');
+const trackDateElem = document.getElementsByName('trackTime');
+const starNameElem = document.getElementsByName('starName');
+
+document.getElementById('setting').style.visibility = "hidden";
+document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
+document.getElementById('description').style.visibility = "hidden";
+document.getElementById('setPicsFor360Div').style.visibility = "hidden";
+document.getElementById('demDescriptionDiv').style.visibility = "hidden";
+document.getElementById('searchDiv').style.visibility = "hidden";
+document.getElementById('objectInfo').style.visibility = "hidden";
+
+// 変数
+// 色
+let darker = false;
+let skycolor = '#001';
+let starColor = '#FFF';
+let yellowColor = 'yellow';
+let objectColor = 'orange';
+let specialObjectNameColor = '#FF8';
+let lineColor = 'red';
+let textColor = 'white';
+
+// 視野
+let [cenRA, cenDec] = setCenCoord();
+let cenAzm = 180;
+let cenAlt = 60;
+let dev = [180*deg2rad, 120*deg2rad, 0*deg2rad];
+
+const minrg = 0.3;
+const maxrg = 90;
+let rgEW, rgNS;
+let rgtext;
+
+// 天文計算
+let showingJD = 0;
+let theta;
+let mode; //AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き), ar
+let lattext, lontext;
+let ObsPlanet="地球", Obs_num=3, lat_obs=35*deg2rad, lon_obs=135*deg2rad;
+
+let Ms, ws, lon_moon, lat_moon;
+
+// データ
+
+let hips = [];
+let gaia100 = new Array(505972);
+let gaia100_help = new Array(64801);
+let gaia101_110 = new Array(800359);
+let gaia101_110_help = new Array(64801);
+let gaia111_115 = new Array(666677);
+let gaia111_115_help = new Array(64801);
+let Tycho = new Array(980634);
+let Help = new Array(64801);
+let Tycho1011 = new Array(1602511);
+let Help1011 = new Array(64801);
+let BSCnum = 0;
+let BSCRAary = Array(1);
+let BSCDecary = Array(1);
+let FSs = Array(1);
+let Bayers = Array(1);
+let BayerNums = Array(1);
+let starNames;
+let messier;
+let recs;
+let NGC = new Array(66130);
+let constellations;
+let boundary = new Array(4801);
 
 var showInfo = false;
 document.getElementById('nextBtn').style.visibility = "hidden";
@@ -21,29 +104,24 @@ function setCenCoord() {
     console.log(cenRA, cenDec);
     return [cenRA, cenDec];
 }
-var [cenRA, cenDec] = setCenCoord();
 
 function setRange() {
     if (canvas.width < canvas.height) {
-        var rgLR = 10.0 + Math.random() * 15.0;
-        var rgTB = rgLR * canvas.height / canvas.width;
+        var rgEW = 10.0 + Math.random() * 15.0;
+        var rgNS = rgEW * canvas.height / canvas.width;
     } else {
-        var rgTB = 10.0 + Math.random() * 15.0;
-        var rgLR = rgTB * canvas.width / canvas.height;
+        var rgNS = 10.0 + Math.random() * 15.0;
+        var rgEW = rgNS * canvas.width / canvas.height;
     }
-    return [rgLR, rgTB];
+    return [rgEW, rgNS];
 }
-var [rgLR, rgTB] = setRange();
-
-const minrg = 0.3;
-const maxrg = 90;
-
-var rgtext = `視野(左右):${Math.round(rgLR * 20) / 10}°`;
+[rgEW, rgNS] = setRange();
+rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
 
 var magLimtext;
 var magLimLim = 11;
 function find_magLim() {
-    var magLim = Math.min(Math.max(12.5 - 1.8 * Math.log(Math.min(rgLR, rgTB)), 4), magLimLim);
+    var magLim = Math.min(Math.max(12.5 - 1.8 * Math.log(Math.min(rgEW, rgNS)), 4), magLimLim);
     //var magLim = 11;
     magLimtext = `~${Math.round(magLim * 10) / 10}等級`;
     return magLim;
@@ -51,134 +129,23 @@ function find_magLim() {
 var magLim = find_magLim();
 
 function find_zerosize() {
-    return 13 - 2.4 * Math.log(Math.min(rgLR, rgTB) + 3);
+    return 15 - 2.4 * Math.log(Math.min(rgEW, rgNS) + 3);
 }
 var zerosize = find_zerosize();
 
 var SHmode = true;
 
-var ObsPlanet="地球", Obs_num=3, lat_obs=35, lon_obs=135;
-
 var xhrcheck = 0;
-
-function loadFile(filename, func, go) {
-    var url = `https://peteworden.github.io/Soleil/${filename}.txt`;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
-    xhr.send();
-    xhr.onreadystatechange = function() {
-        if(xhr.readyState === 4 && xhr.status === 200) {
-            func(xhr.responseText);
-            console.log(filename + " ready");
-            xhrcheck++;
-            if (go == 1) {
-                show_initial();
-            } else {
-                if (xhrcheck == 12) {
-                    show_main();
-                }
-            }
-            return 0;
-        }
-    }
-}
-
-//HIP
-var HIPRAary = Array(1);
-var HIPDecary = Array(1);
-var HIPmagary = Array(1);
-var HIPbvary = Array(1);
-loadFile("StarsNewHIP_to6_5_forJS", xhrHIP, 1);
-function xhrHIP(data) {
-    const DataAry = data.split(',');
-    var num_of_stars = DataAry.length / 4;
-    HIPRAary = Array(num_of_stars);
-    HIPDecary = Array(num_of_stars);
-    HIPmagary = Array(num_of_stars);
-    HIPbvary = Array(num_of_stars);
-    for (i=0; i<num_of_stars; i++){
-        HIPRAary[i] = parseFloat(DataAry[4*i]);
-        HIPDecary[i] = parseFloat(DataAry[4*i+1]);
-        HIPmagary[i] = parseFloat(DataAry[4*i+2]);
-        HIPbvary[i] = DataAry[4*i+3];
-    }
-}
-
-//Tycho
-var Tycho = [];
-loadFile("StarsNew-Tycho-to10-2nd_forJS", xhrTycho, 1);
-function xhrTycho(data) {
-    Tycho = data.split(',');
-}
-
-
-//Tycho helper
-var Help = [];
-loadFile("TychoSearchHelper2nd_forJS", xhrHelp, 1);
-function xhrHelp(data) {
-    Help = data.split(',');
-}
-
-//Tycho 10~11 mag
-var Tycho1011 = [];
-loadFile("StarsNew-Tycho-from10to11-2nd_forJS", xhrTycho1011, 1);
-function xhrTycho1011(data) {
-    Tycho1011 = data.split(',');
-}
-
-
-//Tycho helper 10~11 mag
-var Help1011 = [];
-loadFile("TychoSearchHelper-from10to11-2nd_forJS", xhrHelp1011, 1);
-function xhrHelp1011(data) {
-    Help1011 = data.split(',');
-}
-
-// メシエ天体
-var messier  = Array(3 * 110);
-loadFile("messier_forJS", xhrMessier, 1);
-function xhrMessier(data) {
-    messier = data.split(',');
-}
-
-// NGC天体
-var NGC = [];
-loadFile("NGC_forJS", xhrNGC, 1);
-function xhrNGC(data) {
-    NGC = data.split(',');
-}
-
-//星座名
-var CLnames = [];
-loadFile("ConstellationList", xhrCLnames, 1);
-function xhrCLnames(data) {
-    CLnames = data.split('\r\n');
-}
-
-//星座の位置
-var constPos = [];
-loadFile("ConstellationPositionNew_forJS", xhrCLpos, 1);
-function xhrCLpos(data) {
-    constPos = data.split(',');
-}
-
-//星座線
-var lines = [];
-loadFile("Lines_light_forJS", xhrCLlines, 1);
-function xhrCLlines(data) {
-    lines = data.split(',');
-}
-
-//星座境界線
-var boundary = [];
-loadFile("boundary_light_forJS", xhrCLboundary, 1);
-function xhrCLboundary(data) {
-    boundary = data.split(',');
-}
-
+let xhrimpcheck = 0;
+let defaultcheck = 0;
+let loaded = [];
+document.addEventListener('DOMContentLoaded', function() {
+    loadFiles();
+});
 
 function show_initial(){
-    if (xhrcheck == 11){
+    console.log(xhrcheck);
+    if (xhrcheck == 14){
         console.log(xhrcheck);
         show_main();
     } else {
@@ -188,14 +155,12 @@ function show_initial(){
 
 var ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 var JPNplanets = ['太陽',  '水星', '金星', '地球', '火星',  '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
-var Ms, ws, lon_moon, lat_moon, dist_Moon, dist_Sun;
+var dist_Moon, dist_Sun;
 
-
-const popularList = ["NGC869", "NGC884", "コリンダー399", "アルビレオ", "NGC5139", "NGC2264"];
 
 var JD = 2459945.125 + Math.random() * 365.0;
 var azimuth = Math.random() * 360.0;
-var altitude = 90.0 - Math.random() * (100.0 - rgTB);
+var altitude = 90.0 - Math.random() * (100.0 - rgNS);
 
 //基本的にYMDHはJST, JDはTT
 
@@ -257,7 +222,7 @@ function showAnswer() {
     document.getElementById('coordtext').style.visibility = "visible";
     document.getElementById('answerBtn').style.visibility = "hidden";
     document.getElementById('nextBtn').style.visibility = "visible";
-    var chartLink = `https://peteworden.github.io/Soleil/chart.html?RA=${Math.round(cenRA*100)/100}&Dec=${Math.round(cenDec*100)/100}&SH=1&to11=1&area=${Math.round(rgLR*200)/100}`;
+    var chartLink = `https://peteworden.github.io/Soleil/chart.html?RA=${Math.round(cenRA*100)/100}&Dec=${Math.round(cenDec*100)/100}&mode=AEP&area=${Math.round(rgEW*200)/100}`;
     chartLinkElement.href = chartLink;
     chartLinkElement.textContent = '星図で見る'
 
@@ -268,7 +233,7 @@ function showNext() {
     showInfo = false;
     JD = 2459945.125 + Math.random() * 365.0;
     [cenRA, cenDec] = setCenCoord();
-    [rgLR, rgTB] = setRange();
+    [rgEW, rgNS] = setRange();
     magLim = find_magLim();
     zerosize = find_zerosize();
 
@@ -324,17 +289,17 @@ function ontouchmove(e) {
             if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
                 //canvas.removeEventListener("touchmove", onMouseMove);
                 if (SHmode) {
-                    var startRA_SH = -rgLR * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var startDec_SH = -rgTB * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var startDec_SH = -rgNS * (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
                     var [startRA, startDec] = SHtoRADec(startRA_SH, startDec_SH);
-                    var moveRA_SH = -rgLR * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-                    var moveDec_SH = -rgTB * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+                    var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+                    var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
                     var [moveRA, moveDec] = SHtoRADec(moveRA_SH, moveDec_SH);
                     cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
                     cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
                 } else {
-                    cenRA  = ((cenRA  + 2 * rgLR * (moveX - startX) / canvas.width) % 360 + 360) % 360;
-                    cenDec = Math.min(Math.max(-90, cenDec + 2 * rgTB * (moveY - startY) / canvas.height), 90);
+                    cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width) % 360 + 360) % 360;
+                    cenDec = Math.min(Math.max(-90, cenDec + 2 * rgNS * (moveY - startY) / canvas.height), 90);
                 }
                 show_main();
                 startX = moveX;
@@ -357,23 +322,23 @@ function ontouchmove(e) {
             var scale = movedDistance / baseDistance;
             if (scale && scale != Infinity) {
                 if (canvas.width < canvas.height) {
-                    scale = Math.max(Math.min(scale, rgLR/minrg), rgTB/maxrg);
+                    scale = Math.max(Math.min(scale, rgEW/minrg), rgNS/maxrg);
                 } else {
-                    scale = Math.max(Math.min(scale, rgTB/minrg), rgLR/maxrg);
+                    scale = Math.max(Math.min(scale, rgNS/minrg), rgEW/maxrg);
                 }
-                rgTB /= scale;
-                rgLR /= scale;
+                rgNS /= scale;
+                rgEW /= scale;
                 if (SHmode) {
-                    var pinchRA_SH  = -rgLR * x3 / (canvas.width  / 2);
-                    var pinchDec_SH = -rgTB * y3 / (canvas.height / 2);
+                    var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
+                    var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
                     [cenRA, cenDec] = SHtoRADec(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
                 } else {
-                    var pinchRA  = cenRA  - rgLR * x3 / (canvas.width  / 2);
-                    var pinchDec = cenDec - rgTB * y3 / (canvas.height / 2);
+                    var pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
+                    var pinchDec = cenDec - rgNS * y3 / (canvas.height / 2);
                     cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
                     cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
                 }
-                rgtext = `視野(左右):${Math.round(rgLR * 20) / 10}°`;
+                rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
                 magLim = find_magLim();
                 zerosize = find_zerosize();
                 show_main();
@@ -407,17 +372,17 @@ function onmousemove(e) {
     moveY = e.pageY;
     if ((moveX-startX)*(moveX-startX) + (moveY-startY)*(moveY-startY) > dist_detect*dist_detect) {
         if (SHmode) {
-            var startRA_SH = -rgLR * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var startDec_SH = -rgTB* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var startRA_SH = -rgEW * (startX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var startDec_SH = -rgNS* (startY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
             var [startRA, startDec] = SHtoRADec(startRA_SH, startDec_SH);
-            var moveRA_SH = -rgLR * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            var moveDec_SH = -rgTB * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
+            var moveRA_SH = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            var moveDec_SH = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
             var [moveRA, moveDec] = SHtoRADec(moveRA_SH, moveDec_SH);
             cenRA = ((cenRA - moveRA + startRA) % 360 + 360) % 360;
             cenDec = Math.min(Math.max(cenDec - moveDec + startDec, -90), 90);
         } else {
-            cenRA  = ((cenRA  + 2 * rgLR * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
-            cenDec =  Math.min(Math.max(cenDec + 2 * rgTB * (moveY - startY) / canvas.height, -90), 90);
+            cenRA  = ((cenRA  + 2 * rgEW * (moveX - startX) / canvas.width ) % 360 + 360) % 360;
+            cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - startY) / canvas.height, -90), 90);
         }
         show_main();
         startX = moveX;
@@ -436,31 +401,31 @@ function onwheel(event) {
     var scale = 1 - event.deltaY * 0.0005;
     if (scale && scale != Infinity) {
         if (canvas.width < canvas.height) {
-            scale = Math.max(Math.min(scale, rgLR/minrg), rgTB/maxrg);
+            scale = Math.max(Math.min(scale, rgEW/minrg), rgNS/maxrg);
         } else {
-            scale = Math.max(Math.min(scale, rgTB/minrg), rgLR/maxrg);
+            scale = Math.max(Math.min(scale, rgNS/minrg), rgEW/maxrg);
         }
-        rgTB /= scale;
-        rgLR /= scale;
+        rgNS /= scale;
+        rgEW /= scale;
         if (SHmode) {
-            var pinchRA_SH  = -rgLR * x3 / (canvas.width  / 2);
-            var pinchDec_SH = -rgTB * y3 / (canvas.height / 2);
+            var pinchRA_SH  = -rgEW * x3 / (canvas.width  / 2);
+            var pinchDec_SH = -rgNS * y3 / (canvas.height / 2);
             [cenRA, cenDec] = SHtoRADec(pinchRA_SH * (1 - 1 / scale), pinchDec_SH * (1 - 1 / scale));
         } else {
-            var pinchRA  = cenRA  - rgLR * x3 / (canvas.width  / 2);
-            var pinchDec = cenDec - rgTB * y3 / (canvas.height / 2);
+            var pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
+            var pinchDec = cenDec - rgNS * y3 / (canvas.height / 2);
             cenRA  = (pinchRA  + (cenRA  - pinchRA ) / scale) % 360;
             cenDec = Math.min(Math.max(-90, pinchDec + (cenDec - pinchDec) / scale), 90);
         }
-        rgtext = `視野(左右):${Math.round(rgLR * 20) / 10}°`;
+        rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
         magLim = find_magLim();
         zerosize = find_zerosize();
         show_main();
         baseDistance = distance;
         //canvas.addEventListener("touchmove", onTouchMove);
     }
-    //rgtext = `視野(左右):${Math.round(rgLR * 20) / 10}°`;
-    //magLim = find_magLim(rgLR);
+    //rgtext = `視野(左右):${Math.round(rgEW * 20) / 10}°`;
+    //magLim = find_magLim(rgEW);
     //zerosize = find_zerosize();
     //show_main();
 }
@@ -540,7 +505,7 @@ function clearCanvas(){
         show_main();
     }
 }
- 
+
 function initLocalStorage(){
     myStorage.setItem("__log", JSON.stringify([]));
     temp = [];
@@ -606,11 +571,16 @@ function show_main(){
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     const pi = Math.PI;
+    let x, y;
+    let ra, dec, mag;
+    let scrRA, scrDec;
+    let inFlag = false;
+    infoList = [];
+    
+    var t = (JD - 2451545.0) / 36525;
+    let theta = hourAngle(JD, lon_obs);
 
     if (showInfo) {
-        var t = (JD - 2451545.0) / 36525;
-        var theta = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD-2451544.5)%1)) * 2*pi + lon_obs //rad
-
         var Astr = "";
         var hstr = "";
         //azimuth = (Math.atan2(-cos(Dec_rad)*sin(theta-RA_rad), sin(Dec_rad)*cos(lat_obs)-cos(Dec_rad)*sin(lat_obs)*cos(theta-RA_rad)) * 180/pi + 360) % 360;
@@ -620,54 +590,22 @@ function show_main(){
         Astr = '';//`方位角 ${Math.round(azimuth*10)/10}°(${direc}) `;
         hstr = '';//`高度 ${Math.round(altitude*10)/10}° `;
 
-        //星座判定
-        var A = Array(89).fill(0);
-        const num_of_boundary = boundary.length / 5;
-        for (var i=0; i<num_of_boundary; i++) {
-            var Dec1 = parseFloat(boundary[5*i+2]);
-            var Dec2 = parseFloat(boundary[5*i+4]);
-            if (Math.min(Dec1, Dec2) <= cenDec && cenDec < Math.max(Dec1, Dec2)) {
-                var RA1 = parseFloat(boundary[5*i+1]);
-                var RA2 = parseFloat(boundary[5*i+3]);
-                if (cenRA >= (cenDec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
-                    var No = parseInt(boundary[5*i]) - 1;
-                    A[No] = (A[No] + 1) % 2;
-                }
-            }
-        }
-        
-        var constellation = "";
-        for (var i=0; i<89; i++) {
-            if (A[i] == 1) {
-                constellation = CLnames[i] + "座 ";
-                break;
-            }
-            if (cenDec > 0) {
-                constellation = "こぐま座 ";
-            } else {
-                constellation = "はちぶんぎ座 ";
-            }
-        }
-
         //星座線
         ctx.lineWidth = 2;
         ctx.strokeStyle = 'red';
         ctx.beginPath();
-        const num_of_lines = lines.length / 5;
-        for (var i=0; i<num_of_lines; i++) {
-            var RA1 = parseFloat(lines[5*i+1]);
-            var Dec1 = parseFloat(lines[5*i+2]);
-            var RA2 = parseFloat(lines[5*i+3]);
-            var Dec2 = parseFloat(lines[5*i+4]);
-            var [RA1_SH, Dec1_SH] = angleSH(RA1, Dec1);
-            var [RA2_SH, Dec2_SH] = angleSH(RA2, Dec2);
-            if (Math.min(RA1_SH, RA2_SH) < rgLR && Math.max(RA1_SH, RA2_SH) > -rgLR) {
-                if (Math.min(Dec1_SH, Dec2_SH) < rgTB && Math.max(Dec1_SH, Dec2_SH) > -rgTB) {
-                    if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
-                        var [x1, y1] = coordSH(RA1_SH, Dec1_SH);
-                        var [x2, y2] = coordSH(RA2_SH, Dec2_SH);
-                        ctx.moveTo(x1, y1);
-                        ctx.lineTo(x2, y2);
+        for (i=0; i<89; i++) {
+            for (let line of constellations[i].lines) {
+                let RA1 = line[0], Dec1 = line[1];
+                let RA2 = line[2], Dec2 = line[3];
+                let [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
+                let [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
+                if (Math.min(RA1_SH, RA2_SH) < rgEW && Math.max(RA1_SH, RA2_SH) > -rgEW) {
+                    if (Math.min(Dec1_SH, Dec2_SH) < rgNS && Math.max(Dec1_SH, Dec2_SH) > -rgNS) {
+                        if (Math.pow(RA2_SH-RA1_SH, 2) + Math.pow(Dec2_SH-Dec1_SH, 2) < 30*30) {
+                            ctx.moveTo(...coordSH(RA1_SH, Dec1_SH));
+                            ctx.lineTo(...coordSH(RA2_SH, Dec2_SH));
+                        }
                     }
                 }
             }
@@ -675,100 +613,76 @@ function show_main(){
         ctx.stroke();
     }
 
-    //HIP
-    ctx.fillStyle = starColor;
-    for (i=0; i<HIPRAary.length; i++){
-        var RA = HIPRAary[i];
-        var Dec = HIPDecary[i];
-        var mag = HIPmagary[i];
-        var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-        if (mag < magLim && Math.abs(RA_SH) < rgLR && Math.abs(Dec_SH) < rgTB) {
-            var [x, y] = coordSH(RA_SH, Dec_SH);
-            ctx.beginPath();
-            ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-            ctx.fill();
-        }
-    }
+    //Gaia
+    if (magLim > 6.5 && gaia100[0] != undefined && gaia100_help[0] != undefined) {
+        let minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
+        let maxDec = Math.min( 90, Math.max(scr2RADec(rgEW,  rgNS)[1], cenDec+rgNS));
 
-    //Tycho
-    var skyareas = [];
-    if (magLim > 6.5) {
-        var minDec = Math.max(-90, Math.min(SHtoRADec(rgLR, -rgTB)[1], cenDec-rgTB));
-        var maxDec = Math.min( 90, Math.max(SHtoRADec(rgLR,  rgTB)[1], cenDec+rgTB));
-        
         if (minDec == -90) {
             skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
         } else if (maxDec == 90) {
             skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
         } else {
-            var RArange1 = (SHtoRADec(rgLR,  rgTB)[0] - cenRA + 360) % 360;
-            var RArange2 = (SHtoRADec(rgLR,     0)[0] - cenRA + 360) % 360;
-            var RArange3 = (SHtoRADec(rgLR, -rgTB)[0] - cenRA + 360) % 360;
-            var RArange = Math.max(RArange1, RArange2, RArange3);
+            let RArange1 = (scr2RADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
+            let RArange2 = (scr2RADec(rgEW,     0)[0] - cenRA + 360) % 360;
+            let RArange3 = (scr2RADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
+            let RArange = Math.max(RArange1, RArange2, RArange3);
 
             if (cenRA - RArange < 0) {
-                var skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
-                for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
+                            [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
+                for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                 }
             } else if (cenRA + RArange > 360) {
-                var skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
-                for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
+                            [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
+                for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                 }
             } else {
-                var skyareas = [[SkyArea(cenRA-RArange, minDec), SkyArea(cenRA+RArange, minDec)]];
-                for (var i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                skyareas = [[SkyArea(cenRA-RArange, minDec), SkyArea(cenRA+RArange, minDec)]];
+                for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                 }
             }
         }
-        DrawStars_SH(skyareas);
-        if (magLim > 10) {
-            DrawStars1011_SH(skyareas);
+        drawGaia(gaia100, gaia100_help, skyareas);
+        if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+            drawGaia(gaia101_110, gaia101_110_help, skyareas);
+            if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                drawGaia(gaia111_115, gaia111_115_help, skyareas);
+            }
         }
+        // drawStars(skyareas);
+        // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
+        //     drawStars1011(skyareas);
+        // }
+    }
+
+    ctx.fillStyle = starColor;
+    function drawHIPstar(x, y, mag, c) {
+        drawFilledCircle(x, y, size(mag), c);
+        //回折による光の筋みたいなのを作りたい
+    }
+    var hips_magfilter = hips.filter(hip => hip.mag <= magLim);
+    for (i=0; i<hips_magfilter.length; i++){
+        let hip = hips_magfilter[i];
+        [x, y, inFlag] = xyIfInCanvas(hip.ra, hip.dec);
+        if (inFlag) drawHIPstar(x, y, hip.mag, bv2color(hip.bv));
     }
 
     if (showInfo) {
-        // 星座名
-        ctx.font = '20px times new roman';
-        ctx.fillStyle = 'white';
-        for (i=0; i<88; i++){
-            var RA = 1.0 * constPos[2*i];
-            var Dec = 1.0 * constPos[2*i+1];
-            var constName = CLnames[i];
-            var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-            if (Math.abs(RA_SH) < rgLR && Math.abs(Dec_SH) < rgTB) {
-                var [x, y] = coordSH(RA_SH, Dec_SH);
-                ctx.fillText(constName, x-40, y-10);
-            }
-        }
+        writeStarNames();
 
         ctx.font = '16px serif';
         ctx.strokeStyle = 'orange';
         ctx.fillStyle = 'orange';
 
-        //メシエ
-        DrawMessier_SH();
-        //ポピュラー
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
-            if (popularList.indexOf(name) != -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(RA_SH) < rgLR && Math.abs(Dec_SH) < rgTB) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
-                    DrawObjects(name, x, y, type);
-                }
-            }
-        }
-        DrawNGC_SH();
+        drawMessier();
+        drawRecs();
 
         var RAtext = `赤経 ${Math.floor(cenRA/15)}h ${Math.round((cenRA-15*Math.floor(cenRA/15))*4*10)/10}m `;
         if (cenDec >= 0) {
@@ -777,7 +691,8 @@ function show_main(){
             var Dectext = `赤緯 -${Math.floor(-cenDec)}° ${Math.round((-cenDec-Math.floor(-cenDec))*60)}' (J2000.0) `;
         }
         
-        var coordtext = `${constellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
+        let centerConstellation = determineConstellation(cenRA, cenDec);
+        var coordtext = `${centerConstellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
         document.getElementById("coordtext").innerHTML = coordtext;
     }
 
@@ -790,8 +705,8 @@ function show_main(){
     }
 
     function coord (RA, Dec) {
-        var x = canvas.width * (0.5 - RApos(RA) / rgLR / 2);
-        var y = canvas.height * (0.5 - (Dec - cenDec) / rgTB / 2);
+        var x = canvas.width * (0.5 - RApos(RA) / rgEW / 2);
+        var y = canvas.height * (0.5 - (Dec - cenDec) / rgNS / 2);
         return [x, y];
     }
 
@@ -840,9 +755,107 @@ function show_main(){
     }
 
     function coordSH (RA_SH, Dec_SH) {
-        var x = canvas.width * (0.5 - RA_SH / rgLR / 2);
-        var y = canvas.height * (0.5 - Dec_SH / rgTB / 2);
+        var x = canvas.width * (0.5 - RA_SH / rgEW / 2);
+        var y = canvas.height * (0.5 - Dec_SH / rgNS / 2);
         return [x, y];
+    }
+    
+    function xyIfInCanvas(ra, dec) {
+        let scrRA, scrDec;
+        let x, y;
+        let inFlag = false;
+        [scrRA, scrDec] = RADec2scrAEP(ra, dec);
+        if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+            [x, y] = coordSH(scrRA, scrDec);
+            inFlag = true;
+        }
+        return [x, y, inFlag];
+    }
+
+    function RADec2scrAEP (RA, Dec) { //deg
+        if (RA == cenRA && Dec == cenDec) {
+            return [0, 0];
+        } else {
+            RA *= deg2rad;
+            Dec *= deg2rad;
+
+            let cenRA_rad = cenRA * deg2rad;
+            let cenDec_rad = cenDec * deg2rad;
+
+            let a = sin(cenDec_rad)*cos(Dec)*cos(RA-cenRA_rad) - cos(cenDec_rad)*sin(Dec);
+            let b =                 cos(Dec)*sin(RA-cenRA_rad);
+            let c = cos(cenDec_rad)*cos(Dec)*cos(RA-cenRA_rad) + sin(cenDec_rad)*sin(Dec);
+
+            let r = Math.acos(c) * rad2deg; //中心からの角距離, deg
+            let thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
+            let scrRA = r * sin(thetaSH);
+            let scrDec = - r * cos(thetaSH);
+            return [scrRA, scrDec];
+        }
+    }
+
+    function size(mag) {
+        if (mag > magLim) {
+            return zerosize / (magLim + 1);
+        } else {
+            return zerosize / (magLim + 1) + zerosize * 0.8 * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
+            //return zerosize * (magLim + 1 - mag) / (magLim + 1);
+        }
+    }
+    
+    function bv2color(bv) {
+        let c;
+        if (darker) {
+            c = starColor;
+        } else if (bv == -10) {
+            c = starColor;
+        } else {
+            bv = Math.max(-0.4, Math.min(2.0, parseFloat(bv)));
+            let r = 0, g = 0, b = 0;
+            if (bv < 0.4) r = 0.5 + 0.5 * (bv + 0.4) / 0.8;
+            else r = 1.0;
+            if (bv < 0) g = 1.0 + bv;
+            else if (bv < 0.4) g = 1.0;
+            else g = 1.0 - 0.75 * (bv - 0.4) / 1.6;
+            if (bv < 0.4) b = 1.0;
+            else b = 1.0 - (bv - 0.4) / 1.6;
+
+            r = Math.round(r * 255);
+            g = Math.round(g * 255);
+            b = Math.round(b * 255);
+            c = `rgba(${r}, ${g}, ${b}, 1)`;
+        }
+        return c;
+    }
+
+    function determineConstellation(cenRA, cenDec) {
+        let a = Array(89).fill(0);
+        for (let i=0; i<boundary.length; i+=5) {
+            let Dec1 = boundary[i+2];
+            let Dec2 = boundary[i+4];
+            if (Math.min(Dec1, Dec2) <= cenDec && cenDec < Math.max(Dec1, Dec2)) {
+                let RA1 = boundary[i+1];
+                let RA2 = boundary[i+3];
+                if (cenRA >= (cenDec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
+                    let No = boundary[i] - 1;
+                    a[No] = (a[No] + 1) % 2;
+                }
+            }
+        }
+
+        let centerConstellation = "";
+        for (let i=0; i<89; i++) {
+            if (a[i] == 1) {
+                centerConstellation = constellations[i].JPNname + "座  ";
+                break;
+            }
+            if (cenDec > 0) {
+                centerConstellation = "こぐま座  ";
+            } else {
+                centerConstellation = "はちぶんぎ座  ";
+            }
+        }
+        return centerConstellation;
     }
 
     function drawLines(RA1, Dec1, RA2, Dec2, a){
@@ -853,84 +866,137 @@ function show_main(){
         ctx.lineTo(x2, y2);
     }
 
-    function size (mag) {
-        if (mag > magLim) {
-            return zerosize / (magLim + 1);
+    function drawFilledCircle (x, y, r, c=starColor) {
+        ctx.fillStyle = c;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * pi, false);
+        ctx.fill();
+    }
+
+    function drawGaia(gaia, help, skyareas) {
+        ctx.fillStyle = starColor;
+        ctx.beginPath();
+        for (let arearange of skyareas) {
+            // help[0] = 0
+            // help[1<=i<180*360] = i番目の領域に入る直前までの星の数
+            // help[180*360] = gaia.length
+            let st = help[arearange[0]];
+            let fi = help[arearange[1]+1];
+            for (i=st; i<fi; i++) {
+                let data = gaia[i];
+                let mag = data[2] * 0.1;
+                if (mag >= magLim) continue;
+                let ra = data[0] * 0.001;
+                let dec = data[1] * 0.001;
+                let [x, y, inFlag] = xyIfInCanvas(ra, dec);
+                if (inFlag) {
+                    ctx.moveTo(x, y);
+                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
+                }
+            }
+        }
+        ctx.fill();
+    }
+
+    function writeStarNames () {
+        const tier_range = [180, 90, 60, 40, 30, 30];
+        let tierLimitUmu = starNameElem[1].checked;
+        ctx.strokeStyle = textColor;
+        ctx.fillStyle = textColor;
+        for (i=0; i<starNames.length; i++){
+            let d = starNames[i]
+            let tier = d.tier
+            if (tierLimitUmu && tier > 1) continue;
+            if (2*Math.max(rgNS, rgEW) > tier_range[tier-1]) continue;
+            let ra = d.ra;
+            let dec = d.dec;
+            [x, y, inFlag] = xyIfInCanvas(ra, dec);
+            if (inFlag) {
+                let size = 20 - 1 * tier;
+                if (d.jpnname) {
+                    drawObjects(d.jpnname, x, y+15, 0, fontsize=size);
+                } else {
+                    drawObjects(d.name, x, y+15, 0, fontsize=size);
+                }
+            }
+        }
+    }
+
+    //入っていることは前提
+    function drawObjects (name, x, y, type, fontsize=16, fontname='serif') {
+        ctx.beginPath();
+        /*
+        Gx       Galaxy 銀河
+        OC       Open star cluster 散開星団
+        Gb       Globular star cluster, usually in the Milky Way Galaxy 球状星団
+        Nb       Bright emission or reflection nebula 散光星雲、超新星残骸
+        Pl       Planetary nebula 惑星状星雲
+        C+N      Cluster associated with nebulosity
+        Ast      Asterism or group of a few stars
+        Kt       Knot or nebulous region in an external galaxy
+        TS       Triple star    (was *** in the CDS table version)
+        DS       Double star    (was ** in the CDS version)
+        SS       Single star    (was * in the CDS version)
+        ?        Uncertain type or may not exist
+        U        Unidentified at the place given, or type unknown (was blank in CDS v.)
+        -        Object called nonexistent in the RNGC (Sulentic and Tifft 1973)
+        PD       Photographic plate defect
+        */
+        if (type == "Gx") { //銀河
+            ctx.strokeRect(x-8, y-4, 16, 8);
+        } else if (type == "Nb" || type == "Pl" || type == "Kt") { //星雲
+            ctx.moveTo(x  , y-5);
+            ctx.lineTo(x+5, y  );
+            ctx.lineTo(x  , y+5);
+            ctx.lineTo(x-5, y  );
+            ctx.lineTo(x  , y-5);
+        } else if (type == "Gb") {
+            ctx.arc(x, y, 5, 0, 2 * pi, false);
+        } else if (type == "OC" || type == "C+N" || type == "Ast" || type == "TS" || type == "DS") {
+            ctx.moveTo(x  , y-6);
+            ctx.lineTo(x-5, y+3);
+            ctx.lineTo(x+5, y+3);
+            ctx.lineTo(x  , y-6);
+        } else if (type == 0) {
+            1;
         } else {
-            return zerosize * (magLim + 1 - mag) / (magLim + 1);
+            ctx.moveTo(x-4, y-4);
+            ctx.lineTo(x+4, y+4);
+            ctx.moveTo(x-4, y+4);
+            ctx.lineTo(x+4, y-4);
         }
+        ctx.stroke();
+        ctx.font = fontsize + 'px ' + fontname;
+        ctx.fillText(name, x+5, y-5);
     }
 
-    function DrawStars_SH(skyareas){
-        for (var arearange of skyareas) {
-            var st = parseInt(Help[arearange[0]]);
-            var fi = parseInt(Help[arearange[1]+1]);
-            for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho[3*(i-1)]);
-                var Dec = parseFloat(Tycho[3*(i-1)+1]);
-                var mag = parseFloat(Tycho[3*(i-1)+2]);
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (mag < magLim && Math.abs(Dec_SH) < rgTB && Math.abs(RA_SH) < rgLR) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-                    ctx.fill();
-                }
+    function drawJsonObjects (data, func, color=objectColor) {
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        for (i=0; i<data.length; i++){
+            let name = data[i].name;
+            if (name == '') continue;
+            let ra = rahm2deg(data[i].ra);
+            let dec = decdm2deg(data[i].dec);
+            [x, y, inFlag] = xyIfInCanvas(ra, dec);
+            if (inFlag) {
+                func(i, name, x, y);
             }
         }
     }
 
-    function DrawStars1011_SH(skyareas){
-        for (var arearange of skyareas) {
-            var st = parseInt(Help1011[arearange[0]]);
-            var fi = parseInt(Help1011[arearange[1]+1]);
-            for (i=st; i<fi; i++) {
-                var RA = parseFloat(Tycho1011[3*(i-1)]);
-                var Dec = parseFloat(Tycho1011[3*(i-1)+1]);
-                var mag = parseFloat(Tycho1011[3*(i-1)+2]);
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (mag < magLim && Math.abs(Dec_SH) < rgTB && Math.abs(RA_SH) < rgLR) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-                    ctx.fill();
-                }
-            }
-        }
+    function drawMessier () {
+        drawJsonObjects(messier, function(i, name, x, y) {
+            drawObjects(name, x, y, messier[i].class);
+            infoList.push([name, x, y]);
+        });
     }
 
-    function DrawMessier_SH() {
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
-        for (i=0; i<110; i++){
-            var RA = parseFloat(messier[3*i]);
-            var Dec = parseFloat(messier[3*i+1]);
-            var type = messier[3*i+2];
-            var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-            if (Math.abs(RA_SH) < rgLR && Math.abs(Dec_SH) < rgTB) {
-                var [x, y] = coordSH(RA_SH, Dec_SH);
-                DrawObjects("M" + (i+1).toString(), x, y, type);
-            }
-        }
-    }
-
-    function DrawNGC_SH() {
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = 'orange';
-        ctx.fillStyle = 'orange';
-        for (i=0; i<NGC.length/4; i++){
-            var name = NGC[4*i];
-            if (popularList.indexOf(name) == -1) {
-                var RA = parseFloat(NGC[4*i+1]);
-                var Dec = parseFloat(NGC[4*i+2]);
-                var type = NGC[4*i+3];
-                var [RA_SH, Dec_SH] = angleSH(RA, Dec);
-                if (Math.abs(RA_SH) < rgLR && Math.abs(Dec_SH) < rgTB) {
-                    var [x, y] = coordSH(RA_SH, Dec_SH);
-                    DrawObjects(name, x, y, type);
-                }
-            }
-        }
+    function drawRecs () {
+        drawJsonObjects(recs, function(i, name, x, y) {
+            drawObjects(name, x, y, recs[i].class);
+            infoList.push([name, x, y]);
+        })
     }
 
     //入っていることは前提
@@ -949,6 +1015,101 @@ function show_main(){
         ctx.stroke();
         ctx.fillText(name, x+5, y-5);
     }
+}
+
+function Rx([x, y, z], a) {
+    let s = sin(a);
+    let c = cos(a);
+    let ans = [x, c*y-s*z, s*y+c*z]
+    return ans;
+}
+
+function Ry ([x, y, z], a) {
+    let s = sin(a);
+    let c = cos(a);
+    let ans = [c*x+s*z, y, -s*x+c*z]
+    return ans;
+}
+
+function Rz ([x, y, z], a) {
+    let s = sin(a);
+    let c = cos(a);
+    let ans = [c*x-s*y, s*x+c*y, z];
+    return ans;
+}
+
+function rahm2deg(rahmtext) {
+    let rahm = rahmtext.split(' ').map(Number);
+    return rahm[0] * 15 + rahm[1] * 0.25;
+}
+
+function decdm2deg(decdmtext) {
+    let decdm = decdmtext.split(' ').map(Number);
+    let dec = Math.abs(decdm[0]) + decdm[1] / 60;
+    if (decdmtext[0] == '-') {
+        dec *= -1;
+    }
+    return dec;
+}
+
+function hourAngle(JD_TT, lon_obs) {
+    let t = (JD_TT - 2451545.0) / 36525;
+    let ans = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs - 0.0203; //rad
+    return ans;
+}
+
+function RADec2Ah (RA, Dec, theta) { //deg
+    RA *= deg2rad;
+    Dec *= deg2rad;
+    let [x, y, z] = Ry([sin(Dec), cos(Dec)*sin(theta-RA), cos(Dec)*cos(theta-RA)], -lat_obs);
+    let A = (Math.atan2(-y, x) * rad2deg + 360) % 360;
+    let h = Math.asin(z) * rad2deg;
+    return [A, h]; //deg
+}
+
+function Ah2RADec (A, h, theta) {
+    A *= deg2rad;
+    h *= deg2rad;
+    let [x, y, z] = Ry([cos(h)*cos(A), -cos(h)*sin(A), sin(h)], lat_obs);
+    let RA = ((theta - Math.atan2(y, z)) * rad2deg + 360) % 360;
+    let Dec = Math.asin(x) * rad2deg;
+    return [RA, Dec]; //deg
+}
+
+function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+    if (scrRA == 0 && scrDec == 0) {
+        return [cenRA, cenDec];
+    } else {
+        let thetaSH = Math.atan2(scrRA, -scrDec);
+        let r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * deg2rad;
+        let cenDec_rad = cenDec * deg2rad;
+
+        let a =  sin(cenDec_rad)*sin(r)*cos(thetaSH) + cos(cenDec_rad)*cos(r);
+        let b =                  sin(r)*sin(thetaSH);
+        let c = -cos(cenDec_rad)*sin(r)*cos(thetaSH) + sin(cenDec_rad)*cos(r);
+
+        let dec = Math.asin(c) * rad2deg;
+        let ra = ((Math.atan2(b, a) * rad2deg + cenRA) % 360 + 360) % 360;
+        return [ra, dec]
+    }
+}
+
+function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+    let A, h;
+    if (scrRA == 0 && scrDec == 0) {
+        A = cenAzm;
+        h = cenAlt;
+    } else {
+        let thetaSH = Math.atan2(scrRA, -scrDec); //地球から見て下から始めて時計回り
+        let r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * deg2rad;
+
+        let cenAzm_rad = cenAzm * deg2rad;
+        let cenAlt_rad = cenAlt * deg2rad;
+        let [x, y, z] = Rz(Ry([sin(r)*cos(thetaSH), sin(r)*sin(thetaSH), cos(r)], pi/2-cenAlt_rad), -cenAzm_rad);
+        h = Math.asin(z) * rad2deg;
+        A = (Math.atan2(-y, x) * rad2deg % 360 + 360) % 360;
+    }
+    return [A, h];
 }
 
 function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸の向きはいつも通り
@@ -974,5 +1135,206 @@ function SHtoRADec (RA_SH, Dec_SH) { //deg 画面中心を原点とし、各軸�
 
 function sin(a){return Math.sin(a)}
 function cos(a){return Math.cos(a)}
+
+function loadFiles() {
+    // 決めるもの
+    // hips
+    // BSCRAary, BSCDecary, FSs, Bayers, BayerNums
+    // ENGplanets, JPNplanets, planets, document.getElementById('observer')
+    // hip_65, constellations, ...
+
+    function xhrHIP(data) {
+        const hipData = data.split(',').map(Number);
+        for (i=0; i<hipData.length; i+=4){
+            hips.push({
+                ra: hipData[i] * 0.001,
+                dec: hipData[i+1] * 0.001,
+                mag: hipData[i+2] * 0.1,
+                bv: hipData[i+3] * 0.1 //割って-10（もともと-100）ならNaN
+            });
+        }
+    }
+
+    //Bayer
+    function xhrBSC(data) {
+        const BSC = data.split(',');
+        BSCnum = BSC.length / 6;
+        BSCRAary = Array(BSCnum);
+        BSCDecary = Array(BSCnum);
+        FSs = Array(BSCnum);
+        Bayers = Array(BSCnum);
+        BayerNums = Array(BSCnum);
+        for (i=0; i<BSCnum; i++){
+            BSCRAary[i] = +BSC[6*i];
+            BSCDecary[i] = +BSC[6*i+1];
+            FSs[i] = BSC[6*i+2];
+            Bayers[i] = BSC[6*i+3];
+            BayerNums[i] = BSC[6*i+4];
+        }
+    }
+
+    if (online) {
+        function loadFile(filename, func, impflag=false) {
+            let url_load = "https://peteworden.github.io/Soleil/data/" + filename + ".txt";
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', url_load);
+            xhr.send();
+            xhr.onreadystatechange = function() {
+                if(xhr.readyState === 4 && xhr.status === 200) {
+                    func(xhr.responseText);
+                    xhrcheck++;
+                    if (impflag) {
+                       xhrimpcheck++;
+                    }
+                    loaded.push(filename);
+                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                    show_initial();
+                    return 0;
+                }
+            }
+        }
+
+        function loadJsonData(filename, func, impflag=false) {
+            fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                func(data)
+                xhrcheck++;
+                if (impflag) {
+                    xhrimpcheck++;
+                }
+                loaded.push(filename)
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json`);
+                show_initial();
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+        
+        function loadCsvData(filename, func, impflag=false) {
+            fetch(`https://peteworden.github.io/Soleil/data/${filename}.csv`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                let rows = text.trim().split('\n');
+                let data = rows.map(row => row.split(",").map(Number));
+                func(data)
+                xhrcheck++;
+                if (impflag) {
+                    xhrimpcheck++;
+                }
+                loaded.push(filename)
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.csv`);
+                show_initial();
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+        }
+
+        // デバッグ用。テキストファイル専用。getfileに関連するjsの2行をコメントアウトする。
+        // 公開時コメントアウトの解除を忘れないように！
+        // 例
+        // document.getElementById('getFile').addEventListener('change', function(event) {
+        //     loadFileForDebug(event, 'localhip', xhrHIP, true)
+        // })
+        function loadFileForDebug(event, filename, func, impflag=false) {
+            let fr = new FileReader();
+            fr.onload = function () {
+                const content = fr.result;
+                func(content);
+                xhrcheck++;
+                if (impflag) {
+                   xhrimpcheck++;
+                }
+                loaded.push(filename);
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                show_initial();
+            }
+            fr.readAsText(event.target.files[0]);
+        }
+        function loadCSVForDebug(event, filename,func, impflag=false) {
+            const file = e.target.files[0];
+            if (file) {
+                const fr = new FileReader();
+                fr.onload = function(event) {
+                    const csvText = event.target.result;
+                    const data = parseCSV(csvText);
+                    func(data)
+                    xhrcheck++;
+                    if (impflag) {
+                       xhrimpcheck++;
+                    }
+                    loaded.push(filename);
+                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                    show_initial();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        //HIP
+        loadFile("hip_65", xhrHIP, true);
+
+        loadJsonData('constellation', (data) => {
+            constellations = data;
+        }, true);
+
+        //星座境界線
+        loadFile("constellation_boundaries", (data) => {
+            boundary = data.split(',').map(Number);
+        }, true);
+
+        loadJsonData('starnames', (data) => {
+            starNames = data;
+        }, true);
+
+        loadJsonData('messier', (data) => {
+            messier = data;
+        }, true);
+
+        //gaia offlineはまだ
+        loadCsvData('gaia_-100', (data) => {
+            gaia100 = data;
+        });
+        loadFile("gaia_-100_helper", (data) => {
+            gaia100_help = data.split(',').map(Number);
+        });
+        loadCsvData('gaia_101-110', (data) => {
+            gaia101_110 = data;
+        });
+        loadFile("gaia_101-110_helper", (data) => {
+            gaia101_110_help = data.split(',').map(Number);
+        });
+        loadCsvData('gaia_111-115', (data) => {
+            gaia111_115 = data;
+        });
+        loadFile("gaia_111-115_helper", (data) => {
+            gaia111_115_help = data.split(',').map(Number);
+        });
+
+        //Bayer
+        loadFile("brights", xhrBSC);
+
+        loadJsonData('rec', (data) => {
+            recs = data;
+        });
+
+        // NGC天体とIC天体
+        loadFile("ngc", (data) => {
+            NGC = data.split(',');
+        });
+    }
+}
 
 document.body.appendChild(canvas);
