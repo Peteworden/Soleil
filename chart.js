@@ -143,6 +143,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-03-28T00:52:00+09:00', text: ['アイコンが素敵になりました。ありがとう！', '場所の設定方法を改良し、地図上で選択できるようになりました', 'Windows向けデスクトップアプリを鋭意開発中です！ -> https://github.com/Peteworden/reticle/releases']},
     {time: '2025-03-23T23:15:00+09:00', text: ['この星図のいい名前を募集しています！', '星が消えるバグ、恒星時の計算式のずれを修正しました', 'バグ報告などの連絡は？ボタンを押したところのフォームから！']},
     {time: '2025-02-08T19:00:00+09:00', text: ['以前から日本語名を表示できた(Thanks to ToE42)90個の星を含む428個の星の英語名を収録しました。天文冬の陣2024でいただいた意見をもとにした改良です']},
     {time: '2025-02-08T16:00:00+09:00', text: ['これまではヒッパルコス星表とティコ第2星表を使っていましたが、後者をやめガイア星表を使うことにしました', '最微等級が11.0等級から11.5等級になりました。多すぎる場合は設定のスライダーで調整してください', '恒星の位置の精度が0.01°から0.001°になりました']},
@@ -638,7 +639,6 @@ function showObjectInfo(x, y) {
         if (JPNplanets.includes(nearest[0])) {
             trackPlanet = nearest[0];
             document.getElementById('planetTrack').style.display = 'inline-block';
-            document.getElementById('objectInfoText').innerHTML +=  `<a href="https://peteworden.github.io/Soleil/SoleilWeb.html?time=${yearTextElem.value}-${monthTextElem.value}-${dateTextElem.value}-${hourTextElem.value}-${Math.floor(minuteTextElem.value/6.0)}&target=${ENGplanets[JPNplanets.indexOf(nearest[0])].split(' ').join('').split('/').join('')}&dark=1">Soleil Webでくわしく見る</a>`;
             return;
         } else if (nearest[0][0] == 'M') {
             if (messier[parseInt(nearest[0].slice(1))-1].description.length > 0) {
@@ -977,6 +977,19 @@ function onmouseup(e){
     }
 }
 
+function onmouseout(e){
+    canvas.removeEventListener("mousemove", onmousemove);
+    if (dragFlag) {
+        setUrlAndLocalStorage('RA', cenRA.toFixed(2));
+        setUrlAndLocalStorage('Dec', cenDec.toFixed(2));
+        setUrlAndLocalStorage('azm', cenAzm.toFixed(2));
+        setUrlAndLocalStorage('alt', cenAlt.toFixed(2));
+        setUrlAndLocalStorage('area', (2*rgEW).toFixed(2));
+        history.replaceState('', '', url.href);
+        canvas.removeEventListener("mousemove", onmousemove);
+    }
+}
+
 function onwheel(event) {
     event.preventDefault();
     let x3 = event.pageX - canvas.offsetLeft - canvas.width / 2;
@@ -1037,7 +1050,7 @@ function show_initial(){
         canvas.addEventListener('touchcancel', ontouchcancel);
         canvas.addEventListener('mousedown', onmousedown);
         canvas.addEventListener('mouseup', onmouseup);
-        canvas.addEventListener('mouseout', onmouseup);
+        canvas.addEventListener('mouseout', onmouseout);
         canvas.addEventListener('wheel', onwheel);
         document.getElementById("settingBtn").removeAttribute("disabled");
         document.getElementById("descriptionBtn").removeAttribute("disabled");
