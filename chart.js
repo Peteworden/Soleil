@@ -22,7 +22,7 @@ const aovSliderElem = document.getElementById('aovSlider');
 const timeSliderElem = document.getElementById('timeSlider');
 let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
-const realtimeElem = document.getElementsByName('realtime');
+const realtimeElem = document.getElementById('realtime');
 const trackDateElem = document.getElementsByName('trackTime');
 const starNameElem = document.getElementsByName('starName');
 
@@ -76,6 +76,14 @@ let showingJD = 0;
 let theta;
 let mode; //AEP(正距方位図法), EtP(正距円筒図法), view(プラネタリウム), live(実際の傾き), ar
 let ObsPlanet, Obs_num, lat_obs, lon_obs, lattext, lontext;
+const observationSites = {
+    "京大西部構内": [35.03, 135.78],
+    "鵜倉園地": [34.27, 136.55],
+    "乗鞍高原": [36.11, 137.63],
+    "仙台": [38.27, 140.87],
+    "東京": [35.68, 139.76],
+    "大阪": [34.70, 135.50]
+};
 
 let Ms, ws, lon_moon, lat_moon;
 
@@ -88,10 +96,10 @@ let gaia101_110 = new Array(800359);
 let gaia101_110_help = new Array(64801);
 let gaia111_115 = new Array(666677);
 let gaia111_115_help = new Array(64801);
-let Tycho = new Array(980634);
-let Help = new Array(64801);
-let Tycho1011 = new Array(1602511);
-let Help1011 = new Array(64801);
+// let Tycho = new Array(980634);
+// let Help = new Array(64801);
+// let Tycho1011 = new Array(1602511);
+// let Help1011 = new Array(64801);
 let BSCnum = 0;
 let BSCRAary = Array(1);
 let BSCDecary = Array(1);
@@ -729,29 +737,29 @@ function setYMDHM(y, m, d, h, mi) {
     }
 }
 
-function here() {
-    function success(position) {
-        const latitude = Math.round(position.coords.latitude*100)/100;
-        const longitude = Math.round(position.coords.longitude*100)/100;
-        if (latitude < 0) {
-            document.getElementById('NSCombo').options[1].selected = true;
-        } else {
-            document.getElementById('NSCombo').options[0].selected = true;
-        }
-        document.getElementById('lat').value = Math.abs(latitude);
-        if (longitude < 0) {
-            document.getElementById('EWCombo').options[1].selected = true;
-        } else {
-            document.getElementById('EWCombo').options[0].selected = true;
-        }
-        document.getElementById('lon').value = Math.abs(longitude);
-    }
-    if (!navigator.geolocation) {
-        alert("お使いのブラウザは位置情報に対応していません");
-    } else {
-        navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
-    }
-}
+// function here() {
+//     function success(position) {
+//         const latitude = Math.round(position.coords.latitude*100)/100;
+//         const longitude = Math.round(position.coords.longitude*100)/100;
+//         if (latitude < 0) {
+//             document.getElementById('NSCombo').options[1].selected = true;
+//         } else {
+//             document.getElementById('NSCombo').options[0].selected = true;
+//         }
+//         document.getElementById('lat').value = Math.abs(latitude);
+//         if (longitude < 0) {
+//             document.getElementById('EWCombo').options[1].selected = true;
+//         } else {
+//             document.getElementById('EWCombo').options[0].selected = true;
+//         }
+//         document.getElementById('lon').value = Math.abs(longitude);
+//     }
+//     if (!navigator.geolocation) {
+//         alert("お使いのブラウザは位置情報に対応していません");
+//     } else {
+//         navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
+//     }
+// }
 
 aovSliderElem.addEventListener('input', function() {
     show_main();
@@ -1029,6 +1037,7 @@ function show_initial(){
         canvas.addEventListener('touchcancel', ontouchcancel);
         canvas.addEventListener('mousedown', onmousedown);
         canvas.addEventListener('mouseup', onmouseup);
+        canvas.addEventListener('mouseout', onmouseup);
         canvas.addEventListener('wheel', onwheel);
         document.getElementById("settingBtn").removeAttribute("disabled");
         document.getElementById("descriptionBtn").removeAttribute("disabled");
@@ -1543,9 +1552,9 @@ function show_main(){
         ctx.stroke();
     }
 
-    //Tycho
-    if (magLim > 6.5 && gaia100[0] != undefined && gaia100_help[0] != undefined) {
-    // if (magLim > 6.5 && Tycho.length != 0 && Help.length != 0) {
+    //Gaia
+    // messierに含まれない6.5等級より明るい星もあるので、magLim > 5で余裕を持たせる
+    if (magLim > 5 && gaia100[0] != undefined && gaia100_help[0] != undefined) {
         let skyareas = [];
         if (mode == 'AEP') {
             let minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
@@ -1589,10 +1598,6 @@ function show_main(){
                     drawGaia(gaia111_115, gaia111_115_help, skyareas);
                 }
             }
-            // drawStars(skyareas);
-            // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
-            //     drawStars1011(skyareas);
-            // }
         } else if (mode == 'EtP') { //正距円筒図法
             if (cenRA - rgEW < 0) {
                 //skyareasは[[a, b]]のaの領域とbの領域を両方含む
@@ -1622,10 +1627,6 @@ function show_main(){
                     drawGaia(gaia111_115, gaia111_115_help, skyareas);
                 }
             }
-            // drawStars(skyareas);
-            // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
-            //     drawStars1011(skyareas);
-            // }
         } else if (mode == 'view') {
             let [scrRA_NP, scrDec_NP] = RADec2scrview(0, 90);
             let [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
@@ -1685,10 +1686,6 @@ function show_main(){
                     drawGaia(gaia111_115, gaia111_115_help, skyareas);
                 }
             }
-            // drawStars(skyareas);
-            // if (magLim > 10 && Tycho1011.length != 0 && Help1011.length != 0) {
-            //     drawStars1011(skyareas);
-            // }
         }
     }
 
@@ -1938,7 +1935,7 @@ function show_main(){
         if (mag > magLim) {
             return zerosize / (magLim + 1);
         } else {
-            return zerosize / (magLim + 1) + zerosize * 0.8 * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
+            return zerosize / (magLim + 1) + zerosize * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
             //return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
@@ -2028,50 +2025,6 @@ function show_main(){
                 let ra = data[0] * 0.001;
                 let dec = data[1] * 0.001;
                 let [x, y, inFlag] = xyIfInCanvas(ra, dec);
-                if (inFlag) {
-                    ctx.moveTo(x, y);
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-                }
-            }
-        }
-        ctx.fill();
-    }
-
-    // drawFilledCircleを使わない方が僅かに速い
-    function drawStars (skyareas) {
-        ctx.fillStyle = starColor;
-        ctx.beginPath();
-        for (let arearange of skyareas) {
-            let st = Help[arearange[0]];
-            let fi = Help[arearange[1]+1];
-            for (i=st; i<fi; i++) {
-                let idx = 3 * (i - 1);
-                let mag = Tycho[idx+2];
-                if (mag >= magLim) continue;
-                let ra = Tycho[idx];
-                let dec = Tycho[idx+1];
-                let [x, y, inFlag] = xyIfInCanvas(ra, dec);
-                if (inFlag) {
-                    ctx.moveTo(x, y);
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
-                }
-            }
-        }
-        ctx.fill();
-    }
-
-    function drawStars1011 (skyareas) {
-        ctx.beginPath();
-        for (let arearange of skyareas) {
-            let st = Help1011[arearange[0]];
-            let fi = Help1011[arearange[1]+1];
-            for (i=st; i<fi; i++) {
-                let idx = 3 * (i - 1);
-                let mag = Tycho1011[idx+2];
-                if (mag >= magLim) continue;
-                let ra = Tycho1011[idx];
-                let dec = Tycho1011[idx+1];
-                [x, y, inFlag] = xyIfInCanvas(ra, dec);
                 if (inFlag) {
                     ctx.moveTo(x, y);
                     ctx.arc(x, y, size(mag), 0, 2 * pi, false);
@@ -2748,6 +2701,8 @@ function newSetting() {
         setUrlAndLocalStorage('lon', -document.getElementById('lon').value);
     }
 
+    localStorage.setItem('observationSite', document.getElementById('observation-site-select').value);
+
     setRealtime(); //timeのURL, localStorageもやる
     timeSliderElem.value = 0;
     timeSliderValue = 0;
@@ -2766,7 +2721,8 @@ function setUrlAndLocalStorage(key, value) {
 function setRealtime() {
     let ymdhm = new Date();
     document.getElementById('showingData').style.color = textColor;
-    if (realtimeElem[0].checked) {
+    let realtimeelemValue = realtimeElem.value;
+    if (realtimeelemValue == 'オフ') {
         timeSliderElem.style.visibility = 'visible';
         let y = parseInt(yearTextElem.value);
         let m = parseInt(monthTextElem.value);
@@ -2781,7 +2737,7 @@ function setRealtime() {
         }
         setUrlAndLocalStorage('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('realtime', 'off');
-    } else if (realtimeElem[1].checked) {
+    } else if (realtimeelemValue == '赤道座標固定') {
         timeSliderElem.style.visibility = 'hidden';
         let [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
@@ -2794,7 +2750,7 @@ function setRealtime() {
         setYMDHM(y, m, d, h, mi);
         setUrlAndLocalStorage('time', `${y}-${m}-${d}-${h}-${mi}`);
         localStorage.setItem('realtime', 'radec');
-    } else if (realtimeElem[2].checked) {
+    } else if (realtimeelemValue == '高度方位固定') {
         timeSliderElem.style.visibility = 'hidden';
         let [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), parseFloat((ymdhm.getMinutes()+ymdhm.getSeconds()/60).toFixed(1))];
         document.getElementById('showingData').innerHTML = `${y}/${m}/${d} ${h}:${mi.toString().padStart(2, '0')} (JST) ${lattext} ${lontext}`;
@@ -2812,9 +2768,7 @@ function setRealtime() {
 }
 
 function realtimeOff() {
-    realtimeElem[1].checked = false;
-    realtimeElem[2].checked = false;
-    realtimeElem[0].checked = true;
+    realtimeElem.value = 'オフ';
     timeSliderElem.style.visibility = 'visible';
     let y = parseInt(yearTextElem.value);
     let m = parseInt(monthTextElem.value);
@@ -3116,27 +3070,7 @@ function loadFiles() {
         loadFile("gaia_111-115_helper", (data) => {
             gaia111_115_help = data.split(',').map(Number);
         });
-
-        //Tycho
-        // loadFile("tycho2_100", (data) => {
-        //     Tycho = data.split(',').map(Number);
-        // });
-
-        // //Tycho helper
-        // loadFile("tycho2_100_helper", (data) => {
-        //     Help = data.split(',').map(Number);
-        // });
-
-        // //Tycho 10~11 mag
-        // loadFile("tycho2_100-110", (data) => {
-        //     Tycho1011 = data.split(',').map(Number);
-        // });
-
-        // //Tycho helper 10~11 mag
-        // loadFile("tycho2_100-110_helper", (data) => {
-        //     Help1011 = data.split(',').map(Number);
-        // });
-
+        
         //追加天体
         loadFile("additional_objects", xhrExtra);
 
@@ -3160,10 +3094,10 @@ function loadFiles() {
                     fn = content[i].split('::::')[0];
                     let data = content[i].split('::::')[1];
                     if (fn == 'hip_65') {xhrHIP(data); xhrimpcheck++;}
-                    if (fn === 'tycho2_100') Tycho = data.split(',').map(Number);
-                    if (fn == 'tycho2_100_helper') Help = data.split(',').map(Number);
-                    if (fn == 'tycho2_100-110_helper') Tycho1011 = data.split(',').map(Number);
-                    if (fn == 'tycho2_100-110_helper') Help1011 = data.split(',').map(Number);
+                    // if (fn === 'tycho2_100') Tycho = data.split(',').map(Number);
+                    // if (fn == 'tycho2_100_helper') Help = data.split(',').map(Number);
+                    // if (fn == 'tycho2_100-110_helper') Tycho1011 = data.split(',').map(Number);
+                    // if (fn == 'tycho2_100-110_helper') Help1011 = data.split(',').map(Number);
                     if (fn == 'brights') xhrBSC(data);
                     if (fn == 'starname') {starNames = JSON.parse(data); xhrimpcheck++;}
                     if (fn == 'messier') {messier = JSON.parse(data); xhrimpcheck++;}
@@ -3260,16 +3194,19 @@ function checkURL() {
         show_initial();
     } else if (localStorage.getItem('realtime') != null) {
         if (localStorage.getItem('realtime') == 'radec') {
-            realtimeElem[2].checked = false;
-            realtimeElem[1].checked = true;
+            realtimeElem.value = '赤道座標固定';
         } else if (localStorage.getItem('realtime') == 'off') {
-            realtimeElem[2].checked = false;
-            realtimeElem[0].checked = true;
+            realtimeElem.value = 'オフ';
         }
         defaultcheck++;
         show_initial();
     } else {
         now();
+        // now()の中身は以下
+        // let ymdhm = new Date();
+        // let [y, m, d, h, mi] = [ymdhm.getFullYear(), ymdhm.getMonth()+1, ymdhm.getDate(), ymdhm.getHours(), ymdhm.getMinutes()];
+        // setYMDHM(y, m, d, h, mi);
+        // showingJD = YMDHM_to_JD(y, m, d, h, mi);
         defaultcheck++;
         show_initial();
     }
@@ -3328,35 +3265,33 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('lat') && !isNaN(url.searchParams.get('lat'))) {
-        lat_obs = url.searchParams.get('lat') * deg2rad;
-        if (lat_obs >= 0) {
-            document.getElementById("NSCombo").value = '北緯';
-            document.getElementById('lat').value = url.searchParams.get('lat');
-        } else {
-            document.getElementById("NSCombo").value = '南緯';
-            document.getElementById('lat').value = -url.searchParams.get('lat');
+    if ((url.searchParams.has('lat') && !isNaN(url.searchParams.get('lat'))) || (url.searchParams.has('lon') && !isNaN(url.searchParams.get('lon')))) {
+        setObservationSite(+url.searchParams.get('lat'), +url.searchParams.get('lon'));
+        console.log(+url.searchParams.get('lat'), +url.searchParams.get('lon'));
+        if (+url.searchParams.get('lat') != undefined && +url.searchParams.get('lon') != undefined) {
+            console.log(observationSites);
+            for (let observationSite in observationSites) {
+                console.log(observationSites[observationSite][0] = +url.searchParams.get('lat'), +url.searchParams.get('lon') && observationSites[observationSite][1] == +url.searchParams.get('lon'));
+                if (observationSites[observationSite][0] = +url.searchParams.get('lat'), +url.searchParams.get('lon') && observationSites[observationSite][1] == +url.searchParams.get('lon')) {
+                    console.log(observationSite)
+                    document.getElementById('observation-site-select').value = observationSite;
+                    console.log(document.getElementById('observation-site-select').value);
+                    break;
+                }
+            }
         }
-        defaultcheck++;
+        defaultcheck += 2;
+        show_initial();
+    } else if (localStorage.getItem('observationSite') != null && observationSites[localStorage.getItem('observationSite')] != undefined) {
+        const observationSite = localStorage.getItem('observationSite');
+        console.log(observationSite);
+        setObservationSite(...observationSites[observationSite]);
+        document.getElementById('observation-site-select').value = observationSite;
+        defaultcheck += 2;
         show_initial();
     } else {
-        defaultcheck++;
-        show_initial();
-    }
-
-    if (url.searchParams.has('lon') && !isNaN(url.searchParams.get('lon'))) {
-        lon_obs = url.searchParams.get('lon') * deg2rad;
-        if (lon_obs >= 0) {
-            document.getElementById("EWCombo").value = '東経';
-            document.getElementById('lon').value = url.searchParams.get('lon');
-        } else {
-            document.getElementById("EWCombo").value = '西経';
-            document.getElementById('lon').value = -url.searchParams.get('lon');
-        }
-        defaultcheck++;
-        show_initial();
-    } else {
-        defaultcheck++;
+        setObservationSite(+localStorage.getItem('lat'), +localStorage.getItem('lon'));
+        defaultcheck += 2;
         show_initial();
     }
 
@@ -3598,11 +3533,16 @@ document.getElementById('copyButton').addEventListener('click', function() {
     });
 });
 
-function toggleFullscreen() {
+function fullScreenFunc() {
     let elem = document.documentElement;
     elem
     .requestFullscreen({ navigationUI: "show" })
-    .then(() => {})
+    .then(() => {
+        setCanvas(true);
+        show_main();
+        document.getElementById('fullScreenBtn').style.visibility = "hidden";
+        document.getElementById('exitFullScreenBtn').style.visibility = "visible";
+    })
     .catch((err) => {
         alert(
             `An error occurred while trying to switch into fullscreen mode: ${err.message} (${err.name})`,
@@ -3610,16 +3550,10 @@ function toggleFullscreen() {
     });
 }
 
-function fullScreenFunc() {
-    toggleFullscreen();
-    setCanvas(true);
-    document.getElementById('fullScreenBtn').style.visibility = "hidden";
-    document.getElementById('exitFullScreenBtn').style.visibility = "visible";
-}
-
 function exitFullScreenFunc() {
     document.exitFullscreen();
     setCanvas(false);
+    show_main();
     document.getElementById('fullScreenBtn').style.visibility = "visible";
     document.getElementById('exitFullScreenBtn').style.visibility = "hidden";
 }
@@ -3651,6 +3585,60 @@ document.getElementById('planetTrackCheck').addEventListener('input', () => {
     }
 });
 
+document.getElementById('NSCombo').addEventListener('change', function() {
+    document.getElementById('observation-site-select').value = '--';
+});
+document.getElementById('lat').addEventListener('input', function() {
+    document.getElementById('observation-site-select').value = '--';
+});
+document.getElementById('EWCombo').addEventListener('change', function() {
+    document.getElementById('observation-site-select').value = '--';
+});
+document.getElementById('lon').addEventListener('input', function() {
+    document.getElementById('observation-site-select').value = '--';
+});
+
+let lat_map, lon_map;
+let currentMarker = null;
+document.getElementById('observation-site-select').addEventListener('change', function() {
+    const observationSite = document.getElementById('observation-site-select').value;
+    if (observationSites[observationSite] != undefined) {
+        console.log(observationSites[observationSite]);
+        setObservationSite(...observationSites[observationSite]);
+    } else if (observationSite == '現在地') {
+        function success(position) {
+            const hereCoord = position.coords;
+            setObservationSite(hereCoord.latitude, hereCoord.longitude);
+        }
+        if (!navigator.geolocation) {
+            alert("お使いのブラウザは位置情報に対応していません");
+        } else {
+            navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
+        }
+    } else if (observationSite == '地図上で選択') {
+        document.getElementById('observation-site-map-div').style.visibility = 'visible';
+        const map = L.map('observation-site-map').setView([lat_obs*rad2deg, lon_obs*rad2deg], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+        currentMarker = L.marker([lat_obs*rad2deg, lon_obs*rad2deg]).addTo(map);
+
+        map.on('click', (e) => {
+            lat_map = e.latlng.lat;
+            lon_map = e.latlng.lng;
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+            }
+            currentMarker = L.marker([lat_map, lon_map]).addTo(map);
+            console.log(`緯度: ${lat_map}, 経度: ${lon_map}`);
+        });
+    }
+});
+function closeObservationSiteMap() {
+    document.getElementById('observation-site-map-div').style.visibility = 'hidden';
+    setObservationSite(lat_map, lon_map);
+}
+
 function show_JD_plus1(){
     showingJD++;
     setYMDHM(...JD_to_YMDHM(showingJD));
@@ -3661,6 +3649,17 @@ function show_JD_minus1(){
     showingJD--;
     setYMDHM(...JD_to_YMDHM(showingJD));
     realtimeOff();
+}
+
+function setObservationSite(lat_deg=35, lon_deg=135) {
+    lat_obs = lat_deg * deg2rad;
+    lon_obs = lon_deg * deg2rad;
+    lat_deg = Math.round(lat_deg * 100) / 100;
+    lon_deg = Math.round(lon_deg * 100) / 100;
+    document.getElementById("NSCombo").value = lat_deg >= 0 ? '北緯' : '南緯';
+    document.getElementById('lat').value = Math.abs(lat_deg).toFixed(2);
+    document.getElementById("EWCombo").value = lon_deg >= 0 ? '東経' : '西経';
+    document.getElementById('lon').value = Math.abs(lon_deg).toFixed(2);
 }
 
 document.body.appendChild(canvas);

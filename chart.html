@@ -8,8 +8,10 @@
         <meta name="theme-color" content="#000000">
         <meta name="msapplication-TileColor" content="#000000">
         <link rel="stylesheet" href="styles/styleChart.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <link rel="apple-touch-icon" sizes="180x180" href="images/icon/apple-touch-icon.png">
         <link rel="icon" type="image/png" sizes="32x32" href="images/icon/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="images/icon/favicon-16x16.png">
@@ -48,7 +50,11 @@
             </ul>
         </div>
 
-        <div>
+        <div class="top-right-buttons">
+            <button id="searchBtn" class="searchBtn" type="button" onclick="openSearch()">
+                <!--rgb(247, 206, 206) 48px-->
+                <img src="images/search.png" alt="検索">
+            </button>
             <button id="settingBtn" class="settingBtn" type="button" onclick="showSetting()" disabled>
                 <img src="images/settingBtn.png" alt="設定">
             </button>
@@ -106,11 +112,24 @@
                         <option>西経</option>
                     </select>
                     <label><input type="text" id="lon" size="1" value="135">°</label>
-                    <button type="button" onclick="here()">現在地</button>
+                    <!-- <button type="button" onclick="here()">現在地</button> -->
+                    <select id="observation-site-select">
+                        <option selected>--</option>
+                        <option>現在地</option>
+                        <option>京大西部構内</option>
+                        <option>鵜倉園地</option>
+                        <option>乗鞍高原</option>
+                        <option>仙台</option>
+                        <option>東京</option>
+                        <option>大阪</option>
+                        <option>地図上で選択</option>
+                    </select>
                 </div>
 
                 <div class="set-mag-limit">
+                    <img src="images/キラキラ1.png" alt="" class="magLimit-image magLimit-left-image">
                     <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
+                    <img src="images/キラキラ2.png" alt="" class="magLimit-image magLimit-right-image">
                 </div>
 
                 <div class="mainSettingRows">
@@ -123,14 +142,23 @@
                         <input type="radio" name="mode" value="ar">AR
                         <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
                         <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
-                    </div>
-                    <div>
-                        リアルタイム
-                        <input type="radio" name="realtime" value="off">オフ
-                        <input type="radio" name="realtime" value="radec">赤道座標固定
-                        <input type="radio" name="realtime" value="altazm" checked>高度方位固定
-                    </div>
+                    </div><br>
+                    <!-- <div>
+                        ページ更新時の時刻設定（URLが最優先、リアルタイム設定では常に現在時刻）
+                        <select id="firstTimeSetting">
+                            <option selected>現在時刻</option>
+                            <option>最後に設定した時刻</option>
+                        </select>
+                    </div> -->
                     <ul>
+                        <li>
+                            リアルタイム
+                            <select id="realtime">
+                                <option>オフ</option>
+                                <option selected>赤道座標固定</option>
+                                <option>高度方位固定</option>
+                            </select>
+                        </li><br>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="gridCheck" checked>グリッド（プラネモード）</li>
                         <br>
@@ -174,9 +202,9 @@
                             <input type="checkbox" id="allNGCCheck">すべてのNGC天体とIC天体
                             （左右の視野<input type="text" id="allNGCFrom" size="1" value="50">°以下のとき）
                         </li>
-                        <li>
+                        <!-- <li>
                             <input type="checkbox" id="radioSourcesCheck">電波源（Coming soon）
-                        </li>
+                        </li> -->
                         <br>
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
                         <br>
@@ -212,7 +240,7 @@
                 説明など<br>これを開いた右下のボタンで閉じる
             </p>
 
-            <button id="openSearch" type="button" onclick="openSearch()">検索</button>
+            <!-- <button id="openSearch" type="button" onclick="openSearch()">検索</button> -->
 
             <div id="bookmarkUrlDiv">
                 ブックマークなどを作成する際は下のリンクをご使用ください↓
@@ -307,12 +335,12 @@
                 </ul>
             </p>
             <p>
-                Data of stars are provided by the Hipparcos Catalogue (European Space Agency (ESA)), Tycho-2 Catalogue (ESA), Messier Catalogue and NGC Catalogue available through the High Energy Astrophysics Science Archive Research Center (HEASARC), operated by NASA/GSFC. 星座関係はAstro Commons (星座線は改変)から。惑星はJPLのApproximate Positions of the Planets、太陽系小天体はSmall-Body Database Lookupから。詳細は<a href="https://peteworden.github.io/Soleil/chartReadMe.html">ここ</a>
+                <a href="https://github.com/Peteworden/reticle/tree/main?tab=readme-ov-file#data-sources">Data Sources</a>
             </a>
             </p>
         </div>
 
-        <div id="setPicsFor360Div" class="setPicsFor360Div">
+        <div id="setPicsFor360Div" class="big-window">
             <input type="text" id="picsFor360" placeholder="5" value="5.2">
             <button id="submitPicsFor360" type="button" onclick="setPicsFor360()">OK</button>
             <div id="picsFor360text">
@@ -328,7 +356,7 @@
             </div>
         </div>
 
-        <div id="demDescriptionDiv" class="demDescriptionDiv">
+        <div id="demDescriptionDiv" class="big-window">
             <button id="closeDemDescription" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'hidden'">OK</button>
             <div class="demDescriptionText">
                 <h2>地形を表示(パソコン推奨)</h2>
@@ -354,10 +382,15 @@
             </div>
         </div>
 
-        <div id="searchDiv" class="searchDiv">
+        <div id="searchDiv" class="big-window">
             <input type="text" id="searchInput" placeholder="ここに入力して検索">
             <button id="closeSearch" type="button" onclick="closeSearch()">閉じる</button>
             <div id="suggestionButtonContainer"></div>
+        </div>
+
+        <div id="observation-site-map-div" class="big-window">
+            <button id="closeObservationSiteMap" class="close-observation-site-map" type="button" onclick="closeObservationSiteMap()">選択</button>
+            <div id="observation-site-map"></div>
         </div>
 
         <div id="news" class="news">
