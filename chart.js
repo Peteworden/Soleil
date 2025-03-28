@@ -3280,15 +3280,10 @@ function checkURL() {
 
     if ((url.searchParams.has('lat') && !isNaN(url.searchParams.get('lat'))) || (url.searchParams.has('lon') && !isNaN(url.searchParams.get('lon')))) {
         setObservationSite(+url.searchParams.get('lat'), +url.searchParams.get('lon'));
-        console.log(+url.searchParams.get('lat'), +url.searchParams.get('lon'));
         if (+url.searchParams.get('lat') != undefined && +url.searchParams.get('lon') != undefined) {
-            console.log(observationSites);
             for (let observationSite in observationSites) {
-                console.log(observationSites[observationSite][0] = +url.searchParams.get('lat'), +url.searchParams.get('lon') && observationSites[observationSite][1] == +url.searchParams.get('lon'));
                 if (observationSites[observationSite][0] = +url.searchParams.get('lat'), +url.searchParams.get('lon') && observationSites[observationSite][1] == +url.searchParams.get('lon')) {
-                    console.log(observationSite)
                     document.getElementById('observation-site-select').value = observationSite;
-                    console.log(document.getElementById('observation-site-select').value);
                     break;
                 }
             }
@@ -3297,7 +3292,6 @@ function checkURL() {
         show_initial();
     } else if (localStorage.getItem('observationSite') != null && observationSites[localStorage.getItem('observationSite')] != undefined) {
         const observationSite = localStorage.getItem('observationSite');
-        console.log(observationSite);
         setObservationSite(...observationSites[observationSite]);
         document.getElementById('observation-site-select').value = observationSite;
         defaultcheck += 2;
@@ -3616,7 +3610,6 @@ let currentMarker = null;
 document.getElementById('observation-site-select').addEventListener('change', function() {
     const observationSite = document.getElementById('observation-site-select').value;
     if (observationSites[observationSite] != undefined) {
-        console.log(observationSites[observationSite]);
         setObservationSite(...observationSites[observationSite]);
     } else if (observationSite == '現在地') {
         function success(position) {
@@ -3643,7 +3636,7 @@ document.getElementById('observation-site-select').addEventListener('change', fu
                 map.removeLayer(currentMarker);
             }
             currentMarker = L.marker([lat_map, lon_map]).addTo(map);
-            console.log(`緯度: ${lat_map}, 経度: ${lon_map}`);
+            document.getElementById('observation-site-select').value = '--';
         });
     }
 });
