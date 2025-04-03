@@ -143,6 +143,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-04-03T19:45:00+09:00', text: ['木星を拡大するとガリレオ衛星が見れます！意外と正弦波１，２つ重ねるだけで高い精度出た']},
     {time: '2025-03-28T00:52:00+09:00', text: ['アイコンが素敵になりました。ありがとう！', '場所の設定方法を改良し、地図上で選択できるようになりました', 'Windows向けデスクトップアプリを鋭意開発中です！ -> https://github.com/Peteworden/reticle/releases']},
     {time: '2025-03-23T23:15:00+09:00', text: ['この星図のいい名前を募集しています！', '星が消えるバグ、恒星時の計算式のずれを修正しました', 'バグ報告などの連絡は？ボタンを押したところのフォームから！']},
     {time: '2025-02-08T19:00:00+09:00', text: ['以前から日本語名を表示できた(Thanks to ToE42)90個の星を含む428個の星の英語名を収録しました。天文冬の陣2024でいただいた意見をもとにした改良です']},
@@ -304,6 +305,14 @@ function link(obj) {
     }
     // 見つかったかどうかのフラグ
     let flag = false;
+    for (i=0; i<10; i++) {
+        if (JPNplanets[i] == obj) {
+            cenRA = solarSystemBodies[i].ra;
+            cenDec = solarSystemBodies[i].dec;
+            flag = true;
+            break;
+        }
+    }
     for (i=0; i<starNames.length; i++) {
         if (starNames[i].name == obj || starNames[i].jpnname == obj) {
             cenRA = starNames[i].ra;
@@ -363,11 +372,20 @@ document.getElementById('searchInput').addEventListener('input', function() {
     let suggestions1 = [[], []];
     let suggestions2 = [[], []];
     let recsugs = [];
+    const planetNamesHiragana = ['たいよう', 'すいせい', 'きんせい', 'ちきゅう', 'かせい', 'もくせい', 'どせい', 'てんのうせい', 'かいおうせい', 'つき'];
     if (searchText.length == 0) {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
     } else if (searchText.length == 1) { //1文字
         if (isNaN(searchText)) {
+            // 惑星
+            for (i=0; i<planetNamesHiragana.length; i++) {
+                if (i == Obs_num) continue;
+                if (toUpperCaseOrKatakana(planetNamesHiragana[i]) == searchText) {
+                    suggestions1[0].push(JPNplanets[i]);
+                    suggestions1[1].push(JPNplanets[i]);
+                } 
+            }
             // 星座
             for (i=0; i<89; i++) {
                 if (constellations[i].JPNname.length && toUpperCaseOrKatakana(constellations[i].JPNname[0]) == searchText) {
@@ -443,6 +461,18 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
         if (isNaN(searchText)) {
+            for (i=0; i<planetNamesHiragana.length; i++) {
+                if (i == Obs_num) continue;
+                if (toUpperCaseOrKatakana(planetNamesHiragana[i]).includes(searchText)) {
+                    if (toUpperCaseOrKatakana(planetNamesHiragana[i]).startsWith(searchText)) {
+                        suggestions1[0].push(JPNplanets[i]);
+                        suggestions1[1].push(JPNplanets[i]);
+                    } else {
+                        suggestions1[2].push(JPNplanets[i]);
+                        suggestions1[2].push(JPNplanets[i]);
+                    }
+                } 
+            }
             for (i=0; i<89; i++) {
                 if ((toUpperCaseOrKatakana(constellations[i].JPNname)+'座').includes(searchText)) {
                     if (toUpperCaseOrKatakana(constellations[i].JPNname+'座').startsWith(searchText)) {
@@ -638,6 +668,12 @@ function showObjectInfo(x, y) {
         document.getElementById('objectInfoText').innerHTML = '';
         if (JPNplanets.includes(nearest[0])) {
             trackPlanet = nearest[0];
+            if (nearest[0] == '木星') {
+                document.getElementById('objectInfoText').innerHTML += 'ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。';
+                if (online) {
+                    document.getElementById('objectInfoText').innerHTML += `<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/">名古屋市科学館のサイト</a>がより正確でしょう。`;
+                }
+            }
             document.getElementById('planetTrack').style.display = 'inline-block';
             return;
         } else if (nearest[0][0] == 'M') {
@@ -1784,7 +1820,7 @@ function show_main(){
                         }
                         infoList.push(['月', x, y]);
                     }
-                } else if (i != 9) {// 太陽と月以外
+                } else if (i != 9 && i != 5) {// 太陽と月と木星以外
                     mag = solarSystemBodies[i].mag;
                     drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
                     if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
@@ -1792,6 +1828,69 @@ function show_main(){
                         ctx.fillText(JPNplanets[i], x, y);
                     }
                     infoList.push([JPNplanets[i], x, y]);
+                } else if (i == 5) {
+                    mag = solarSystemBodies[i].mag;
+                    if (Math.min(rgEW, rgNS) < 2){
+                        drawFilledCircle(x, y, canvas.width*(0.027/solarSystemBodies[5].dist)/rgEW/2, '#FEECD2');
+                        ctx.font = '15px serif';
+                        if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
+                            ctx.fillStyle = specialObjectNameColor;
+                            ctx.fillText('木星', x, y);
+                        }
+                        infoList.push([JPNplanets[i], x, y]);
+                        function doubleSin(A1, T1, phi1, A2, T2, phi2, C) {
+                            return A1 * sin(2 * pi * (JD - 2460700) / T1 + phi1) + A2 * sin(2 * pi * (JD - 2460700) / T2 + phi2) + C;
+                        }
+                        let io = [
+                            [2.81902066e-03, 1.76913779e+00, 8.65841524e-01, 1.74598769e-05, 4.86827421e+02, 2.66915800e+00, -2.18722549e-07],
+                            [2.81749741e-03, 1.76913780e+00, -7.05455552e-01, 1.74491534e-05, 4.86856291e+02, 4.24131033e+00, 8.18597552e-08],
+                            [0.00010859262101371663, 1.769140962458129, -0.3257986471267499, 0, 1, 0, -1.3007560448464165e-07]
+                        ];
+                        let europa = [
+                            [4.48458800e-03, 3.55118035e+00, -9.02192463e-01, 6.26054071e-05, 4.86569848e+02, -4.74084307e-01, -8.69788604e-07],
+                            [4.48339424e-03, 3.55118004e+00, -2.47369227e+00, 6.26447647e-05, 4.87167668e+02, 1.10308902e+00, 2.64572475e-07],
+                            [1.68287262e-04, 3.55119272e+00, -1.87783527e+00, 0, 1, 0, 4.81407414e-07]
+                        ]
+                        let ganymede = [
+                            [7.15463873e-03, 7.15455397e+00, 2.92727313e+00, 6.59854992e-06, 4.78597640e+02, 2.60102925e+00, -2.00450346e-05],
+                            [7.15015296e-03, 7.15455414e+00, 1.35593375e+00, 6.52410267e-06, 4.95415244e+02, -1.96356203e+00, 8.13836093e-06],
+                            [2.92016360e-04, 7.15446463e+00, 1.71476937e+00, 0, 1, 0, -3.35154035e-08]
+                        ]
+                        let callisto = [
+                            [1.25841245e-02, 1.66890172e+01, 2.15602328e-01, 4.53197520e-05, 8.34464401e+00, -1.31205372e+00, -1.33895795e-04],
+                            [1.25786592e-02, 1.66890142e+01, -1.35561583e+00, 4.53041567e-05, 8.34463367e+00, -2.88356795e+00, -2.38334693e-05],
+                            [4.28550326e-04, 1.66890365e+01, -9.48956811e-01, 0, 1, 0, -2.54730259e-06]
+                        ]
+                        
+                        let jupiterXYZ = [solarSystemBodies[5].x, solarSystemBodies[5].y, solarSystemBodies[5].z];
+                        let hereXYZ = [solarSystemBodies[Obs_num].x, solarSystemBodies[Obs_num].y, solarSystemBodies[Obs_num].z]
+                        let jupiter_ecl = Rx([jupiterXYZ[0]-hereXYZ[0], jupiterXYZ[1]-hereXYZ[1], jupiterXYZ[2]-hereXYZ[2]], -eps);
+
+                        let galileo = [io, europa, ganymede, callisto];
+                        let galileoNames = ['I', 'E', 'G', 'C'];
+                        let galileo_ecl = [0, 0, 0];
+                        let galileo_equ = [0, 0, 0];
+                        let galileo_radecdist = [0, 0, 0];
+                        for (let j = 0; j < 4; j++) {
+                            galileo_ecl = [doubleSin(...galileo[j][0]), doubleSin(...galileo[j][1]), doubleSin(...galileo[j][2])]
+                            galileo_equ = Rx([jupiter_ecl[0]+galileo_ecl[0], jupiter_ecl[1]+galileo_ecl[1], jupiter_ecl[2]+galileo_ecl[2]], eps);
+                            galileo_radecdist = xyz_to_RADec(...galileo_equ);
+                            [x, y, inFlag] = xyIfInCanvas(galileo_radecdist[0], galileo_radecdist[1]);
+                            drawFilledCircle(x, y, 1, '#F33');
+                            if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
+                                ctx.fillStyle = specialObjectNameColor;
+                                ctx.fillText(galileoNames[j], x, y);
+                            }
+                        }
+                        ctx.font = '20px serif';
+                    } else {
+                        drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
+                        if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
+                            ctx.fillStyle = specialObjectNameColor;
+                            ctx.fillText(JPNplanets[i], x, y);
+                        }
+                        infoList.push([JPNplanets[i], x, y]);
+                    }
                 }
             }
         }
@@ -2590,7 +2689,7 @@ function screen2liveAh (scrRA, scrDec) {
 }
 
 function xyz_to_RADec(x, y, z) { //deg
-    dist = Math.sqrt(x*x + y*y + z*z);
+    let dist = Math.sqrt(x*x + y*y + z*z);
     let ra, dec;
     if (dist  < 0.00000001){
         ra = 0;
