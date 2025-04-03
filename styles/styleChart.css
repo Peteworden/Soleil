@@ -450,7 +450,7 @@ select {
     background-color: #8B4513;
 }
 
-.searchDiv input {
+#searchInput {
     position: fixed;
     top: 10px;
     left: 50%;
