@@ -114,23 +114,24 @@ let constellations;
 let boundary = new Array(4801);
 
 const Sun = ['Sun'];
-const Marcury = [2451545.0,  0.387099, 0.205636,  29.127030,  7.004979,  48.330766, 174.792527,  0.000000,  0.000019,  0.285818, -0.005947, -0.125341];
-const Venus   = [2451545.0,  0.723336, 0.006777,  54.922625,  3.394676,  76.679843,  50.376632,  0.000004, -0.000041,  0.280377, -0.000789, -0.277694];
-const Earth   = [2451545.0,  1.000003, 0.016711, 102.937682, -0.000015,   0       ,  -2.473110,  0.000006, -0.000044,  0.323274, -0.012947,  0       ];
-const Mars    = [2451545.0,  1.523710, 0.093394, 286.496832,  1.849691,  49.559539,  19.390198,  0.000018,  0.000079,  0.736984, -0.008131, -0.292573];
-const Jupiter = [2451545.0,  5.202887, 0.048386, 274.254571,  1.304397, 100.473909,  19.667961, -0.000116, -0.000133,  0.007836, -0.001837,  0.204691];
-const Saturn  = [2451545.0,  9.536676, 0.053862, -21.063546,  2.485992, 113.662424, 317.355366, -0.001251, -0.000510, -0.130294,  0.001936, -0.288678];
-const Uranus  = [2451545.0, 19.189165, 0.047257,  96.937351,  0.772638,  74.016925, 142.283828, -0.001962, -0.000044,  0.365647, -0.002429,  0.042406];
-const Neptune = [2451545.0, 30.069923, 0.008590, 273.180537,  1.770043, 131.784226, 259.915208,  0.000263,  0.000051, -0.317328,  0.000354, -0.005087];
+const Mercury = [2451545.0,  0.38709927, 0.20563593,  7.00497902, 252.25032350,  77.45779628,  48.33076593,  0.00000037,  0.00001906, -0.00594749, 149472.67411175,  0.16047689, -0.12534081];
+const Venus   = [2451545.0,  0.72333566, 0.00677672,  3.39467605, 181.97909950, 131.60246718,  76.67984255,  0.00000390, -0.00004107, -0.00078890,  58517.81538729,  0.00268329, -0.27769418];
+const Earth   = [2451545.0,  1.00000261, 0.01671123, -0.00001531, 100.46457166, 102.93768193,   0.0       ,  0.00000562, -0.00004392, -0.01294668,  35999.37244981,  0.32327364,  0.0       ];
+const Mars    = [2451545.0,  1.52371034, 0.09339410,  1.84969142,  -4.55343205, -23.94362959,  49.5595389 ,  0.00001847,  0.00007882, -0.00813131,  19140.30268499,  0.44441088, -0.29257343];
+const Jupiter = [2451545.0,  5.20288700, 0.04838624,  1.30439695,  34.39644051,  14.72847983, 100.47390909, -0.00011607, -0.00013253, -0.00183714,   3034.74612775,  0.21252668,  0.20469106, -0.00012452,  0.06064060, -0.35635438, 38.35125000];
+const Saturn  = [2451545.0,  9.53667594, 0.05386179,  2.48599187,  49.95424423,  92.59887831, 113.66242448, -0.00125060, -0.00050991,  0.00193609,   1222.49362201, -0.41897216, -0.28867794,  0.00025899, -0.13434469,  0.87320147, 38.35125000];
+const Uranus  = [2451545.0, 19.18916464, 0.04725744,  0.77263783, 313.23810451, 170.95427630,  74.01692503, -0.00196176, -0.00004397, -0.00242939,    428.48202785,  0.40805281,  0.04240589,  0.00058331, -0.97731848,  0.17689245,  7.67025000];
+const Neptune = [2451545.0, 30.06992276, 0.00859048,  1.77004347, -55.12002969,  44.96476227, 131.78422574,  0.00026291,  0.00005105,  0.00035372,    218.45945325, -0.32241464, -0.00508664, -0.00041348,  0.68346318, -0.10162547,  7.67025000];
 const Moon    = ['Moon'];
 const Ceres   = [2459396.5,  2.76566 , 0.07839 ,  73.738268, 10.588196,  80.267638, 247.549972,  0       ,  0       ,  0       ,  0       ,  0       , 3.53, 0.12];
 const Vesta   = [2459396.5,  2.36166 , 0.08835 , 151.015603,  7.141541, 103.806059, 311.692061,  0       ,  0       ,  0       ,  0       ,  0       , 3.31, 0.32];
 
-const planets    = [Sun, Marcury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Moon, Ceres, Vesta];
+const planets    = [Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Moon, Ceres, Vesta];
 const OriginalNumOfPlanets = planets.length;
 
 let ENGplanets = ['Sun', 'Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Moon', 'Ceres', 'Vesta'];
 let JPNplanets = ['太陽', '水星', '金星', '地球', '火星', '木星', '土星', '天王星', '海王星', '月', 'Ceres', 'Vesta'];
+const planetNamesHiragana = ['たいよう', 'すいせい', 'きんせい', 'ちきゅう', 'かせい', 'もくせい', 'どせい', 'てんのうせい', 'かいおうせい', 'つき'];
 
 let solarSystemBodies = new Array(20);
 
@@ -143,6 +144,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-04-04T15:50:00+09:00', text: ['惑星の位置がより正確になりました', '惑星をクリック（タップ）したときの情報が増えました']},
     {time: '2025-04-03T19:45:00+09:00', text: ['木星を拡大するとガリレオ衛星が見れます！意外と正弦波１，２つ重ねるだけで高い精度出た']},
     {time: '2025-03-28T00:52:00+09:00', text: ['アイコンが素敵になりました。ありがとう！', '場所の設定方法を改良し、地図上で選択できるようになりました', 'Windows向けデスクトップアプリを鋭意開発中です！ -> https://github.com/Peteworden/reticle/releases']},
     {time: '2025-03-23T23:15:00+09:00', text: ['この星図のいい名前を募集しています！', '星が消えるバグ、恒星時の計算式のずれを修正しました', 'バグ報告などの連絡は？ボタンを押したところのフォームから！']},
@@ -372,7 +374,6 @@ document.getElementById('searchInput').addEventListener('input', function() {
     let suggestions1 = [[], []];
     let suggestions2 = [[], []];
     let recsugs = [];
-    const planetNamesHiragana = ['たいよう', 'すいせい', 'きんせい', 'ちきゅう', 'かせい', 'もくせい', 'どせい', 'てんのうせい', 'かいおうせい', 'つき'];
     if (searchText.length == 0) {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
@@ -665,58 +666,81 @@ function showObjectInfo(x, y) {
             }
         }
 
-        document.getElementById('objectInfoText').innerHTML = '';
+        let infoText = '';
+        console.log(infoText)
         if (JPNplanets.includes(nearest[0])) {
             trackPlanet = nearest[0];
+            nearestCoord = solarSystemBodies[JPNplanets.indexOf(nearest[0])];
+            raHM = radeg2hm(nearestCoord.ra);
+            decDM = decdeg2dm(nearestCoord.dec);
+            console.log(raHM, decDM);
+            console.log(infoText);
+            infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (J2000.0)`;
+            if (nearest[0] == '月') {
+                infoText += `<br>距離: ${(nearestCoord.dist/10000).toFixed(1)}万km`;
+                infoText += ` （光の速さで${(nearestCoord.dist/299792.458).toFixed(2)}秒）`
+            } else {
+                infoText += `<br>距離: ${nearestCoord.dist.toFixed(2)}au`;
+                light_minutes = nearestCoord.dist * 149597870700 / 299792458 / 60;
+                if (light_minutes < 60) {
+                    infoText += ` （光の速さで${light_minutes.toFixed(1)}分）`;
+                } else if (light_minutes < 1440) {
+                    infoText += ` （光の速さで${(light_minutes/60).toFixed(1)}時間）`;
+                } else {
+                    infoText += ` （光の速さで${(light_minutes/1440).toFixed(1)}日）`;
+                }
+            }
+            
+            console.log(infoText);
             if (nearest[0] == '木星') {
-                document.getElementById('objectInfoText').innerHTML += 'ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。';
+                infoText += '<br>ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。';
                 if (online) {
-                    document.getElementById('objectInfoText').innerHTML += `<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/">名古屋市科学館のサイト</a>がより正確でしょう。`;
+                    infoText += `<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/">名古屋市科学館のサイト</a>がより正確でしょう。`;
                 }
             }
             document.getElementById('planetTrack').style.display = 'inline-block';
-            return;
         } else if (nearest[0][0] == 'M') {
             if (messier[parseInt(nearest[0].slice(1))-1].description.length > 0) {
-                document.getElementById('objectInfoText').innerHTML = messier[parseInt(nearest[0].slice(1))-1].description;
+                infoText = messier[parseInt(nearest[0].slice(1))-1].description;
             } else {
-                document.getElementById('objectInfoText').innerHTML = 'no description';
+                infoText = 'no description';
             }
             if (online) {
                 if (wikiSpecial[0].includes(parseInt(nearest[0].slice(1)))) {
-                    document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${wikiSpecial[1][wikiSpecial[0].indexOf(parseInt(nearest[0].slice(1)))]}">Wikipedia</a>`;
+                    infoText += `<br><a href="https://ja.wikipedia.org/wiki/${wikiSpecial[1][wikiSpecial[0].indexOf(parseInt(nearest[0].slice(1)))]}">Wikipedia</a>`;
                 } else {
-                    document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
+                    infoText += `<br><a href="https://ja.wikipedia.org/wiki/M${nearest[0].slice(1)}_(天体)">Wikipedia</a>`;
                 }
             }
         } else if (nearest[0].endsWith('座')) {
             for (i=0; i<89; i++) {
                 if (constellations[i].JPNname + '座' == nearest[0]) {
                     let constellation = constellations[i];
-                    document.getElementById('objectInfoText').innerHTML += `<br>ラテン語名：${constellation.IAUname}<br>略称：${constellation.abbr}<br>`
+                    infoText += `<br>ラテン語名：${constellation.IAUname}<br>略称：${constellation.abbr}<br>`
                 }
             }
         } else {
             for (let rec of recs) {
                 if (rec.name == nearest[0]) {
                     if (rec.description.length > 0) {
-                        document.getElementById('objectInfoText').innerHTML = rec.description;
+                        infoText = rec.description;
                     } else {
-                        document.getElementById('objectInfoText').innerHTML = 'no description';
+                        infoText = 'no description';
                     }
                     if (online) {
                         if (rec.wiki == null) {
-                            document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.name}">Wikipedia</a>`;
+                            infoText += `<br><a href="https://ja.wikipedia.org/wiki/${rec.name}">Wikipedia</a>`;
                         } else if (rec.wiki.startsWith("http")){
-                            document.getElementById('objectInfoText').innerHTML += `<br><a href="${rec.wiki}">${rec.wiki}</a>`
+                            infoText += `<br><a href="${rec.wiki}">${rec.wiki}</a>`
                         } else {
-                            document.getElementById('objectInfoText').innerHTML += `<br><a href="https://ja.wikipedia.org/wiki/${rec.wiki}">Wikipedia</a>`;
+                            infoText += `<br><a href="https://ja.wikipedia.org/wiki/${rec.wiki}">Wikipedia</a>`;
                         }
                     }
-                    return;
                 }
             }
         }
+        console.log(infoText);
+        document.getElementById('objectInfoText').innerHTML = infoText;
     }
 }
 
@@ -1111,6 +1135,7 @@ function calculation(JD) {
 
     [X, Y, Z] = calc(planets[Obs_num], JD);
     let [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
+    console.log(showingJD, X, Y, Z);
     solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
     for (i=1; i<planets.length; i++) {
@@ -1273,11 +1298,51 @@ function calc(planet, JD) {
         return [x+Xe, y+Ye, z+Ze, ra, dec, dist, Ms, ws, lon_moon, lat_moon];
     } else {
         let e = planet[2];
-        if (e <= 0.99) {
+        if ([Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune].includes(planet)) {
+            return cal_planet(planet, JD);
+        } else if (e <= 0.99) {
             return cal_Ellipse(planet, JD);
         } else {
             return cal_Parabola(planet, JD);
         }
+    }
+
+    function cal_planet(planet, JD) {
+        let t = (JD - planet[0]) / 36525;
+        let a = planet[1] + planet[7] * t;
+        let e = planet[2] + planet[8] * t;
+        let incl = (planet[3] + planet[9] * t) * deg2rad;
+        let mean_longitude = (planet[4] + planet[10] * t) * deg2rad;
+        let long_peri = (planet[5] + planet[11] * t) * deg2rad;
+        let node = (planet[6] + planet[12] * t) * deg2rad;
+        let peri = long_peri - node;
+        let M = mean_longitude - long_peri;
+        if ([Jupiter, Saturn, Uranus, Neptune].includes(planet)) {
+            M += (planet[13] * t*t + planet[14] * cos(planet[16] * t) + planet[15] * sin(planet[16] * t)) * deg2rad;
+        }
+        let E = M + e * sin(M);
+        if (Math.abs(E - M) > 0.00000001){
+            let newE = M + e * sin(E);
+            while (Math.abs(newE - E) > 0.00000001){
+                E = newE;
+                newE = M + e * sin(E);
+            }
+            E = newE;
+        }
+
+        let cE_e = cos(E) - e;
+        let sE = sin(E);
+        let Ax = a *                     ( cos(peri)*cos(node) - sin(peri)*cos(incl)*sin(node));
+        let Bx = a * Math.sqrt(1-e**2) * (-sin(peri)*cos(node) - cos(peri)*cos(incl)*sin(node));
+        let Ay = a *                     ( sin(peri)*cos(incl)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(incl)*sine);
+        let By = a * Math.sqrt(1-e**2) * ( cos(peri)*cos(incl)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(incl)*sine);
+        let Az = a *                     ( sin(peri)*cos(incl)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(incl)*cose);
+        let Bz = a * Math.sqrt(1-e**2) * ( cos(peri)*cos(incl)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(incl)*cose);
+
+        let x = Ax * cE_e + Bx * sE;
+        let y = Ay * cE_e + By * sE;
+        let z = Az * cE_e + Bz * sE;
+        return [x, y, z];
     }
     
     function cal_Ellipse(planet, JD) {
@@ -1298,9 +1363,9 @@ function calc(planet, JD) {
         let n = 0.01720209895 * Math.pow(a, -1.5); //平均日日運動(rad)
         let M = (M0 + n * (JD - T)) % (2 * pi);
         let E = M + e * sin(M);
-        if (Math.abs(E - M) > 0.000001){
+        if (Math.abs(E - M) > 0.00000001){
             let newE = M + e * sin(E);
-            while (Math.abs(newE - E) > 0.000001){
+            while (Math.abs(newE - E) > 0.00000001){
                 E = newE;
                 newE = M + e * sin(E);
             }
@@ -1331,9 +1396,9 @@ function calc(planet, JD) {
         let F = Mm + wm;
 
         let E = Mm + e * sin(Mm);
-        if (Math.abs(E - Mm) > 0.000001) {
+        if (Math.abs(E - Mm) > 0.0000001) {
             let newE = Mm + e * sin(E);
-            while (Math.abs(newE - E) > 0.000001){
+            while (Math.abs(newE - E) > 0.0000001){
                 E = newE;
                 newE = Mm + e * sin(E);
             }
@@ -1918,12 +1983,14 @@ function show_main(){
         }
     }
 
-    let RAtext = `赤経 ${Math.floor(cenRA/15)}h ${((cenRA-15*Math.floor(cenRA/15))*4).toFixed(1)}m `;
-    let Dectext;
+    let cenRA_hm = radeg2hm(cenRA);
+    let cenDec_dm = decdeg2dm(cenDec);
+    let RAtext = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
+    let Dectext = '';
     if (cenDec >= 0) {
-        Dectext = `赤緯 +${Math.floor(cenDec)}° ${Math.round((cenDec-Math.floor(cenDec))*60)}' (J2000.0) `;
+        Dectext = `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
     } else {
-        Dectext = `赤緯 -${Math.floor(-cenDec)}° ${Math.round((-cenDec-Math.floor(-cenDec))*60)}' (J2000.0) `;
+        Dectext = `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
     }
 
     let coordtext = `${centerConstellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
@@ -2615,6 +2682,43 @@ function decdm2deg(decdmtext) {
         dec *= -1;
     }
     return dec;
+}
+
+function radeg2hm(ra_deg) {
+    let h = Math.floor(ra_deg / 15);
+    let m = Math.round((ra_deg - 15 * Math.floor(ra_deg / 15)) * 40);
+    if (m == 600) {
+        m = 0.0;
+        if (h == 23) {
+            h = 0;
+        } else {
+            h += 1;
+        }
+    } else {
+        m = m / 10;
+    }
+    return [h, m]
+}
+
+function decdeg2dm(dec_deg) {
+    let d, m;
+    if (dec_deg >= 0) {
+        d = Math.floor(dec_deg);
+        m = Math.round((dec_deg - d) * 60);
+        if (m == 60) {
+            m = 0;
+            d += 1;
+        }
+    } else {
+        d = Math.floor(-dec_deg);
+        m = Math.round((-dec_deg - d) * 60);
+        d *= -1;
+        if (m == 60) {
+            m = 0;
+            d -= 1;
+        }
+    }
+    return [d, m];
 }
 
 function hourAngle(JD_TT, lon_obs) {
