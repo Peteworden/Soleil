@@ -23,12 +23,11 @@ const timeSliderElem = document.getElementById('timeSlider');
 let zuhoElem = document.getElementsByName('mode');
 const permitBtns = document.getElementsByClassName('permitBtn');
 const realtimeElem = document.getElementById('realtime');
+const coordinateSystemElem = document.getElementById('coordinateSystem');
 const trackDateElem = document.getElementsByName('trackTime');
 const starNameElem = document.getElementsByName('starName');
 
 // 要素の表示/非表示
-
-document.getElementById('welcomeImage').style.visibility = "hidden";
 if (online) {
     document.getElementById('fileBtn').style.visibility = "hidden";
     document.getElementById('getFile').style.visibility = "hidden";
@@ -670,12 +669,15 @@ function showObjectInfo(x, y) {
         console.log(infoText)
         if (JPNplanets.includes(nearest[0])) {
             trackPlanet = nearest[0];
-            nearestCoord = solarSystemBodies[JPNplanets.indexOf(nearest[0])];
-            raHM = radeg2hm(nearestCoord.ra);
-            decDM = decdeg2dm(nearestCoord.dec);
-            console.log(raHM, decDM);
-            console.log(infoText);
+            let nearestCoord = solarSystemBodies[JPNplanets.indexOf(nearest[0])];
+            let raHM = radeg2hm(nearestCoord.ra);
+            let decDM = decdeg2dm(nearestCoord.dec);
             infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (J2000.0)`;
+            let [raApp, decApp] = J2000toApparent(nearestCoord.ra, nearestCoord.dec, showingJD);
+            raHM = radeg2hm(raApp);
+            decDM = decdeg2dm(decApp);
+            infoText += `<br>RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (視位置)`;
+
             if (nearest[0] == '月') {
                 infoText += `<br>距離: ${(nearestCoord.dist/10000).toFixed(1)}万km`;
                 infoText += ` （光の速さで${(nearestCoord.dist/299792.458).toFixed(2)}秒）`
@@ -1135,7 +1137,6 @@ function calculation(JD) {
 
     [X, Y, Z] = calc(planets[Obs_num], JD);
     let [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
-    console.log(showingJD, X, Y, Z);
     solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
     for (i=1; i<planets.length; i++) {
@@ -1311,12 +1312,12 @@ function calc(planet, JD) {
         let t = (JD - planet[0]) / 36525;
         let a = planet[1] + planet[7] * t;
         let e = planet[2] + planet[8] * t;
-        let incl = (planet[3] + planet[9] * t) * deg2rad;
-        let mean_longitude = (planet[4] + planet[10] * t) * deg2rad;
+        let incl      = (planet[3] + planet[9]  * t) * deg2rad;
+        let mean_long = (planet[4] + planet[10] * t) * deg2rad;
         let long_peri = (planet[5] + planet[11] * t) * deg2rad;
-        let node = (planet[6] + planet[12] * t) * deg2rad;
+        let node      = (planet[6] + planet[12] * t) * deg2rad;
         let peri = long_peri - node;
-        let M = mean_longitude - long_peri;
+        let M = mean_long - long_peri;
         if ([Jupiter, Saturn, Uranus, Neptune].includes(planet)) {
             M += (planet[13] * t*t + planet[14] * cos(planet[16] * t) + planet[15] * sin(planet[16] * t)) * deg2rad;
         }
@@ -1985,17 +1986,31 @@ function show_main(){
 
     let cenRA_hm = radeg2hm(cenRA);
     let cenDec_dm = decdeg2dm(cenDec);
-    let RAtext = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
-    let Dectext = '';
+    let J2000Text = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
     if (cenDec >= 0) {
-        Dectext = `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
+        J2000Text += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
     } else {
-        Dectext = `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
+        J2000Text += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
     }
 
-    let coordtext = `${centerConstellation}　${rgtext}　${magLimtext}<br>${RAtext}${Dectext}<br>${Astr}${hstr}`;
+    let [cenRaApp, cenDecApp] = J2000toApparent(cenRA, cenDec, JD);
+    cenRA_hm = radeg2hm(cenRaApp);
+    cenDec_dm = decdeg2dm(cenDecApp);
+    let apparentText = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
+    if (cenDec >= 0) {
+        apparentText += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
+    } else {
+        apparentText += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
+    }
+
     document.getElementById("coordtext").style.color = textColor;
-    document.getElementById("coordtext").innerHTML = coordtext;
+    if (coordinateSystemElem.value == '視位置') {
+        document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${apparentText}<br>${Astr}${hstr}`;
+    } else if (coordinateSystemElem.value == 'J2000.0') {
+        document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${J2000Text}<br>${Astr}${hstr}`;
+    } else {
+        document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${apparentText}<br>${J2000Text}<br>${Astr}${hstr}`;
+    }
 
     function SkyArea(RA, Dec) { //(RA, Dec)はHelperで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
@@ -2301,13 +2316,19 @@ function show_main(){
 
     function writeStarNames () {
         const tier_range = [180, 90, 60, 40, 30, 30];
-        let tierLimitUmu = starNameElem[1].checked;
+        let tierLimit = 3;
+        if (starNameElem[1].checked) {
+            tierLimit = 1;
+        } else if (starNameElem[2].checked) {
+            tierLimit = 2;
+        }
         ctx.strokeStyle = textColor;
         ctx.fillStyle = textColor;
         for (i=0; i<starNames.length; i++){
-            let d = starNames[i]
-            let tier = d.tier
-            if (tierLimitUmu && tier > 1) continue;
+            let d = starNames[i];
+            let tier = d.tier; //概ね等級-1
+            if (tierLimit == 1 && tier > 0) continue;
+            if (tierLimit == 2 && tier > 1) continue;
             if (2*Math.max(rgNS, rgEW) > tier_range[tier-1]) continue;
             let ra = d.ra;
             let dec = d.dec;
@@ -2728,6 +2749,14 @@ function hourAngle(JD_TT, lon_obs) {
 }
 
 // 座標変換
+function J2000toApparent(raJ2000, decJ2000, JD) {
+    let t = (JD - 2451545.0) / 36525;
+    let xyz = radecToXYZ(raJ2000, decJ2000, 1);
+    let precession = 5029 / 3600 * t * deg2rad;
+    xyz = Rx(Rz(Rx(xyz, -eps), precession), eps);
+    let apparent = xyz_to_RADec(xyz[0], xyz[1], xyz[2]);
+    return [apparent[0], apparent[1]]; //deg
+}
 
 function RADec2Ah (RA, Dec, theta) { //deg
     RA *= deg2rad;
@@ -2803,6 +2832,13 @@ function xyz_to_RADec(x, y, z) { //deg
         dec = Math.atan(z / Math.sqrt(x*x + y*y)) * rad2deg; //deg
     }
     return [ra, dec, dist];
+}
+
+function radecToXYZ(ra, dec, dist) { //deg
+    let x = dist * cos(dec*deg2rad) * cos(ra*deg2rad);
+    let y = dist * cos(dec*deg2rad) * sin(ra*deg2rad);
+    let z = dist * sin(dec*deg2rad);
+    return [x, y, z];
 }
 
 // 時間の変換 基本的にYMDHMはJST, JDはTT
@@ -3054,14 +3090,14 @@ function filterData(data, ranges) {
 }
 
 
-function loadFiles() {
+async function loadFiles() {
     // 決めるもの
     // hips
     // BSCRAary, BSCDecary, FSs, Bayers, BayerNums
     // ENGplanets, JPNplanets, planets, document.getElementById('observer')
     // hip_65, constellations, ...
 
-    function xhrHIP(data) {
+    async function xhrHIP(data) {
         const hipData = data.split(',').map(Number);
         for (i=0; i<hipData.length; i+=4){
             hips.push({
@@ -3074,7 +3110,7 @@ function loadFiles() {
     }
 
     //Bayer
-    function xhrBSC(data) {
+    async function xhrBSC(data) {
         const BSC = data.split(',');
         BSCnum = BSC.length / 6;
         BSCRAary = Array(BSCnum);
@@ -3092,7 +3128,7 @@ function loadFiles() {
     }
 
     //追加天体
-    function xhrExtra(data) {
+    async function xhrExtra(data) {
         const extra = data.split('\n');
         for (let i=0; i<extra.length; i++) {
             if (extra[i].length == 0) {
@@ -3138,27 +3174,43 @@ function loadFiles() {
         }
     }
     if (online) {
-        function loadFile(filename, func, impflag=false) {
-            let url_load = "https://peteworden.github.io/Soleil/data/" + filename + ".txt";
-            let xhr = new XMLHttpRequest();
-            xhr.open('GET', url_load);
-            xhr.send();
-            xhr.onreadystatechange = function() {
-                if(xhr.readyState === 4 && xhr.status === 200) {
-                    func(xhr.responseText);
-                    xhrcheck++;
-                    if (impflag) {
-                       xhrimpcheck++;
-                    }
-                    loaded.push(filename);
-                    console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
-                    show_initial();
-                    return 0;
+        async function loadFile(filename, func, impflag=false) {
+            try {
+                const url_load = `https://peteworden.github.io/Soleil/data/${filename}.txt`;
+                const response = await fetch(url_load);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${filename}: ${response.statusText}`);
                 }
+                const data = await response.text();
+                func(data);
+                xhrcheck++;
+                if (impflag) xhrimpcheck++;
+                loaded.push(filename);
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                show_initial();
+            } catch (error) {
+                console.error(`Error loading file ${filename}:`, error);
             }
+            // let url_load = "https://peteworden.github.io/Soleil/data/" + filename + ".txt";
+            // let xhr = new XMLHttpRequest();
+            // xhr.open('GET', url_load);
+            // xhr.send();
+            // xhr.onreadystatechange = function() {
+            //     if(xhr.readyState === 4 && xhr.status === 200) {
+            //         func(xhr.responseText);
+            //         xhrcheck++;
+            //         if (impflag) {
+            //            xhrimpcheck++;
+            //         }
+            //         loaded.push(filename);
+            //         console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+            //         show_initial();
+            //         return 0;
+            //     }
+            // }
         }
 
-        function loadJsonData(filename, func, impflag=false) {
+        async function loadJsonData(filename, func, impflag=false) {
             fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
             .then(response => {
                 if (!response.ok) {
@@ -3181,7 +3233,7 @@ function loadFiles() {
             });
         }
         
-        function loadCsvData(filename, func, impflag=false) {
+        async function loadCsvData(filename, func, impflag=false) {
             fetch(`https://peteworden.github.io/Soleil/data/${filename}.csv`)
             .then(response => {
                 if (!response.ok) {
@@ -3212,7 +3264,7 @@ function loadFiles() {
         // document.getElementById('getFile').addEventListener('change', function(event) {
         //     loadFileForDebug(event, 'localhip', xhrHIP, true)
         // })
-        function loadFileForDebug(event, filename, func, impflag=false) {
+        async function loadFileForDebug(event, filename, func, impflag=false) {
             let fr = new FileReader();
             fr.onload = function () {
                 const content = fr.result;
@@ -3227,7 +3279,7 @@ function loadFiles() {
             }
             fr.readAsText(event.target.files[0]);
         }
-        function loadCSVForDebug(event, filename,func, impflag=false) {
+        async function loadCSVForDebug(event, filename,func, impflag=false) {
             const file = e.target.files[0];
             if (file) {
                 const fr = new FileReader();
@@ -3248,57 +3300,57 @@ function loadFiles() {
         }
 
         //HIP
-        loadFile("hip_65", xhrHIP, true);
+        await loadFile("hip_65", xhrHIP, true);
 
-        loadJsonData('constellation', (data) => {
+        await loadJsonData('constellation', (data) => {
             constellations = data;
         }, true);
 
         //星座境界線
-        loadFile("constellation_boundaries", (data) => {
+        await loadFile("constellation_boundaries", (data) => {
             boundary = data.split(',').map(Number);
         }, true);
 
-        loadJsonData('starnames', (data) => {
+        await loadJsonData('starnames', (data) => {
             starNames = data;
         }, true);
 
-        loadJsonData('messier', (data) => {
+        await loadJsonData('messier', (data) => {
             messier = data;
         }, true);
 
         //gaia offlineはまだ
-        loadCsvData('gaia_-100', (data) => {
+        await loadCsvData('gaia_-100', (data) => {
             gaia100 = data;
         });
-        loadFile("gaia_-100_helper", (data) => {
+        await loadFile("gaia_-100_helper", (data) => {
             gaia100_help = data.split(',').map(Number);
         });
-        loadCsvData('gaia_101-110', (data) => {
+        await loadCsvData('gaia_101-110', (data) => {
             gaia101_110 = data;
         });
-        loadFile("gaia_101-110_helper", (data) => {
+        await loadFile("gaia_101-110_helper", (data) => {
             gaia101_110_help = data.split(',').map(Number);
         });
-        loadCsvData('gaia_111-115', (data) => {
+        await loadCsvData('gaia_111-115', (data) => {
             gaia111_115 = data;
         });
-        loadFile("gaia_111-115_helper", (data) => {
+        await loadFile("gaia_111-115_helper", (data) => {
             gaia111_115_help = data.split(',').map(Number);
         });
         
         //追加天体
-        loadFile("additional_objects", xhrExtra);
+        await loadFile("additional_objects", xhrExtra);
 
         //Bayer
-        loadFile("brights", xhrBSC);
+        await loadFile("brights", xhrBSC);
 
-        loadJsonData('rec', (data) => {
+        await loadJsonData('rec', (data) => {
             recs = data;
         });
 
         // NGC天体とIC天体
-        loadFile("ngc", (data) => {
+        await loadFile("ngc", (data) => {
             NGC = data.split(',');
         });
     } else {
@@ -3453,7 +3505,7 @@ function checkURL() {
     if (url.searchParams.has('area') && !isNaN(url.searchParams.get('area'))) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
-        rgtext = `視野(左右):${(rgEW * 2).toFixed(1)}°`;
+        rgtext = `左右:${(rgEW * 2).toFixed(1)}°`;
         if (['live', 'ar'].includes(mode)) {
             magLimLim = 6.5;
         } else {

@@ -142,7 +142,7 @@
                         <input type="radio" name="mode" value="ar">AR
                         <input type="button" id="arSettingBtn" value="設定" onclick="changePicsFor360()"/>
                         <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
-                    </div><br>
+                    </div>
                     <!-- <div>
                         ページ更新時の時刻設定（URLが最優先、リアルタイム設定では常に現在時刻）
                         <select id="firstTimeSetting">
@@ -161,12 +161,21 @@
                         </li><br>
                         <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="gridCheck" checked>グリッド（プラネモード）</li>
+                        <li>
+                            座標系
+                            <select id="coordinateSystem">
+                                <option selected>視位置</option>
+                                <option>J2000.0</option>
+                                <option>両方</option>
+                            </select>
+                        </li>
                         <br>
                         <li>
                             <div>
                                 恒星名
                                 <input type="radio" name="starName" value="no">なし
-                                <input type="radio" name="starName" value="bright" checked>2等星まで
+                                <input type="radio" name="starName" value="one" checked>1等星まで
+                                <input type="radio" name="starName" value="bright">2等星まで
                                 <input type="radio" name="starName" value="all">すべて
                             </div>
                         </li>
