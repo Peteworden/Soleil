@@ -14,6 +14,7 @@ body {
 }
 
 input {
+    margin: 5px 0;
     width: 3em;
     max-width: 100%;
     color: whitesmoke;
@@ -285,8 +286,8 @@ ul {
 }
 
 .set-mag-limit {
-    width: 60%;
-    margin: auto;
+    width: 100%;
+    margin: 5px auto;
     text-align: center;
     display: flex;
     align-items: center;
@@ -323,6 +324,7 @@ button {
 }
 
 select {
+    margin: 5px;
     color: #F5F5DC;
     background-color: #8F5A3C;
 }
