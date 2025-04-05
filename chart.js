@@ -1318,9 +1318,10 @@ function calc(planet, JD) {
         let node      = (planet[6] + planet[12] * t) * deg2rad;
         let peri = long_peri - node;
         let M = mean_long - long_peri;
-        if ([Jupiter, Saturn, Uranus, Neptune].includes(planet)) {
-            M += (planet[13] * t*t + planet[14] * cos(planet[16] * t) + planet[15] * sin(planet[16] * t)) * deg2rad;
-        }
+        //なぜか精度が落ちる。2020付近ではだめ？
+        // if ([Jupiter, Saturn, Uranus, Neptune].includes(planet)) {
+        //     M += (planet[13] * t*t + planet[14] * cos(planet[16] * t) + planet[15] * sin(planet[16] * t)) * deg2rad;
+        // }
         let E = M + e * sin(M);
         if (Math.abs(E - M) > 0.00000001){
             let newE = M + e * sin(E);
