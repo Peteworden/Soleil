@@ -100,16 +100,16 @@ let gaia111_115_help = new Array(64801);
 // let Tycho1011 = new Array(1602511);
 // let Help1011 = new Array(64801);
 let BSCnum = 0;
-let BSCRAary = Array(1);
-let BSCDecary = Array(1);
-let FSs = Array(1);
-let Bayers = Array(1);
-let BayerNums = Array(1);
-let starNames;
-let messier;
-let recs;
+let BSCRAary = [];
+let BSCDecary = [];
+let FSs = [];
+let Bayers = [];
+let BayerNums = [];
+let starNames = [];
+let messier = [];
+let recs = [];
 let NGC = new Array(66130);
-let constellations;
+let constellations = [];
 let boundary = new Array(4801);
 
 const Sun = ['Sun'];
@@ -650,7 +650,7 @@ function showObjectInfo(x, y) {
 
         let found = false;
         document.getElementById('objectInfoImage').innerHTML = "";
-        for (let ext of ["jpg"]) {
+        for (let ext of ["jpg", "JPG"]) {
             const img = new Image();
             img.onload = function() {
                 document.getElementById('objectInfoImage').appendChild(img);
@@ -1119,7 +1119,7 @@ function show_initial(){
         document.getElementById('welcomeImage').style.display = 'none';
         show_main();
     }
-    if (xhrimpcheck == 5 && defaultcheck == 11) {
+    if (xhrimpcheck == 3 && defaultcheck >= 10) {
         if (xhrcheck == 15) {
             document.getElementById('loadingtext').style.display = 'none';
             ready();
@@ -1670,7 +1670,7 @@ function show_main(){
 
     //Gaia
     // messierに含まれない6.5等級より明るい星もあるので、magLim > 5で余裕を持たせる
-    if (magLim > 5 && gaia100[0] != undefined && gaia100_help[0] != undefined) {
+    if (magLim > 5 && gaia100[0] != null && gaia100_help[0] != null) {
         let skyareas = [];
         if (mode == 'AEP') {
             let minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
@@ -1708,9 +1708,9 @@ function show_main(){
                 }
             }
             drawGaia(gaia100, gaia100_help, skyareas);
-            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+            if (magLim > 10 && gaia101_110[0] != null && gaia101_110_help[0] != null) {
                 drawGaia(gaia101_110, gaia101_110_help, skyareas);
-                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                if (magLim > 11 && gaia111_115[0] != null && gaia111_115_help[0] != null) {
                     drawGaia(gaia111_115, gaia111_115_help, skyareas);
                 }
             }
@@ -1737,9 +1737,9 @@ function show_main(){
                 }
             }
             drawGaia(gaia100, gaia100_help, skyareas);
-            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+            if (magLim > 10 && gaia101_110[0] != null && gaia101_110_help[0] != null) {
                 drawGaia(gaia101_110, gaia101_110_help, skyareas);
-                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                if (magLim > 11 && gaia111_115[0] != null && gaia111_115_help[0] != null) {
                     drawGaia(gaia111_115, gaia111_115_help, skyareas);
                 }
             }
@@ -1796,16 +1796,16 @@ function show_main(){
                 }
             }
             drawGaia(gaia100, gaia100_help, skyareas);
-            if (magLim > 10 && gaia101_110[0] != undefined && gaia101_110_help[0] != undefined) {
+            if (magLim > 10 && gaia101_110[0] != null && gaia101_110_help[0] != null) {
                 drawGaia(gaia101_110, gaia101_110_help, skyareas);
-                if (magLim > 11 && gaia111_115[0] != undefined && gaia111_115_help[0] != undefined) {
+                if (magLim > 11 && gaia111_115[0] != null && gaia111_115_help[0] != null) {
                     drawGaia(gaia111_115, gaia111_115_help, skyareas);
                 }
             }
         }
     }
 
-    if (!starNameElem[0].checked) {
+    if (starNames.length > 0 && !starNameElem[0].checked) {
         writeStarNames();
     }
 
@@ -1842,19 +1842,19 @@ function show_main(){
     ctx.strokeStyle = objectColor;
     ctx.fillStyle = objectColor;
 
-    if (document.getElementById('BayerFSCheck').checked && BayerNums.length != 0) {
+    if (BSCRAary[BSCnum] != 0 && document.getElementById('BayerFSCheck').checked && BayerNums.length != 0) {
         writeBayer();
     }
 
-    if (document.getElementById('MessierCheck').checked && rgEW <= 0.5 * document.getElementById('MessierFrom').value) {
+    if (messier.length > 0 && document.getElementById('MessierCheck').checked && rgEW <= 0.5 * document.getElementById('MessierFrom').value) {
         drawMessier();
     }
 
-    if (document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value && typeof recs !== 'undefined') {
+    if (recs.length > 0 && document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value && typeof recs !== 'undefined') {
         drawRecs();
     }
 
-    if (document.getElementById('allNGCCheck').checked && rgEW <= 0.5 * document.getElementById('allNGCFrom').value && NGC.length != 0) {
+    if (NGC.length > 0 && document.getElementById('allNGCCheck').checked && rgEW <= 0.5 * document.getElementById('allNGCFrom').value && NGC.length != 0) {
         drawNGC();
     }
 
@@ -2893,10 +2893,10 @@ function newSetting() {
 
     // 視点
     if (ObsPlanet == '地球') {
-        if (url.searchParams.has('observer')) {
+        if (loaded.includes("additional_objects") && url.searchParams.has('observer')) {
             url.searchParams.delete('observer');
+            localStorage.setItem('observer_planet', 'Earth');
         }
-        localStorage.setItem('observer_planet', 'Earth');
     } else {
         url.searchParams.set('observer', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
         localStorage.setItem('observer_planet', ENGplanets[Obs_num].split(' ').join('').split('/').join(''));
@@ -3130,6 +3130,8 @@ async function loadFiles() {
 
     //追加天体
     async function xhrExtra(data) {
+        const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+        const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
         const extra = data.split('\n');
         for (let i=0; i<extra.length; i++) {
             if (extra[i].length == 0) {
@@ -3137,15 +3139,85 @@ async function loadFiles() {
             }
             let extraLine = extra[i].split(' ');
             let name = extraLine[1];
+            let shortName = name;
+            for (let j=2; j<parseInt(extraLine[0])+1; j++) {
+                if (extraLine[j][0] != '(') {
+                    name += ' ' + extraLine[j];
+                } else {
+                    break;
+                }
+            }
             for (let j=2; j<parseInt(extraLine[0])+1; j++) {
                 name += ' ' + extraLine[j];
             }
             ENGplanets.push(name);
             JPNplanets.push(name);
 
-            let New = [];
-            for (let j=parseInt(extraLine[0])+1; j<extraLine.length-4; j++) {
-                New.push(parseFloat(extraLine[j]));
+            let New;
+            if (online && isElectron) {
+                try {
+                    const result = await window.electronAPI.fetchAsteroidData(shortName);
+                    if (data.includes('code')) {
+                        offlineAdd();
+                    } else if (result.object) {
+                        const elements = data.orbit.elements;
+                        const e = +elements[0].value;
+                        let epoch;
+                        if (e <= 0.99) {
+                            epoch = data.orbit.epoch;
+                        } else {
+                            epoch = elements[7].epoch;
+                        }
+                        const [y, m, d, h] = JD_to_YMDHM(epoch-0.3742);
+                        let elems;
+                        if (e <= 0.999) {
+                            const a = +elements[1].value;
+                            const peri = +elements[5].value;
+                            const incl = +elements[3].value;
+                            const node = +elements[4].value;
+                            const m0 = +elements[6].value;
+                            if (data.phys_par != null) {
+                                let G = 0.15;
+                                let H = 0;
+                                H_flag = false;
+                                for (let par of data.phys_par) {
+                                    if (par.name == 'H') {
+                                        H = par.value;
+                                        H_flag = true;
+                                    } else if (par.name == 'G') {
+                                        G = par.value;
+                                    }
+                                }
+                                if (H_flag) {
+                                    elems = [a, e, peri, incl, node, m0, H, G];
+                                } else {
+                                    elems = [a, e, peri, incl, node, m0, 0, 100];
+                                }
+                            } else {
+                                elems = [a, e, peri, incl, node, m0, 0, 100];
+                            }
+                        } else {
+                            const q = +elements[2].value;
+                            const peri = +elements[5].value;
+                            const incl = +elements[3].value;
+                            const node = +elements[4].value;
+                            elems = [q, e, peri, incl, node, 0, 0, 100];
+                        }
+                        New = [epoch, elem[0], elem[1], elem[2], elem[3], elem[4], elem[5], 0, 0, 0, 0, 0, elem[6], elem[7], y, m, d, h];
+                    } else {
+                        offlineAdd();
+                    }
+                } catch (error) {
+                    offlineAdd();
+                }
+            } else {
+                offlineAdd();
+            }
+            function offlineAdd() {
+                New = [];
+                for (let j=parseInt(extraLine[0])+1; j<extraLine.length-4; j++) {
+                    New.push(parseFloat(extraLine[j]));
+                }
             }
             planets.push(New);
 
@@ -3162,6 +3234,7 @@ async function loadFiles() {
                 }
             }
             defaultcheck++;
+            show_initial();
         } else if (localStorage.getItem('observer_planet') != null && localStorage.getItem('observer_planet') != 'Earth') {
             for (let j=0; j<ENGplanets.length; j++) {
                 if (localStorage.getItem('observer_planet') == ENGplanets[j].split(' ').join('').split('/').join('')) {
@@ -3170,11 +3243,14 @@ async function loadFiles() {
                 }
             }
             defaultcheck++;
+            show_initial();
         } else {
             defaultcheck++;
+            show_initial();
         }
     }
     if (online) {
+        const t0 = performance.now();
         async function loadFile(filename, func, impflag=false) {
             try {
                 const url_load = `https://peteworden.github.io/Soleil/data/${filename}.txt`;
@@ -3187,28 +3263,12 @@ async function loadFiles() {
                 xhrcheck++;
                 if (impflag) xhrimpcheck++;
                 loaded.push(filename);
-                console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt ${impflag}`);
+                console.log(performance.now() - t0);
                 show_initial();
             } catch (error) {
                 console.error(`Error loading file ${filename}:`, error);
             }
-            // let url_load = "https://peteworden.github.io/Soleil/data/" + filename + ".txt";
-            // let xhr = new XMLHttpRequest();
-            // xhr.open('GET', url_load);
-            // xhr.send();
-            // xhr.onreadystatechange = function() {
-            //     if(xhr.readyState === 4 && xhr.status === 200) {
-            //         func(xhr.responseText);
-            //         xhrcheck++;
-            //         if (impflag) {
-            //            xhrimpcheck++;
-            //         }
-            //         loaded.push(filename);
-            //         console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
-            //         show_initial();
-            //         return 0;
-            //     }
-            // }
         }
 
         async function loadJsonData(filename, func, impflag=false) {
@@ -3226,7 +3286,8 @@ async function loadFiles() {
                     xhrimpcheck++;
                 }
                 loaded.push(filename)
-                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json`);
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.json ${impflag}`);
+                console.log(performance.now() - t0);
                 show_initial();
             })
             .catch(error => {
@@ -3251,12 +3312,41 @@ async function loadFiles() {
                     xhrimpcheck++;
                 }
                 loaded.push(filename)
-                console.log(`${xhrcheck} ${defaultcheck} ${filename}.csv`);
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.csv ${impflag}`);
+                console.log(performance.now() - t0);
                 show_initial();
             })
             .catch(error => {
                 console.error('There was a problem with the fetch operation:', error);
             });
+        }
+
+        async function loadGaiaBinData(filename, impflag=false) {
+            const response = await fetch(`https://peteworden.github.io/Soleil/data/gaia_${filename}.bin`);
+            const buffer = await response.arrayBuffer();
+            const view = new DataView(buffer);
+            let index = 0;
+            const bufferByteLength = buffer.byteLength;
+            for (let i = 0; i < bufferByteLength; i += 6) {
+                const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
+                const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
+                const decPart = Math.floor(decMag / 10);
+                const dec = decPart - 180000;
+                if (filename == '101-110') {
+                    const mag = decMag - 10 * decPart + 101;
+                    gaia101_110[index] = [ra, dec, mag];
+                } else if (filename == '111-115') {
+                    const mag = decMag - 10 * decPart + 111;
+                    gaia111_115[index] = [ra, dec, mag];
+                }
+                index++;
+            }
+            xhrcheck++;
+            if (impflag) xhrimpcheck++;
+            loaded.push(filename)
+            console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
+            console.log(performance.now() - t0);
+            show_initial();
         }
 
         // デバッグ用。テキストファイル専用。getfileに関連するjsの2行をコメントアウトする。
@@ -3311,14 +3401,17 @@ async function loadFiles() {
         await loadFile("constellation_boundaries", (data) => {
             boundary = data.split(',').map(Number);
         }, true);
-
-        await loadJsonData('starnames', (data) => {
-            starNames = data;
-        }, true);
+        
+        //追加天体
+        await loadFile("additional_objects", xhrExtra);
 
         await loadJsonData('messier', (data) => {
             messier = data;
-        }, true);
+        });
+
+        await loadJsonData('rec', (data) => {
+            recs = data;
+        });
 
         //gaia offlineはまだ
         await loadCsvData('gaia_-100', (data) => {
@@ -3327,28 +3420,33 @@ async function loadFiles() {
         await loadFile("gaia_-100_helper", (data) => {
             gaia100_help = data.split(',').map(Number);
         });
-        await loadCsvData('gaia_101-110', (data) => {
-            gaia101_110 = data;
+        // await loadCsvData('gaia_101-110', (data) => {
+        //     gaia101_110 = data;
+        // });
+
+        await loadJsonData('starnames', (data) => {
+            starNames = data;
         });
+
+        await loadGaiaBinData("101-110");
         await loadFile("gaia_101-110_helper", (data) => {
             gaia101_110_help = data.split(',').map(Number);
         });
-        await loadCsvData('gaia_111-115', (data) => {
-            gaia111_115 = data;
-        });
+        // await loadCsvData('gaia_111-115', (data) => {
+        //     gaia111_115 = data;
+        // });
+        await loadGaiaBinData("111-115");
         await loadFile("gaia_111-115_helper", (data) => {
             gaia111_115_help = data.split(',').map(Number);
         });
-        
-        //追加天体
-        await loadFile("additional_objects", xhrExtra);
+
+        await loadGaiaBinData("111-115");
+        await loadFile("gaia_111-115_helper", (data) => {
+            gaia111_115_help = data.split(',').map(Number);
+        });
 
         //Bayer
         await loadFile("brights", xhrBSC);
-
-        await loadJsonData('rec', (data) => {
-            recs = data;
-        });
 
         // NGC天体とIC天体
         await loadFile("ngc", (data) => {
@@ -3460,6 +3558,7 @@ function checkURL() {
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         realtimeOff();
         defaultcheck++;
+        console.log('time');
         show_initial();
     } else if (localStorage.getItem('realtime') != null) {
         if (localStorage.getItem('realtime') == 'radec') {
@@ -3490,6 +3589,7 @@ function checkURL() {
         }
         turnOnOffLiveMode(mode);
         defaultcheck++;
+        console.log('mode');
         show_initial();
     } else {
         for (let i=0; i<zuhoElem.length; i++) {
@@ -3536,7 +3636,7 @@ function checkURL() {
 
     if ((url.searchParams.has('lat') && !isNaN(url.searchParams.get('lat'))) || (url.searchParams.has('lon') && !isNaN(url.searchParams.get('lon')))) {
         setObservationSite(+url.searchParams.get('lat'), +url.searchParams.get('lon'));
-        if (+url.searchParams.get('lat') != undefined && +url.searchParams.get('lon') != undefined) {
+        if (+url.searchParams.get('lat') != null && +url.searchParams.get('lon') != null) {
             for (let observationSite in observationSites) {
                 if (observationSites[observationSite][0] = +url.searchParams.get('lat'), +url.searchParams.get('lon') && observationSites[observationSite][1] == +url.searchParams.get('lon')) {
                     document.getElementById('observation-site-select').value = observationSite;
@@ -3546,7 +3646,7 @@ function checkURL() {
         }
         defaultcheck += 2;
         show_initial();
-    } else if (localStorage.getItem('observationSite') != null && observationSites[localStorage.getItem('observationSite')] != undefined) {
+    } else if (localStorage.getItem('observationSite') != null && observationSites[localStorage.getItem('observationSite')] != null) {
         const observationSite = localStorage.getItem('observationSite');
         setObservationSite(...observationSites[observationSite]);
         document.getElementById('observation-site-select').value = observationSite;
@@ -3865,7 +3965,7 @@ let lat_map, lon_map;
 let currentMarker = null;
 document.getElementById('observation-site-select').addEventListener('change', function() {
     const observationSite = document.getElementById('observation-site-select').value;
-    if (observationSites[observationSite] != undefined) {
+    if (observationSites[observationSite] != null) {
         setObservationSite(...observationSites[observationSite]);
     } else if (observationSite == '現在地') {
         function success(position) {
