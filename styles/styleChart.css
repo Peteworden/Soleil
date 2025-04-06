@@ -707,12 +707,17 @@ canvas {
 
 .info-lb {
     position: fixed;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     font-size: 16px;
     font-weight: 100;
     color: #fff;
     width: 80%;
+    height: auto;
     bottom: 6px;
     z-index: 1;
+    box-sizing: border-box;
 }
 
 .showingData {
@@ -720,7 +725,8 @@ canvas {
     font-weight: 100;
     color: #fff;
     width: 70%;
-    height: 20px;
+    height: auto;
+    bottom: auto;
     z-index: 1;
 }
 
@@ -734,10 +740,10 @@ canvas {
     width: 80%;
     background: orange;
 }
-.timeSlider::-webkit-slider-thumb {
+.aovSlider::-webkit-slider-thumb {
     background: orange;
 }
-.timeSlider::-moz-range-thumb {
+.aovSlider::-moz-range-thumb {
     background: orange;
 }
 
