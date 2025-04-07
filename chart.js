@@ -2162,15 +2162,11 @@ function show_main(){
 
     function determineConstellation(cenRA, cenDec) {
         let a = Array(89).fill(0);
-        for (let i=0; i<boundary.length; i+=5) {
-            let Dec1 = boundary[i+2];
-            let Dec2 = boundary[i+4];
-            if (Math.min(Dec1, Dec2) <= cenDec && cenDec < Math.max(Dec1, Dec2)) {
-                let RA1 = boundary[i+1];
-                let RA2 = boundary[i+3];
-                if (cenRA >= (cenDec-Dec1) * (RA2-RA1) / (Dec2-Dec1) + RA1) {
-                    let No = boundary[i] - 1;
-                    a[No] = (a[No] + 1) % 2;
+        for (let i=0; i<boundary.length; i++) {
+            const {num, ra1, dec1, ra2, dec2} = boundary[i];
+            if (Math.min(dec1, dec2) <= cenDec*1000 && cenDec*1000 < Math.max(dec1, dec2)) {
+                if (cenRA*1000 >= (cenDec*1000-dec1) * (ra2-ra1) / (dec2-dec1) + ra1) {
+                    a[num-1] = (a[num-1] + 1) % 2;
                 }
             }
         }
@@ -2181,11 +2177,9 @@ function show_main(){
                 centerConstellation = constellations[i].JPNname + "座  ";
                 break;
             }
-            if (cenDec > 0) {
-                centerConstellation = "こぐま座  ";
-            } else {
-                centerConstellation = "はちぶんぎ座  ";
-            }
+        }
+        if (centerConstellation == "") {
+            centerConstellation = cenDec > 0 ? "こぐま座  " : "はちぶんぎ座  ";
         }
         return centerConstellation;
     }
@@ -3348,6 +3342,29 @@ async function loadFiles() {
             console.log(performance.now() - t0);
             show_initial();
         }
+        async function loadConstellationBoundariesBinData(filename='constellation_boundaries', impflag=false) {
+            const response = await fetch(`https://peteworden.github.io/Soleil/data/${filename}.bin`);
+            const buffer = await response.arrayBuffer();
+            const view = new DataView(buffer);
+            const bufferByteLength = buffer.byteLength;
+            boundary = Array(Math.floor(bufferByteLength/12));
+            let index = 0;
+            for (let i = 0; i < bufferByteLength; i += 12) {
+                const ra1 = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
+                const dec1 = ((view.getUint8(i + 3) << 13) | (view.getUint8(i + 4) << 5) | (view.getUint8(i + 5) >> 3)) - 90000;
+                const ra2 = (view.getUint8(i + 6) << 16) | (view.getUint8(i + 7) << 8) | view.getUint8(i + 8);
+                const dec2 = ((view.getUint8(i + 9) << 12) | (view.getUint8(i + 10) << 4) | (view.getUint8(i + 11) >> 4)) - 90000;
+                const num = (view.getUint8(i + 5) & 0x07) + (view.getUint8(i + 11) & 0x0F) * 8;
+                boundary[index] = { num, ra1, dec1, ra2, dec2};
+                index++;
+            }
+            xhrcheck++;
+            if (impflag) xhrimpcheck++;
+            loaded.push(filename)
+            console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
+            console.log(performance.now() - t0);
+            show_initial();
+        }
 
         // デバッグ用。テキストファイル専用。getfileに関連するjsの2行をコメントアウトする。
         // 公開時コメントアウトの解除を忘れないように！
@@ -3398,9 +3415,10 @@ async function loadFiles() {
         }, true);
 
         //星座境界線
-        await loadFile("constellation_boundaries", (data) => {
-            boundary = data.split(',').map(Number);
-        }, true);
+        // await loadFile("constellation_boundaries", (data) => {
+        //     boundary = data.split(',').map(Number);
+        // }, true);
+        await loadConstellationBoundariesBinData('constellation_boundaries', true);
         
         //追加天体
         await loadFile("additional_objects", xhrExtra);
@@ -3420,15 +3438,15 @@ async function loadFiles() {
         await loadFile("gaia_-100_helper", (data) => {
             gaia100_help = data.split(',').map(Number);
         });
-        // await loadCsvData('gaia_101-110', (data) => {
-        //     gaia101_110 = data;
-        // });
 
         await loadJsonData('starnames', (data) => {
             starNames = data;
         });
 
         await loadGaiaBinData("101-110");
+        // await loadCsvData('gaia_101-110', (data) => {
+        //     gaia101_110 = data;
+        // });
         await loadFile("gaia_101-110_helper", (data) => {
             gaia101_110_help = data.split(',').map(Number);
         });
@@ -3558,7 +3576,6 @@ function checkURL() {
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         realtimeOff();
         defaultcheck++;
-        console.log('time');
         show_initial();
     } else if (localStorage.getItem('realtime') != null) {
         if (localStorage.getItem('realtime') == 'radec') {
@@ -3589,7 +3606,6 @@ function checkURL() {
         }
         turnOnOffLiveMode(mode);
         defaultcheck++;
-        console.log('mode');
         show_initial();
     } else {
         for (let i=0; i<zuhoElem.length; i++) {
