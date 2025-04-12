@@ -211,6 +211,22 @@ ul {
     margin-left: 20px;
 }
 
+.close-big-window {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    text-align: center;
+    padding: 10px;
+    background-color: #147d18;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
 .setPicsFor360Div input {
     position: absolute;
     top: 10px;
@@ -283,6 +299,11 @@ ul {
 
 .demDescriptionText a {
     color: #C0C0C0;
+}
+
+.dem-description-image {
+    width: 100%;
+    height: auto;
 }
 
 .set-mag-limit {
@@ -550,6 +571,10 @@ h1, p {
     flex-direction: column;
     align-items: center;
     z-index: 3;
+}
+
+#newsText {
+    width: 80%;
 }
 
 .news ul {
