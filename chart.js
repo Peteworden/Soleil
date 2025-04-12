@@ -3,6 +3,9 @@
 // URLを表示に反映するのは最初のみ
 
 const online = navigator.onLine;
+const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
+const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+console.log(online, isLocalhost, isElectron);
 
 // 定数
 const pi = Math.PI;
@@ -46,6 +49,10 @@ document.getElementById('searchDiv').style.visibility = "hidden";
 document.getElementById('news').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
 document.getElementById('darkerbtntext').innerHTML = 'dark';
+
+if (isElectron) {
+    document.getElementById("customizeObjectsBtn").style.visibility = "visible";
+}
 
 // 変数
 // 色
@@ -95,10 +102,6 @@ let gaia101_110 = new Array(800359);
 let gaia101_110_help = new Array(64801);
 let gaia111_115 = new Array(666677);
 let gaia111_115_help = new Array(64801);
-// let Tycho = new Array(980634);
-// let Help = new Array(64801);
-// let Tycho1011 = new Array(1602511);
-// let Help1011 = new Array(64801);
 let BSCnum = 0;
 let BSCRAary = [];
 let BSCDecary = [];
@@ -111,6 +114,9 @@ let recs = [];
 let NGC = new Array(66130);
 let constellations = [];
 let boundary = new Array(4801);
+let demFileName = '';
+let dem = new Array(256*256);
+let demAngle = [];
 
 const Sun = ['Sun'];
 const Mercury = [2451545.0,  0.38709927, 0.20563593,  7.00497902, 252.25032350,  77.45779628,  48.33076593,  0.00000037,  0.00001906, -0.00594749, 149472.67411175,  0.16047689, -0.12534081];
@@ -143,6 +149,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-04-12T17:00:00+09:00', text: ['メインで使う座標系をJ2000.0から視位置にしました。表示のバグは少しありますが計算間違いはないはずです', '以前からですが、設定画面の一番下のボタンで地形を表示させることができます。SWAN彗星見るときに使えそう', 'いくつかのNGC天体が複数個表示されるバグは気が向いたら直します']},
     {time: '2025-04-04T15:50:00+09:00', text: ['惑星の位置がより正確になりました', '惑星をクリック（タップ）したときの情報が増えました']},
     {time: '2025-04-03T19:45:00+09:00', text: ['木星を拡大するとガリレオ衛星が見れます！意外と正弦波１，２つ重ねるだけで高い精度出た']},
     {time: '2025-03-28T00:52:00+09:00', text: ['アイコンが素敵になりました。ありがとう！', '場所の設定方法を改良し、地図上で選択できるようになりました', 'Windows向けデスクトップアプリを鋭意開発中です！ -> https://github.com/Peteworden/reticle/releases']},
@@ -300,10 +307,12 @@ function linkExist(obj) {
 
 //objの位置に移動する
 function link(obj) {
+    console.log(obj);
     if (!obj) {
         console.error('Invalid input:', obj);
         return;
     }
+    let cenRaJ2000, cenDecJ2000;
     // 見つかったかどうかのフラグ
     let flag = false;
     for (i=0; i<10; i++) {
@@ -316,16 +325,18 @@ function link(obj) {
     }
     for (i=0; i<starNames.length; i++) {
         if (starNames[i].name == obj || starNames[i].jpnname == obj) {
-            cenRA = starNames[i].ra;
-            cenDec = starNames[i].dec;
+            // cenRA = starNames[i].ra;
+            // cenDec = starNames[i].dec;
+            [cenRA, cenDec] = J2000toApparent(starNames[i].ra, starNames[i].dec, showingJD);
             flag = true;
             break;
         }
     }
     for (i=0; i<recs.length; i++) {
         if (recs[i].name == obj) {
-            cenRA = rahm2deg(recs[i].ra);
-            cenDec = decdm2deg(recs[i].dec);
+            cenRaJ2000 = rahm2deg(recs[i].ra);
+            cenDecJ2000 = decdm2deg(recs[i].dec);
+            [cenRA, cenDec] = J2000toApparent(cenRaJ2000, cenDecJ2000, showingJD);
             flag = true;
             break;
         }
@@ -334,24 +345,27 @@ function link(obj) {
         if (obj[0] == 'M' && !isNaN(obj.substr(1))) { //メシエ
             for (i=0; i<messier.length; i++) {
                 if (messier[i].name == obj) {
-                    cenRA = rahm2deg(messier[i].ra);
-                    cenDec = decdm2deg(messier[i].dec);
+                    cenRaJ2000 = rahm2deg(messier[i].ra);
+                    cenDecJ2000 = decdm2deg(messier[i].dec);
+                    [cenRA, cenDec] = J2000toApparent(cenRaJ2000, cenDecJ2000, showingJD);
                     break;
                 }
             }
         } else if ((obj.startsWith('NGC') && !isNaN(obj.substr(3))) || (obj.startsWith('IC') && !isNaN(obj.substr(2)))) {
             for (i=0; i<NGC.length; i+=5) {
                 if (NGC[i] == obj) {
-                    cenRA = +NGC[i+1];
-                    cenDec = +NGC[i+2];
+                    // cenRA = +NGC[i+1];
+                    // cenDec = +NGC[i+2];
+                    [cenRA, cenDec] = J2000toApparent(+NGC[i+1], +NGC[i+2], showingJD);
                     break;
                 }
             }
         } else if (obj.slice(-1) == '座') {
             for (i=0; i<89; i++){
                 if (obj == constellations[i].JPNname + '座') {
-                    cenRA = constellations[i].ra;
-                    cenDec = constellations[i].dec;
+                    // cenRA = constellations[i].ra;
+                    // cenDec = constellations[i].dec;
+                    [cenRA, cenDec] = J2000toApparent(constellations[i].ra, constellations[i].dec, showingJD);
                     break;
                 }
             }
@@ -359,7 +373,7 @@ function link(obj) {
     }
     setUrlAndLocalStorage('RA', cenRA.toFixed(2));
     setUrlAndLocalStorage('Dec', cenDec.toFixed(2));
-    [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, hourAngle(showingJD, lon_obs));
+    [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, siderealTime(showingJD, lon_obs));
     setUrlAndLocalStorage('azm', cenAzm.toFixed(2));
     setUrlAndLocalStorage('alt', cenAlt.toFixed(2));
     history.replaceState('', '', url.href);
@@ -448,11 +462,11 @@ document.getElementById('searchInput').addEventListener('input', function() {
                     }
                 }
             }
-            if (1 <= parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
+            if (1 <= parseInt(searchText) && parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}` && !suggestions1[0].includes(`NGC${searchText}`))) {
                 suggestions1[0].push(`NGC${searchText}`);
                 suggestions1[1].push(`NGC${searchText}`);
             }
-            if (1 <= parseInt(searchText) <= 5386 && !recsugs.includes(`IC${searchText}`) && linkExist(`IC${searchText}`)) {
+            if (1 <= parseInt(searchText) && parseInt(searchText) <= 5386 && !recsugs.includes(`IC${searchText}`) && linkExist(`IC${searchText}`) && !suggestions1[0].includes(`IC${searchText}`)) {
                 suggestions1[0].push(`IC${searchText}`);
                 suggestions1[1].push(`IC${searchText}`);
             }
@@ -507,12 +521,12 @@ document.getElementById('searchInput').addEventListener('input', function() {
             }
         }
         //Mをつけてメシエになるとき
-        if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+        if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`) && !recsugs.includes(`NGC${searchText}`)) {
             suggestions1[0].push(`M${searchText}`);
             suggestions1[1].push(`M${searchText}`);
         }
         //そのままでメシエになるとき
-        if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) <= 110 && linkExist(searchText)) {
+        if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) && parseInt(searchText.substr(1)) <= 110 && linkExist(searchText) && !recsugs.includes(`IC${searchText}`)) {
             suggestions1[0].push(searchText.toUpperCase());
             suggestions1[1].push(searchText.toUpperCase());
         }
@@ -521,17 +535,21 @@ document.getElementById('searchInput').addEventListener('input', function() {
                 if (toUpperCaseOrKatakana(rec.name).startsWith(searchText)) {
                     suggestions1[0].push(rec.name);
                     suggestions1[1].push(rec.name);
+                    recsugs.push(rec.name);
                 } else if (toUpperCaseOrKatakana(rec.name).includes(searchText)) {
                     suggestions2[0].push(rec.name);
                     suggestions2[1].push(rec.name);
+                    recsugs.push(rec.name);
                 }
                 for (let alt of rec.alt_name) {
                     if (toUpperCaseOrKatakana(alt).startsWith(searchText)) {
                         suggestions1[0].push(rec.name);
                         suggestions1[1].push(rec.name);
+                        recsugs.push(alt);
                     } else if (toUpperCaseOrKatakana(alt).includes(searchText)) {
                         suggestions2[0].push(rec.name);
                         suggestions2[1].push(rec.name);
+                        recsugs.push(alt);
                     }
                 }
             }
@@ -553,18 +571,18 @@ document.getElementById('searchInput').addEventListener('input', function() {
         }
         //NGC, ICをつけてそれらになるとき
         if (!isNaN(searchText)) {
-            if (1 <= parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
+            if (1 <= parseInt(searchText) && parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
                 suggestions1[0].push(`NGC${searchText}`);
                 suggestions1[1].push(`NGC${searchText}`);
             }
-            if (1 <= parseInt(searchText) <= 5386 && !recsugs.includes(`IC${searchText}`) && linkExist(`IC${searchText}`)) {
+            if (1 <= parseInt(searchText) && parseInt(searchText) <= 5386 && !recsugs.includes(`IC${searchText}`) && linkExist(`IC${searchText}`)) {
                 suggestions1[0].push(`IC${searchText}`);
                 suggestions1[1].push(`IC${searchText}`);
             }
-        } else if (searchText.startsWith('NGC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
+        } else if (searchText.startsWith('NGC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) && parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
             suggestions1[0].push(searchText);
             suggestions1[1].push(searchText);
-        } else if (searchText.startsWith('IC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
+        } else if (searchText.startsWith('IC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) && parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
             suggestions1[0].push(searchText);
             suggestions1[1].push(searchText);
         }
@@ -666,17 +684,16 @@ function showObjectInfo(x, y) {
         }
 
         let infoText = '';
-        console.log(infoText)
         if (JPNplanets.includes(nearest[0])) {
             trackPlanet = nearest[0];
             let nearestCoord = solarSystemBodies[JPNplanets.indexOf(nearest[0])];
             let raHM = radeg2hm(nearestCoord.ra);
             let decDM = decdeg2dm(nearestCoord.dec);
-            infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (J2000.0)`;
-            let [raApp, decApp] = J2000toApparent(nearestCoord.ra, nearestCoord.dec, showingJD);
-            raHM = radeg2hm(raApp);
-            decDM = decdeg2dm(decApp);
-            infoText += `<br>RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (視位置)`;
+            infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (視位置)`;
+            let [raJ2000, decJ2000] = apparentToJ2000(nearestCoord.ra, nearestCoord.dec, showingJD);
+            raHM = radeg2hm(raJ2000);
+            decDM = decdeg2dm(decJ2000);
+            infoText += `<br>RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed()}' (J2000.0)`;
 
             if (nearest[0] == '月') {
                 infoText += `<br>距離: ${(nearestCoord.dist/10000).toFixed(1)}万km`;
@@ -692,8 +709,6 @@ function showObjectInfo(x, y) {
                     infoText += ` （光の速さで${(light_minutes/1440).toFixed(1)}日）`;
                 }
             }
-            
-            console.log(infoText);
             if (nearest[0] == '木星') {
                 infoText += '<br>ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。';
                 if (online) {
@@ -741,7 +756,6 @@ function showObjectInfo(x, y) {
                 }
             }
         }
-        console.log(infoText);
         document.getElementById('objectInfoText').innerHTML = infoText;
     }
 }
@@ -1133,10 +1147,11 @@ function show_initial(){
 function calculation(JD) {
     let x, y, z;
     let X, Y, Z;
-    theta = hourAngle(JD, lon_obs);
+    theta = siderealTime(JD, lon_obs);
 
-    [X, Y, Z] = calc(planets[Obs_num], JD);
+    [X, Y, Z] = calc(planets[Obs_num], JD); // J2000.0
     let [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
+    [ra, dec] = J2000toApparent(ra, dec, JD);
     solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
     for (i=1; i<planets.length; i++) {
@@ -1144,10 +1159,12 @@ function calculation(JD) {
         if (i == 9) {
             [x, y, z] = calc(Earth, JD);
             [x, y, z, ra, dec, dist, Ms, ws, lon_moon, lat_moon] = calc(Moon, JD); // xyzは太陽基準
+            [ra, dec] = J2000toApparent(ra, dec, JD);
             solarSystemBodies[9] = {x: x, y: y, z: z, ra: ra, dec: dec, dist: dist, mag: 100};
         } else {
             [x, y, z] = calc(planet, JD);
             [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            [ra, dec] = J2000toApparent(ra, dec, JD);
             solarSystemBodies[i] = {x: x, y: y, z: z, ra: ra, dec: dec, dist: dist, mag: 100}
         }
     }
@@ -1503,8 +1520,8 @@ function show_main(){
     let inFlag = false;
     infoList = [];
 
-    let JD = showingJD;
-    let theta = hourAngle(JD, lon_obs);
+    const JD = showingJD;
+    let theta = siderealTime(JD, lon_obs);
     if (['live', 'ar'].includes(mode)) {
         [cenAzm, cenAlt] = screen2liveAh(0, 0);
     }
@@ -1513,6 +1530,7 @@ function show_main(){
     } else if (['view', 'live', 'ar'].includes(mode)) {
         [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
     }
+    const [cenRaJ2000, cenDecJ2000] = apparentToJ2000(cenRA, cenDec, JD);
 
     let Astr = "";
     let hstr = "";
@@ -1531,52 +1549,55 @@ function show_main(){
         drawGrid();
     }
 
-    if (['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
-        const demReader = new FileReader();
-        demReader.onload = function(e) {
-            const dem = e.target.result.split(',').map(Number);
-            if (dem.length == 257*257) {
-                const demAngle = [...Array(257*257)].map(() => Array(3).fill(0));
-                obsHeight = dem[257*128+128];
-                for (i=0; i<257; i++) {
-                    for (j=0; j<257; j++) {
-                        let demDist = Math.sqrt((j-128)*(j-128)+(128-i)*(128-i));
-                        if (demDist > 1){
-                            demAngle[257*i+j][0] = (Math.atan2(j-128, 128-i) * rad2deg + 360) % 360;
-                            demAngle[257*i+j][1] = Math.atan((dem[257*i+j]-obsHeight) * 257 / 100 / demDist) * rad2deg;
-                            demAngle[257*i+j][2] = demDist;
+    if (!dragFlag && !pinchFlag && ['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
+        const fileNames = Array.from(document.getElementById('demFileInput').files).map(file => file.name);
+        if (demFileName.length > 0 || dem != null || dem.length == 257*257 || demAngle != null || fileNames[0] == demFileName) {
+            const demReader = new FileReader();
+            demReader.onload = function(e) {
+                dem = e.target.result.split(',').map(Number);
+                if (dem.length == 257*257) {
+                    demAngle = [...Array(257*257)].map(() => Array(3).fill(0));
+                    obsHeight = dem[257*128+128];
+                    for (i=0; i<257; i++) {
+                        for (j=0; j<257; j++) {
+                            let demDist = Math.sqrt((j-128)*(j-128)+(128-i)*(128-i));
+                            if (demDist > 1){
+                                demAngle[257*i+j][0] = (Math.atan2(j-128, 128-i) * rad2deg + 360) % 360;
+                                demAngle[257*i+j][1] = Math.atan((dem[257*i+j]-obsHeight) * 257 / 100 / demDist) * rad2deg;
+                                demAngle[257*i+j][2] = demDist;
+                            }
                         }
                     }
+                    demAngle.sort((a, b) => a[2] - b[2]);
                 }
-                demAngle.sort((a, b) => a[2] - b[2]);
-                if (mode == 'view') {
-                    ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-                    ctx.beginPath();
-                    for (i=0; i<257*257; i++) {
-                        [scrRA, scrDec] = RADec2scrview(...Ah2RADec(demAngle[i][0], demAngle[i][1], theta));
-                        if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                            // drawFilledCircle (...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
-                            ctx.moveTo(...coordSH(scrRA, scrDec));
-                            ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
-                        }
-                    }
-                    ctx.fill();
-                } else if (['live', 'ar'].includes(mode)) {
-                    ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-                    ctx.beginPath();
-                    for (i=0; i<257*257; i++) {
-                        [scrRA, scrDec] = Ah2scrlive(demAngle[i][0], demAngle[i][1]);
-                        if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                            // drawFilledCircle(...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
-                            ctx.moveTo(...coordSH(scrRA, scrDec));
-                            ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
-                        }
-                    }
-                    ctx.fill();
+            };
+            demReader.readAsText(document.getElementById('demFileInput').files[0]);
+        }
+        if (mode == 'view') {
+            ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+            ctx.beginPath();
+            for (i=0; i<257*257; i++) {
+                [scrRA, scrDec] = RADec2scrview(...Ah2RADec(demAngle[i][0], demAngle[i][1], theta));
+                if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                    // drawFilledCircle (...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                    ctx.moveTo(...coordSH(scrRA, scrDec));
+                    ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
                 }
             }
-        };
-        demReader.readAsText(document.getElementById('demFileInput').files[0]);
+            ctx.fill();
+        } else if (['live', 'ar'].includes(mode)) {
+            ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+            ctx.beginPath();
+            for (i=0; i<257*257; i++) {
+                [scrRA, scrDec] = Ah2scrlive(demAngle[i][0], demAngle[i][1]);
+                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                    // drawFilledCircle(...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                    ctx.moveTo(...coordSH(scrRA, scrDec));
+                    ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
+                }
+            }
+            ctx.fill();
+        }
     }
 
     if (document.getElementById('aovCheck').checked) {
@@ -1601,7 +1622,7 @@ function show_main(){
     }
 
     //星座判定
-    let centerConstellation = determineConstellation(cenRA, cenDec);
+    let centerConstellation = determineConstellation(cenRaJ2000, cenDecJ2000);
 
     //line //星座線
     if (document.getElementById('constLineCheck').checked && rgEW <= 0.5 * document.getElementById('constLineFrom').value) {
@@ -1611,6 +1632,8 @@ function show_main(){
             for (let line of constellations[i].lines) {
                 let RA1 = line[0], Dec1 = line[1];
                 let RA2 = line[2], Dec2 = line[3];
+                [RA1, Dec1] = J2000toApparent(RA1, Dec1, JD);
+                [RA2, Dec2] = J2000toApparent(RA2, Dec2, JD);
                 if (mode == 'AEP') {
                     let [RA1_SH, Dec1_SH] = RADec2scrAEP(RA1, Dec1);
                     let [RA2_SH, Dec2_SH] = RADec2scrAEP(RA2, Dec2);
@@ -1818,7 +1841,8 @@ function show_main(){
     var hips_magfilter = hips.filter(hip => hip.mag <= magLim);
     for (i=0; i<hips_magfilter.length; i++){
         let hip = hips_magfilter[i];
-        [x, y, inFlag] = xyIfInCanvas(hip.ra, hip.dec);
+        // [x, y, inFlag] = xyIfInCanvas(hip.ra, hip.dec);
+        [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(hip.ra, hip.dec, JD));
         if (inFlag) drawHIPstar(x, y, hip.mag, bv2color(hip.bv));
     }
 
@@ -1850,7 +1874,7 @@ function show_main(){
         drawMessier();
     }
 
-    if (recs.length > 0 && document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value && typeof recs !== 'undefined') {
+    if (recs.length > 0 && document.getElementById('recsCheck').checked && rgEW <= 0.5 * document.getElementById('recsFrom').value) {
         drawRecs();
     }
 
@@ -1985,8 +2009,56 @@ function show_main(){
         }
     }
 
+    if (Math.min(rgNS, rgEW) <= 250) {
+        [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(0, 90, JD));
+        if (inFlag) {
+            drawObjects('2000年初', x, y, 1);
+        }
+        [x, y, inFlag] = xyIfInCanvas(0, 90);
+        if (inFlag) {
+            drawObjects('現在', x, y, 1);
+        }
+    }
+
+    // let cenRA_hm = radeg2hm(cenRA);
+    // let cenDec_dm = decdeg2dm(cenDec);
+    // let J2000Text = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
+    // if (cenDec >= 0) {
+    //     J2000Text += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
+    // } else {
+    //     J2000Text += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
+    // }
+
+    // let [cenRaApp, cenDecApp] = J2000toApparent(cenRA, cenDec, JD);
+    // cenRA_hm = radeg2hm(cenRaApp);
+    // cenDec_dm = decdeg2dm(cenDecApp);
+    // let apparentText = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
+    // if (cenDec >= 0) {
+    //     apparentText += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
+    // } else {
+    //     apparentText += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
+    // }
+
+    // document.getElementById("coordtext").style.color = textColor;
+    // if (coordinateSystemElem.value == '視位置') {
+    //     document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${apparentText}<br>${Astr}${hstr}`;
+    // } else if (coordinateSystemElem.value == 'J2000.0') {
+    //     document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${J2000Text}<br>${Astr}${hstr}`;
+    // } else {
+    //     document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${apparentText}<br>${J2000Text}<br>${Astr}${hstr}`;
+    // }
+
     let cenRA_hm = radeg2hm(cenRA);
     let cenDec_dm = decdeg2dm(cenDec);
+    let apparentText = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
+    if (cenDec >= 0) {
+        apparentText += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
+    } else {
+        apparentText += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
+    }
+
+    cenRA_hm = radeg2hm(cenRaJ2000);
+    cenDec_dm = decdeg2dm(cenDecJ2000);
     let J2000Text = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
     if (cenDec >= 0) {
         J2000Text += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
@@ -1994,15 +2066,6 @@ function show_main(){
         J2000Text += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (J2000.0) `;
     }
 
-    let [cenRaApp, cenDecApp] = J2000toApparent(cenRA, cenDec, JD);
-    cenRA_hm = radeg2hm(cenRaApp);
-    cenDec_dm = decdeg2dm(cenDecApp);
-    let apparentText = `赤経 ${cenRA_hm[0]}h ${cenRA_hm[1].toFixed(1)}m `;
-    if (cenDec >= 0) {
-        apparentText += `赤緯 +${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
-    } else {
-        apparentText += `赤緯 ${cenDec_dm[0]}° ${cenDec_dm[1].toFixed()}' (視位置) `;
-    }
 
     document.getElementById("coordtext").style.color = textColor;
     if (coordinateSystemElem.value == '視位置') {
@@ -2213,6 +2276,7 @@ function show_main(){
                 if (mag >= magLim) continue;
                 let ra = data[0] * 0.001;
                 let dec = data[1] * 0.001;
+                [ra, dec] = J2000toApparent(ra, dec, JD);
                 let [x, y, inFlag] = xyIfInCanvas(ra, dec);
                 if (inFlag) {
                     ctx.moveTo(x, y);
@@ -2239,7 +2303,7 @@ function show_main(){
             } else {
                 name = FSs[i];
             }
-            [x, y, inFlag] = xyIfInCanvas(ra, dec);
+            [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(ra, dec, JD));
             if (inFlag) {
                 drawObjects(name, x, y, 0);
             }
@@ -2302,6 +2366,7 @@ function show_main(){
             if (name == '') continue;
             let ra = rahm2deg(data[i].ra);
             let dec = decdm2deg(data[i].dec);
+            [ra, dec] = J2000toApparent(ra, dec, JD);
             [x, y, inFlag] = xyIfInCanvas(ra, dec);
             if (inFlag) {
                 func(i, name, x, y);
@@ -2325,9 +2390,7 @@ function show_main(){
             if (tierLimit == 1 && tier > 0) continue;
             if (tierLimit == 2 && tier > 1) continue;
             if (2*Math.max(rgNS, rgEW) > tier_range[tier-1]) continue;
-            let ra = d.ra;
-            let dec = d.dec;
-            [x, y, inFlag] = xyIfInCanvas(ra, dec);
+            [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(d.ra, d.dec, JD));
             if (inFlag) {
                 let size = 20 - 1 * tier;
                 if (d.jpnname) {
@@ -2356,13 +2419,11 @@ function show_main(){
     function drawNGC () {
         ctx.strokeStyle = objectColor;
         ctx.fillStyle = objectColor;
+        const drawRecFlag = (recs.length > 0 && document.getElementById('recsCheck').checked);
         for (i=0; i<NGC.length; i+=5){
-            let ra = +NGC[i+1];
-            let dec = +NGC[i+2];
-            let [x, y, inFlag] = xyIfInCanvas(ra, dec);
-            if (inFlag) {
-                drawObjects(NGC[i], x, y, NGC[i+4]);
-            }
+            const name = NGC[i];
+            let [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(+NGC[i+1], +NGC[i+2], JD));
+            if (inFlag) drawObjects(NGC[i], x, y, NGC[i+4]);
         }
     }
 
@@ -2737,20 +2798,34 @@ function decdeg2dm(dec_deg) {
     return [d, m];
 }
 
-function hourAngle(JD_TT, lon_obs) {
+function siderealTime(JD_TT, lon_obs) {
     let t = (JD_TT - 2451545.0) / 36525;
     let ans = ((24110.54841 + 8640184.812866*t + 0.093104*t**2 - 0.0000062*t**3)/86400 % 1 + 1.00273781 * ((JD_TT-0.0008-2451544.5)%1)) * 2*pi + lon_obs - 0.0203; //rad
+    // https://aa.usno.navy.mil/faq/GAST
+    const JD_UT = JD_TT - 0.0008;
+    const h = 24 * ((JD_UT + 0.5) % 1);
+    const d_UT = JD_UT - h / 24 - 2451545.0;
+    ans = ((6.697375 + (0.065707485828 * d_UT) % 24 + 1.0027379 * h + 0.0854103 * t + 0.0000258 * t*t) % 24) * 15 * deg2rad + lon_obs;
     return ans;
 }
 
 // 座標変換
 function J2000toApparent(raJ2000, decJ2000, JD) {
-    let t = (JD - 2451545.0) / 36525;
+    const t = (JD - 2451545.0) / 36525;
     let xyz = radecToXYZ(raJ2000, decJ2000, 1);
-    let precession = 5029 / 3600 * t * deg2rad;
+    const precession = 5029 / 3600 * t * deg2rad;
     xyz = Rx(Rz(Rx(xyz, -eps), precession), eps);
-    let apparent = xyz_to_RADec(xyz[0], xyz[1], xyz[2]);
+    const apparent = xyz_to_RADec(xyz[0], xyz[1], xyz[2]);
     return [apparent[0], apparent[1]]; //deg
+}
+
+function apparentToJ2000(raApp, decApp, JD) {
+    const t = (JD - 2451545.0) / 36525;
+    let xyz = radecToXYZ(raApp, decApp, 1);
+    const precession = 5029 / 3600 * t * deg2rad;
+    xyz = Rx(Rz(Rx(xyz, -eps), -precession), eps);
+    const J2000 = xyz_to_RADec(xyz[0], xyz[1], xyz[2]);
+    return [J2000[0], J2000[1]]; //deg
 }
 
 function RADec2Ah (RA, Dec, theta) { //deg
@@ -3044,7 +3119,7 @@ function realtimeRadec() {
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         calculation(showingJD);
-        [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, hourAngle(showingJD, lon_obs));
+        [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, siderealTime(showingJD, lon_obs));
         show_main();
     }
 }
@@ -3061,7 +3136,7 @@ function realtimeAzmalt() {
         setYMDHM(y, m, d, h, mi);
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         calculation(showingJD);
-        [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, hourAngle(showingJD, lon_obs));
+        [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, siderealTime(showingJD, lon_obs));
         show_main();
     }
 }
@@ -3124,8 +3199,6 @@ async function loadFiles() {
 
     //追加天体
     async function xhrExtra(data) {
-        const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-        const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
         const extra = data.split('\n');
         for (let i=0; i<extra.length; i++) {
             if (extra[i].length == 0) {
@@ -4016,6 +4089,22 @@ function closeObservationSiteMap() {
     document.getElementById('observation-site-map-div').style.visibility = 'hidden';
     setObservationSite(lat_map, lon_map);
 }
+
+function closeCustomizeObjects() {
+    document.getElementById('customizeObjects').style.visibility = 'hidden';
+}
+
+// preload.js、main.jsと関係
+document.getElementById('writeButton').addEventListener('click', async () => {
+    const text = document.getElementById('coordtext').value;
+    const result = await window.fileAPI.writeTestFile(text);
+    console.log(result);
+});
+
+document.getElementById('readButton').addEventListener('click', async () => {
+    const content = await window.fileAPI.readTestFile();
+    console.log('読み込み内容:', content);
+});
 
 function show_JD_plus1(){
     showingJD++;
