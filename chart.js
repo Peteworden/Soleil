@@ -1549,9 +1549,9 @@ function show_main(){
         drawGrid();
     }
 
-    if (!dragFlag && !pinchFlag && ['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
+    if (['view', 'live', 'ar'].includes(mode) && document.getElementById('demCheck').checked && document.getElementById('demFileInput').files.length > 0) {
         const fileNames = Array.from(document.getElementById('demFileInput').files).map(file => file.name);
-        if (demFileName.length > 0 || dem != null || dem.length == 257*257 || demAngle != null || fileNames[0] == demFileName) {
+        if (demFileName == '' || dem != null || demAngle != null || (demFileName != '' && fileNames[0] != demFileName)) {
             const demReader = new FileReader();
             demReader.onload = function(e) {
                 dem = e.target.result.split(',').map(Number);
@@ -1569,34 +1569,44 @@ function show_main(){
                         }
                     }
                     demAngle.sort((a, b) => a[2] - b[2]);
+                    drawDem(demAngle);
                 }
+            };
+            demReader.onerror = function(e) {
+                console.error("地形ファイルの読み込み中にエラーが発生しました", e);
             };
             demReader.readAsText(document.getElementById('demFileInput').files[0]);
         }
-        if (mode == 'view') {
-            ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-            ctx.beginPath();
-            for (i=0; i<257*257; i++) {
-                [scrRA, scrDec] = RADec2scrview(...Ah2RADec(demAngle[i][0], demAngle[i][1], theta));
-                if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
-                    // drawFilledCircle (...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
-                    ctx.moveTo(...coordSH(scrRA, scrDec));
-                    ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
+
+        drawDem(demAngle);
+        function drawDem(demAngle) {
+            if (Array.isArray(demAngle) && demAngle.length == 257*257 && Array.isArray(demAngle[0]) && demAngle[0].length == 3) {
+                if (mode == 'view') {
+                    ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+                    ctx.beginPath();
+                    for (i=0; i<257*257; i++) {
+                        [scrRA, scrDec] = RADec2scrview(...Ah2RADec(demAngle[i][0], demAngle[i][1], theta));
+                        if (Math.abs(scrDec) < rgNS && Math.abs(scrRA) < rgEW) {
+                            // drawFilledCircle (...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                            ctx.moveTo(...coordSH(scrRA, scrDec));
+                            ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
+                        }
+                    }
+                    ctx.fill();
+                } else if (['live', 'ar'].includes(mode)) {
+                    ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
+                    ctx.beginPath();
+                    for (i=0; i<257*257; i++) {
+                        [scrRA, scrDec] = Ah2scrlive(demAngle[i][0], demAngle[i][1]);
+                        if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
+                            // drawFilledCircle(...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
+                            ctx.moveTo(...coordSH(scrRA, scrDec));
+                            ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
+                        }
+                    }
+                    ctx.fill();
                 }
             }
-            ctx.fill();
-        } else if (['live', 'ar'].includes(mode)) {
-            ctx.fillStyle = "rgba(0, 255, 0, 0.5)";
-            ctx.beginPath();
-            for (i=0; i<257*257; i++) {
-                [scrRA, scrDec] = Ah2scrlive(demAngle[i][0], demAngle[i][1]);
-                if (Math.abs(scrRA) < rgEW && Math.abs(scrDec) < rgNS) {
-                    // drawFilledCircle(...coordSH(scrRA, scrDec), 1, c="rgba(0, 255, 0, 0.5)");
-                    ctx.moveTo(...coordSH(scrRA, scrDec));
-                    ctx.arc(...coordSH(scrRA, scrDec), 1, 0, 2*pi, false);
-                }
-            }
-            ctx.fill();
         }
     }
 
@@ -2421,7 +2431,6 @@ function show_main(){
         ctx.fillStyle = objectColor;
         const drawRecFlag = (recs.length > 0 && document.getElementById('recsCheck').checked);
         for (i=0; i<NGC.length; i+=5){
-            const name = NGC[i];
             let [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(+NGC[i+1], +NGC[i+2], JD));
             if (inFlag) drawObjects(NGC[i], x, y, NGC[i+4]);
         }
