@@ -149,6 +149,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-04-19T02:20:00+09:00', text: ['この星図のURLのQRコードを右下？ボタン→「QRコードで...」から見れます！　広めてもらえるとうれしいです。']},
     {time: '2025-04-12T17:00:00+09:00', text: ['メインで使う座標系をJ2000.0から視位置にしました。表示のバグは少しありますが計算間違いはないはずです', '以前からですが、設定画面の一番下のボタンで地形を表示させることができます。SWAN彗星見るときに使えそう', 'いくつかのNGC天体が複数個表示されるバグは気が向いたら直します']},
     {time: '2025-04-04T15:50:00+09:00', text: ['惑星の位置がより正確になりました', '惑星をクリック（タップ）したときの情報が増えました']},
     {time: '2025-04-03T19:45:00+09:00', text: ['木星を拡大するとガリレオ衛星が見れます！意外と正弦波１，２つ重ねるだけで高い精度出た']},
@@ -4030,6 +4031,10 @@ function closeSearch() {
 
 function closeNews() {
     document.getElementById('news').style.visibility = "hidden";
+}
+
+function closeQR() {
+    document.getElementById('qrwin').style.visibility = "hidden";
 }
 
 function closeObjectInfo() {

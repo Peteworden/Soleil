@@ -247,11 +247,13 @@
 
             <!-- <button id="openSearch" type="button" onclick="openSearch()">検索</button> -->
 
+            <button id="qr" type="button" onclick="document.getElementById('qrwin').style.visibility='visible'">QRコードで共有してね！</button>
+
             <div id="bookmarkUrlDiv">
                 ブックマークなどを作成する際は下のリンクをご使用ください↓
                 <div id="bookmarkUrlBox">
-                    <p id="bookmarkUrl">https://peteworden.github.io/Soleil/chart.html</p> 
                     <button id="copyButton"><i class="fas fa-copy"></i></button>
+                    <p id="bookmarkUrl">https://peteworden.github.io/Soleil/chart.html</p> 
                     <div id="copyMessage">copied!</div>
                 </div>
             </div>            
@@ -362,7 +364,7 @@
         </div>
 
         <div id="demDescriptionDiv" class="big-window">
-            <button id="closeDemDescription" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'hidden'">OK</button>
+            <button id="closeDemDescription" class="close-big-window" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'hidden'">×</button>
             <div class="demDescriptionText">
                 <h2>地形を表示(パソコン推奨)</h2>
                 <p>
@@ -396,10 +398,15 @@
         </div>
 
         <div id="customizeObjects" class="big-window">
-            <button class="close-big-window" type="button" onclick="closeCustomizeObjects()">閉じる</button>
+            <button class="close-big-window" type="button" onclick="closeCustomizeObjects()">×</button>
             <p>このページはまだ使えません。</p>
             <button type="button" id="writeButton">write</button>
             <button type="button" id="readButton">read</button>
+        </div>
+
+        <div id="observation-site-map-div" class="big-window">
+            <button id="closeObservationSiteMap" class="close-observation-site-map" type="button" onclick="closeObservationSiteMap()">選択</button>
+            <div id="observation-site-map"></div>
         </div>
 
         <div id="searchDiv" class="big-window">
@@ -408,9 +415,10 @@
             <div id="suggestionButtonContainer"></div>
         </div>
 
-        <div id="observation-site-map-div" class="big-window">
-            <button id="closeObservationSiteMap" class="close-observation-site-map" type="button" onclick="closeObservationSiteMap()">選択</button>
-            <div id="observation-site-map"></div>
+        <div id="qrwin" class="big-window">
+            <button id="closeQR" class="close-big-window" type="button" onclick="closeQR()">×</button>
+            <img src="./chartImage/chartqr.png" id="qr" alt="QRコード">
+            <p id="qrtext">QRコードは株式会社デンソーウェーブの登録商標です</p>
         </div>
 
         <div id="news" class="news">
