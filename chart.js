@@ -2020,7 +2020,7 @@ function show_main(){
         }
     }
 
-    if (Math.min(rgNS, rgEW) <= 250) {
+    if (Math.min(rgNS, rgEW) <= 2.5) {
         [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(0, 90, JD));
         if (inFlag) {
             drawObjects('2000年初', x, y, 1);
