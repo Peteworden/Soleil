@@ -211,20 +211,32 @@ ul {
     margin-left: 20px;
 }
 
+.big-window {
+    visibility: hidden;
+    position: fixed;
+    background-color: #2C0B0B;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    overflow: scroll;
+    z-index: 3;
+}
+
 .close-big-window {
     position: absolute;
     top: 20px;
     right: 30px;
-    width: 60px;
-    height: 60px;
+    width: 40px;
+    height: 40px;
     text-align: center;
-    padding: 10px;
+    padding: 0;
     background-color: #147d18;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 30px;
 }
 
 .setPicsFor360Div input {
@@ -272,22 +284,6 @@ ul {
 
 .setting ul button {
     margin: auto 10px;
-}
-
-#closeDemDescription {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    width: 60px;
-    height: 60px;
-    text-align: center;
-    padding: 10px;
-    background-color: #147d18;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
 }
 
 .demDescriptionText {
@@ -391,16 +387,20 @@ select {
     z-index: 2;
 }
 
-.big-window {
-    visibility: hidden;
-    position: fixed;
-    background-color: #2C0B0B;
-    width: 100%;
-    height: 100%;
-    top: 0px;
-    left: 0px;
-    overflow: scroll;
-    z-index: 3;
+#qrwin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+#qr {
+    margin-bottom: 10px; /* QRコードとテキストの間隔を調整 */
+}
+
+#qrtext {
+    font-size: 14px; /* 必要に応じてフォントサイズを調整 */
 }
 
 #bookmarkUrlDiv p {
