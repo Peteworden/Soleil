@@ -120,8 +120,8 @@ input[type="file"] {
     position: fixed;
     top: 0;
     right: 0;
-    width: 111px;
-    height: 58px;
+    width: 164px; /*5+48+5+48+5+48+5*/
+    height: 58px; /*5+48+5*/
     margin: 0;
     padding: 0;
     display: flex;
@@ -129,7 +129,21 @@ input[type="file"] {
     padding: 5px;
     z-index: 1;
 }
-.searchBtn {
+.bottom-right-buttons {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 5px;
+    padding: 5px;
+    z-index: 1;
+}
+
+.main-screen-button {
     background-color: transparent;
     border: 0;
     width: 48px;
@@ -140,17 +154,8 @@ input[type="file"] {
     z-index: 1;
     cursor: pointer;
 }
-.settingBtn {
-    background-color: transparent;
-    border: 0;
-    width: 48px;
-    height: 48px;
-    padding: 0;
-    margin: 0;
-    text-align: center;
-    z-index: 1;
-}
 
+/* settings */
 .setting {
     position: fixed;
     color: #C0C0C0;
@@ -200,8 +205,19 @@ input[type="file"] {
 .zuho {
     text-align: left;
 }
+#arOpacitySlider {
+    width: 140px;
+    flex: 1;
+    margin: 0;
+}
+#arOpacitySlider::-webkit-slider-thumb {
+    background: wheat;
+}
+#arOpacitySlider::-moz-range-thumb {
+    background: wheat;
+}
 
-ul {
+.mainSettingRows ul {
     padding: 0;
     list-style-type: none;
     text-align: left;
@@ -237,6 +253,19 @@ ul {
     border-radius: 5px;
     cursor: pointer;
     font-size: 30px;
+}
+
+.big-window-textinput {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: left;
+    background-color: white;
+    color: black;
+    font-size: large;
+    width: 60%;
+    height: 30px;
 }
 
 .setPicsFor360Div input {
@@ -357,18 +386,6 @@ select {
     padding: 0px 20px;
 }
 
-.descriptionBtn {
-    background-color: transparent;
-    position: fixed;
-    border: 0;
-    bottom: 10px;
-    right: 5px;
-    width: 50px;
-    height: 50px;
-    text-align: center;
-    z-index: 1;
-}
-
 .description {
     position: fixed;
     color: #C0C0C0;
@@ -471,19 +488,6 @@ select {
     height: 40px;
     color: whitesmoke;
     background-color: #8B4513;
-}
-
-#searchInput {
-    position: fixed;
-    top: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    text-align: left;
-    background-color: white;
-    color: black;
-    font-size: large;
-    width: 60%;
-    height: 30px;
 }
 
 #closeSearch {
@@ -669,30 +673,6 @@ h1, p {
     display: inline-flex;
     margin: auto;
     gap: 10px;
-}
-
-.fullScreenBtn {
-    background-color: transparent;
-    position: fixed;
-    border: 0;
-    bottom: 10px;
-    right: 60px;
-    width: 50px;
-    height: 50px;
-    text-align: center;
-    z-index: 1;
-}
-
-.exitFullScreenBtn {
-    background-color: transparent;
-    position: fixed;
-    border: 0;
-    bottom: 10px;
-    right: 60px;
-    width: 50px;
-    height: 50px;
-    text-align: center;
-    z-index: 1;
 }
 
 video {
