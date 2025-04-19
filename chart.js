@@ -308,7 +308,6 @@ function linkExist(obj) {
 
 //objの位置に移動する
 function link(obj) {
-    console.log(obj);
     if (!obj) {
         console.error('Invalid input:', obj);
         return;
@@ -3408,7 +3407,7 @@ async function loadFiles() {
                 const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
                 const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
                 const decPart = Math.floor(decMag / 10);
-                const dec = decPart - 180000;
+                const dec = decPart - 90000;
                 if (filename == '101-110') {
                     const mag = decMag - 10 * decPart + 101;
                     gaia101_110[index] = [ra, dec, mag];
