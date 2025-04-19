@@ -149,7 +149,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
-    // {time: '2025-04-19T19:40:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
+    {time: '2025-04-19T20:10:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
     {time: '2025-04-19T02:20:00+09:00', text: ['この星図のURLのQRコードを右上メニューボタン→「QRコードで...」から見れます！　広めてもらえるとうれしいです。']},
     {time: '2025-04-12T17:00:00+09:00', text: ['メインで使う座標系をJ2000.0から視位置にしました。表示のバグは少しありますが計算間違いはないはずです', '以前からですが、設定画面の一番下のボタンで地形を表示させることができます。SWAN彗星見るときに使えそう', 'いくつかのNGC天体が複数個表示されるバグは気が向いたら直します']},
     {time: '2025-04-04T15:50:00+09:00', text: ['惑星の位置がより正確になりました', '惑星をクリック（タップ）したときの情報が増えました']},
@@ -268,18 +268,6 @@ function permitDeviceOrientationForSafari() {
 
 const url = new URL(window.location.href);
 
-function changePicsFor360() {
-    document.getElementById('setPicsFor360Div').style.visibility = 'visible';
-}
-function setPicsFor360FromInput() {
-    let picsFor360Input = document.getElementById('picsFor360').value;
-    if (!isNaN(picsFor360Input) && 1 <= +picsFor360Input && +picsFor360Input <= 20) {
-        setPicsFor360(picsFor360Input);
-        document.getElementById('setPicsFor360Div').style.visibility = 'hidden';
-    } else {
-        alert('ほんまに？　1から20にしてください');
-    }
-}
 function setPicsFor360(picsFor360) {
     localStorage.setItem('picsFor360', picsFor360);
     document.getElementById('picsFor360').value = picsFor360;
@@ -3775,7 +3763,7 @@ function checkURL() {
     }
     showNews(lastVisitDate);
 
-    if (!isNaN(localStorage.getItem('picsFor360'))) {
+    if (!isNaN(localStorage.getItem('picsFor360')) && +localStorage.getItem('picsFor360') >= 1) {
         setPicsFor360(+localStorage.getItem('picsFor360'));
     }
 }
