@@ -149,7 +149,8 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
-    {time: '2025-04-19T02:20:00+09:00', text: ['この星図のURLのQRコードを右下？ボタン→「QRコードで...」から見れます！　広めてもらえるとうれしいです。']},
+    {time: '2025-04-19T19:40:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
+    {time: '2025-04-19T02:20:00+09:00', text: ['この星図のURLのQRコードを右上メニューボタン→「QRコードで...」から見れます！　広めてもらえるとうれしいです。']},
     {time: '2025-04-12T17:00:00+09:00', text: ['メインで使う座標系をJ2000.0から視位置にしました。表示のバグは少しありますが計算間違いはないはずです', '以前からですが、設定画面の一番下のボタンで地形を表示させることができます。SWAN彗星見るときに使えそう', 'いくつかのNGC天体が複数個表示されるバグは気が向いたら直します']},
     {time: '2025-04-04T15:50:00+09:00', text: ['惑星の位置がより正確になりました', '惑星をクリック（タップ）したときの情報が増えました']},
     {time: '2025-04-03T19:45:00+09:00', text: ['木星を拡大するとガリレオ衛星が見れます！意外と正弦波１，２つ重ねるだけで高い精度出た']},
@@ -166,9 +167,7 @@ let intervalId = null;
 
 // ライブモード、AR
 let moving = false;
-let picsFor360 = 5;
 let videoHeight = 1;
-let videoWidth = 1;
 let videoOn = false;
 
 let os, orientationPermittion=true, loadAzm=0;
@@ -272,18 +271,21 @@ const url = new URL(window.location.href);
 function changePicsFor360() {
     document.getElementById('setPicsFor360Div').style.visibility = 'visible';
 }
-
-function setPicsFor360() {
+function setPicsFor360FromInput() {
     let picsFor360Input = document.getElementById('picsFor360').value;
-    if (!isNaN(picsFor360Input) && 1 < parseFloat(picsFor360Input) < 20) {
-        videoHeight = 360 / parseFloat(picsFor360Input);
-        document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
+    if (!isNaN(picsFor360Input) && 1 <= +picsFor360Input && +picsFor360Input <= 20) {
+        setPicsFor360(picsFor360Input);
         document.getElementById('setPicsFor360Div').style.visibility = 'hidden';
     } else {
-        alert('ほんまに？');
+        alert('ほんまに？　1から20にしてください');
     }
 }
-setPicsFor360();
+function setPicsFor360(picsFor360) {
+    localStorage.setItem('picsFor360', picsFor360);
+    document.getElementById('picsFor360').value = picsFor360;
+    videoHeight = 360.0 / parseFloat(picsFor360);
+    document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
+}
 
 //objという名前がメシエかNGCかICにあればTrueを返す
 function linkExist(obj) {
@@ -3772,10 +3774,14 @@ function checkURL() {
         }
     }
     showNews(lastVisitDate);
+
+    if (!isNaN(localStorage.getItem('picsFor360'))) {
+        setPicsFor360(+localStorage.getItem('picsFor360'));
+    }
 }
 
-// デバイスの向きに応じた表示
-
+//live
+//ar
 function turnOnOffLiveMode (mode) {
     if (['live', 'ar'].includes(mode)) {
         if (os == 'iphone') {
@@ -3790,22 +3796,25 @@ function turnOnOffLiveMode (mode) {
             window.removeEventListener("deviceorientationabsolute", deviceOrientation, true);
         }
     }
-    if (mode == 'ar' && !videoOn) {
-        skycolor = "rgba(" + [0, 0, 1, 0.1] + ")";
-        let constraints = { audio: false, video: { facingMode: "environment" } };
-        navigator.mediaDevices.getUserMedia(constraints)
-        .then(
-            function(stream) {
-                let video = document.getElementById('arVideo');
-                video.srcObject = stream;
-                video.onloadedmetadata = function(e) {
-                    video.play();
-                };
-                document.body.appendChild(video);
-                setPicsFor360();
-            }
-        )
-        videoOn = true;
+    if (mode == 'ar') {
+        let arOpacity = 1 - document.getElementById('arOpacitySlider').value;
+        skycolor = "rgba(" + [0, 0, 1, arOpacity] + ")";
+        if (!videoOn) {
+            let constraints = { audio: false, video: { facingMode: "environment" } };
+            navigator.mediaDevices.getUserMedia(constraints)
+            .then(
+                function(stream) {
+                    let video = document.getElementById('arVideo');
+                    video.srcObject = stream;
+                    video.onloadedmetadata = function(e) {
+                        video.play();
+                    };
+                    document.body.appendChild(video);
+                    setPicsFor360FromInput();
+                }
+            )
+            videoOn = true;
+        }
     } else if (mode != 'ar' && videoOn) {
         skycolor = '#001';
         let constraints = { audio: false, video: { facingMode: "environment" } };
@@ -4026,6 +4035,19 @@ function openSearch() {
 
 function closeSearch() {
     document.getElementById('searchDiv').style.visibility = "hidden";
+}
+
+function changePicsFor360() {
+    document.getElementById('setPicsFor360Div').style.visibility = 'visible';
+}
+function setPicsFor360FromInput() {
+    let picsFor360Input = document.getElementById('picsFor360').value;
+    if (!isNaN(picsFor360Input) && 1 <= +picsFor360Input && +picsFor360Input <= 20) {
+        setPicsFor360(picsFor360Input);
+        document.getElementById('setPicsFor360Div').style.visibility = 'hidden';
+    } else {
+        alert('ほんまに？　1から20にしてください');
+    }
 }
 
 function closeNews() {
