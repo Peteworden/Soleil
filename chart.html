@@ -40,7 +40,6 @@
                 <li><h3>星図</h3></li>
                 <li><a href="PeteHOME.html">HOME</a></li>
                 <div id="loadingtext">Loading...</div>
-                <li><button id="darkerBtn" class="darkerBtn" type="button" onclick="darkerFunc()"><div id="darkerbtntext"></div></li>
                 <li><button id="fileBtn" style="display:block;width:40px; height:25px;" onclick="document.getElementById('getFile').click()">file</button><input type="file" id="getFile" accept="*.txt" /></li>
             </ul>
         </div>
@@ -111,7 +110,6 @@
                         <option>西経</option>
                     </select>
                     <label><input type="text" id="lon" size="1" value="135">°</label>
-                    <!-- <button type="button" onclick="here()">現在地</button> -->
                     <select id="observation-site-select">
                         <option selected>--</option>
                         <option>現在地</option>
@@ -159,6 +157,8 @@
                                 <option>高度方位固定</option>
                             </select>
                         </li><br>
+                        <li><input type="checkbox" id="dark">ダークモード</li>
+                        <!-- <li><button id="darkerBtn" class="darkerBtn" type="button" onclick="darkerFunc()"><div id="darkerbtntext"></div></li> -->
                         <li><input type="checkbox" id="center" checked>中心位置</li>
                         <li><input type="checkbox" id="gridCheck" checked>グリッド（プラネモード）</li>
                         <li>

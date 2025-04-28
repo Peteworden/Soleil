@@ -2,9 +2,15 @@
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
 
-const online = navigator.onLine;
+Object.defineProperty(window, 'online', {
+    get: function() {
+        return navigator.onLine;
+    }
+});
 const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname);
-const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+// const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
+// const isElectron = (typeof process !== 'undefined' && process.versions && process.versions.electron) || navigator.userAgent.includes('Electron');
+const isElectron = false;
 console.log(online, isLocalhost, isElectron);
 
 // 定数
@@ -31,13 +37,21 @@ const trackDateElem = document.getElementsByName('trackTime');
 const starNameElem = document.getElementsByName('starName');
 
 // 要素の表示/非表示
-if (online) {
-    document.getElementById('fileBtn').style.visibility = "hidden";
-    document.getElementById('getFile').style.visibility = "hidden";
+if (isElectron) {
+    document.title = "Reticle Star Atlas";
+    document.getElementById('welcomeImage').style.display = 'none';
+    const listItems = document.getElementById('title').getElementsByTagName('li');
+    listItems[1].remove();
+    listItems[1].remove(); // 2番目を削除した後、インデックスがずれるため
 } else {
-    alert('Sorry, this star chart is unablable offline now.');
-    document.getElementById('fileBtn').style.visibility = "hidden";
-    document.getElementById('getFile').style.visibility = "hidden";
+    if (online) {
+        document.getElementById('fileBtn').style.visibility = "hidden";
+        document.getElementById('getFile').style.visibility = "hidden";
+    } else {
+        alert('Sorry, this star chart is unablable offline now.');
+        document.getElementById('fileBtn').style.visibility = "hidden";
+        document.getElementById('getFile').style.visibility = "hidden";
+    }
 }
 
 document.getElementById('setting').style.visibility = "hidden";
@@ -48,7 +62,6 @@ document.getElementById('demDescriptionDiv').style.visibility = "hidden";
 document.getElementById('searchDiv').style.visibility = "hidden";
 document.getElementById('news').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
-document.getElementById('darkerbtntext').innerHTML = 'dark';
 
 if (isElectron) {
     document.getElementById("customizeObjectsBtn").style.visibility = "visible";
@@ -95,6 +108,7 @@ let Ms, ws, lon_moon, lat_moon;
 
 // データ
 
+const soleilUrl = !isElectron ? "https://peteworden.github.io/Soleil" : ".";
 let hips = [];
 let gaia100 = new Array(505972);
 let gaia100_help = new Array(64801);
@@ -278,14 +292,14 @@ function setPicsFor360(picsFor360) {
 //objという名前がメシエかNGCかICにあればTrueを返す
 function linkExist(obj) {
     let linkExist = false;
-    if (obj[0] == 'M' && !isNaN(obj.substr(1))) { //メシエ
+    if (obj[0] == 'M' && isNumber(obj.substr(1))) { //メシエ
         for (i=0; i<messier.length; i++) {
             if (messier[i].name == obj) {
                 linkExist = true;
                 break;
             }
         }
-    } else if ((obj.startsWith('NGC') && !isNaN(obj.substr(3))) || (obj.startsWith('IC') && !isNaN(obj.substr(2)))) {
+    } else if ((obj.startsWith('NGC') && isNumber(obj.substr(3))) || (obj.startsWith('IC') && isNumber(obj.substr(2)))) {
         for (i=0; i<NGC.length; i+=5) {
             if (NGC[i] == obj) {
                 linkExist = true;
@@ -332,7 +346,7 @@ function link(obj) {
         }
     }
     if (!flag) {
-        if (obj[0] == 'M' && !isNaN(obj.substr(1))) { //メシエ
+        if (obj[0] == 'M' && isNumber(obj.substr(1))) { //メシエ
             for (i=0; i<messier.length; i++) {
                 if (messier[i].name == obj) {
                     cenRaJ2000 = rahm2deg(messier[i].ra);
@@ -341,7 +355,7 @@ function link(obj) {
                     break;
                 }
             }
-        } else if ((obj.startsWith('NGC') && !isNaN(obj.substr(3))) || (obj.startsWith('IC') && !isNaN(obj.substr(2)))) {
+        } else if ((obj.startsWith('NGC') && isNumber(obj.substr(3))) || (obj.startsWith('IC') && isNumber(obj.substr(2)))) {
             for (i=0; i<NGC.length; i+=5) {
                 if (NGC[i] == obj) {
                     // cenRA = +NGC[i+1];
@@ -381,7 +395,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
     } else if (searchText.length == 1) { //1文字
-        if (isNaN(searchText)) {
+        if (!isNumber(searchText)) {
             // 惑星
             for (i=0; i<planetNamesHiragana.length; i++) {
                 if (i == Obs_num) continue;
@@ -410,12 +424,12 @@ document.getElementById('searchInput').addEventListener('input', function() {
             }
         }
         // Mをつけてメシエになるとき
-        if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
+        if (isNumber(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`)) {
             suggestions1[0].push(`M${searchText}`);
             suggestions1[1].push(`M${searchText}`);
         }
         // 文字
-        if (isNaN(searchText)) {
+        if (!isNumber(searchText)) {
             for (m of messier) {
                 for (alt of m.alt_name) {
                     if (alt.length && toUpperCaseOrKatakana(alt[0]) == searchText && !alt[0].startsWith('NGC') && !alt[0].startsWith('IC')) {
@@ -464,7 +478,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
     } else {
         suggestions1 = [[], []];
         suggestions2 = [[], []];
-        if (isNaN(searchText)) {
+        if (!isNumber(searchText)) {
             for (i=0; i<planetNamesHiragana.length; i++) {
                 if (i == Obs_num) continue;
                 if (toUpperCaseOrKatakana(planetNamesHiragana[i]).includes(searchText)) {
@@ -511,16 +525,16 @@ document.getElementById('searchInput').addEventListener('input', function() {
             }
         }
         //Mをつけてメシエになるとき
-        if (!isNaN(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`) && !recsugs.includes(`NGC${searchText}`)) {
+        if (isNumber(searchText) && 1 <= parseInt(searchText) <= 110 && linkExist(`M${searchText}`) && !recsugs.includes(`NGC${searchText}`)) {
             suggestions1[0].push(`M${searchText}`);
             suggestions1[1].push(`M${searchText}`);
         }
         //そのままでメシエになるとき
-        if (searchText[0] == 'M' && !isNaN(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) && parseInt(searchText.substr(1)) <= 110 && linkExist(searchText) && !recsugs.includes(`IC${searchText}`)) {
+        if (searchText[0] == 'M' && isNumber(searchText.substr(1)) && 1 <= parseInt(searchText.substr(1)) && parseInt(searchText.substr(1)) <= 110 && linkExist(searchText) && !recsugs.includes(`IC${searchText}`)) {
             suggestions1[0].push(searchText.toUpperCase());
             suggestions1[1].push(searchText.toUpperCase());
         }
-        if (isNaN(searchText)) {
+        if (!isNumber(searchText)) {
             for (let rec of recs) {
                 if (toUpperCaseOrKatakana(rec.name).startsWith(searchText)) {
                     suggestions1[0].push(rec.name);
@@ -560,7 +574,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
             }
         }
         //NGC, ICをつけてそれらになるとき
-        if (!isNaN(searchText)) {
+        if (isNumber(searchText)) {
             if (1 <= parseInt(searchText) && parseInt(searchText) <= 7840 && !recsugs.includes(`NGC${searchText}`) && linkExist(`NGC${searchText}`)) {
                 suggestions1[0].push(`NGC${searchText}`);
                 suggestions1[1].push(`NGC${searchText}`);
@@ -569,15 +583,15 @@ document.getElementById('searchInput').addEventListener('input', function() {
                 suggestions1[0].push(`IC${searchText}`);
                 suggestions1[1].push(`IC${searchText}`);
             }
-        } else if (searchText.startsWith('NGC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) && parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
+        } else if (searchText.startsWith('NGC') && !recsugs.includes(searchText) && isNumber(searchText.substr(3)) && 1 <= parseInt(searchText.substr(3)) && parseInt(searchText.substr(3)) <= 7840 && linkExist(searchText)) {
             suggestions1[0].push(searchText);
             suggestions1[1].push(searchText);
-        } else if (searchText.startsWith('IC') && !recsugs.includes(searchText) && !isNaN(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) && parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
+        } else if (searchText.startsWith('IC') && !recsugs.includes(searchText) && isNumber(searchText.substr(2)) && 1 <= parseInt(searchText.substr(2)) && parseInt(searchText.substr(2)) <= 5386 && linkExist(searchText)) {
             suggestions1[0].push(searchText);
             suggestions1[1].push(searchText);
         }
         //M, N, I以外から始まり数字でないとき
-        if (isNaN(searchText) && !["M", "N", "I"].includes(searchText[0])){
+        if (!isNumber(searchText) && !["M", "N", "I"].includes(searchText[0])){
             for (m of messier) {
                 for (alt of m.alt_name) {
                     if (toUpperCaseOrKatakana(alt).includes(searchText)) {
@@ -667,7 +681,7 @@ function showObjectInfo(x, y) {
             img.onerror = function() {
                 console.log(`画像が見つかりません: ${ext}`);
             };
-            img.src = `https://peteworden.github.io/Soleil/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`;
+            img.src = `${soleilUrl}/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`;
             if (found) {
                 break;
             }
@@ -2744,6 +2758,10 @@ function Rz ([x, y, z], a) {
     return ans;
 }
 
+function isNumber(a) {
+    return a != "" && !isNaN(parseFloat(a)) && !isNaN(a) && isFinite(a);
+}
+
 // 角度の単位変換
 
 function rahm2deg(rahmtext) {
@@ -2988,10 +3006,26 @@ function newSetting() {
     magLim = determinMagLim(magkey1, magkey2);
     zerosize = determinZerosize();
 
+    if (!isNumber(document.getElementById('lat').value) && !isNumber(document.getElementById('lon').value)) {
+        alert("緯度と経度が無効です");
+        document.getElementById("NSCombo").value = "北緯"
+        setObservationSite(35, undefined, true, false);
+        document.getElementById("EWCombo").value = "東経"
+        setObservationSite(undefined, 135, false, true);
+    } else if (!isNumber(document.getElementById('lat').value)) {
+        alert("緯度が無効です");
+        document.getElementById("NSCombo").value = "北緯"
+        setObservationSite(35, undefined, true, false);
+    } else if (!isNumber(document.getElementById('lon').value)) {
+        alert("経度が無効です");
+        document.getElementById("EWCombo").value = "東経"
+        setObservationSite(undefined, 135, false, true);
+    }
+
     if (document.getElementById("NSCombo").value == '北緯') {
         lat_obs = document.getElementById('lat').value * deg2rad;
         lattext = document.getElementById('lat').value + "°N";
-        if (document.getElementById('lat').value == '35') {
+        if (lattext == '35°N') {
             if (url.searchParams.has('lat')) {
                 url.searchParams.delete('lat');
             }
@@ -3008,7 +3042,7 @@ function newSetting() {
     if (document.getElementById("EWCombo").value == '東経') {
         lon_obs = document.getElementById('lon').value * deg2rad;
         lontext = document.getElementById('lon').value + "°E";
-        if (document.getElementById('lon').value == '135') {
+        if (lontext == '135°E') {
             if (url.searchParams.has('lon')) {
                 url.searchParams.delete('lon');
             }
@@ -3027,6 +3061,26 @@ function newSetting() {
     setRealtime(); //timeのURL, localStorageもやる
     timeSliderElem.value = 0;
     timeSliderValue = 0;
+
+    if (!document.getElementById('dark').checked) { //明るくする
+        darker = false;
+        starColor = '#FFF';
+        yellowColor = 'yellow';
+        objectColor = 'orange';
+        lineColor = 'red';
+        textColor = 'white';
+        specialObjectNameColor = '#FF8';
+        // document.getElementById('darkerbtntext').innerHTML = 'dark';
+    } else { //暗くする
+        darker = true;
+        starColor = '#C66';
+        yellowColor = '#550';
+        objectColor = '#D55';
+        lineColor = '#700';
+        textColor = '#A53';
+        specialObjectNameColor = '#AA5';
+        // document.getElementById('darkerbtntext').innerHTML = 'bright';
+    }
 
     //history.replaceState('', '', url.href);
 
@@ -3220,7 +3274,8 @@ async function loadFiles() {
             JPNplanets.push(name);
 
             let New;
-            if (online && isElectron) {
+            // いつかやる
+            if (online && isElectron && false) {
                 try {
                     const result = await window.electronAPI.fetchAsteroidData(shortName);
                     if (data.includes('code')) {
@@ -3315,16 +3370,27 @@ async function loadFiles() {
             show_initial();
         }
     }
-    if (online) {
+
+    if (online || isElectron) {
         const t0 = performance.now();
         async function loadFile(filename, func, impflag=false) {
             try {
-                const url_load = `https://peteworden.github.io/Soleil/data/${filename}.txt`;
-                const response = await fetch(url_load);
-                if (!response.ok) {
-                    throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                let data;
+                if (isElectron) {
+                    const filePath = window.electronAPI.joinPath('data', `${filename}.txt`);
+                    if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
+                        throw new Error(`Path traversal attempt detected: ${filePath}`);
+                    }
+                    data = await window.electronAPI.readFile(filePath);
+                } else {
+                    // ブラウザ環境では fetch を使用
+                    const url_load = `${soleilUrl}/data/${filename}.txt`;
+                    const response = await fetch(url_load);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                    }
+                    data = await response.text();
                 }
-                const data = await response.text();
                 func(data);
                 xhrcheck++;
                 if (impflag) xhrimpcheck++;
@@ -3338,104 +3404,146 @@ async function loadFiles() {
         }
 
         async function loadJsonData(filename, func, impflag=false) {
-            fetch(`https://peteworden.github.io/Soleil/data/${filename}.json`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            try {
+                let data;
+                if (isElectron) {
+                    const filePath = window.electronAPI.joinPath('data', `${filename}.json`);
+                    if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
+                        throw new Error(`Path traversal attempt detected: ${filePath}`);
+                    }
+                    const jsonData = await window.electronAPI.readFile(filePath);
+                    data = JSON.parse(jsonData);
+                } else {
+                    const response = await fetch(`${soleilUrl}/data/${filename}.json`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                    }
+                    data = await response.json();
                 }
-                return response.json();
-            })
-            .then(data => {
-                func(data)
+                func(data);
                 xhrcheck++;
-                if (impflag) {
-                    xhrimpcheck++;
-                }
-                loaded.push(filename)
+                if (impflag) xhrimpcheck++;
+                loaded.push(filename);
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.json ${impflag}`);
-                console.log(performance.now() - t0);
                 show_initial();
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            });
+            } catch (error) {
+                console.error(`Error loading file ${filename}:`, error);
+            }
         }
         
         async function loadCsvData(filename, func, impflag=false) {
-            fetch(`https://peteworden.github.io/Soleil/data/${filename}.csv`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            try {
+                let data;
+                if (isElectron) {
+                    const filePath = window.electronAPI.joinPath('data', `${filename}.csv`);
+                    if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
+                        throw new Error(`Path traversal attempt detected: ${filePath}`);
+                    }
+                    const text = await window.electronAPI.readFile(filePath);
+                    const rows = text.trim().split('\n');
+                    data = rows.map(row => row.split(',').map(Number));
+                } else {
+                    const response = await fetch(`${soleilUrl}/data/${filename}.csv`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                    }
+                    const text = await response.text();
+                    const rows = text.trim().split('\n');
+                    data = rows.map(row => row.split(',').map(Number));
                 }
-                return response.text();
-            })
-            .then(text => {
-                let rows = text.trim().split('\n');
-                let data = rows.map(row => row.split(",").map(Number));
-                func(data)
+                func(data);
                 xhrcheck++;
-                if (impflag) {
-                    xhrimpcheck++;
-                }
-                loaded.push(filename)
+                if (impflag) xhrimpcheck++;
+                loaded.push(filename);
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.csv ${impflag}`);
-                console.log(performance.now() - t0);
                 show_initial();
-            })
-            .catch(error => {
-                console.error('There was a problem with the fetch operation:', error);
-            });
+            } catch (error) {
+                console.error(`Error loading file ${filename}:`, error);
+            }
         }
 
         async function loadGaiaBinData(filename, impflag=false) {
-            const response = await fetch(`https://peteworden.github.io/Soleil/data/gaia_${filename}.bin`);
-            const buffer = await response.arrayBuffer();
-            const view = new DataView(buffer);
-            let index = 0;
-            const bufferByteLength = buffer.byteLength;
-            for (let i = 0; i < bufferByteLength; i += 6) {
-                const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
-                const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
-                const decPart = Math.floor(decMag / 10);
-                const dec = decPart - 90000;
-                if (filename == '101-110') {
-                    const mag = decMag - 10 * decPart + 101;
-                    gaia101_110[index] = [ra, dec, mag];
-                } else if (filename == '111-115') {
-                    const mag = decMag - 10 * decPart + 111;
-                    gaia111_115[index] = [ra, dec, mag];
+            try {
+                let buffer;
+                if (isElectron) {
+                    const filePath = window.electronAPI.joinPath('data', `gaia_${filename}.bin`);
+                    if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
+                        throw new Error(`Path traversal attempt detected: ${filePath}`);
+                    }
+                    buffer = await window.electronAPI.readFile(filePath, { encoding: 'binary' });
+                } else {
+                    const response = await fetch(`${soleilUrl}/data/gaia_${filename}.bin`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                    }
+                    buffer = await response.arrayBuffer();
                 }
-                index++;
+                const view = new DataView(buffer);
+                let index = 0;
+                const bufferByteLength = buffer.byteLength;
+                for (let i = 0; i < bufferByteLength; i += 6) {
+                    const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
+                    const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
+                    const decPart = Math.floor(decMag / 10);
+                    const dec = decPart - 90000;
+                    if (filename == '101-110') {
+                        const mag = decMag - 10 * decPart + 101;
+                        gaia101_110[index] = [ra, dec, mag];
+                    } else if (filename == '111-115') {
+                        const mag = decMag - 10 * decPart + 111;
+                        gaia111_115[index] = [ra, dec, mag];
+                    }
+                    index++;
+                }
+                xhrcheck++;
+                if (impflag) xhrimpcheck++;
+                loaded.push(filename)
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
+                console.log(performance.now() - t0);
+                show_initial();
+            } catch (error) {
+                console.error(`Error loading file ${filename}:`, error);
             }
-            xhrcheck++;
-            if (impflag) xhrimpcheck++;
-            loaded.push(filename)
-            console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
-            console.log(performance.now() - t0);
-            show_initial();
         }
+        
         async function loadConstellationBoundariesBinData(filename='constellation_boundaries', impflag=false) {
-            const response = await fetch(`https://peteworden.github.io/Soleil/data/${filename}.bin`);
-            const buffer = await response.arrayBuffer();
-            const view = new DataView(buffer);
-            const bufferByteLength = buffer.byteLength;
-            boundary = Array(Math.floor(bufferByteLength/12));
-            let index = 0;
-            for (let i = 0; i < bufferByteLength; i += 12) {
-                const ra1 = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
-                const dec1 = ((view.getUint8(i + 3) << 13) | (view.getUint8(i + 4) << 5) | (view.getUint8(i + 5) >> 3)) - 90000;
-                const ra2 = (view.getUint8(i + 6) << 16) | (view.getUint8(i + 7) << 8) | view.getUint8(i + 8);
-                const dec2 = ((view.getUint8(i + 9) << 12) | (view.getUint8(i + 10) << 4) | (view.getUint8(i + 11) >> 4)) - 90000;
-                const num = (view.getUint8(i + 5) & 0x07) + (view.getUint8(i + 11) & 0x0F) * 8;
-                boundary[index] = { num, ra1, dec1, ra2, dec2};
-                index++;
+            try {
+                let buffer;
+                if (isElectron) {
+                    const filePath = window.electronAPI.joinPath('data', `${filename}.bin`);
+                    if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
+                        throw new Error(`Path traversal attempt detected: ${filePath}`);
+                    }
+                    buffer = await window.electronAPI.readFile(filePath, { encoding: 'binary' });
+                } else {
+                    const response = await fetch(`${soleilUrl}/data/${filename}.bin`);
+                    if (!response.ok) {
+                        throw new Error(`Failed to load ${filename}: ${response.statusText}`);
+                    }
+                    buffer = await response.arrayBuffer();
+                }
+                const view = new DataView(buffer);
+                const bufferByteLength = buffer.byteLength;
+                boundary = Array(Math.floor(bufferByteLength / 12));
+                let index = 0;
+                for (let i = 0; i < bufferByteLength; i += 12) {
+                    const ra1 = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
+                    const dec1 = ((view.getUint8(i + 3) << 13) | (view.getUint8(i + 4) << 5) | (view.getUint8(i + 5) >> 3)) - 90000;
+                    const ra2 = (view.getUint8(i + 6) << 16) | (view.getUint8(i + 7) << 8) | view.getUint8(i + 8);
+                    const dec2 = ((view.getUint8(i + 9) << 12) | (view.getUint8(i + 10) << 4) | (view.getUint8(i + 11) >> 4)) - 90000;
+                    const num = (view.getUint8(i + 5) & 0x07) + (view.getUint8(i + 11) & 0x0F) * 8;
+                    boundary[index] = { num, ra1, dec1, ra2, dec2};
+                    index++;
+                }
+                xhrcheck++;
+                if (impflag) xhrimpcheck++;
+                loaded.push(filename)
+                console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
+                console.log(performance.now() - t0);
+                show_initial();
+            } catch (error) {
+                console.error(`Error loading file ${filename}:`, error);
             }
-            xhrcheck++;
-            if (impflag) xhrimpcheck++;
-            loaded.push(filename)
-            console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
-            console.log(performance.now() - t0);
-            show_initial();
         }
 
         // デバッグ用。テキストファイル専用。getfileに関連するjsの2行をコメントアウトする。
@@ -3530,11 +3638,6 @@ async function loadFiles() {
             gaia111_115_help = data.split(',').map(Number);
         });
 
-        await loadGaiaBinData("111-115");
-        await loadFile("gaia_111-115_helper", (data) => {
-            gaia111_115_help = data.split(',').map(Number);
-        });
-
         //Bayer
         await loadFile("brights", xhrBSC);
 
@@ -3578,12 +3681,12 @@ function checkURL() {
     //優先順位はURL>localStorage>default
     //checkURL->show_initial->newSetting<-ここで一部の変数の内容をURLとlocalStorageに書き込むので、それらはcheckURLでurlやlocalStorageまで書き換える必要はない。
     //ra, dec, azm, altはここで書き換える必要あり。
-    if (url.searchParams.has('RA') && !isNaN(url.searchParams.get('RA'))) {
+    if (url.searchParams.has('RA') && isNumber(url.searchParams.get('RA'))) {
         cenRA = +url.searchParams.get('RA');
         localStorage.setItem('RA', cenRA);
         defaultcheck++;
         show_initial();
-    } else if (localStorage.getItem('RA') != null && !isNaN(localStorage.getItem('RA'))) {
+    } else if (localStorage.getItem('RA') != null && isNumber(localStorage.getItem('RA'))) {
         cenRA = +localStorage.getItem('RA');
         url.searchParams.set('RA', cenRA);
         defaultcheck++;
@@ -3594,12 +3697,12 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('Dec') && !isNaN(url.searchParams.get('Dec'))) {
+    if (url.searchParams.has('Dec') && isNumber(url.searchParams.get('Dec'))) {
         cenDec = +url.searchParams.get('Dec');
         localStorage.setItem('Dec', cenDec);
         defaultcheck++;
         show_initial();
-    } else if (localStorage.getItem('Dec') != null && !isNaN(localStorage.getItem('Dec'))) {
+    } else if (localStorage.getItem('Dec') != null && isNumber(localStorage.getItem('Dec'))) {
         cenDec = +localStorage.getItem('Dec');
         url.searchParams.set('Dec', cenDec);
         defaultcheck++;
@@ -3610,12 +3713,12 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('azm') && !isNaN(url.searchParams.get('azm'))) {
+    if (url.searchParams.has('azm') && isNumber(url.searchParams.get('azm'))) {
         cenAzm = +url.searchParams.get('azm');
         localStorage.setItem('azm', cenAzm);
         defaultcheck++;
         show_initial();
-    } else if (localStorage.getItem('azm') != null && !isNaN(localStorage.getItem('azm'))) {
+    } else if (localStorage.getItem('azm') != null && isNumber(localStorage.getItem('azm'))) {
         cenAzm = +localStorage.getItem('azm');
         url.searchParams.set('azm', cenAzm);
         defaultcheck++;
@@ -3626,12 +3729,12 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('alt') && !isNaN(url.searchParams.get('alt'))) {
+    if (url.searchParams.has('alt') && isNumber(url.searchParams.get('alt'))) {
         cenAlt = +url.searchParams.get('alt');
         localStorage.setItem('alt', cenAlt);
         defaultcheck++;
         show_initial();
-    } else if (localStorage.getItem('alt') != null && !isNaN(localStorage.getItem('alt'))) {
+    } else if (localStorage.getItem('alt') != null && isNumber(localStorage.getItem('alt'))) {
         cenAlt = +localStorage.getItem('alt');
         url.searchParams.set('alt', cenAlt);
         defaultcheck++;
@@ -3691,7 +3794,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('area') && !isNaN(url.searchParams.get('area'))) {
+    if (url.searchParams.has('area') && isNumber(url.searchParams.get('area'))) {
         rgEW = parseFloat(url.searchParams.get('area')) / 2.0;
         rgNS = rgEW * canvas.height / canvas.width;
         rgtext = `左右:${(rgEW * 2).toFixed(1)}°`;
@@ -3710,7 +3813,7 @@ function checkURL() {
         show_initial();
     }
 
-    if (url.searchParams.has('magkey') && !isNaN(url.searchParams.get('magkey'))) {
+    if (url.searchParams.has('magkey') && isNumber(url.searchParams.get('magkey'))) {
         magkey1 = parseFloat(url.searchParams.get('magkey'));
         document.getElementById('magLimitSlider').value = magkey1;
         magLim = determinMagLim(magkey1, magkey2);
@@ -3722,26 +3825,24 @@ function checkURL() {
         show_initial();
     }
 
-    if ((url.searchParams.has('lat') && !isNaN(url.searchParams.get('lat'))) || (url.searchParams.has('lon') && !isNaN(url.searchParams.get('lon')))) {
-        setObservationSite(+url.searchParams.get('lat'), +url.searchParams.get('lon'));
-        if (+url.searchParams.get('lat') != null && +url.searchParams.get('lon') != null) {
-            for (let observationSite in observationSites) {
-                if (observationSites[observationSite][0] = +url.searchParams.get('lat'), +url.searchParams.get('lon') && observationSites[observationSite][1] == +url.searchParams.get('lon')) {
-                    document.getElementById('observation-site-select').value = observationSite;
-                    break;
-                }
+    if ((url.searchParams.has('lat') && isNumber(url.searchParams.get('lat'))) || (url.searchParams.has('lon') && isNumber(url.searchParams.get('lon')))) {
+        setObservationSite(+url.searchParams.get('lat'), +url.searchParams.get('lon'), true, true);
+        for (let observationSite in observationSites) {
+            if (observationSites[observationSite][0] == +url.searchParams.get('lat') && observationSites[observationSite][1] == +url.searchParams.get('lon')) {
+                document.getElementById('observation-site-select').value = observationSite;
+                break;
             }
         }
         defaultcheck += 2;
         show_initial();
     } else if (localStorage.getItem('observationSite') != null && observationSites[localStorage.getItem('observationSite')] != null) {
         const observationSite = localStorage.getItem('observationSite');
-        setObservationSite(...observationSites[observationSite]);
+        setObservationSite(...observationSites[observationSite], true, true);
         document.getElementById('observation-site-select').value = observationSite;
         defaultcheck += 2;
         show_initial();
     } else {
-        setObservationSite(+localStorage.getItem('lat'), +localStorage.getItem('lon'));
+        setObservationSite(+localStorage.getItem('lat'), +localStorage.getItem('lon'), true, true);
         defaultcheck += 2;
         show_initial();
     }
@@ -3763,7 +3864,7 @@ function checkURL() {
     }
     showNews(lastVisitDate);
 
-    if (!isNaN(localStorage.getItem('picsFor360')) && +localStorage.getItem('picsFor360') >= 1) {
+    if (isNumber(localStorage.getItem('picsFor360')) && +localStorage.getItem('picsFor360') >= 1) {
         setPicsFor360(+localStorage.getItem('picsFor360'));
     }
 }
@@ -3842,41 +3943,6 @@ function deviceOrientation(event) {
             dev = eventAngle.map(val => val * deg2rad);
             devArray = [[dev[0]], [dev[1]], [dev[2]]];
         }
-
-        // if (Math.max(Math.abs(dev_a-event.alpha), Math.abs(dev_b-event.beta), Math.abs(dev_c-event.gamma)) < 10) {
-        //     if (dev_a_array.length > 2) {
-        //         dev_a_sum += event.alpha*deg2rad - dev_a_array.pop();
-        //         dev_b_sum += event.beta*deg2rad - dev_b_array.pop();
-        //         dev_c_sum += event.gamma*deg2rad - dev_c_array.pop();
-        //         dev_a_array.unshift(event.alpha*deg2rad);
-        //         dev_b_array.unshift(event.beta*deg2rad);
-        //         dev_c_array.unshift(event.gamma*deg2rad);
-        //         moving = (Math.abs(dev_a_sum / 3 - dev_a) > 0.2);
-        //         dev_a = dev_a_sum / 3;
-        //         dev_b = dev_b_sum / 3;
-        //         dev_c = dev_c_sum / 3;
-        //     } else {
-        //         dev_a_sum += event.alpha*deg2rad;
-        //         dev_b_sum += event.beta*deg2rad;
-        //         dev_c_sum += event.gamma*deg2rad;
-        //         dev_a_array.unshift(event.alpha*deg2rad);
-        //         dev_b_array.unshift(event.beta*deg2rad);
-        //         dev_c_array.unshift(event.gamma*deg2rad);
-        //         dev_a = dev_a_sum / dev_a_array.length;
-        //         dev_b = dev_b_sum / dev_b_array.length;
-        //         dev_c = dev_c_sum / dev_c_array.length;
-        //     }
-        // } else {
-        //     dev_a = event.alpha*deg2rad;
-        //     dev_b = event.beta*deg2rad;
-        //     dev_c = event.gamma*deg2rad;
-        //     dev_a_sum = dev_a + 0;
-        //     dev_b_sum = dev_b + 0;
-        //     dev_c_sum = dev_c + 0;
-        //     dev_a_array = [dev_a];
-        //     dev_b_array = [dev_b];
-        //     dev_c_array = [dev_c];
-        // }
         show_initial();
     }
 }
@@ -3920,32 +3986,6 @@ function showNews(lastVisit) {
         newsText.appendChild(newsDiv);
         document.getElementById('news').style.visibility = 'visible';
     }
-}
-
-//ボタンを押したとき
-
-function darkerFunc() {
-    if (darker) { //明るくする
-        darker = false;
-        starColor = '#FFF';
-        yellowColor = 'yellow';
-        objectColor = 'orange';
-        lineColor = 'red';
-        textColor = 'white';
-        specialObjectNameColor = '#FF8';
-        document.getElementById('darkerbtntext').innerHTML = 'dark';
-    } else { //暗くする
-        darker = true;
-        starColor = '#C66';
-        yellowColor = '#550';
-        objectColor = '#D55';
-        lineColor = '#700';
-        textColor = '#A53';
-        specialObjectNameColor = '#AA5';
-        document.getElementById('darkerbtntext').innerHTML = 'bright';
-    }
-    newSetting();
-    show_main();
 }
 
 function showSetting() {
@@ -4030,7 +4070,7 @@ function changePicsFor360() {
 }
 function setPicsFor360FromInput() {
     let picsFor360Input = document.getElementById('picsFor360').value;
-    if (!isNaN(picsFor360Input) && 1 <= +picsFor360Input && +picsFor360Input <= 20) {
+    if (isNumber(picsFor360Input) && 1 <= +picsFor360Input && +picsFor360Input <= 20) {
         setPicsFor360(picsFor360Input);
         document.getElementById('setPicsFor360Div').style.visibility = 'hidden';
     } else {
@@ -4078,6 +4118,7 @@ let currentMarker = null;
 document.getElementById('observation-site-select').addEventListener('change', function() {
     const observationSite = document.getElementById('observation-site-select').value;
     if (observationSites[observationSite] != null) {
+        console.log(observationSites[observationSite]);
         setObservationSite(...observationSites[observationSite]);
     } else if (observationSite == '現在地') {
         function success(position) {
@@ -4090,22 +4131,36 @@ document.getElementById('observation-site-select').addEventListener('change', fu
             navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
         }
     } else if (observationSite == '地図上で選択') {
-        document.getElementById('observation-site-map-div').style.visibility = 'visible';
-        const map = L.map('observation-site-map').setView([lat_obs*rad2deg, lon_obs*rad2deg], 10);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors'
-        }).addTo(map);
-        currentMarker = L.marker([lat_obs*rad2deg, lon_obs*rad2deg]).addTo(map);
+        if (online) {
+            document.getElementById('observation-site-map-div').style.visibility = 'visible';
 
-        map.on('click', (e) => {
-            lat_map = e.latlng.lat;
-            lon_map = e.latlng.lng;
-            if (currentMarker) {
-                map.removeLayer(currentMarker);
+            if (!map) {
+                map = null;
             }
-            currentMarker = L.marker([lat_map, lon_map]).addTo(map);
-            document.getElementById('observation-site-select').value = '--';
-        });
+            if (map) {
+                map.remove();
+            }
+
+            map = L.map('observation-site-map').setView([lat_obs*rad2deg, lon_obs*rad2deg], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            currentMarker = L.marker([lat_obs*rad2deg, lon_obs*rad2deg]).addTo(map);
+
+            map.on('click', (e) => {
+                lat_map = e.latlng.lat;
+                lon_map = e.latlng.lng;
+                if (currentMarker) {
+                    map.removeLayer(currentMarker);
+                }
+                currentMarker = L.marker([lat_map, lon_map]).addTo(map);
+                document.getElementById('observation-site-select').value = '--';
+            });
+        } else {
+            alert('オフラインでは地図での選択ができません');
+        }
+    } else {
+        setObservationSite();
     }
 });
 function closeObservationSiteMap() {
@@ -4141,15 +4196,27 @@ function show_JD_minus1(){
     realtimeOff();
 }
 
-function setObservationSite(lat_deg=35, lon_deg=135) {
-    lat_obs = lat_deg * deg2rad;
-    lon_obs = lon_deg * deg2rad;
-    lat_deg = Math.round(lat_deg * 100) / 100;
-    lon_deg = Math.round(lon_deg * 100) / 100;
-    document.getElementById("NSCombo").value = lat_deg >= 0 ? '北緯' : '南緯';
-    document.getElementById('lat').value = Math.abs(lat_deg).toFixed(2);
-    document.getElementById("EWCombo").value = lon_deg >= 0 ? '東経' : '西経';
-    document.getElementById('lon').value = Math.abs(lon_deg).toFixed(2);
+function setObservationSite(lat_deg=35, lon_deg=135, latflag=true, lonflag=true) {
+    console.log(lat_deg);
+    console.log(lat_deg, lon_deg, latflag, lonflag);
+    if (latflag) {
+        if (!isNumber(lat_deg) || lat_deg < -90 || lat_deg > 90) {
+            lat_deg = 35;
+        }
+        lat_obs = lat_deg * deg2rad;
+        lat_deg = Math.round(lat_deg * 100) / 100;
+        document.getElementById("NSCombo").value = lat_deg >= 0 ? '北緯' : '南緯';
+        document.getElementById('lat').value = Math.abs(lat_deg).toFixed(2);
+    }
+    if (lonflag) {
+        if (!isNumber(lon_deg) || lon_deg < -180 || lon_deg > 180) {
+            lon_deg = 135;
+        }
+        lon_obs = lon_deg * deg2rad;
+        lon_deg = Math.round(lon_deg * 100) / 100;
+        document.getElementById("EWCombo").value = lon_deg >= 0 ? '東経' : '西経';
+        document.getElementById('lon').value = Math.abs(lon_deg).toFixed(2);
+    }
 }
 
 document.body.appendChild(canvas);
