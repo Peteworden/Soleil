@@ -105,17 +105,6 @@ input[type="file"] {
     }
 }
 
-.darkerBtn {
-    background-color: black;
-    color: white;
-    position: fixed;
-    border: 0;
-    width: 50px;
-    height: 25px;
-    text-align: center;
-}
-
-
 .top-right-buttons {
     position: fixed;
     top: 0;
@@ -151,6 +140,20 @@ input[type="file"] {
     padding: 0;
     margin: 0;
     text-align: center;
+    z-index: 1;
+    cursor: pointer;
+}
+#fullScreenBtn, #exitFullScreenBtn {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1;
     cursor: pointer;
 }
