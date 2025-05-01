@@ -809,7 +809,7 @@
         "dec": "+11 48.0",
         "vmag": "6.9",
         "class": "OC",
-        "description": ""
+        "description": "導入がかなり難しい。その割に明るくない...。視直径25'"
     },
     {
         "name": "M68",
@@ -820,7 +820,7 @@
         "dec": "-26 45.0",
         "vmag": "8.2",
         "class": "Gb",
-        "description": ""
+        "description": "しっかり球状星団の見た目してる"
     },
     {
         "name": "M69",
@@ -1138,7 +1138,7 @@
         "dec": "+11 42.0",
         "vmag": "9.7",
         "class": "Gx",
-        "description": ""
+        "description": "とても淡い。電視観望では大文字のΘのような腕が見えた"
     },
     {
         "name": "M96",
@@ -1149,7 +1149,7 @@
         "dec": "+11 49.0",
         "vmag": "9.2",
         "class": "Gx",
-        "description": ""
+        "description": "とても淡い。電視観望では大きい２本の腕が見えた"
     },
     {
         "name": "M97",
@@ -1197,7 +1197,7 @@
         "dec": "+15 49.0",
         "vmag": "9.4",
         "class": "Gx",
-        "description": ""
+        "description": "Mirror Galaxy"
     },
     {
         "name": "M101",
@@ -1246,7 +1246,7 @@
         "dec": "-11 37.0",
         "vmag": "8.3",
         "class": "Gx",
-        "description": "ソンブレロ銀河。帽子のソンブレロに似ている。暗黒帯がよく見える。"
+        "description": "ソンブレロ銀河。帽子のソンブレロに似ている。暗黒帯がよく見える。画像の一辺は0.3°"
     },
     {
         "name": "M105",
@@ -1257,7 +1257,7 @@
         "dec": "+12 35.0",
         "vmag": "9.3",
         "class": "Gx",
-        "description": ""
+        "description": "とても淡い"
     },
     {
         "name": "M106",
