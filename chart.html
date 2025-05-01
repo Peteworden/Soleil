@@ -141,13 +141,6 @@
                         <input type="button" id="arSettingBtn" value="説明" onclick="changePicsFor360()"/>
                         <input type="button" class="permitBtn" value="許可" style="visibility: hidden;"/><br>
                     </div>
-                    <!-- <div>
-                        ページ更新時の時刻設定（URLが最優先、リアルタイム設定では常に現在時刻）
-                        <select id="firstTimeSetting">
-                            <option selected>現在時刻</option>
-                            <option>最後に設定した時刻</option>
-                        </select>
-                    </div> -->
                     <ul>
                         <li>
                             リアルタイム
@@ -218,10 +211,11 @@
                         <li><input type="checkbox" id="BayerFSCheck">バイエル符号・フラムスティード番号</li>
                         <br>
                         <!--<li><input type="checkbox" id="atmRefCheck">大気差（プラネタリウムモードのみ）</li>-->
-                        <input type="checkbox" id="aovCheck">画角
+                        <input type="checkbox" id="aovCheck">電視観望の画角
                         <div class="aov-radio" id="aovRadio">
-                            <input type="radio" name="aov" value="85-cmos" checked>85+CMOS<br>
-                            <input type="radio" name="aov" value="128-cmos">128+CMOS<br>
+                            <input type="radio" name="aov" value="85+cmos" checked>FSQ-85ED + CMOS<br>
+                            <input type="radio" name="aov" value="128+cmos">FS-128 + CMOS<br>
+                            <input type="radio" name="aov" value="r200ss+cmos">R200SS + CMOS<br>
                         </div>
                         <li><input type="checkbox" id="demCheck">地形<input type="file" id="demFileInput" accept=".csv"><button id="openDemDescriptionDiv" type="button" onclick="document.getElementById('demDescriptionDiv').style.visibility = 'visible'">説明</button></li>
                         <li><button id="customizeObjectsBtn" type="button" onclick="document.getElementById('customizeObjects').style.visibility = 'none'" style="visibility: hidden;">太陽系天体のカスタマイズ</button></li>
@@ -242,9 +236,8 @@
         </div>
 
         <div id="description" class="description">
-            説明など<br>これを開いた右上のメニューボタンで閉じる
-
-            <!-- <button id="openSearch" type="button" onclick="openSearch()">検索</button> -->
+            <h3>メニュー（と呼ぶことにします）</h3>
+            <p>これを開いた右上のボタンで閉じます</p>
 
             <button id="qr" type="button" onclick="document.getElementById('qrwin').style.visibility='visible'">QRコードで広めてね！</button>
 
@@ -268,11 +261,12 @@
 
             <p>
                 ↓↓ご意見・ご提案などはこちらから↓↓<br>
-                <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank" rel="noopener">Google Form</a>
+                <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank" rel="noopener">意見・提案フォーム</a>
             </p>
-
-            <h6>指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用できます。</h4>
-            <p>---<a href="chartReadMe.html" target="_blank" rel="noopener">説明ページ（新しいタブ）</a>---</p>
+            <p>
+                ↓↓星座・天体の写真の提供はこちらから↓↓<br>
+                <a href="https://forms.gle/1YxVyK9DuLgLRq4w7" target="_blank" rel="noopener">写真提供フォーム</a>
+            </p>
 
             <p>
                 星雲・星団・銀河のマーク
@@ -284,7 +278,9 @@
                     <li>×：記載なしまたはその他</li>
                 </ul>
             </p>
-            <p>画像は私の撮影です</p>
+
+            <h6>指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用できます。</h4>
+            <p>---<a href="chartReadMe.html" target="_blank" rel="noopener">説明ページ（新しいタブ）</a>---</p>
             <p>下の少し色が違うところからその天体に飛べます</p>
             <p>
                 双眼鏡向けの天体(上４つは暗いところなら肉眼でも見られる)
@@ -443,7 +439,7 @@
         </div>
 
         <div class="result">
-            <script src="chart.js"></script>
+            <script src="./chart.js"></script>
         </div>
     </body>
 </html>

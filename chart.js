@@ -1,6 +1,10 @@
-//2023/10/21 ~
+// 2023/10/21 ~
 // 入力をURLに反映するのは手を離したときとセッティングを終えたとき
 // URLを表示に反映するのは最初のみ
+// Node.jsのローカルサーバーのとき: npm start
+// VSCodeの便利なショートカット
+// Ctrl+G n行目にジャンプ
+// Ctrl+K Ctrl+Q 最後の編集位置にジャンプ
 
 Object.defineProperty(window, 'online', {
     get: function() {
@@ -126,6 +130,7 @@ let starNames = [];
 let messier = [];
 let recs = [];
 let NGC = new Array(66130);
+let imageList = [];
 let constellations = [];
 let boundary = new Array(4801);
 let demFileName = '';
@@ -163,6 +168,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-05-01T22:10:00+09:00', text: ['KUALAの新機材・R200SSで電視観望するときの画角を出せます', '天体や星座の画像を募集します！右上の３本線をクリックしてフォームを探してください']},
     {time: '2025-04-19T20:10:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
     {time: '2025-04-19T02:20:00+09:00', text: ['この星図のURLのQRコードを右上メニューボタン→「QRコードで...」から見れます！　広めてもらえるとうれしいです。']},
     {time: '2025-04-12T17:00:00+09:00', text: ['メインで使う座標系をJ2000.0から視位置にしました。表示のバグは少しありますが計算間違いはないはずです', '以前からですが、設定画面の一番下のボタンで地形を表示させることができます。SWAN彗星見るときに使えそう', 'いくつかのNGC天体が複数個表示されるバグは気が向いたら直します']},
@@ -659,7 +665,7 @@ function showObjectInfo(x, y) {
     const wikiSpecial = [[1, 8, 16, 17, 20, 27, 31, 33, 42, 44, 45, 51, 57, 64, 97, 104], ["かに星雲", "干潟星雲", "わし星雲", "オメガ星雲", "三裂星雲", "亜鈴状星雲", "アンドロメダ銀河", "さんかく座銀河", "オリオン大星雲", "プレセペ星団", "プレアデス星団", "子持ち銀河", "環状星雲", "黒眼銀河", "ふくろう星雲", "ソンブレロ銀河"]]
     let nearest = null;
     let nearestDistance = Math.max(canvas.width, canvas.height);
-    for (i=0; i<infoList.length; i++) {
+    for (let i=0; i<infoList.length; i++) {
         let distance = Math.sqrt(Math.pow(x - infoList[i][1], 2) + Math.pow(y - infoList[i][2], 2));
         if (distance < nearestDistance && distance < Math.min(canvas.width, canvas.height) / 15) {
             nearest = infoList[i];
@@ -672,17 +678,16 @@ function showObjectInfo(x, y) {
 
         let found = false;
         document.getElementById('objectInfoImage').innerHTML = "";
-        for (let ext of ["jpg", "JPG"]) {
-            const img = new Image();
-            img.onload = function() {
-                document.getElementById('objectInfoImage').appendChild(img);
-                found = true;
-            };
-            img.onerror = function() {
-                console.log(`画像が見つかりません: ${ext}`);
-            };
-            img.src = `${soleilUrl}/chartImage/${nearest[0].replace(/\s+/g, '')}.${ext}`;
-            if (found) {
+        for (let i=0; i<imageList.length; i++) {
+            if (nearest[0] == imageList[i].name) {
+                const img = new Image();
+                img.onload = function() {
+                    document.getElementById('objectInfoImage').appendChild(img);
+                };
+                img.onerror = function() {
+                    console.log(`画像が見つかりません: ${imageList[i].image_url}`);
+                };
+                img.src = `${soleilUrl}/chartImage/${imageList[i].image_url}`;
                 break;
             }
         }
@@ -817,30 +822,6 @@ function setYMDHM(y, m, d, h, mi) {
     }
 }
 
-// function here() {
-//     function success(position) {
-//         const latitude = Math.round(position.coords.latitude*100)/100;
-//         const longitude = Math.round(position.coords.longitude*100)/100;
-//         if (latitude < 0) {
-//             document.getElementById('NSCombo').options[1].selected = true;
-//         } else {
-//             document.getElementById('NSCombo').options[0].selected = true;
-//         }
-//         document.getElementById('lat').value = Math.abs(latitude);
-//         if (longitude < 0) {
-//             document.getElementById('EWCombo').options[1].selected = true;
-//         } else {
-//             document.getElementById('EWCombo').options[0].selected = true;
-//         }
-//         document.getElementById('lon').value = Math.abs(longitude);
-//     }
-//     if (!navigator.geolocation) {
-//         alert("お使いのブラウザは位置情報に対応していません");
-//     } else {
-//         navigator.geolocation.getCurrentPosition(success, () => {alert("位置情報を取得できません")});
-//     }
-// }
-
 aovSliderElem.addEventListener('input', function() {
     show_main();
 })
@@ -866,6 +847,7 @@ let dragFlag = false;
 // タッチ開始
 function ontouchstart(e) {
     // e.preventDefault();
+    console.log(e.touches.length);
     if (e.touches.length === 1) {
         pinchFlag = false;
         dragFlag = false;
@@ -1121,7 +1103,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkURL();
 });
 
-function show_initial(){
+function show_initial(defaultcheck, xhrcheck, xhrimpcheck) {
     function ready() {
         newSetting();
         canvas.addEventListener("touchstart", ontouchstart);
@@ -1138,7 +1120,7 @@ function show_initial(){
         show_main();
     }
     if (xhrimpcheck == 3 && defaultcheck >= 10) {
-        if (xhrcheck == 15) {
+        if (xhrcheck == 16) {
             document.getElementById('loadingtext').style.display = 'none';
             ready();
         } else {
@@ -1158,7 +1140,7 @@ function calculation(JD) {
     [ra, dec] = J2000toApparent(ra, dec, JD);
     solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
-    for (i=1; i<planets.length; i++) {
+    for (let i=1; i<planets.length; i++) {
         let planet = planets[i];
         if (i == 9) {
             [x, y, z] = calc(Earth, JD);
@@ -1176,7 +1158,7 @@ function calculation(JD) {
     //明るさを計算
     const es2 = X**2 + Y**2 + Z**2;
     let ps2, V;
-    for (n=0; n<planets.length; n++) {
+    for (let n=0; n<planets.length; n++) {
         x = solarSystemBodies[n].x;
         y = solarSystemBodies[n].y;
         z = solarSystemBodies[n].z;
@@ -1293,6 +1275,7 @@ function calculation(JD) {
                 let H = planet[12];
                 let G = planet[13];
                 ps2 = x**2 + y**2 + z**2;
+                let a;
                 if (Obs_num != 0) {
                     a = Math.acos((ps2 + dist**2 - es2) / (2 * dist * Math.sqrt(ps2)));
                 } else {
@@ -1518,6 +1501,7 @@ function show_main(){
     ctx.fillStyle = skycolor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    let i, j;
     let x, y;
     let ra, dec, mag;
     let scrRA, scrDec;
@@ -1726,20 +1710,20 @@ function show_main(){
                 if (cenRA - RArange < 0) {
                     skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
                                 [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
-                    for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                    for (i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else if (cenRA + RArange > 360) {
                     skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
                                 [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
-                    for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                    for (i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else {
                     skyareas = [[SkyArea(cenRA-RArange, minDec), SkyArea(cenRA+RArange, minDec)]];
-                    for (let i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
+                    for (i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     }
                 }
@@ -1756,20 +1740,20 @@ function show_main(){
                 //skyareasは[[a, b]]のaの領域とbの領域を両方含む
                 skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)],
                             [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
-                for (let i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
+                for (i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                 }
             } else if (cenRA + rgEW >= 360) {
                 skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
                             [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
-                for (let i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
+                for (i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                 }
             } else {
                 skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
-                for (let i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
+                for (i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
                     skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                 }
             }
@@ -1806,7 +1790,7 @@ function show_main(){
                 for (j=0; j<=Math.ceil(3*rgEW); j++) {
                     for (i=0; i<=Math.ceil(3*rgNS); i++) {
                         if (i == 0 || i == Math.ceil(3*rgNS) || j == 0 || j == Math.ceil(3*rgEW)) {
-                            [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
+                            let [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                             [ra, dec] = Ah2RADec(A, h, theta);
                             edgeRA.push(ra);
                             edgeDec.push(dec);
@@ -1821,13 +1805,13 @@ function show_main(){
                     RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
                     RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
                     skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
-                    for (let i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                    for (i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                         skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
                     }
                 } else {
                     skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
-                    for (let i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
+                    for (i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
                         skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
                     }
                 }
@@ -2408,9 +2392,9 @@ function show_main(){
             if (inFlag) {
                 let size = 20 - 1 * tier;
                 if (d.jpnname) {
-                    drawObjects(d.jpnname, x, y+15, 0, fontsize=size);
+                    drawObjects(d.jpnname, x, y+15, 0, size);
                 } else {
-                    drawObjects(d.name, x, y+15, 0, fontsize=size);
+                    drawObjects(d.name, x, y+15, 0, size);
                 }
             }
         }
@@ -2548,6 +2532,7 @@ function show_main(){
     }
 
     function drawGrid() {
+        let i, j;
         let minAlt = Math.max(-90, Math.min(SHtoAh(rgEW, -rgNS)[1], cenAlt-rgNS));
         let maxAlt = Math.min( 90, Math.max(SHtoAh(rgEW,  rgNS)[1], cenAlt+rgNS));
 
@@ -2701,7 +2686,7 @@ function show_main(){
     }
 
     function drawAov() {
-        let aovs = [['85-cmos', 3.34, 2.27], ['128-cmos', 1.36, 0.91]];
+        let aovs = [['85+cmos', 3.34, 2.27], ['128+cmos', 1.36, 0.91], ['r200ss+cmos', 1.44, 0.99]];
         if (document.getElementById('aovCheck').checked && ['AEP', 'view'].includes(mode)) {
             let aovLabel = '';
             for (i=0; i<document.getElementsByName('aov').length; i++){
@@ -3222,7 +3207,7 @@ async function loadFiles() {
 
     async function xhrHIP(data) {
         const hipData = data.split(',').map(Number);
-        for (i=0; i<hipData.length; i+=4){
+        for (let i=0; i<hipData.length; i+=4){
             hips.push({
                 ra: hipData[i] * 0.001,
                 dec: hipData[i+1] * 0.001,
@@ -3241,7 +3226,7 @@ async function loadFiles() {
         FSs = Array(BSCnum);
         Bayers = Array(BSCnum);
         BayerNums = Array(BSCnum);
-        for (i=0; i<BSCnum; i++){
+        for (let i=0; i<BSCnum; i++){
             BSCRAary[i] = +BSC[6*i];
             BSCDecary[i] = +BSC[6*i+1];
             FSs[i] = BSC[6*i+2];
@@ -3355,7 +3340,7 @@ async function loadFiles() {
                 }
             }
             defaultcheck++;
-            show_initial();
+            show_initial(defaultcheck, xhrcheck, xhrimpcheck);
         } else if (localStorage.getItem('observer_planet') != null && localStorage.getItem('observer_planet') != 'Earth') {
             for (let j=0; j<ENGplanets.length; j++) {
                 if (localStorage.getItem('observer_planet') == ENGplanets[j].split(' ').join('').split('/').join('')) {
@@ -3364,10 +3349,10 @@ async function loadFiles() {
                 }
             }
             defaultcheck++;
-            show_initial();
+            show_initial(defaultcheck, xhrcheck, xhrimpcheck);
         } else {
             defaultcheck++;
-            show_initial();
+            show_initial(defaultcheck, xhrcheck, xhrimpcheck);
         }
     }
 
@@ -3397,7 +3382,7 @@ async function loadFiles() {
                 loaded.push(filename);
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt ${impflag}`);
                 console.log(performance.now() - t0);
-                show_initial();
+                show_initial(defaultcheck, xhrcheck, xhrimpcheck);
             } catch (error) {
                 console.error(`Error loading file ${filename}:`, error);
             }
@@ -3425,7 +3410,7 @@ async function loadFiles() {
                 if (impflag) xhrimpcheck++;
                 loaded.push(filename);
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.json ${impflag}`);
-                show_initial();
+                show_initial(defaultcheck, xhrcheck, xhrimpcheck);
             } catch (error) {
                 console.error(`Error loading file ${filename}:`, error);
             }
@@ -3456,7 +3441,7 @@ async function loadFiles() {
                 if (impflag) xhrimpcheck++;
                 loaded.push(filename);
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.csv ${impflag}`);
-                show_initial();
+                show_initial(defaultcheck, xhrcheck, xhrimpcheck);
             } catch (error) {
                 console.error(`Error loading file ${filename}:`, error);
             }
@@ -3500,7 +3485,7 @@ async function loadFiles() {
                 loaded.push(filename)
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
                 console.log(performance.now() - t0);
-                show_initial();
+                show_initial(defaultcheck, xhrcheck, xhrimpcheck);
             } catch (error) {
                 console.error(`Error loading file ${filename}:`, error);
             }
@@ -3540,7 +3525,7 @@ async function loadFiles() {
                 loaded.push(filename)
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.bin ${impflag}`);
                 console.log(performance.now() - t0);
-                show_initial();
+                show_initial(defaultcheck, xhrcheck, xhrimpcheck);
             } catch (error) {
                 console.error(`Error loading file ${filename}:`, error);
             }
@@ -3563,7 +3548,7 @@ async function loadFiles() {
                 }
                 loaded.push(filename);
                 console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
-                show_initial();
+                show_initial(defaultcheck, xhrcheck, xhrimpcheck);
             }
             fr.readAsText(event.target.files[0]);
         }
@@ -3581,7 +3566,7 @@ async function loadFiles() {
                     }
                     loaded.push(filename);
                     console.log(`${xhrcheck} ${defaultcheck} ${filename}.txt`);
-                    show_initial();
+                    show_initial(defaultcheck, xhrcheck, xhrimpcheck);
                 };
                 reader.readAsText(file);
             }
@@ -3638,6 +3623,11 @@ async function loadFiles() {
             gaia111_115_help = data.split(',').map(Number);
         });
 
+        //天体写真
+        await loadJsonData('imageList', (data) => {
+            imageList = data;
+        })
+
         //Bayer
         await loadFile("brights", xhrBSC);
 
@@ -3667,7 +3657,7 @@ async function loadFiles() {
                     if (fn == 'constellation_boundaries') {boundary = data.split(',').map(Number); xhrimpcheck++;}
                     if (fn == 'additional_objects') xhrExtra(data);
                     xhrcheck++;
-                    show_initial();
+                    show_initial(defaultcheck, xhrcheck, xhrimpcheck);
                 }
             }
             fr.readAsText(this.files[0]);
@@ -3685,64 +3675,64 @@ function checkURL() {
         cenRA = +url.searchParams.get('RA');
         localStorage.setItem('RA', cenRA);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else if (localStorage.getItem('RA') != null && isNumber(localStorage.getItem('RA'))) {
         cenRA = +localStorage.getItem('RA');
         url.searchParams.set('RA', cenRA);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         setUrlAndLocalStorage('RA', cenRA);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('Dec') && isNumber(url.searchParams.get('Dec'))) {
         cenDec = +url.searchParams.get('Dec');
         localStorage.setItem('Dec', cenDec);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else if (localStorage.getItem('Dec') != null && isNumber(localStorage.getItem('Dec'))) {
         cenDec = +localStorage.getItem('Dec');
         url.searchParams.set('Dec', cenDec);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         setUrlAndLocalStorage('Dec', cenDec);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('azm') && isNumber(url.searchParams.get('azm'))) {
         cenAzm = +url.searchParams.get('azm');
         localStorage.setItem('azm', cenAzm);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else if (localStorage.getItem('azm') != null && isNumber(localStorage.getItem('azm'))) {
         cenAzm = +localStorage.getItem('azm');
         url.searchParams.set('azm', cenAzm);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         setUrlAndLocalStorage('azm', cenAzm);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('alt') && isNumber(url.searchParams.get('alt'))) {
         cenAlt = +url.searchParams.get('alt');
         localStorage.setItem('alt', cenAlt);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else if (localStorage.getItem('alt') != null && isNumber(localStorage.getItem('alt'))) {
         cenAlt = +localStorage.getItem('alt');
         url.searchParams.set('alt', cenAlt);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         setUrlAndLocalStorage('alt', cenAlt);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('time')) {
@@ -3751,7 +3741,7 @@ function checkURL() {
         showingJD = YMDHM_to_JD(y, m, d, h, mi);
         realtimeOff();
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else if (localStorage.getItem('realtime') != null) {
         if (localStorage.getItem('realtime') == 'radec') {
             realtimeElem.value = '赤道座標固定';
@@ -3759,7 +3749,7 @@ function checkURL() {
             realtimeElem.value = 'オフ';
         }
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         now();
         // now()の中身は以下
@@ -3768,7 +3758,7 @@ function checkURL() {
         // setYMDHM(y, m, d, h, mi);
         // showingJD = YMDHM_to_JD(y, m, d, h, mi);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('mode') && ['AEP', 'EtP', 'view', 'live', 'ar'].includes(url.searchParams.get('mode'))) {
@@ -3781,7 +3771,7 @@ function checkURL() {
         }
         turnOnOffLiveMode(mode);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         for (let i=0; i<zuhoElem.length; i++) {
             if (zuhoElem[i].checked) {
@@ -3791,7 +3781,7 @@ function checkURL() {
         }
         turnOnOffLiveMode(mode);
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('area') && isNumber(url.searchParams.get('area'))) {
@@ -3806,11 +3796,11 @@ function checkURL() {
         magLim = determinMagLim(magkey1, magkey2);
         zerosize = determinZerosize();
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         url.searchParams.set('area', (2*rgEW).toFixed(2));
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (url.searchParams.has('magkey') && isNumber(url.searchParams.get('magkey'))) {
@@ -3819,10 +3809,10 @@ function checkURL() {
         magLim = determinMagLim(magkey1, magkey2);
         zerosize = determinZerosize();
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         defaultcheck++;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if ((url.searchParams.has('lat') && isNumber(url.searchParams.get('lat'))) || (url.searchParams.has('lon') && isNumber(url.searchParams.get('lon')))) {
@@ -3834,17 +3824,17 @@ function checkURL() {
             }
         }
         defaultcheck += 2;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else if (localStorage.getItem('observationSite') != null && observationSites[localStorage.getItem('observationSite')] != null) {
         const observationSite = localStorage.getItem('observationSite');
         setObservationSite(...observationSites[observationSite], true, true);
         document.getElementById('observation-site-select').value = observationSite;
         defaultcheck += 2;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     } else {
         setObservationSite(+localStorage.getItem('lat'), +localStorage.getItem('lon'), true, true);
         defaultcheck += 2;
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 
     if (localStorage.getItem('lastVisit') != null) {
@@ -3943,7 +3933,7 @@ function deviceOrientation(event) {
             dev = eventAngle.map(val => val * deg2rad);
             devArray = [[dev[0]], [dev[1]], [dev[2]]];
         }
-        show_initial();
+        show_initial(defaultcheck, xhrcheck, xhrimpcheck);
     }
 }
 
