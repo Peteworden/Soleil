@@ -52,7 +52,7 @@ if (isElectron || isPWA) {
         document.getElementById('fileBtn').style.visibility = "hidden";
         document.getElementById('getFile').style.visibility = "hidden";
     } else {
-        alert('Sorry, this star chart is unablable offline now.');
+        alert('オフライン環境では使えません。デスクトップアプリ版を使うか、PWA版の完成をお待ちください。');
         document.getElementById('fileBtn').style.visibility = "hidden";
         document.getElementById('getFile').style.visibility = "hidden";
     }
