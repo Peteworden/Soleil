@@ -15,7 +15,8 @@ const isLocalhost = ['localhost', '127.0.0.1', '::1'].includes(window.location.h
 // const isElectron = typeof process !== 'undefined' && process.versions && process.versions.electron;
 // const isElectron = (typeof process !== 'undefined' && process.versions && process.versions.electron) || navigator.userAgent.includes('Electron');
 const isElectron = false;
-console.log(online, isLocalhost, isElectron);
+const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+console.log(online, isLocalhost, isElectron, isPWA);
 
 // 定数
 const pi = Math.PI;
@@ -41,12 +42,11 @@ const trackDateElem = document.getElementsByName('trackTime');
 const starNameElem = document.getElementsByName('starName');
 
 // 要素の表示/非表示
-if (isElectron) {
+if (isElectron || isPWA) {
     document.title = "Reticle Star Atlas";
-    document.getElementById('welcomeImage').style.display = 'none';
+    document.getElementById('welco  meImage').style.display = 'none';
     const listItems = document.getElementById('title').getElementsByTagName('li');
     listItems[1].remove();
-    listItems[1].remove(); // 2番目を削除した後、インデックスがずれるため
 } else {
     if (online) {
         document.getElementById('fileBtn').style.visibility = "hidden";
@@ -112,7 +112,8 @@ let Ms, ws, lon_moon, lat_moon;
 
 // データ
 
-const soleilUrl = !isElectron ? "https://peteworden.github.io/Soleil" : ".";
+const soleilUrl = !(isElectron || isPWA) ? "https://peteworden.github.io/Soleil" : ".";
+// const soleilUrl = ".";
 let hips = [];
 let gaia100 = new Array(505972);
 let gaia100_help = new Array(64801);
@@ -3356,7 +3357,7 @@ async function loadFiles() {
         }
     }
 
-    if (online || isElectron) {
+    if (online || isElectron || isPWA) {
         const t0 = performance.now();
         async function loadFile(filename, func, impflag=false) {
             try {
