@@ -406,7 +406,7 @@ document.getElementById('searchInput').addEventListener('input', function() {
             // 惑星
             for (i=0; i<planetNamesHiragana.length; i++) {
                 if (i == Obs_num) continue;
-                if (toUpperCaseOrKatakana(planetNamesHiragana[i]) == searchText) {
+                if (toUpperCaseOrKatakana(planetNamesHiragana[i][0]) == searchText) {
                     suggestions1[0].push(JPNplanets[i]);
                     suggestions1[1].push(JPNplanets[i]);
                 } 
@@ -1965,6 +1965,7 @@ function show_main(){
                             galileo_ecl = [doubleSin(...galileo[j][0]), doubleSin(...galileo[j][1]), doubleSin(...galileo[j][2])]
                             galileo_equ = Rx([jupiter_ecl[0]+galileo_ecl[0], jupiter_ecl[1]+galileo_ecl[1], jupiter_ecl[2]+galileo_ecl[2]], eps);
                             galileo_radecdist = xyz_to_RADec(...galileo_equ);
+                            galileo_radecdist = J2000toApparent(galileo_radecdist[0], galileo_radecdist[1], JD);
                             [x, y, inFlag] = xyIfInCanvas(galileo_radecdist[0], galileo_radecdist[1]);
                             drawFilledCircle(x, y, 1, '#F33');
                             if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
