@@ -54,15 +54,28 @@ const FILES_TO_CACHE = [
 
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames
-          .filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
+    (async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(
+        cacheNames.map(name => name !== CACHE_NAME && caches.delete(name))
       );
-    })
+      // ここで即時反映を促す
+      await self.clients.claim();
+    })()
   );
 });
+
+// self.addEventListener('activate', event => {
+//   event.waitUntil(
+//     caches.keys().then(cacheNames => {
+//       return Promise.all(
+//         cacheNames
+//           .filter(name => name !== CACHE_NAME)
+//           .map(name => caches.delete(name))
+//       );
+//     })
+//   );
+// });
 
 // キャッシュ登録
 self.addEventListener('install', event => {
