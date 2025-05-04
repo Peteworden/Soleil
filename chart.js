@@ -44,7 +44,7 @@ const starNameElem = document.getElementsByName('starName');
 // 要素の表示/非表示
 if (isElectron || isPWA) {
     document.title = "Reticle Star Atlas";
-    document.getElementById('welco  meImage').style.display = 'none';
+    document.getElementById('welcomeImage').style.display = 'none';
     const listItems = document.getElementById('title').getElementsByTagName('li');
     listItems[1].remove();
 } else {
