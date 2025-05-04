@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mobile-reticle-star-atlas-v2505042120';
+const CACHE_NAME = 'mobile-reticle-star-atlas-v2505042139';
 const FILES_TO_CACHE = [
   '/Soleil/chart.html',
   '/Soleil/chart.js',
@@ -56,24 +56,29 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        cacheNames
+          .filter(name => name !== CACHE_NAME)
+          .map(name => caches.delete(name))
       );
     })
   );
 });
 
+// キャッシュ登録
 self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
-  );
+  event.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES_TO_CACHE))
+  );
 });
 
+// リクエスト処理
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
-  );
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+      .catch(() => {
+        1;
+        // オフライン時のフォールバック処理が必要ならここに書く
+      })
+  );
 });
