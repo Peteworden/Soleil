@@ -44,7 +44,7 @@ const starNameElem = document.getElementsByName('starName');
 // 要素の表示/非表示
 if (isElectron || isPWA) {
     document.title = "Reticle Star Atlas";
-    document.getElementById('welcomeImage').style.display = 'none';
+    document.getElementById('welco  meImage').style.display = 'none';
     const listItems = document.getElementById('title').getElementsByTagName('li');
     listItems[1].remove();
 } else {
@@ -107,6 +107,7 @@ const observationSites = {
     "東京": [35.68, 139.76],
     "大阪": [34.70, 135.50]
 };
+let map = null;
 
 let Ms, ws, lon_moon, lat_moon;
 
@@ -221,8 +222,8 @@ if (canvas.width < canvas.height) {
     rgEW = 20;
     rgNS = rgEW * canvas.height / canvas.width;
     document.getElementById('constNameFrom').value = "90";
-    document.getElementById('MessierFrom').value = "60";
-    document.getElementById('recsFrom').value = "50";
+    document.getElementById('MessierFrom').value = "80";
+    document.getElementById('recsFrom').value = "60";
 } else {
     rgNS = 20;
     rgEW = rgNS * canvas.width / canvas.height;
@@ -4126,9 +4127,12 @@ document.getElementById('observation-site-select').addEventListener('change', fu
         if (online) {
             document.getElementById('observation-site-map-div').style.visibility = 'visible';
 
-            if (!map) {
-                map = null;
-            }
+            // if (map  == undefined) {
+            //     console.log('map is undefined');
+            // }
+            // if (!map) {
+            //     map = null;
+            // }
             if (map) {
                 map.remove();
             }
