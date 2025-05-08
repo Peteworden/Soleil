@@ -63,8 +63,8 @@ function drawOrientation(alpha, beta, gamma) {
     }
 
     // 傾きに応じた点の位置を計算
-    A = 1.0;
-    h = 3.0;
+    // A = 1.0;
+    // h = 3.0;
     function plot(h, A, color, size) {
         if (h <= 5) {
             const pointX = centerX + (h / 5) * radius * Math.cos(A);
