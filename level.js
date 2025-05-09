@@ -103,10 +103,10 @@ function toggleRecording() {
         document.getElementById('recordLabel').textContent = '停止';
     } else if (recording == 'recording') {
         recording = 'pausing';
-        recordingData = [];
         document.getElementById('recordLabel').textContent = '消去';
     } else if (recording == 'pausing') {
         recording = 'none';
+        recordingData = [];
         document.getElementById('recordLabel').textContent = '記録開始';
     }
 }
