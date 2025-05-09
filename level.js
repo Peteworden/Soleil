@@ -53,12 +53,18 @@ function drawOrientation(alpha, beta, gamma) {
     ctx.lineTo(centerX, centerY + radius);
     ctx.stroke();
 
-    // alpha = (Math.random() - 0.5) * 10 * deg2rad;
-    // beta = (Math.random() - 0.5) * 10 * deg2rad;
-    // gamma = (Math.random() - 0.5) * 10 * deg2rad;
+    alpha = (Math.random() - 0.5) * 10 * deg2rad;
+    beta = (Math.random() - 0.5) * 10 * deg2rad;
+    gamma = (Math.random() - 0.5) * 10 * deg2rad;
     let [A, h] = centerAzmAlt([alpha, beta, gamma], loadAzm);
     
     console.log(A, h, alpha, beta, gamma);
+    document.getElementById('alphaValue').textContent = 'Alpha: ' + (alpha * rad2deg).toFixed(2);
+    document.getElementById('betaValue').textContent = 'Beta: ' + (beta * rad2deg).toFixed(2);
+    document.getElementById('gammaValue').textContent = 'Gamma: ' + (gamma * rad2deg).toFixed(2);
+    document.getElementById('azmValue').textContent = 'Azimuth: ' + A.toFixed(2);
+    document.getElementById('altValue').textContent = 'Altitude: ' + h.toFixed(2);
+
     if (beta == 0 && gamma == 0) {
         A = 0.0;
         h = 0.0;
@@ -66,12 +72,6 @@ function drawOrientation(alpha, beta, gamma) {
         A = Math.atan2(beta, gamma);
         h = h + 90;
     }
-    document.getElementById('alphaValue').textContent = 'Alpha: ' + alpha;
-    document.getElementById('betaValue').textContent = 'Beta: ' + beta;
-    document.getElementById('gammaValue').textContent = 'Gamma: ' + gamma;
-    document.getElementById('azmValue').textContent = 'Azimuth: ' + A;
-    document.getElementById('altValue').textContent = 'Altitude: ' + h;
-
 
     // 傾きに応じた点の位置を計算
     // A = 1.0;
@@ -103,6 +103,7 @@ function toggleRecording() {
         document.getElementById('recordLabel').textContent = '停止';
     } else if (recording == 'recording') {
         recording = 'pausing';
+        recordingData = [];
         document.getElementById('recordLabel').textContent = '消去';
     } else if (recording == 'pausing') {
         recording = 'none';
