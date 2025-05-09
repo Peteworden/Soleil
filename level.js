@@ -53,9 +53,9 @@ function drawOrientation(alpha, beta, gamma) {
     ctx.lineTo(centerX, centerY + radius);
     ctx.stroke();
 
-    alpha = (Math.random() - 0.5) * 10 * deg2rad;
-    beta = (Math.random() - 0.5) * 10 * deg2rad;
-    gamma = (Math.random() - 0.5) * 10 * deg2rad;
+    // alpha = (Math.random() - 0.5) * 10 * deg2rad;
+    // beta = (Math.random() - 0.5) * 10 * deg2rad;
+    // gamma = (Math.random() - 0.5) * 10 * deg2rad;
     let [A, h] = centerAzmAlt([alpha, beta, gamma], loadAzm);
     
     console.log(A, h, alpha, beta, gamma);
