@@ -53,7 +53,12 @@ function drawOrientation(alpha, beta, gamma) {
     ctx.lineTo(centerX, centerY + radius);
     ctx.stroke();
 
+    // alpha = (Math.random() - 0.5) * 10 * deg2rad;
+    // beta = (Math.random() - 0.5) * 10 * deg2rad;
+    // gamma = (Math.random() - 0.5) * 10 * deg2rad;
     let [A, h] = centerAzmAlt([alpha, beta, gamma], loadAzm);
+    
+    console.log(A, h, alpha, beta, gamma);
     if (beta == 0 && gamma == 0) {
         A = 0.0;
         h = 0.0;
@@ -61,14 +66,20 @@ function drawOrientation(alpha, beta, gamma) {
         A = Math.atan2(beta, gamma);
         h = h + 90;
     }
+    document.getElementById('alphaValue').textContent = 'Alpha: ' + alpha;
+    document.getElementById('betaValue').textContent = 'Beta: ' + beta;
+    document.getElementById('gammaValue').textContent = 'Gamma: ' + gamma;
+    document.getElementById('azmValue').textContent = 'Azimuth: ' + A;
+    document.getElementById('altValue').textContent = 'Altitude: ' + h;
+
 
     // 傾きに応じた点の位置を計算
     // A = 1.0;
     // h = 3.0;
     function plot(h, A, color, size) {
-        if (h <= 5) {
-            const pointX = centerX + (h / 5) * radius * Math.cos(A);
-            const pointY = centerY + (h / 5) * radius * Math.sin(A);
+        if (h <= 10) {
+            const pointX = centerX + (h / 10) * radius * Math.cos(A);
+            const pointY = centerY + (h / 10) * radius * Math.sin(A);
             ctx.beginPath();
             ctx.arc(pointX, pointY, size, 0, Math.PI * 2);
             ctx.fillStyle = color;
@@ -105,7 +116,7 @@ function deviceOrientation(event) {
     }
     let eventAngleDegRad = [event.alpha, event.beta, event.gamma].map(val => val * deg2rad);
     // Canvasに描画
-    drawOrientation(eventAngleDegRad);
+    drawOrientation(eventAngleDegRad[0], eventAngleDegRad[1], eventAngleDegRad[2]);
 }
 
 function init() {
@@ -180,3 +191,11 @@ function centerAzmAlt (dev, loadAzm) {
     let A = ((Math.atan2(-y, x) * rad2deg + loadAzm + 90) % 360 + 360) % 360;
     return [A, h];
 }
+
+function updateRecordLabel(newText) {
+    const label = document.getElementById('directionLabel');
+    document.getElementById('directionLabel').textContent = newText;
+}
+
+// 使用例：
+// updateRecordLabel('新しいテキスト');
