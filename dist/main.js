@@ -3,25 +3,8 @@ import { AstronomicalCalculator } from './utils/calculations.js';
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
 import { Planet, Moon } from './models/CelestialObject.js';
 import { DataLoader } from './utils/DataLoader.js';
-// 木星のデータ
-const jupiterData = {
-    jpnName: '木星',
-    hiraganaName: 'もくせい',
-    engName: 'Jupiter',
-    t0: 2451545.0,
-    a: 5.20288700,
-    e: 0.04838624,
-    incl: 1.30439695,
-    meanLong: 34.39644051,
-    longPeri: 14.72847983,
-    node: 100.47390909,
-    da: -0.00011607,
-    de: -0.00013253,
-    dIncl: -0.00183714,
-    dMeanLong: 3034.74612775,
-    dLongPeri: 0.21252668,
-    dNode: 0.20469106
-};
+import { InteractionController } from "./renderer/interactionController.js";
+import { jupiterData } from './data/planets.js';
 // 星空表示の設定
 const config = {
     renderOptions: {
@@ -65,28 +48,34 @@ export async function main() {
             DataLoader.loadStarNames(),
             DataLoader.loadHIPData()
         ]);
+        console.log(constellationData);
         // キャンバスの作成
         const canvas = document.createElement('canvas');
         canvas.width = config.canvasSize.width;
         canvas.height = config.canvasSize.height;
         app.appendChild(canvas);
+        config.renderOptions.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.renderOptions.fieldOfViewRA;
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config.renderOptions, config.observationSite.latitude, config.observationSite.longitude);
+        function renderAll() {
+            renderer.clear();
+            renderer.drawGrid();
+            renderer.drawConstellationLines(Object.values(constellationData));
+            renderer.drawHipStars(hipStars);
+            renderer.drawObject(jupiter);
+            renderer.drawObject(moon);
+        }
+        const controller = new InteractionController(canvas, config.renderOptions, renderAll);
         // 天体の作成
         const jupiter = new Planet(jupiterData);
         const moon = new Moon();
         // 現在のユリウス日を計算
-        const jd = AstronomicalCalculator.calculateJulianDate(config.displayTime.year, config.displayTime.month, config.displayTime.day, config.displayTime.hour, config.displayTime.minute, config.displayTime.second);
+        const jd = AstronomicalCalculator.calculateCurrentJulianDate();
         // 天体の位置を更新
         jupiter.updatePosition(jd);
         moon.updatePosition(jd);
-        console.log(hipStars);
         // 描画
-        renderer.clear();
-        renderer.drawGrid();
-        renderer.drawHipStars(hipStars);
-        renderer.drawObject(jupiter);
-        renderer.drawObject(moon);
+        renderAll();
         // 情報の表示
         const info = document.createElement('div');
         info.innerHTML = `

@@ -15,6 +15,10 @@ export class AstronomicalCalculator {
         const jd = Math.floor(365.25 * (year + 4716)) + Math.floor(30.6001 * (month + 1)) + day + b - 1524.5;
         return jd + (hour + minute / 60 + second / 3600) / 24;
     }
+    static calculateCurrentJulianDate() {
+        const now = new Date();
+        return this.calculateJulianDate(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+    }
     // グリニッジ恒星時を計算
     static calculateGreenwichSiderealTime(jd) {
         const t = (jd - 2451545.0) / 36525;

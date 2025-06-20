@@ -1,3 +1,4 @@
+import { Planet, Moon } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 export class CanvasRenderer {
     constructor(canvas, options, latitude, longitude) {
@@ -17,9 +18,9 @@ export class CanvasRenderer {
     drawObject(object) {
         const coords = object.getCoordinates();
         const screenCoords = this.celestialToScreen(coords);
-        if (!screenCoords)
+        if (!screenCoords[0])
             return;
-        const [x, y] = screenCoords;
+        const [x, y] = screenCoords[1];
         const magnitude = object.getMagnitude();
         const type = object.getType();
         this.ctx.beginPath();
@@ -29,19 +30,30 @@ export class CanvasRenderer {
             this.ctx.fillStyle = 'white';
             this.ctx.fill();
         }
+        else if (object instanceof Planet) {
+            this.ctx.arc(x, y, 3, 0, Math.PI * 2);
+            this.ctx.fillStyle = 'red';
+            this.ctx.fill();
+        }
+        else if (object instanceof Moon) {
+            this.ctx.arc(x, y, 30, 0, Math.PI * 2);
+            this.ctx.fillStyle = 'yellow';
+            this.ctx.fill();
+        }
         else {
             this.ctx.arc(x, y, 3, 0, Math.PI * 2);
-            this.ctx.fillStyle = 'yellow';
+            this.ctx.fillStyle = 'blue';
             this.ctx.fill();
         }
     }
     drawHipStars(hipStars) {
+        const limitingMagnitude = this.limitingMagnitude(this.options);
         for (const star of hipStars) {
             const coords = star.getCoordinates();
             const screenCoords = this.celestialToScreen(coords);
-            if (!screenCoords)
+            if (!screenCoords[0] || star.getMagnitude() > limitingMagnitude)
                 continue;
-            const [x, y] = screenCoords;
+            const [x, y] = screenCoords[1];
             const radius = Math.max(1, 7 - star.getMagnitude());
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -62,8 +74,8 @@ export class CanvasRenderer {
             for (let dec = -90; dec <= 90; dec += 5) {
                 const coords = { ra, dec };
                 const screenCoords = this.celestialToScreen(coords);
-                if (screenCoords) {
-                    const [x, y] = screenCoords;
+                if (screenCoords[0]) {
+                    const [x, y] = screenCoords[1];
                     if (dec === -90) {
                         this.ctx.moveTo(x, y);
                     }
@@ -80,8 +92,8 @@ export class CanvasRenderer {
             for (let ra = 0; ra <= 360; ra += 5) {
                 const coords = { ra, dec };
                 const screenCoords = this.celestialToScreen(coords);
-                if (screenCoords) {
-                    const [x, y] = screenCoords;
+                if (screenCoords[0]) {
+                    const [x, y] = screenCoords[1];
                     if (ra === 0) {
                         this.ctx.moveTo(x, y);
                     }
@@ -94,23 +106,25 @@ export class CanvasRenderer {
         }
     }
     // 星座線を描画
-    drawConstellations(constellations) {
+    drawConstellationLines(constellations) {
         if (!this.options.showConstellations)
             return;
-        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.3)';
+        this.ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
         this.ctx.lineWidth = 1;
         for (const constellation of constellations) {
-            const coords1 = { ra: constellation.ra1, dec: constellation.dec1 };
-            const coords2 = { ra: constellation.ra2, dec: constellation.dec2 };
-            const screenCoords1 = this.celestialToScreen(coords1);
-            const screenCoords2 = this.celestialToScreen(coords2);
-            if (screenCoords1 && screenCoords2) {
-                const [x1, y1] = screenCoords1;
-                const [x2, y2] = screenCoords2;
-                this.ctx.beginPath();
-                this.ctx.moveTo(x1, y1);
-                this.ctx.lineTo(x2, y2);
-                this.ctx.stroke();
+            for (const line of constellation.lines) {
+                const coords1 = { ra: line[0], dec: line[1] };
+                const coords2 = { ra: line[2], dec: line[3] };
+                const screenCoords1 = this.celestialToScreen(coords1);
+                const screenCoords2 = this.celestialToScreen(coords2);
+                if (screenCoords1[0] || screenCoords2[0]) {
+                    const [x1, y1] = screenCoords1[1];
+                    const [x2, y2] = screenCoords2[1];
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x1, y1);
+                    this.ctx.lineTo(x2, y2);
+                    this.ctx.stroke();
+                }
             }
         }
     }
@@ -132,9 +146,14 @@ export class CanvasRenderer {
         const y = this.canvas.height * (0.5 - decDiff / fovDec);
         // 画面内かチェック
         if (x >= 0 && x <= this.canvas.width && y >= 0 && y <= this.canvas.height) {
-            return [x, y];
+            return [true, [x, y]];
         }
-        return null;
+        else {
+            return [false, [x, y]];
+        }
+    }
+    limitingMagnitude(renderOptions) {
+        return 15 - 2.5 * Math.log10(renderOptions.fieldOfViewRA * renderOptions.fieldOfViewDec);
     }
     // 描画オプションを更新
     updateOptions(options) {
