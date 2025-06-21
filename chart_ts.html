@@ -2,54 +2,308 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>星図 TypeScript版</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #000;
-            color: #fff;
-            font-family: sans-serif;
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <meta name="description" content="指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+    <link rel="stylesheet" href="styles/styleChart_ts.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-WREGJRZRGT"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="images/icon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/icon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="images/icon/favicon-16x16.png">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="manifest" href="images/icon/site.webmanifest">
+    <!-- Google tag (gtag.js) -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/Soleil/service-worker.js').then(() => {
+                    console.log('Service Worker registered!');
+                });
+            });
         }
-        #app {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
+
+        if (navigator.onLine) {
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css';
+            document.head.appendChild(link);
+            link.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css";
+            document.head.appendChild(link);
         }
-        canvas {
-            border: 1px solid #333;
-            background-color: #000;
-        }
-        .info {
-            max-width: 800px;
-            background-color: #111;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        h2, h3 {
-            color: #fff;
-            margin-top: 0;
-        }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        li {
-            margin: 8px 0;
-            color: #ccc;
-        }
-    </style>
+
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-WREGJRZRGT');
+    </script>
 </head>
 <body>
+    <!-- <img id="welcomeImage" class="welcomeImage" src="images/welcome0928.jpg"> -->
+    
+    <!-- タイトルバー -->
+    <div class="title" id="title">
+        <ul>
+            <li><h3>星図</h3></li>
+            <li><a href="PeteHOME.html">HOME</a></li>
+            <div id="loadingtext">Loading...</div>
+        </ul>
+    </div>
+
+    <!-- 情報表示エリア -->
+    <div class="info-display" id="infoDisplay">
+        <div class="info-row">
+            <span class="info-label">観測地:</span>
+            <span class="info-value" id="locationInfo">北緯35° 東経135°</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">時刻:</span>
+            <span class="info-value" id="timeInfo">2024年1月1日 12:00</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">中心:</span>
+            <span class="info-value" id="centerInfo">赤経0h 赤緯0°</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">視野:</span>
+            <span class="info-value" id="fovInfo">90°</span>
+        </div>
+    </div>
+
+    <!-- PC用ボタン配置 -->
+    <div class="top-right-buttons">
+        <button id="searchBtn" class="main-screen-button" type="button">
+            <img src="images/search.png" alt="検索">
+        </button>
+        <button id="settingBtn" class="main-screen-button" type="button">
+            <img src="images/settingBtn.png" alt="設定">
+        </button>
+        <button id="descriptionBtn" class="main-screen-button" type="button">
+            <img src="images/menu.png" alt="説明">
+        </button>
+    </div>
+
+    <!-- スマホ用ボタンドック -->
+    <div class="mobile-button-dock" id="mobileButtonDock">
+        <button id="searchBtnMobile" class="main-screen-button" type="button">
+            <img src="images/search.png" alt="検索">
+        </button>
+        <button id="settingBtnMobile" class="main-screen-button" type="button">
+            <img src="images/settingBtn.png" alt="設定">
+        </button>
+        <button id="descriptionBtnMobile" class="main-screen-button" type="button">
+            <img src="images/menu.png" alt="説明">
+        </button>
+        <button id="fullScreenBtnMobile" class="main-screen-button" type="button">
+            <img src="images/fullScreenBtn.png" alt="全画面表示">
+        </button>
+    </div>
+
+    <!-- 設定画面 -->
+    <div id="setting" class="setting" style="display: none;">
+        <div class="settingBlock">
+            <!-- タブナビゲーション -->
+            <div class="setting-tabs">
+                <button class="setting-tab active" data-tab="basic">基本設定</button>
+                <button class="setting-tab" data-tab="display">表示設定</button>
+                <button class="setting-tab" data-tab="objects">天体設定</button>
+            </div>
+
+            <div class="setting-content">
+                <!-- 基本設定タブ -->
+                <div id="basic-tab" class="setting-section">
+                    <h3>日時/場所</h3>
+                    
+                    <div class="setting-row">
+                        <label>視点:</label>
+                        <select id="observer">
+                            <option>太陽</option>
+                            <option>水星</option>
+                            <option>金星</option>
+                            <option selected>地球</option>
+                            <option>火星</option>
+                            <option>木星</option>
+                            <option>土星</option>
+                            <option>天王星</option>
+                            <option>海王星</option>
+                            <option>月</option>
+                            <option>Ceres</option>
+                            <option>Vesta</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>観測地:</label>
+                        <select id="observation-site-select">
+                            <option selected>カスタム</option>
+                            <option>現在地</option>
+                            <option>京大西部構内</option>
+                            <option>鵜倉園地</option>
+                            <option>乗鞍高原</option>
+                            <option>仙台</option>
+                            <option>東京</option>
+                            <option>大阪</option>
+                            <option>地図上で選択</option>
+                        </select>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>緯度:</label>
+                        <select id="NSCombo">
+                            <option selected>北緯</option>
+                            <option>南緯</option>
+                        </select>
+                        <input type="text" id="lat" size="1" value="35">°
+                    </div>
+
+                    <div class="setting-row">
+                        <label>経度:</label>
+                        <select id="EWCombo">
+                            <option selected>東経</option>
+                            <option>西経</option>
+                        </select>
+                        <input type="text" id="lon" size="1" value="135">°
+                    </div>
+                </div>
+
+                <!-- 表示設定タブ -->
+                <div id="display-tab" class="setting-section" style="display: none;">
+                    <h3>表示設定</h3>
+                    
+                    <div class="setting-row">
+                        <label>表示モード:</label>
+                        <div>
+                            <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
+                            <input type="radio" name="mode" value="view" checked>プラネタリウムモード<br>
+                            <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
+                            <input type="radio" name="mode" value="live">ライブモード<br>
+                            <input type="radio" name="mode" value="ar">風景と重ねる
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>等級限界:</label>
+                        <div class="set-mag-limit">
+                            <img src="images/キラキラ1.png" alt="" class="magLimit-image magLimit-left-image">
+                            <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
+                            <img src="images/キラキラ2.png" alt="" class="magLimit-image magLimit-right-image">
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>ダークモード:</label>
+                        <input type="checkbox" id="dark">
+                    </div>
+
+                    <div class="setting-row">
+                        <label>グリッド表示:</label>
+                        <input type="checkbox" id="gridCheck" checked>
+                    </div>
+                </div>
+
+                <!-- 天体設定タブ -->
+                <div id="objects-tab" class="setting-section" style="display: none;">
+                    <h3>天体設定</h3>
+                    
+                    <div class="setting-row">
+                        <label>恒星名表示:</label>
+                        <div>
+                            <input type="radio" name="starName" value="no">なし
+                            <input type="radio" name="starName" value="one" checked>1等星まで
+                            <input type="radio" name="starName" value="bright">2等星まで
+                            <input type="radio" name="starName" value="all">すべて
+                        </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>星座名:</label>
+                        <input type="checkbox" id="constNameCheck" checked>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>星座線:</label>
+                        <input type="checkbox" id="constLineCheck" checked>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>太陽系天体:</label>
+                        <input type="checkbox" id="planetCheck" checked>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>メシエ天体:</label>
+                        <input type="checkbox" id="MessierCheck" checked>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>NGC天体:</label>
+                        <input type="checkbox" id="recsCheck" checked>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="showBtn" class="showBtn" type="button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PC用全画面ボタン -->
+    <div class="bottom-right-buttons">
+        <button id="fullScreenBtn" class="main-screen-button" type="button">
+            <img src="images/fullScreenBtn.png" alt="全画面表示">
+        </button>
+    </div>
+
+    <!-- 検索画面 -->
+    <div id="searchDiv" class="big-window" style="display: none;">
+        <input type="text" id="searchInput" class="big-window-textinput" placeholder="ここに入力して検索">
+        <button id="closeSearch" type="button">閉じる</button>
+        <div id="suggestionButtonContainer"></div>
+    </div>
+
+    <!-- 説明画面 -->
+    <div id="description" class="description" style="display: none;">
+        <h3>メニュー</h3>
+        <p>これを開いた右上のボタンで閉じます</p>
+        <!-- 説明内容は省略 -->
+    </div>
+
+    <!-- 天体情報画面 -->
+    <div id="objectInfo" class="objectInfo" style="display: none;">
+        <button id="closeObjectInfo" type="button">閉</button>
+        <div id="objectInfoName"></div>
+        <div id="objectInfoImage"></div>
+        <div id="objectInfoText"></div>
+    </div>
+    
+    <!-- 座標表示 -->
+    <div id="coordtext" class="coordtext">coord here</div>
+
+    <!-- 情報表示エリア -->
+    <div class="info-lb">
+        <div id="showingData" class="showingData"></div>
+        <div id="aovSliderDiv" class="aovSliderDiv">
+            <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1">
+        </div>
+        <div id="timeSliderDiv" class="timeSliderDiv">
+            <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+        </div>
+    </div>
+    
+    <!-- AR用ビデオ -->
+    <div>
+        <video id="arVideo"></video>
+    </div>
+
+    <!-- キャンバス -->
     <div id="app"></div>
     <script type="module">
         import { main } from './dist/main.js';
         window.addEventListener('DOMContentLoaded', main);
     </script>
-</body>
+    </body>
 </html>
