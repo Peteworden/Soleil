@@ -13,7 +13,6 @@ export class InteractionController {
             this.lastY = e.clientY;
             this.canvas.setPointerCapture(e.pointerId); // ポインターをキャプチャ
             this.canvas.style.cursor = 'grabbing';
-            console.log("pointerdown");
         };
         this.onPointerMove = (e) => {
             if (!this.isDragging)
@@ -32,7 +31,27 @@ export class InteractionController {
                 this.renderOptions.centerDec = -90;
             this.lastX = e.clientX;
             this.lastY = e.clientY;
+            // グローバルconfigも更新
+            const globalConfig = window.config;
+            console.log('🎮 InteractionController: Checking references after drag');
+            console.log('🎮 this.renderOptions:', this.renderOptions.centerRA, this.renderOptions.centerDec);
+            console.log('🎮 globalConfig.renderOptions:', globalConfig?.renderOptions.centerRA, globalConfig?.renderOptions.centerDec);
+            console.log('🎮 this.renderOptions === globalConfig.renderOptions:', this.renderOptions === globalConfig?.renderOptions);
+            if (globalConfig && globalConfig.renderOptions === this.renderOptions) {
+                console.log('🎮 InteractionController: Updating global config after drag');
+                console.log('🎮 New centerRA:', this.renderOptions.centerRA, 'centerDec:', this.renderOptions.centerDec);
+            }
+            else {
+                console.log('🎮 InteractionController: References do not match, skipping global update');
+            }
+            console.log('🎮 Calling renderCallback...');
             this.renderCallback();
+            console.log('🎮 renderCallback completed');
+            // 情報表示を即座に更新
+            const updateInfoDisplay = window.updateInfoDisplay;
+            if (updateInfoDisplay) {
+                updateInfoDisplay();
+            }
         };
         this.onPointerUp = (e) => {
             this.isDragging = false;
@@ -61,12 +80,44 @@ export class InteractionController {
                 this.renderOptions.fieldOfViewDec = 180;
                 this.renderOptions.fieldOfViewRA = this.renderOptions.fieldOfViewDec * this.canvas.width / this.canvas.height;
             }
+            // グローバルconfigも更新
+            const globalConfig = window.config;
+            if (globalConfig && globalConfig.renderOptions === this.renderOptions) {
+                console.log('🎮 InteractionController: Updating global config after zoom');
+                console.log('🎮 New fieldOfViewRA:', this.renderOptions.fieldOfViewRA, 'fieldOfViewDec:', this.renderOptions.fieldOfViewDec);
+            }
             this.renderCallback();
+            // 情報表示を即座に更新
+            const updateInfoDisplay = window.updateInfoDisplay;
+            if (updateInfoDisplay) {
+                updateInfoDisplay();
+            }
         };
         this.canvas = canvas;
         this.renderOptions = renderOptions;
         this.renderCallback = renderCallback;
+        console.log('🎮 InteractionController constructor called');
         this.setupEventListeners();
+    }
+    // オプション更新メソッドを追加
+    updateOptions(newOptions) {
+        console.log('🎮 InteractionController updateOptions called with:', newOptions);
+        // グローバルconfigとの参照を確認
+        const globalConfig = window.config;
+        if (globalConfig) {
+            console.log('🎮 this.renderOptions === globalConfig.renderOptions:', this.renderOptions === globalConfig.renderOptions);
+            // 参照が異なる場合は、globalConfig.renderOptionsの参照に更新
+            if (this.renderOptions !== globalConfig.renderOptions) {
+                console.log('🎮 Updating renderOptions reference to match globalConfig');
+                this.renderOptions = globalConfig.renderOptions;
+            }
+        }
+        Object.assign(this.renderOptions, newOptions);
+        console.log('🎮 renderOptions after update:', this.renderOptions);
+        // renderCallbackが正しく動作するかテスト
+        console.log('🎮 Testing renderCallback after updateOptions...');
+        this.renderCallback();
+        console.log('🎮 renderCallback test completed');
     }
     setupEventListeners() {
         // PointerEventでマウスとタッチを両方扱う

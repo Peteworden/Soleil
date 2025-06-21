@@ -5,7 +5,7 @@ export class CelestialObject {
         this.coordinates = coordinates || { ra: 0, dec: 0 };
         this.magnitude = magnitude || 0;
         this.type = type || '';
-        this.bv = bv || 0;
+        this.bv = bv || 100;
     }
     getName() {
         return this.name;
@@ -18,6 +18,9 @@ export class CelestialObject {
     }
     getType() {
         return this.type;
+    }
+    getBv() {
+        return this.bv;
     }
 }
 export class HipStar extends CelestialObject {
