@@ -109,13 +109,13 @@
             <div class="setting-tabs">
                 <button class="setting-tab active" data-tab="basic">基本設定</button>
                 <button class="setting-tab" data-tab="display">表示設定</button>
-                <button class="setting-tab" data-tab="objects">天体設定</button>
+                <button class="setting-tab" data-tab="objects">高度な設定</button>
             </div>
 
             <div class="setting-content">
                 <!-- 基本設定タブ -->
                 <div id="basic-tab" class="setting-section">
-                    <h3>日時/場所</h3>
+                    <h3>場所/日時</h3>
                     
                     <div class="setting-row">
                         <label>視点:</label>
@@ -139,14 +139,14 @@
                         <label>観測地:</label>
                         <select id="observation-site-select">
                             <option selected>カスタム</option>
-                            <option>現在地</option>
-                            <option>京大西部構内</option>
-                            <option>鵜倉園地</option>
-                            <option>乗鞍高原</option>
-                            <option>仙台</option>
-                            <option>東京</option>
-                            <option>大阪</option>
-                            <option>地図上で選択</option>
+                            <option disabled>現在地</option>
+                            <option disabled>京大西部構内</option>
+                            <option disabled>鵜倉園地</option>
+                            <option disabled>乗鞍高原</option>
+                            <option disabled>仙台</option>
+                            <option disabled>東京</option>
+                            <option disabled>大阪</option>
+                            <option disabled>地図上で選択</option>
                         </select>
                     </div>
 
@@ -167,25 +167,24 @@
                         </select>
                         <input type="text" id="lon" size="1" value="135">°
                     </div>
+
+                    <div class="setting-row">
+                        <label>表示モード:</label>
+                        <select id="mode">
+                            <option value="AEP">赤道座標系（正距方位図法）</option>
+                            <option value="view" checked>プラネタリウム</option>
+                            <option value="live" disabled>ライブ</option>
+                            <option value="ar" disabled>風景と重ねる</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- 表示設定タブ -->
                 <div id="display-tab" class="setting-section" style="display: none;">
                     <h3>表示設定</h3>
-                    
-                    <div class="setting-row">
-                        <label>表示モード:</label>
-                        <div>
-                            <input type="radio" name="mode" value="AEP">赤道座標系モード（正距方位図法）<br>
-                            <input type="radio" name="mode" value="view" checked>プラネタリウムモード<br>
-                            <input type="radio" name="mode" value="EtP">赤道座標系モード（正距円筒図法）<br>
-                            <input type="radio" name="mode" value="live">ライブモード<br>
-                            <input type="radio" name="mode" value="ar">風景と重ねる
-                        </div>
-                    </div>
 
                     <div class="setting-row">
-                        <label>等級限界:</label>
+                        <label>最微等級:</label>
                         <div class="set-mag-limit">
                             <img src="images/キラキラ1.png" alt="" class="magLimit-image magLimit-left-image">
                             <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
@@ -210,12 +209,12 @@
                     
                     <div class="setting-row">
                         <label>恒星名表示:</label>
-                        <div>
-                            <input type="radio" name="starName" value="no">なし
-                            <input type="radio" name="starName" value="one" checked>1等星まで
-                            <input type="radio" name="starName" value="bright">2等星まで
-                            <input type="radio" name="starName" value="all">すべて
-                        </div>
+                        <select id="starName">
+                            <option value="no">なし</option>
+                            <option value="one" checked>1等星まで</option>
+                            <option value="bright">2等星まで</option>
+                            <option value="all">すべて</option>
+                        </select>
                     </div>
 
                     <div class="setting-row">
@@ -300,7 +299,9 @@
     </div>
 
     <!-- キャンバス -->
-    <div id="app"></div>
+    <div id="app">
+        <canvas id="starChartCanvas"></canvas>
+    </div>
     <script type="module">
         import { main } from './dist/main.js';
         window.addEventListener('DOMContentLoaded', main);

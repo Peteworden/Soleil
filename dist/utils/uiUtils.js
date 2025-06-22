@@ -1,36 +1,14 @@
 export function updateInfoDisplay() {
-    console.log('updateInfoDisplay called');
     // 位置・時刻・中心座標・視野角の情報を更新
     const locationInfo = document.getElementById('locationInfo');
     const timeInfo = document.getElementById('timeInfo');
     const centerInfo = document.getElementById('centerInfo');
     const fovInfo = document.getElementById('fovInfo');
-    // console.log('HTML elements found:', {
-    //     locationInfo: !!locationInfo,
-    //     timeInfo: !!timeInfo,
-    //     centerInfo: !!centerInfo,
-    //     fovInfo: !!fovInfo
-    // });
     // configからデータを取得
     const config = window.config;
-    console.log('config reference from window:', config);
-    console.log('config === (window as any).config:', config === window.config);
     if (!config) {
-        console.log('No config found');
         return;
     }
-    console.log('Current config in updateInfoDisplay:', config);
-    console.log('renderOptions:', config.renderOptions);
-    console.log('observationSite:', config.observationSite);
-    // console.log('displayTime:', config.displayTime);
-    // 直接window.configからも取得してみる
-    const windowConfig = window.config;
-    console.log('Direct window.config:', windowConfig);
-    console.log('window.config.renderOptions:', windowConfig?.renderOptions);
-    // renderOptionsの参照を詳しく確認
-    console.log('config.renderOptions === windowConfig.renderOptions:', config.renderOptions === windowConfig.renderOptions);
-    // console.log('config.renderOptions reference:', config.renderOptions);
-    // console.log('windowConfig.renderOptions reference:', windowConfig.renderOptions);
     // 観測地情報を更新
     if (locationInfo) {
         const { latitude, longitude } = config.observationSite;
@@ -40,7 +18,6 @@ export function updateInfoDisplay() {
         const lonAbs = Math.abs(longitude);
         const locationText = `${latAbs.toFixed(1)}° ${ns} ${lonAbs.toFixed(1)}° ${ew}`;
         locationInfo.textContent = locationText;
-        console.log('Updated location info:', locationText);
     }
     // 時刻情報を更新
     if (timeInfo) {
@@ -54,35 +31,21 @@ export function updateInfoDisplay() {
             minute: '2-digit'
         });
         timeInfo.textContent = timeText;
-        console.log('Updated time info:', timeText);
     }
     // 中心座標情報を更新
     if (centerInfo) {
-        const { centerRA, centerDec } = config.renderOptions;
-        console.log('centerRA:', centerRA, 'centerDec:', centerDec);
-        // console.log('centerRA type:', typeof centerRA, 'centerDec type:', typeof centerDec);
-        // console.log('centerRA isNaN:', isNaN(centerRA), 'centerDec isNaN:', isNaN(centerDec));
+        const { centerRA, centerDec, centerAlt, centerAz } = config.renderOptions;
         const raHours = Math.floor(centerRA / 15);
         const raMinutes = Math.floor((centerRA % 15) * 4);
         const decSign = centerDec >= 0 ? '+' : '';
-        const centerText = `赤経${raHours}h${raMinutes}m 赤緯${decSign}${centerDec.toFixed(1)}°`;
-        console.log('Calculated values - raHours:', raHours, 'raMinutes:', raMinutes, 'decSign:', decSign);
-        // console.log('centerInfo element:', centerInfo);
-        console.log('centerText to set:', centerText);
-        console.log('centerInfo.textContent before:', centerInfo.textContent);
+        const centerText = `赤経${raHours}h${raMinutes}m 赤緯${decSign}${centerDec.toFixed(1)}° 高度${centerAlt.toFixed(1)}° 方位角${centerAz.toFixed(1)}°`;
         centerInfo.textContent = centerText;
-        console.log('centerInfo.textContent after:', centerInfo.textContent);
-        console.log('Updated center info:', centerText);
-    }
-    else {
-        console.log('centerInfo element not found');
     }
     // 視野角情報を更新
     if (fovInfo) {
         const { fieldOfViewRA, fieldOfViewDec } = config.renderOptions;
         const fovText = `${fieldOfViewRA.toFixed(1)}° × ${fieldOfViewDec.toFixed(1)}°`;
         fovInfo.textContent = fovText;
-        console.log('Updated FOV info:', fovText);
     }
 }
 export function handleResize() {

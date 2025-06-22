@@ -12,12 +12,13 @@ export class CanvasRenderer {
         if (globalConfig && globalConfig.renderOptions) {
             this.options = globalConfig.renderOptions;
             console.log('🎨 CanvasRenderer constructor: Using global config.renderOptions reference');
+            console.log('🎨 this.options === globalConfig.renderOptions:', this.options === globalConfig.renderOptions);
         }
         else {
             this.options = options;
             console.log('🎨 CanvasRenderer constructor: Using passed options (global config not available)');
         }
-        this.coordinateConverter = new CoordinateConverter(latitude, longitude);
+        this.coordinateConverter = new CoordinateConverter();
     }
     // 描画をクリア
     clear() {
@@ -30,10 +31,10 @@ export class CanvasRenderer {
         if (object instanceof Moon && !this.options.showPlanets)
             return;
         const coords = object.getCoordinates();
-        const screenRaDec = this.coordinateConverter.equatorialToAepScreen(coords, { ra: this.options.centerRA, dec: this.options.centerDec });
-        if (!this.isInScreenRaDec(screenRaDec))
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+        if (!screenXY[0])
             return;
-        const [x, y] = this.screenRaDecToScreenXY(screenRaDec);
+        const [x, y] = screenXY[1];
         const magnitude = object.getMagnitude();
         const type = object.getType();
         this.ctx.font = '16px Arial';
@@ -66,16 +67,15 @@ export class CanvasRenderer {
     drawHipStars(hipStars) {
         if (!this.options.showStars)
             return;
-        console.log(this.options.centerRA, this.options.centerDec);
         const limitingMagnitude = this.limitingMagnitude(this.options);
         for (const star of hipStars) {
             const coords = star.getCoordinates();
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
-            const screenRaDec = this.coordinateConverter.equatorialToAepScreen(coords, { ra: this.options.centerRA, dec: this.options.centerDec });
-            if (!this.isInScreenRaDec(screenRaDec))
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+            if (!screenXY[0])
                 continue;
-            const [x, y] = this.screenRaDecToScreenXY(screenRaDec);
+            const [x, y] = screenXY[1];
             const color = this.getStarColor(star.getBv());
             this.ctx.beginPath();
             this.ctx.arc(x, y, this.getStarSize(star.getMagnitude(), limitingMagnitude), 0, Math.PI * 2);
@@ -98,11 +98,11 @@ export class CanvasRenderer {
                 if (mag >= limitingMagnitude)
                     continue;
                 // [ra, dec] = J2000toApparent(ra, dec, JD);
-                let coord = { ra: data[0] * 0.001, dec: data[1] * 0.001 };
-                const screenRaDec = this.coordinateConverter.equatorialToAepScreen(coord, { ra: this.options.centerRA, dec: this.options.centerDec });
-                if (!this.isInScreenRaDec(screenRaDec))
+                const coords = { ra: data[0] * 0.001, dec: data[1] * 0.001 };
+                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+                if (!screenXY[0])
                     continue;
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec);
+                const [x, y] = screenXY[1];
                 this.ctx.beginPath();
                 this.ctx.arc(x, y, this.getStarSize(mag, limitingMagnitude), 0, Math.PI * 2);
                 this.ctx.fillStyle = 'white';
@@ -126,10 +126,10 @@ export class CanvasRenderer {
             this.ctx.beginPath();
             for (let dec = -90; dec <= 90; dec += vertexStep) {
                 const coords = { ra, dec };
-                const screenRaDec = this.coordinateConverter.equatorialToAepScreen(coords, { ra: this.options.centerRA, dec: this.options.centerDec });
-                if (!this.isInScreenRaDec(screenRaDec))
+                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+                if (!screenXY[0])
                     continue;
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec);
+                const [x, y] = screenXY[1];
                 if (dec === -90) {
                     this.ctx.moveTo(x, y);
                 }
@@ -144,10 +144,10 @@ export class CanvasRenderer {
             this.ctx.beginPath();
             for (let ra = 0; ra <= 360; ra += vertexStep) {
                 const coords = { ra, dec };
-                const screenRaDec = this.coordinateConverter.equatorialToAepScreen(coords, { ra: this.options.centerRA, dec: this.options.centerDec });
-                if (!this.isInScreenRaDec(screenRaDec))
+                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+                if (!screenXY[0])
                     continue;
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec);
+                const [x, y] = screenXY[1];
                 if (ra === 0) {
                     this.ctx.moveTo(x, y);
                 }
@@ -168,12 +168,10 @@ export class CanvasRenderer {
             for (const line of constellation.lines) {
                 const coords1 = { ra: line[0], dec: line[1] };
                 const coords2 = { ra: line[2], dec: line[3] };
-                const screenRaDec1 = this.coordinateConverter.equatorialToAepScreen(coords1, { ra: this.options.centerRA, dec: this.options.centerDec });
-                const screenRaDec2 = this.coordinateConverter.equatorialToAepScreen(coords2, { ra: this.options.centerRA, dec: this.options.centerDec });
-                if (!this.isInScreenRaDec(screenRaDec1) && !this.isInScreenRaDec(screenRaDec2))
+                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.canvas, window.config.siderealTime, true);
+                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.canvas, window.config.siderealTime, true);
+                if (!ifin1 && !ifin2)
                     continue;
-                const [x1, y1] = this.screenRaDecToScreenXY(screenRaDec1);
-                const [x2, y2] = this.screenRaDecToScreenXY(screenRaDec2);
                 this.ctx.beginPath();
                 this.ctx.moveTo(x1, y1);
                 this.ctx.lineTo(x2, y2);
@@ -188,50 +186,13 @@ export class CanvasRenderer {
         this.ctx.textAlign = 'center';
         for (const constellation of constellations) {
             const coords = { ra: constellation.ra, dec: constellation.dec };
-            const screenRaDec = this.coordinateConverter.equatorialToAepScreen(coords, { ra: this.options.centerRA, dec: this.options.centerDec });
-            if (!this.isInScreenRaDec(screenRaDec))
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+            if (!screenXY[0])
                 continue;
-            const [x, y] = this.screenRaDecToScreenXY(screenRaDec);
+            const [x, y] = screenXY[1];
             this.ctx.fillStyle = 'white';
             this.ctx.fillText(constellation.JPNname, x, y);
         }
-    }
-    //x, yが画面内かどうかをチェック
-    isInScreenXY(x, y) {
-        return x >= 0 && x <= this.canvas.width && y >= 0 && y <= this.canvas.height;
-    }
-    //screenRaDecが画面内かどうかをチェック
-    isInScreenRaDec(screenRaDec) {
-        return 2 * Math.abs(screenRaDec.ra) <= this.options.fieldOfViewRA && 2 * Math.abs(screenRaDec.dec) <= this.options.fieldOfViewDec;
-    }
-    // 赤道座標を画面座標に変換
-    celestialToScreen(coords) {
-        const centerRA = this.options.centerRA;
-        const centerDec = this.options.centerDec;
-        const fovRA = this.options.fieldOfViewRA;
-        const fovDec = this.options.fieldOfViewDec;
-        // 中心からの相対位置を計算
-        let raDiff = coords.ra - centerRA;
-        if (raDiff > 180)
-            raDiff -= 360;
-        if (raDiff < -180)
-            raDiff += 360;
-        const decDiff = coords.dec - centerDec;
-        // 画面座標に変換
-        const x = this.canvas.width * (0.5 - raDiff / fovRA);
-        const y = this.canvas.height * (0.5 - decDiff / fovDec);
-        // 画面内かチェック
-        if (x >= 0 && x <= this.canvas.width && y >= 0 && y <= this.canvas.height) {
-            return [true, [x, y]];
-        }
-        else {
-            return [false, [x, y]];
-        }
-    }
-    screenRaDecToScreenXY(raDec) {
-        const x = this.canvas.width * (0.5 - raDec.ra / this.options.fieldOfViewRA);
-        const y = this.canvas.height * (0.5 - raDec.dec / this.options.fieldOfViewDec);
-        return [x, y];
     }
     limitingMagnitude(renderOptions) {
         const lm = Math.min(Math.max(renderOptions.starSizeKey1 - renderOptions.starSizeKey2 * Math.log(Math.min(renderOptions.fieldOfViewRA, renderOptions.fieldOfViewDec) / 2), 5), renderOptions.starSizeKey1);
@@ -286,38 +247,40 @@ export class CanvasRenderer {
     }
     areaCandidates() {
         const areaCandidates = [];
-        const minDec = Math.max(-90, Math.min(this.options.centerDec - this.options.fieldOfViewDec, 90));
-        const maxDec = Math.min(90, Math.max(this.options.centerDec + this.options.fieldOfViewDec, -90));
-        if (minDec === -90) {
-            areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, maxDec)]);
-        }
-        else if (maxDec === 90) {
-            areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]);
-        }
-        else {
-            areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, minDec)]);
-            for (let i = minDec + 1; i < maxDec + 1; i++) {
-                areaCandidates.push([this.areaNumber(0, i), this.areaNumber(359, i)]);
+        if (this.options.mode == 'AEP') {
+            const minDec = Math.max(-90, Math.min(this.options.centerDec - this.options.fieldOfViewDec, 90));
+            const maxDec = Math.min(90, Math.max(this.options.centerDec + this.options.fieldOfViewDec, -90));
+            if (minDec === -90) {
+                areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, maxDec)]);
             }
+            else if (maxDec === 90) {
+                areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]);
+            }
+            else {
+                areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, minDec)]);
+                for (let i = minDec + 1; i < maxDec + 1; i++) {
+                    areaCandidates.push([this.areaNumber(0, i), this.areaNumber(359, i)]);
+                }
+            }
+        }
+        else if (this.options.mode == 'view') {
+            areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, 89.5)]);
         }
         return areaCandidates;
     }
     // 描画オプションを更新
     updateOptions(options) {
-        console.log('🎨 CanvasRenderer updateOptions called with:', options);
-        console.log('🎨 this.options === config.renderOptions:', this.options === window.config?.renderOptions);
-        // グローバルconfigとの参照を確認
         const globalConfig = window.config;
         if (globalConfig) {
-            // 参照が異なる場合は、globalConfig.renderOptionsの参照に更新
             if (this.options !== globalConfig.renderOptions) {
-                console.log('🎨 Updating this.options reference to match globalConfig.renderOptions');
                 this.options = globalConfig.renderOptions;
             }
         }
         Object.assign(this.options, options);
-        console.log('🎨 this.options after update:', this.options);
-        console.log('🎨 this.options === config.renderOptions after update:', this.options === window.config?.renderOptions);
+        // グローバルconfigも確実に更新
+        if (globalConfig && globalConfig.renderOptions) {
+            Object.assign(globalConfig.renderOptions, options);
+        }
     }
 }
 //# sourceMappingURL=CanvasRenderer.js.map

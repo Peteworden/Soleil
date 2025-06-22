@@ -19,6 +19,8 @@ export let config = {
         mode: 'AEP',
         centerRA: 90,
         centerDec: 0,
+        centerAz: 0,
+        centerAlt: 0,
         fieldOfViewRA: 60,
         fieldOfViewDec: 60,
         starSizeKey1: 11.5,
@@ -40,7 +42,8 @@ export let config = {
     canvasSize: {
         width: window.innerWidth,
         height: window.innerHeight
-    }
+    },
+    siderealTime: 0 // 恒星時（度）- 初期値、後で計算で更新
 };
 // 設定更新用の関数
 export function updateConfig(newConfig) {
@@ -60,13 +63,21 @@ export function updateConfig(newConfig) {
         window.controller.updateOptions(config.renderOptions);
         console.log('🔧 Renderer and controller updated');
     }
-    // 観測地が変更された場合は、レンダラーの座標変換器も更新する必要がある
-    if (newConfig.observationSite) {
-        console.log('🔧 Observation site updated:', newConfig.observationSite);
+    // 観測地または時刻が変更された場合は、恒星時も更新
+    if (newConfig.observationSite || newConfig.displayTime) {
+        console.log('🔧 Observation site or time updated, recalculating sidereal time');
+        updateSiderealTime();
     }
     window.renderAll();
     // 情報表示を更新
     updateInfoDisplay();
+}
+// 恒星時を計算・更新する関数
+export function updateSiderealTime() {
+    const jd = AstronomicalCalculator.calculateCurrentJdTT();
+    const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude);
+    config.siderealTime = siderealTime;
+    console.log('🌟 Sidereal time updated:', siderealTime, 'degrees');
 }
 // レンダリングオプションのみを更新する関数
 export function updateRenderOptions(newOptions) {
@@ -84,6 +95,7 @@ console.log('🌐 config reference check:', config === window.config);
 window.updateConfig = updateConfig;
 window.updateRenderOptions = updateRenderOptions;
 window.updateInfoDisplay = updateInfoDisplay;
+window.updateSiderealTime = updateSiderealTime;
 // メイン関数
 export async function main() {
     const app = document.getElementById('app');
@@ -104,21 +116,21 @@ export async function main() {
             DataLoader.loadGaiaHelpData('111-115')
         ]);
         document.getElementById('loadingtext').innerHTML = '';
-        // キャンバスの作成
-        const canvas = document.createElement('canvas');
+        // キャンバスの取得（HTMLで作成済み）
+        const canvas = document.getElementById('starChartCanvas');
+        if (!canvas) {
+            throw new Error('Canvas element not found');
+        }
+        // キャンバスのサイズを設定
         canvas.width = config.canvasSize.width;
         canvas.height = config.canvasSize.height;
-        canvas.style.position = 'fixed';
-        canvas.style.top = '0';
-        canvas.style.left = '0';
-        canvas.style.zIndex = '1';
-        app.appendChild(canvas);
+        // フィールドオブビューの調整
         config.renderOptions.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.renderOptions.fieldOfViewRA;
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config.renderOptions, config.observationSite.latitude, config.observationSite.longitude);
         // CanvasRendererのoptionsを確実にconfig.renderOptionsと同じ参照にする
-        renderer.options = config.renderOptions;
-        console.log('🎨 CanvasRenderer options set to config.renderOptions');
+        // (renderer as any).options = config.renderOptions;
+        console.log('🎨 CanvasRenderer created');
         console.log('🎨 renderer.options === config.renderOptions:', renderer.options === config.renderOptions);
         console.log('🎨 renderer.options reference:', renderer.options);
         console.log('🎨 config.renderOptions reference:', config.renderOptions);
@@ -127,6 +139,8 @@ export async function main() {
         const moon = new Moon();
         // 現在のユリウス日を計算
         const jd = AstronomicalCalculator.calculateCurrentJdTT();
+        // 初期恒星時を計算
+        updateSiderealTime();
         // 天体の位置を更新
         jupiter.updatePosition(jd);
         moon.updatePosition(jd);
@@ -229,7 +243,10 @@ function setupResizeHandler() {
 function showSetting() {
     const setting = document.getElementById('setting');
     if (window.innerWidth <= 768) {
-        setting?.classList.add('show');
+        if (setting.style.display === 'none') {
+            setting.style.display = 'block';
+        }
+        setting.classList.add('show');
     }
     else {
         setting.style.display = 'block';

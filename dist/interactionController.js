@@ -8,15 +8,16 @@ export class InteractionController {
         this.dragSensitivity = 0.2;
         this.zoomSensitivity = 0.001;
         this.onPointerDown = (e) => {
+            // e.preventDefault();
             this.isDragging = true;
             this.lastX = e.clientX;
             this.lastY = e.clientY;
-            this.canvas.setPointerCapture(e.pointerId); // ポインターをキャプチャ
             this.canvas.style.cursor = 'grabbing';
         };
         this.onPointerMove = (e) => {
             if (!this.isDragging)
                 return;
+            e.preventDefault();
             const deltaX = e.clientX - this.lastX;
             const deltaY = e.clientY - this.lastY;
             // ズームレベルに応じて移動量を調整
@@ -34,8 +35,9 @@ export class InteractionController {
             this.renderCallback();
         };
         this.onPointerUp = (e) => {
+            if (!this.isDragging)
+                return;
             this.isDragging = false;
-            this.canvas.releasePointerCapture(e.pointerId);
             this.canvas.style.cursor = 'grab';
         };
         this.onWheel = (e) => {
@@ -59,7 +61,7 @@ export class InteractionController {
         this.canvas.addEventListener('pointerdown', this.onPointerDown);
         this.canvas.addEventListener('pointermove', this.onPointerMove);
         this.canvas.addEventListener('pointerup', this.onPointerUp);
-        this.canvas.addEventListener('pointerleave', this.onPointerUp);
+        this.canvas.addEventListener('pointercancel', this.onPointerUp);
         // ホイールイベントでズーム
         this.canvas.addEventListener('wheel', this.onWheel);
     }

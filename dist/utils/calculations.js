@@ -51,6 +51,10 @@ export class AstronomicalCalculator {
         const ans = ((6.697375 + (0.065707485828 * d_UT) % 24 + 1.0027379 * h + 0.0854103 * t + 0.0000258 * t * t) % 24) * 15 * DEG_TO_RAD;
         return ans;
     }
+    static calculateLocalSiderealTime(jd_TT, longitude) {
+        const greenwichSiderealTime = this.calculateGreenwichSiderealTime(jd_TT);
+        return greenwichSiderealTime + longitude * DEG_TO_RAD;
+    }
     // 惑星の軌道要素を計算
     static calculatePlanetElements(planet, jd) {
         const t = (jd - planet.t0) / 36525;

@@ -75,19 +75,19 @@ export class SettingController {
         const constLineCheck = document.getElementById('constLineCheck');
         const planetCheck = document.getElementById('planetCheck');
         const starNameCheck = document.querySelector('input[name="starName"]:checked');
+        const modeSelect = document.getElementById('mode');
         if (gridCheck && darkMode && magLimitSlider) {
             const updateConfig = window.updateConfig;
             console.log('🔧 updateConfig function found:', !!updateConfig);
             if (updateConfig) {
-                // 現在の位置とズームレベルを保持
                 const currentConfig = window.config;
-                console.log('🔧 currentConfig found:', !!currentConfig);
                 const newRenderOptions = {
                     ...currentConfig.renderOptions, // 既存の値を保持
                     showGrid: gridCheck.checked,
                     showPlanets: planetCheck ? planetCheck.checked : true,
                     showConstellationNames: constNameCheck ? constNameCheck.checked : true,
                     showConstellationLines: constLineCheck ? constLineCheck.checked : true,
+                    mode: modeSelect ? modeSelect.value : 'AEP',
                     // 位置・ズーム関連のプロパティも明示的に含める
                     centerRA: currentConfig.renderOptions.centerRA,
                     centerDec: currentConfig.renderOptions.centerDec,
