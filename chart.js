@@ -42,13 +42,20 @@ const trackDateElem = document.getElementsByName('trackTime');
 const starNameElem = document.getElementsByName('starName');
 
 // 要素の表示/非表示
-if (isElectron || isPWA || isLocalhost) {
+if (isElectron || isPWA) {
     document.title = "Reticle Star Atlas";
-    document.getElementById('welcomeImage').style.display = 'none';
+    document.getElementById('welco  meImage').style.display = 'none';
     const listItems = document.getElementById('title').getElementsByTagName('li');
     listItems[1].remove();
-} else if (!online) {
-    alert('オフライン環境では使えません。デスクトップアプリ版を使うか、PWA版の完成をお待ちください。');
+} else {
+    if (online) {
+        // document.getElementById('fileBtn').style.visibility = "hidden";
+        // document.getElementById('getFile').style.visibility = "hidden";
+    } else {
+        alert('オフライン環境では使えません。デスクトップアプリ版を使うか、PWA版の完成をお待ちください。');
+        // document.getElementById('fileBtn').style.visibility = "hidden";
+        // document.getElementById('getFile').style.visibility = "hidden";
+    }
 }
 
 document.getElementById('setting').style.visibility = "hidden";
@@ -60,7 +67,7 @@ document.getElementById('searchDiv').style.visibility = "hidden";
 document.getElementById('news').style.visibility = "hidden";
 document.getElementById('objectInfo').style.visibility = "hidden";
 
-if (isElectron || isLocalhost) {
+if (isElectron) {
     document.getElementById("customizeObjectsBtn").style.visibility = "visible";
 }
 
@@ -1787,6 +1794,7 @@ function show_main(){
                         if (i == 0 || i == Math.ceil(3*rgNS) || j == 0 || j == Math.ceil(3*rgEW)) {
                             let [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                             [ra, dec] = Ah2RADec(A, h, theta);
+                            console.log(A, h, ra, dec);
                             edgeRA.push(ra);
                             edgeDec.push(dec);
                         }
@@ -2480,7 +2488,7 @@ function show_main(){
         let [X, Y, Z] = calc(planets[Obs_num], trackJD);
         let [x, y, z] = calc(trackElem, trackJD);
         let [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
-        [x, y, inFlag] = xyIfInCanvas(ra, dec);
+        [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(ra, dec, JD));
         if (inFlag) {
             if (!(trackPlanet == '月' && ObsPlanet != '地球')) {
                 ctx.strokeStyle = 'lightgreen'
@@ -3352,7 +3360,7 @@ async function loadFiles() {
         }
     }
 
-    if (online || isElectron || isPWA || isLocalhost) {
+    if (online || isElectron || isPWA) {
         const t0 = performance.now();
         async function loadFile(filename, func, impflag=false) {
             try {
