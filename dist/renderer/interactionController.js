@@ -15,10 +15,12 @@ export class InteractionController {
         this.zoomSensitivity = 0.001;
         this.onPointerDown = (e) => {
             e.preventDefault();
-            // ポインターIDを追跡
-            this.activePointers.add(e.pointerId);
-            // ポインターの座標を記録
-            this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            if (this.activePointers.size <= 2) {
+                // ポインターIDを追跡
+                this.activePointers.add(e.pointerId);
+                // ポインターの座標を記録
+                this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            }
             if (this.activePointers.size === 1) {
                 this.isDragging = false;
                 this.isPinch = false;
@@ -39,7 +41,7 @@ export class InteractionController {
                     this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: false });
                 }
             }
-            else {
+            else if (this.activePointers.size === 2) {
                 this.isDragging = false;
                 this.isPinch = true;
                 const titleElement = document.getElementById('titleText');
@@ -52,6 +54,7 @@ export class InteractionController {
             e.preventDefault();
             // ポインターの座標を更新
             this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            console.log(this.pointerPositions.size, this.activePointers, this.pointerPositions.get(this.getActivePointerIds()[0]));
             if (this.activePointers.size === 1) {
                 const titleText = document.getElementById('titleText');
                 if (titleText) {
@@ -105,13 +108,16 @@ export class InteractionController {
                 const titleText = document.getElementById('titleText');
                 this.isDragging = false;
                 this.isPinch = true;
-                const pointerIds = Array.from(this.activePointers);
+                const pointerIds = this.getActivePointerIds();
                 if (pointerIds.length < 2)
                     return;
                 const x1 = this.pointerPositions.get(pointerIds[0])?.x;
                 const y1 = this.pointerPositions.get(pointerIds[0])?.y;
                 const x2 = this.pointerPositions.get(pointerIds[1])?.x;
                 const y2 = this.pointerPositions.get(pointerIds[1])?.y;
+                if (titleText) {
+                    titleText.innerHTML = `pinching ${x1} ${y1} ${x2} ${y2}`;
+                }
                 if (!x1 || !y1 || !x2 || !y2)
                     return;
                 const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
