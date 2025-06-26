@@ -39,6 +39,14 @@ export class InteractionController {
                     this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: false });
                 }
             }
+            else {
+                this.isDragging = false;
+                this.isPinch = true;
+                const titleElement = document.getElementById('titleText');
+                if (titleElement) {
+                    titleElement.innerHTML = 'pinching';
+                }
+            }
         };
         this.onPointerMove = (e) => {
             e.preventDefault();
@@ -97,10 +105,13 @@ export class InteractionController {
                 const titleText = document.getElementById('titleText');
                 this.isDragging = false;
                 this.isPinch = true;
-                const x1 = this.pointerPositions.get(0)?.x;
-                const y1 = this.pointerPositions.get(0)?.y;
-                const x2 = this.pointerPositions.get(1)?.x;
-                const y2 = this.pointerPositions.get(1)?.y;
+                const pointerIds = Array.from(this.activePointers);
+                if (pointerIds.length < 2)
+                    return;
+                const x1 = this.pointerPositions.get(pointerIds[0])?.x;
+                const y1 = this.pointerPositions.get(pointerIds[0])?.y;
+                const x2 = this.pointerPositions.get(pointerIds[1])?.x;
+                const y2 = this.pointerPositions.get(pointerIds[1])?.y;
                 if (!x1 || !y1 || !x2 || !y2)
                     return;
                 const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
