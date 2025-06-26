@@ -95,9 +95,6 @@ export class InteractionController {
             }
             else if (this.activePointers.size > 1) {
                 const titleText = document.getElementById('titleText');
-                if (titleText) {
-                    titleText.innerHTML = `pinching ${this.baseDistance}`;
-                }
                 this.isDragging = false;
                 this.isPinch = true;
                 const x1 = this.pointerPositions.get(0)?.x;
@@ -107,10 +104,13 @@ export class InteractionController {
                 if (!x1 || !y1 || !x2 || !y2)
                     return;
                 const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-                if (!this.baseDistance) {
-                    this.baseDistance = distance;
-                    return;
+                if (titleText) {
+                    titleText.innerHTML = `pinching ${this.baseDistance} ${distance}`;
                 }
+                if (this.baseDistance == 0)
+                    this.baseDistance = distance;
+                if (distance == 0)
+                    return;
                 //原点で0, 右に行くと正、上に行くと正
                 const x3 = (x1 + x2) / 2 - this.canvas.offsetLeft - this.canvas.width / 2;
                 const y3 = (y1 + y2) / 2 - this.canvas.offsetTop - this.canvas.height / 2;
@@ -280,6 +280,7 @@ export class InteractionController {
         this.displaySettings = config.displaySettings;
         this.viewState = config.viewState;
         this.renderCallback = renderCallback;
+        this.baseDistance = 0;
         console.log('🎨 InteractionController constructor: renderCallback:', this.renderCallback);
         this.coordinateConverter = new CoordinateConverter();
         // タッチ操作のデフォルト動作を無効化
