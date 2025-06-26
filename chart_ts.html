@@ -47,7 +47,7 @@
     <!-- タイトルバー -->
     <div class="title" id="title">
         <ul>
-            <li><h3>星図</h3></li>
+            <li><h3 id="titleText">星図</h3></li>
             <li><a href="PeteHOME.html">HOME</a></li>
             <div id="loadingtext">Loading...</div>
         </ul>
@@ -303,7 +303,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js';
+        import { main } from './dist/main.js?v=1.0.1';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

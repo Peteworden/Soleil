@@ -96,7 +96,7 @@ export class InteractionController {
             else if (this.activePointers.size > 1) {
                 const titleText = document.getElementById('titleText');
                 if (titleText) {
-                    titleText.innerHTML = 'pinching';
+                    titleText.innerHTML = `pinching ${this.baseDistance}`;
                 }
                 this.isDragging = false;
                 this.isPinch = true;
