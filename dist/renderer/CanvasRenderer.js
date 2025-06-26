@@ -1,7 +1,7 @@
 import { Planet, Moon } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 export class CanvasRenderer {
-    constructor(canvas, options, latitude, longitude) {
+    constructor(canvas, config) {
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context)
@@ -9,13 +9,13 @@ export class CanvasRenderer {
         this.ctx = context;
         // グローバルconfigのrenderOptionsと同じ参照にする
         const globalConfig = window.config;
-        if (globalConfig && globalConfig.renderOptions) {
-            this.options = globalConfig.renderOptions;
-            console.log('🎨 CanvasRenderer constructor: Using global config.renderOptions reference');
-            console.log('🎨 this.options === globalConfig.renderOptions:', this.options === globalConfig.renderOptions);
+        if (globalConfig && config.displaySettings && config.viewState) {
+            this.config = globalConfig;
+            console.log('🎨 CanvasRenderer constructor: Using global config.displaySettings reference');
+            console.log('🎨 this.config === globalConfig.displaySettings:', this.config === globalConfig);
         }
         else {
-            this.options = options;
+            this.config = config;
             console.log('🎨 CanvasRenderer constructor: Using passed options (global config not available)');
         }
         this.coordinateConverter = new CoordinateConverter();
@@ -26,9 +26,9 @@ export class CanvasRenderer {
     }
     // 天体を描画
     drawObject(object) {
-        if (object instanceof Planet && !this.options.showPlanets)
+        if (object instanceof Planet && !this.config.displaySettings.showPlanets)
             return;
-        if (object instanceof Moon && !this.options.showPlanets)
+        if (object instanceof Moon && !this.config.displaySettings.showPlanets)
             return;
         const coords = object.getCoordinates();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
@@ -65,9 +65,9 @@ export class CanvasRenderer {
         }
     }
     drawHipStars(hipStars) {
-        if (!this.options.showStars)
+        if (!this.config.displaySettings.showStars)
             return;
-        const limitingMagnitude = this.limitingMagnitude(this.options);
+        const limitingMagnitude = this.limitingMagnitude(this.config);
         for (const star of hipStars) {
             const coords = star.getCoordinates();
             if (star.getMagnitude() > limitingMagnitude)
@@ -76,19 +76,20 @@ export class CanvasRenderer {
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
-            const color = this.getStarColor(star.getBv());
             this.ctx.beginPath();
+            this.ctx.fillStyle = this.getStarColor(star.getBv());
             this.ctx.arc(x, y, this.getStarSize(star.getMagnitude(), limitingMagnitude), 0, Math.PI * 2);
-            this.ctx.fillStyle = color;
             this.ctx.fill();
         }
     }
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
-        if (!this.options.showStars)
+        if (!this.config.displaySettings.showStars)
             return;
-        const limitingMagnitude = this.limitingMagnitude(this.options);
+        const limitingMagnitude = this.limitingMagnitude(this.config);
         if (brightestMagnitude > limitingMagnitude)
             return;
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
         for (const area of this.areaCandidates()) {
             let st = gaiaHelpData[area[0]];
             let fi = gaiaHelpData[area[1] + 1];
@@ -103,16 +104,15 @@ export class CanvasRenderer {
                 if (!screenXY[0])
                     continue;
                 const [x, y] = screenXY[1];
-                this.ctx.beginPath();
+                this.ctx.moveTo(x, y);
                 this.ctx.arc(x, y, this.getStarSize(mag, limitingMagnitude), 0, Math.PI * 2);
-                this.ctx.fillStyle = 'white';
-                this.ctx.fill();
             }
         }
+        this.ctx.fill();
     }
     // グリッドを描画
     drawGrid() {
-        if (!this.options.showGrid)
+        if (!this.config.displaySettings.showGrid)
             return;
         const step = 15; // 15度ごとにグリッド線を描画
         const vertexStep = 2; // 2度ごとに頂点を描画
@@ -160,7 +160,7 @@ export class CanvasRenderer {
     }
     // 星座線を描画
     drawConstellationLines(constellations) {
-        if (!this.options.showConstellationLines)
+        if (!this.config.displaySettings.showConstellationLines)
             return;
         this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
         this.ctx.lineWidth = 1;
@@ -180,7 +180,7 @@ export class CanvasRenderer {
         }
     }
     writeConstellationNames(constellations) {
-        if (!this.options.showConstellationNames)
+        if (!this.config.displaySettings.showConstellationNames)
             return;
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'center';
@@ -194,22 +194,24 @@ export class CanvasRenderer {
             this.ctx.fillText(constellation.JPNname, x, y);
         }
     }
-    limitingMagnitude(renderOptions) {
-        const lm = Math.min(Math.max(renderOptions.starSizeKey1 - renderOptions.starSizeKey2 * Math.log(Math.min(renderOptions.fieldOfViewRA, renderOptions.fieldOfViewDec) / 2), 5), renderOptions.starSizeKey1);
+    limitingMagnitude(config) {
+        const key1 = config.viewState.starSizeKey1;
+        const key2 = config.viewState.starSizeKey2;
+        const lm = Math.min(key1, Math.max(5, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
         return lm;
     }
-    starSize_0mag(renderOptions) {
-        const lm = this.limitingMagnitude(renderOptions);
-        return 13 - 2.4 * Math.log(Math.min(renderOptions.fieldOfViewRA, renderOptions.fieldOfViewDec) + 3);
+    starSize_0mag(config) {
+        const lm = this.limitingMagnitude(config);
+        return Math.max(13 - 2.4 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 3), 5);
     }
     getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
         if (limitingMagnitude === undefined) {
-            limitingMagnitude = this.limitingMagnitude(this.options);
+            limitingMagnitude = this.limitingMagnitude(this.config);
         }
         if (starSize_0mag === undefined) {
-            starSize_0mag = this.starSize_0mag(this.options);
+            starSize_0mag = this.starSize_0mag(this.config);
         }
-        return Math.max(1, 1 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3));
+        return Math.max(0.7, 0.7 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3));
     }
     getStarColor(bv) {
         let c;
@@ -247,9 +249,9 @@ export class CanvasRenderer {
     }
     areaCandidates() {
         const areaCandidates = [];
-        if (this.options.mode == 'AEP') {
-            const minDec = Math.max(-90, Math.min(this.options.centerDec - this.options.fieldOfViewDec, 90));
-            const maxDec = Math.min(90, Math.max(this.options.centerDec + this.options.fieldOfViewDec, -90));
+        if (this.config.displaySettings.mode == 'AEP') {
+            const minDec = Math.max(-90, Math.min(this.config.viewState.centerDec - this.config.viewState.fieldOfViewDec, 90));
+            const maxDec = Math.min(90, Math.max(this.config.viewState.centerDec + this.config.viewState.fieldOfViewDec, -90));
             if (minDec === -90) {
                 areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, maxDec)]);
             }
@@ -263,8 +265,97 @@ export class CanvasRenderer {
                 }
             }
         }
-        else if (this.options.mode == 'view') {
-            areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, 89.5)]);
+        else if (this.config.displaySettings.mode == 'view') {
+            const centerRA = this.config.viewState.centerRA;
+            const centerDec = this.config.viewState.centerDec;
+            const siderealTime = window.config.siderealTime;
+            const np = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.canvas, window.config.siderealTime);
+            const sp = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.canvas, window.config.siderealTime);
+            if (np[0]) {
+                const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
+                const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
+                const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
+                const corner2Equatorial = this.coordinateConverter.horizontalToEquatorial(corner2Horizontal, siderealTime);
+                const minDec = Math.min(corner1Equatorial.dec, corner2Equatorial.dec);
+                areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]);
+            }
+            else if (sp[0]) {
+                const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
+                const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
+                const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
+                const corner2Equatorial = this.coordinateConverter.horizontalToEquatorial(corner2Horizontal, siderealTime);
+                const maxDec = Math.max(corner1Equatorial.dec, corner2Equatorial.dec);
+                areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, maxDec)]);
+            }
+            else {
+                let RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
+                const edgeRA = [];
+                const edgeDec = [];
+                const screenRA = this.config.viewState.fieldOfViewRA / 2 + 1.0;
+                const screenDec = this.config.viewState.fieldOfViewDec / 2 + 1.0;
+                const supi = Math.ceil(3.0 * (this.config.viewState.fieldOfViewRA / 2 + 1.0));
+                const supj = Math.ceil(3.0 * (this.config.viewState.fieldOfViewDec / 2 + 1.0));
+                for (let j = 0; j <= supj; j++) {
+                    let horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: screenDec * j / supj });
+                    let equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA, dec: screenDec * j / supj });
+                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                    if (j == 0)
+                        continue;
+                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: -screenDec * j / supj });
+                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA, dec: -screenDec * j / supj });
+                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                }
+                for (let i = 0; i <= supi; i++) {
+                    let horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA * i / supi, dec: screenDec });
+                    let equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA * i / supi, dec: -screenDec });
+                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                    if (i == 0)
+                        continue;
+                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA * i / supi, dec: screenDec });
+                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA * i / supi, dec: -screenDec });
+                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+                    edgeRA.push(equatorial.ra);
+                    edgeDec.push(equatorial.dec);
+                }
+                Dec_max = Math.max(...edgeDec);
+                Dec_min = Math.min(...edgeDec);
+                RA_max = Math.max(...edgeRA);
+                RA_min = Math.min(...edgeRA);
+                if (RA_max > 330 && RA_min < 30) {
+                    RA_max = Math.max(...edgeRA.filter(function (value) { return value < (centerRA + 180) % 360; }));
+                    RA_min = Math.min(...edgeRA.filter(function (value) { return value > (centerRA + 180) % 360; }));
+                    areaCandidates.push([this.areaNumber(0, Dec_min), this.areaNumber(RA_max, Dec_min)]);
+                    areaCandidates.push([this.areaNumber(RA_min, Dec_min), this.areaNumber(359.9, Dec_min)]);
+                    for (let i = 1; i <= Math.floor(Dec_max) - Math.floor(Dec_min); i++) {
+                        areaCandidates.push([areaCandidates[0][0] + 360 * i, areaCandidates[0][1] + 360 * i]);
+                        areaCandidates.push([areaCandidates[1][0] + 360 * i, areaCandidates[1][1] + 360 * i]);
+                    }
+                }
+                else {
+                    areaCandidates.push([this.areaNumber(RA_min, Dec_min), this.areaNumber(RA_max, Dec_min)]);
+                    for (let i = 1; i <= Math.floor(Dec_max) - Math.floor(Dec_min); i++) {
+                        areaCandidates.push([areaCandidates[0][0] + 360 * i, areaCandidates[0][1] + 360 * i]);
+                    }
+                }
+            }
         }
         return areaCandidates;
     }
@@ -272,14 +363,14 @@ export class CanvasRenderer {
     updateOptions(options) {
         const globalConfig = window.config;
         if (globalConfig) {
-            if (this.options !== globalConfig.renderOptions) {
-                this.options = globalConfig.renderOptions;
+            if (this.config !== globalConfig) {
+                this.config = globalConfig;
             }
         }
-        Object.assign(this.options, options);
+        Object.assign(this.config, options);
         // グローバルconfigも確実に更新
-        if (globalConfig && globalConfig.renderOptions) {
-            Object.assign(globalConfig.renderOptions, options);
+        if (globalConfig) {
+            Object.assign(globalConfig, options);
         }
     }
 }

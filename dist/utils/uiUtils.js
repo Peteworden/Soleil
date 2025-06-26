@@ -34,7 +34,7 @@ export function updateInfoDisplay() {
     }
     // 中心座標情報を更新
     if (centerInfo) {
-        const { centerRA, centerDec, centerAlt, centerAz } = config.renderOptions;
+        const { centerRA, centerDec, centerAlt, centerAz } = config.viewState;
         const raHours = Math.floor(centerRA / 15);
         const raMinutes = Math.floor((centerRA % 15) * 4);
         const decSign = centerDec >= 0 ? '+' : '';
@@ -43,7 +43,7 @@ export function updateInfoDisplay() {
     }
     // 視野角情報を更新
     if (fovInfo) {
-        const { fieldOfViewRA, fieldOfViewDec } = config.renderOptions;
+        const { fieldOfViewRA, fieldOfViewDec } = config.viewState;
         const fovText = `${fieldOfViewRA.toFixed(1)}° × ${fieldOfViewDec.toFixed(1)}°`;
         fovInfo.textContent = fovText;
     }

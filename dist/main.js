@@ -8,15 +8,21 @@ import { jupiterData } from './data/planets.js';
 import { SettingController } from './controllers/SettingController.js';
 import { SearchController } from './controllers/SearchController.js';
 import { updateInfoDisplay, handleResize, setupTimeUpdate } from './utils/uiUtils.js';
-// 星空表示の設定
-export let config = {
-    renderOptions: {
+// 初期設定を読み込む関数
+function initializeConfig() {
+    const savedSettings = localStorage.getItem('config');
+    const savedSettingsObject = savedSettings ? JSON.parse(savedSettings) : null;
+    const now = new Date();
+    console.log('🔧 savedSettingsObject:', savedSettingsObject);
+    const displaySettings = {
         showGrid: true,
         showStars: true,
         showPlanets: true,
         showConstellationNames: true,
         showConstellationLines: true,
-        mode: 'AEP',
+        mode: 'view'
+    };
+    const viewState = {
         centerRA: 90,
         centerDec: 0,
         centerAz: 0,
@@ -25,51 +31,79 @@ export let config = {
         fieldOfViewDec: 60,
         starSizeKey1: 11.5,
         starSizeKey2: 1.8
-    },
-    observationSite: {
-        latitude: 35.0, // 東京の緯度
-        longitude: 135.0, // 東京の経度
-        timezone: 9 // 日本標準時
-    },
-    displayTime: {
-        year: new Date().getFullYear(),
-        month: new Date().getMonth() + 1,
-        day: new Date().getDate(),
-        hour: new Date().getHours(),
-        minute: new Date().getMinutes(),
-        second: new Date().getSeconds()
-    },
-    canvasSize: {
-        width: window.innerWidth,
-        height: window.innerHeight
-    },
-    siderealTime: 0 // 恒星時（度）- 初期値、後で計算で更新
-};
-// 設定更新用の関数
+    };
+    if (savedSettingsObject && savedSettingsObject.displaySettings) {
+        displaySettings.showGrid = savedSettingsObject.displaySettings.showGrid ? savedSettingsObject.displaySettings.showGrid : true;
+        displaySettings.showStars = savedSettingsObject.displaySettings.showStars ? savedSettingsObject.displaySettings.showStars : true;
+        displaySettings.showPlanets = savedSettingsObject.displaySettings.showPlanets ? savedSettingsObject.displaySettings.showPlanets : true;
+        displaySettings.showConstellationNames = savedSettingsObject.displaySettings.showConstellationNames ? savedSettingsObject.displaySettings.showConstellationNames : true;
+        displaySettings.showConstellationLines = savedSettingsObject.displaySettings.showConstellationLines ? savedSettingsObject.displaySettings.showConstellationLines : true;
+    }
+    if (savedSettingsObject && savedSettingsObject.viewState) {
+        const savedViewState = savedSettingsObject.viewState;
+        viewState.centerRA = savedViewState.centerRA ? savedViewState.centerRA : 90;
+        viewState.centerDec = savedViewState.centerDec ? savedViewState.centerDec : 0;
+        viewState.centerAz = savedViewState.centerAz ? savedViewState.centerAz : 0;
+        viewState.centerAlt = savedViewState.centerAlt ? savedViewState.centerAlt : 0;
+        viewState.fieldOfViewRA = savedViewState.fieldOfViewRA ? savedViewState.fieldOfViewRA : 60;
+        viewState.fieldOfViewDec = savedViewState.fieldOfViewDec ? savedViewState.fieldOfViewDec : 60;
+        console.log('🔧 viewState:', savedViewState);
+    }
+    return {
+        displaySettings: displaySettings,
+        viewState: viewState,
+        observationSite: {
+            latitude: 35.0,
+            longitude: 135.0,
+            timezone: 9
+        },
+        displayTime: {
+            year: now.getFullYear(),
+            month: now.getMonth() + 1,
+            day: now.getDate(),
+            hour: now.getHours(),
+            minute: now.getMinutes(),
+            second: now.getSeconds()
+        },
+        canvasSize: {
+            width: window.innerWidth,
+            height: window.innerHeight
+        },
+        siderealTime: 0 // 恒星時（度）- 初期値、後で計算で更新
+    };
+}
+// 星空表示の設定
+export const config = initializeConfig();
+// resetConfig();
+// 設定をリセットする関数
+export function resetConfig() {
+    console.log('🔄 Resetting config to default values');
+    localStorage.removeItem('settings');
+    const defaultConfig = initializeConfig();
+    Object.assign(config, defaultConfig);
+    window.config = config;
+    console.log('🔄 Config reset completed');
+}
+// newconfigを受け取り、configを更新する
 export function updateConfig(newConfig) {
     console.log('🔧 updateConfig called with:', newConfig);
-    // config全体を更新
     Object.assign(config, newConfig);
-    // グローバル参照も更新
     window.config = config;
-    // renderOptionsが含まれている場合は、レンダラーとコントローラーも更新
-    if (newConfig.renderOptions) {
-        console.log('🔧 Updating renderOptions:', newConfig.renderOptions);
-        // 既存のrenderOptionsを保持しながら部分更新
-        Object.assign(config.renderOptions, newConfig.renderOptions);
-        console.log('🔧 renderOptions after update:', config.renderOptions);
-        // 完全なrenderOptionsオブジェクトを渡す
-        window.renderer.updateOptions(config.renderOptions);
-        window.controller.updateOptions(config.renderOptions);
+    if (newConfig.displaySettings) {
+        console.log('🔧 Updating displaySettings:', newConfig.displaySettings);
+        Object.assign(config.displaySettings, newConfig.displaySettings);
+        console.log('🔧 displaySettings after update:', config.displaySettings);
+        window.renderer.updateOptions(config.displaySettings);
+        window.controller.updateOptions(config.displaySettings);
         console.log('🔧 Renderer and controller updated');
     }
-    // 観測地または時刻が変更された場合は、恒星時も更新
+    //globalのconfigは更新される？
     if (newConfig.observationSite || newConfig.displayTime) {
         console.log('🔧 Observation site or time updated, recalculating sidereal time');
         updateSiderealTime();
     }
+    console.log('🔧 Calling renderAll from updateConfig');
     window.renderAll();
-    // 情報表示を更新
     updateInfoDisplay();
 }
 // 恒星時を計算・更新する関数
@@ -79,13 +113,12 @@ export function updateSiderealTime() {
     config.siderealTime = siderealTime;
     console.log('🌟 Sidereal time updated:', siderealTime, 'degrees');
 }
-// レンダリングオプションのみを更新する関数
-export function updateRenderOptions(newOptions) {
-    Object.assign(config.renderOptions, newOptions);
-    window.renderer.updateOptions(newOptions);
-    window.controller.updateOptions(newOptions);
+// ViewStateのみを更新する関数
+export function updateViewState(newViewState) {
+    Object.assign(config.viewState, newViewState);
+    window.renderer.updateOptions(newViewState);
+    window.controller.updateOptions(newViewState);
     window.renderAll();
-    // 情報表示を更新
     updateInfoDisplay();
 }
 // グローバルにconfigを公開（SettingControllerからアクセス可能）
@@ -93,9 +126,13 @@ window.config = config;
 console.log('🌐 config published to window:', window.config);
 console.log('🌐 config reference check:', config === window.config);
 window.updateConfig = updateConfig;
-window.updateRenderOptions = updateRenderOptions;
+window.updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
 window.updateSiderealTime = updateSiderealTime;
+window.resetConfig = resetConfig;
+window.saveConfig = SettingController.saveConfigToLocalStorage;
+// (window as any).loadSettingsFromLocalStorage = SettingController.loadSettingsFromLocalStorage;
+window.loadSettingsFromConfig = SettingController.loadSettingsFromConfig;
 // メイン関数
 export async function main() {
     const app = document.getElementById('app');
@@ -125,15 +162,13 @@ export async function main() {
         canvas.width = config.canvasSize.width;
         canvas.height = config.canvasSize.height;
         // フィールドオブビューの調整
-        config.renderOptions.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.renderOptions.fieldOfViewRA;
+        config.viewState.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.viewState.fieldOfViewRA;
         // レンダラーの作成
-        const renderer = new CanvasRenderer(canvas, config.renderOptions, config.observationSite.latitude, config.observationSite.longitude);
-        // CanvasRendererのoptionsを確実にconfig.renderOptionsと同じ参照にする
-        // (renderer as any).options = config.renderOptions;
+        const renderer = new CanvasRenderer(canvas, config);
         console.log('🎨 CanvasRenderer created');
-        console.log('🎨 renderer.options === config.renderOptions:', renderer.options === config.renderOptions);
-        console.log('🎨 renderer.options reference:', renderer.options);
-        console.log('🎨 config.renderOptions reference:', config.renderOptions);
+        console.log('🎨 renderer.config === config:', renderer.config === config);
+        console.log('🎨 renderer.config reference:', renderer.config);
+        console.log('🎨 config reference:', config);
         // 天体の作成
         const jupiter = new Planet(jupiterData);
         const moon = new Moon();
@@ -145,6 +180,7 @@ export async function main() {
         jupiter.updatePosition(jd);
         moon.updatePosition(jd);
         function renderAll() {
+            console.log('🎨 renderAll called');
             renderer.clear();
             renderer.drawGrid();
             renderer.drawConstellationLines(Object.values(constellationData));
@@ -156,7 +192,7 @@ export async function main() {
             renderer.drawObject(jupiter);
             renderer.drawObject(moon);
         }
-        const controller = new InteractionController(canvas, config.renderOptions, renderAll);
+        const controller = new InteractionController(canvas, config, renderAll);
         // 描画
         renderAll();
         // renderAll関数とrenderer、controllerをグローバルに公開
@@ -229,7 +265,7 @@ function setupButtonEvents() {
     document.getElementById('magLimitSlider')?.addEventListener('change', function () {
         const magLimitSlider = document.getElementById('magLimitSlider');
         const magLimitSliderValue = parseFloat(magLimitSlider.value);
-        updateRenderOptions({
+        updateViewState({
             starSizeKey1: magLimitSliderValue,
             starSizeKey2: 1.8
         });
@@ -251,6 +287,8 @@ function showSetting() {
     else {
         setting.style.display = 'block';
     }
+    // 設定画面を開く際に、現在のconfigからUIに値を反映
+    SettingController.loadSettingsFromConfig();
 }
 function openSearch() {
     const searchDiv = document.getElementById('searchDiv');

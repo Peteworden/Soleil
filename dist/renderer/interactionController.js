@@ -1,6 +1,6 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
 export class InteractionController {
-    constructor(canvas, renderOptions, renderCallback) {
+    constructor(canvas, config, renderCallback) {
         // 状態管理
         this.isDragging = false;
         this.isPinch = false;
@@ -26,12 +26,17 @@ export class InteractionController {
                 this.lastY = e.clientY;
                 this.canvas.releasePointerCapture(e.pointerId);
                 this.canvas.setPointerCapture(e.pointerId);
+                const titleElement = document.getElementById('titleText');
+                if (titleElement) {
+                    titleElement.innerHTML = e.pointerType;
+                }
                 if (e.pointerType === 'mouse') {
                     this.canvas.style.cursor = 'grabbing';
                     this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: false });
                 }
                 else if (e.pointerType === 'touch') {
                     this.canvas.style.touchAction = 'none'; // 'auto'にしない！
+                    this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: false });
                 }
             }
         };
@@ -51,34 +56,34 @@ export class InteractionController {
                     return;
                 }
                 // ズームレベルに応じて移動量を調整
-                const moveScale = this.renderOptions.fieldOfViewRA / this.canvas.width;
-                if (this.renderOptions.mode == 'AEP') {
-                    this.renderOptions.centerRA += deltaX * moveScale;
-                    this.renderOptions.centerDec += deltaY * moveScale;
+                const moveScale = this.viewState.fieldOfViewRA / this.canvas.width;
+                if (this.displaySettings.mode == 'AEP') {
+                    this.viewState.centerRA += deltaX * moveScale;
+                    this.viewState.centerDec += deltaY * moveScale;
                     // 値を正規化
-                    this.renderOptions.centerRA = ((this.renderOptions.centerRA % 360) + 360) % 360;
-                    if (this.renderOptions.centerDec > 90)
-                        this.renderOptions.centerDec = 90;
-                    if (this.renderOptions.centerDec < -90)
-                        this.renderOptions.centerDec = -90;
-                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: this.renderOptions.centerRA, dec: this.renderOptions.centerDec }, window.config.siderealTime);
-                    this.renderOptions.centerAz = centerHorizontal.az;
-                    this.renderOptions.centerAlt = centerHorizontal.alt;
+                    this.viewState.centerRA = ((this.viewState.centerRA % 360) + 360) % 360;
+                    if (this.viewState.centerDec > 90)
+                        this.viewState.centerDec = 90;
+                    if (this.viewState.centerDec < -90)
+                        this.viewState.centerDec = -90;
+                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: this.viewState.centerRA, dec: this.viewState.centerDec }, window.config.siderealTime);
+                    this.viewState.centerAz = centerHorizontal.az;
+                    this.viewState.centerAlt = centerHorizontal.alt;
                 }
-                else if (this.renderOptions.mode == 'view') {
-                    this.renderOptions.centerAz += deltaX * moveScale;
-                    this.renderOptions.centerAlt += deltaY * moveScale;
-                    if (this.renderOptions.centerAz < 0)
-                        this.renderOptions.centerAz += 360;
-                    if (this.renderOptions.centerAz > 360)
-                        this.renderOptions.centerAz -= 360;
-                    if (this.renderOptions.centerAlt > 90)
-                        this.renderOptions.centerAlt = 90;
-                    if (this.renderOptions.centerAlt < -90)
-                        this.renderOptions.centerAlt = -90;
-                    const centerEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: this.renderOptions.centerAz, alt: this.renderOptions.centerAlt }, window.config.siderealTime);
-                    this.renderOptions.centerRA = centerEquatorial.ra;
-                    this.renderOptions.centerDec = centerEquatorial.dec;
+                else if (this.displaySettings.mode == 'view') {
+                    this.viewState.centerAz += deltaX * moveScale;
+                    this.viewState.centerAlt += deltaY * moveScale;
+                    if (this.viewState.centerAz < 0)
+                        this.viewState.centerAz += 360;
+                    if (this.viewState.centerAz > 360)
+                        this.viewState.centerAz -= 360;
+                    if (this.viewState.centerAlt > 90)
+                        this.viewState.centerAlt = 90;
+                    if (this.viewState.centerAlt < -90)
+                        this.viewState.centerAlt = -90;
+                    const centerEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: this.viewState.centerAz, alt: this.viewState.centerAlt }, window.config.siderealTime);
+                    this.viewState.centerRA = centerEquatorial.ra;
+                    this.viewState.centerDec = centerEquatorial.dec;
                 }
                 // 座標を更新
                 this.lastX = e.clientX;
@@ -101,27 +106,44 @@ export class InteractionController {
                 if (!scale || scale == Infinity)
                     return;
                 if (this.canvas.width < this.canvas.height) {
-                    scale = Math.max(Math.min(scale, this.renderOptions.fieldOfViewRA / 1.0), this.renderOptions.fieldOfViewDec / 180.0);
+                    scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 180.0);
                 }
                 else {
-                    scale = Math.max(Math.min(scale, this.renderOptions.fieldOfViewDec / 1.0), this.renderOptions.fieldOfViewRA / 180.0);
+                    scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 180.0);
                 }
                 this.baseDistance = distance;
-                this.renderOptions.fieldOfViewRA /= scale;
-                this.renderOptions.fieldOfViewDec /= scale;
-                const pinchScreenRA = -this.renderOptions.fieldOfViewRA * x3 / this.canvas.width;
-                const pinchScreenDec = -this.renderOptions.fieldOfViewDec * y3 / this.canvas.height;
-                const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
-                this.renderOptions.centerRA = pinchEquatorial.ra;
-                this.renderOptions.centerDec = pinchEquatorial.dec;
+                this.viewState.fieldOfViewRA /= scale;
+                this.viewState.fieldOfViewDec /= scale;
+                if (this.displaySettings.mode == 'AEP') {
+                    const pinchScreenRA = -this.viewState.fieldOfViewRA * x3 / this.canvas.width;
+                    const pinchScreenDec = -this.viewState.fieldOfViewDec * y3 / this.canvas.height;
+                    const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
+                    this.viewState.centerRA = pinchEquatorial.ra;
+                    this.viewState.centerDec = pinchEquatorial.dec;
+                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: this.viewState.centerRA, dec: this.viewState.centerDec }, window.config.siderealTime);
+                    this.viewState.centerAz = centerHorizontal.az;
+                    this.viewState.centerAlt = centerHorizontal.alt;
+                }
+                else if (this.displaySettings.mode == 'view') {
+                    const pinchScreenAz = -this.viewState.fieldOfViewRA * x3 / this.canvas.width;
+                    const pinchScreenAlt = -this.viewState.fieldOfViewDec * y3 / this.canvas.height;
+                    const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
+                    this.viewState.centerAz = pinchHorizontal.az;
+                    this.viewState.centerAlt = pinchHorizontal.alt;
+                    const pinchEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: pinchHorizontal.az, alt: pinchHorizontal.alt }, window.config.siderealTime);
+                    this.viewState.centerRA = pinchEquatorial.ra;
+                    this.viewState.centerDec = pinchEquatorial.dec;
+                }
             }
             // グローバルconfigも確実に更新
             const globalConfig = window.config;
-            if (globalConfig && globalConfig.renderOptions) {
-                globalConfig.renderOptions.centerRA = this.renderOptions.centerRA;
-                globalConfig.renderOptions.centerDec = this.renderOptions.centerDec;
-                globalConfig.renderOptions.centerAz = this.renderOptions.centerAz;
-                globalConfig.renderOptions.centerAlt = this.renderOptions.centerAlt;
+            if (globalConfig && globalConfig.viewState) {
+                globalConfig.viewState.centerRA = this.viewState.centerRA;
+                globalConfig.viewState.centerDec = this.viewState.centerDec;
+                globalConfig.viewState.centerAz = this.viewState.centerAz;
+                globalConfig.viewState.centerAlt = this.viewState.centerAlt;
+                globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
+                globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
             }
             this.renderCallback();
             // 情報表示を即座に更新
@@ -138,6 +160,10 @@ export class InteractionController {
             if (e.type === 'pointercancel') {
                 if (this.isDragging) {
                     this.isDragging = false;
+                    const titleElement = document.getElementById('titleText');
+                    if (titleElement) {
+                        titleElement.innerHTML = '星図';
+                    }
                     if (e.pointerType === 'mouse') {
                         this.canvas.style.cursor = 'grab';
                         this.canvas.removeEventListener('pointermove', this.onPointerMove);
@@ -147,6 +173,18 @@ export class InteractionController {
                     }
                     this.canvas.releasePointerCapture(e.pointerId);
                     console.log('onPointerUp (cancel)', e.pointerType, e.pointerId);
+                    // localstorageに保存
+                    this.config.viewState.centerRA = this.viewState.centerRA;
+                    this.config.viewState.centerDec = this.viewState.centerDec;
+                    this.config.viewState.centerAz = this.viewState.centerAz;
+                    this.config.viewState.centerAlt = this.viewState.centerAlt;
+                    this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
+                    this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
+                    localStorage.setItem('config', JSON.stringify({
+                        displaySettings: this.config.displaySettings,
+                        viewState: this.config.viewState
+                    }));
+                    console.log('💾 Config saved to localStorage:', this.config);
                 }
                 return;
             }
@@ -154,6 +192,10 @@ export class InteractionController {
             if (this.activePointers.size === 0) {
                 this.isDragging = false;
                 this.isPinch = false;
+                const titleElement = document.getElementById('titleText');
+                if (titleElement) {
+                    titleElement.innerHTML = '星図';
+                }
                 if (e.pointerType === 'mouse') {
                     this.canvas.style.cursor = 'grab';
                     this.canvas.removeEventListener('pointermove', this.onPointerMove);
@@ -164,6 +206,18 @@ export class InteractionController {
                     this.canvas.releasePointerCapture(e.pointerId); // タッチでもpointer captureを解放
                 }
                 console.log('onPointerUp', e.pointerType, e.pointerId, 'touchCount:', this.activePointers.size);
+                // localstorageに保存
+                this.config.viewState.centerRA = this.viewState.centerRA;
+                this.config.viewState.centerDec = this.viewState.centerDec;
+                this.config.viewState.centerAz = this.viewState.centerAz;
+                this.config.viewState.centerAlt = this.viewState.centerAlt;
+                this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
+                this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
+                localStorage.setItem('config', JSON.stringify({
+                    displaySettings: this.config.displaySettings,
+                    viewState: this.config.viewState
+                }));
+                console.log('💾 Config saved to localStorage:', this.config);
             }
             else if (this.isPinch && this.activePointers.size === 1) {
                 this.isDragging = true;
@@ -176,30 +230,30 @@ export class InteractionController {
         this.onWheel = (e) => {
             e.preventDefault();
             const zoomAmount = e.deltaY * this.zoomSensitivity;
-            this.renderOptions.fieldOfViewRA /= (1 - zoomAmount);
-            this.renderOptions.fieldOfViewDec /= (1 - zoomAmount);
+            this.viewState.fieldOfViewRA /= (1 - zoomAmount);
+            this.viewState.fieldOfViewDec /= (1 - zoomAmount);
             // ズーム範囲を制限
-            if (this.renderOptions.fieldOfViewRA < 1.0) {
-                this.renderOptions.fieldOfViewRA = 1.0;
-                this.renderOptions.fieldOfViewDec = this.renderOptions.fieldOfViewRA * this.canvas.height / this.canvas.width;
+            if (this.viewState.fieldOfViewRA < 1.0) {
+                this.viewState.fieldOfViewRA = 1.0;
+                this.viewState.fieldOfViewDec = this.viewState.fieldOfViewRA * this.canvas.height / this.canvas.width;
             }
-            else if (this.renderOptions.fieldOfViewRA > 200) {
-                this.renderOptions.fieldOfViewRA = 200;
-                this.renderOptions.fieldOfViewDec = this.renderOptions.fieldOfViewRA * this.canvas.height / this.canvas.width;
+            else if (this.viewState.fieldOfViewRA > 200) {
+                this.viewState.fieldOfViewRA = 200;
+                this.viewState.fieldOfViewDec = this.viewState.fieldOfViewRA * this.canvas.height / this.canvas.width;
             }
-            if (this.renderOptions.fieldOfViewDec < 1.0) {
-                this.renderOptions.fieldOfViewDec = 1.0;
-                this.renderOptions.fieldOfViewRA = this.renderOptions.fieldOfViewDec * this.canvas.width / this.canvas.height;
+            if (this.viewState.fieldOfViewDec < 1.0) {
+                this.viewState.fieldOfViewDec = 1.0;
+                this.viewState.fieldOfViewRA = this.viewState.fieldOfViewDec * this.canvas.width / this.canvas.height;
             }
-            else if (this.renderOptions.fieldOfViewDec > 180) {
-                this.renderOptions.fieldOfViewDec = 180;
-                this.renderOptions.fieldOfViewRA = this.renderOptions.fieldOfViewDec * this.canvas.width / this.canvas.height;
+            else if (this.viewState.fieldOfViewDec > 180) {
+                this.viewState.fieldOfViewDec = 180;
+                this.viewState.fieldOfViewRA = this.viewState.fieldOfViewDec * this.canvas.width / this.canvas.height;
             }
             // グローバルconfigも確実に更新
             const globalConfig = window.config;
-            if (globalConfig && globalConfig.renderOptions) {
-                globalConfig.renderOptions.fieldOfViewRA = this.renderOptions.fieldOfViewRA;
-                globalConfig.renderOptions.fieldOfViewDec = this.renderOptions.fieldOfViewDec;
+            if (globalConfig && globalConfig.viewState) {
+                globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
+                globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
             }
             this.renderCallback();
             // 情報表示を即座に更新
@@ -209,8 +263,11 @@ export class InteractionController {
             }
         };
         this.canvas = canvas;
-        this.renderOptions = renderOptions;
+        this.config = config;
+        this.displaySettings = config.displaySettings;
+        this.viewState = config.viewState;
         this.renderCallback = renderCallback;
+        console.log('🎨 InteractionController constructor: renderCallback:', this.renderCallback);
         this.coordinateConverter = new CoordinateConverter();
         // タッチ操作のデフォルト動作を無効化
         this.canvas.style.touchAction = 'none';
@@ -225,15 +282,19 @@ export class InteractionController {
         // グローバルconfigとの参照を確認
         const globalConfig = window.config;
         if (globalConfig) {
-            // 参照が異なる場合は、globalConfig.renderOptionsの参照に更新
-            if (this.renderOptions !== globalConfig.renderOptions) {
-                this.renderOptions = globalConfig.renderOptions;
+            // 参照が異なる場合は、globalConfigの参照に更新
+            if (this.config !== globalConfig || this.viewState !== globalConfig.viewState || this.displaySettings !== globalConfig.displaySettings) {
+                this.config = globalConfig;
+                this.viewState = globalConfig.viewState;
+                this.displaySettings = globalConfig.displaySettings;
             }
         }
-        Object.assign(this.renderOptions, newOptions);
+        Object.assign(this.config, newOptions);
+        Object.assign(this.viewState, newOptions.viewState);
+        Object.assign(this.displaySettings, newOptions.displaySettings);
         // グローバルconfigも確実に更新
-        if (globalConfig && globalConfig.renderOptions) {
-            Object.assign(globalConfig.renderOptions, newOptions);
+        if (globalConfig) {
+            Object.assign(globalConfig, newOptions);
         }
         this.renderCallback();
     }

@@ -26,6 +26,7 @@ export class SettingController {
         // 設定を適用する処理
         const setting = document.getElementById('setting');
         if (window.innerWidth <= 768) {
+            setting.style.display = 'block';
             setting?.classList.remove('show');
         }
         else {
@@ -33,36 +34,26 @@ export class SettingController {
                 setting.style.display = 'none';
             }
         }
-        // 設定値の保存や適用処理
-        SettingController.saveSettings();
+        // 設定値を保存
+        SettingController.saveConfigToLocalStorage();
     }
     static updateConfigFromInputs() {
-        console.log('updateConfigFromInputs called');
+        console.log('🔧 updateConfigFromInputs called');
         // 観測地の設定を読み取り
         const latInput = document.getElementById('lat');
         const lonInput = document.getElementById('lon');
         const nsSelect = document.getElementById('NSCombo');
         const ewSelect = document.getElementById('EWCombo');
         if (latInput && lonInput && nsSelect && ewSelect) {
-            let latitude = parseFloat(latInput.value);
-            let longitude = parseFloat(lonInput.value);
-            // 南緯の場合は負の値に
-            if (nsSelect.value === '南緯') {
-                latitude = -latitude;
-            }
-            // 西経の場合は負の値に
-            if (ewSelect.value === '西経') {
-                longitude = -longitude;
-            }
-            console.log('Updating observation site:', { latitude, longitude });
-            // configを更新
+            const latitude = parseFloat(latInput.value) * (nsSelect.value === '北緯' ? 1 : -1);
+            const longitude = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 updateConfig({
                     observationSite: {
                         latitude: latitude,
                         longitude: longitude,
-                        timezone: 9 // 日本標準時
+                        timezone: 9
                     }
                 });
             }
@@ -81,24 +72,17 @@ export class SettingController {
             console.log('🔧 updateConfig function found:', !!updateConfig);
             if (updateConfig) {
                 const currentConfig = window.config;
-                const newRenderOptions = {
-                    ...currentConfig.renderOptions, // 既存の値を保持
+                const newDisplaySettings = {
+                    ...currentConfig.displaySettings, // 既存の値を保持
                     showGrid: gridCheck.checked,
                     showPlanets: planetCheck ? planetCheck.checked : true,
                     showConstellationNames: constNameCheck ? constNameCheck.checked : true,
                     showConstellationLines: constLineCheck ? constLineCheck.checked : true,
-                    mode: modeSelect ? modeSelect.value : 'AEP',
-                    // 位置・ズーム関連のプロパティも明示的に含める
-                    centerRA: currentConfig.renderOptions.centerRA,
-                    centerDec: currentConfig.renderOptions.centerDec,
-                    fieldOfViewRA: currentConfig.renderOptions.fieldOfViewRA,
-                    fieldOfViewDec: currentConfig.renderOptions.fieldOfViewDec,
-                    starSizeKey1: currentConfig.renderOptions.starSizeKey1,
-                    starSizeKey2: currentConfig.renderOptions.starSizeKey2
+                    mode: modeSelect ? modeSelect.value : 'AEP'
                 };
-                console.log('🔧 About to call updateConfig with centerRA:', newRenderOptions.centerRA);
+                console.log('🔧 About to call updateConfig with newDisplaySettings:', newDisplaySettings);
                 updateConfig({
-                    renderOptions: newRenderOptions
+                    displaySettings: newDisplaySettings
                 });
                 console.log('🔧 updateConfig called successfully');
             }
@@ -106,7 +90,7 @@ export class SettingController {
                 console.log('❌ updateConfig function not found!');
             }
         }
-        // 時刻設定を読み取り（もし時刻入力フィールドがある場合）
+        // 時刻設定を読み取り
         const yearInput = document.getElementById('yearText');
         const monthInput = document.getElementById('monthText');
         const dayInput = document.getElementById('dateText');
@@ -133,75 +117,134 @@ export class SettingController {
             }
         }
     }
-    static saveSettings() {
-        // 設定値をローカルストレージに保存
-        const settings = {
-            observer: document.getElementById('observer')?.value,
-            latitude: document.getElementById('lat')?.value,
-            longitude: document.getElementById('lon')?.value,
-            darkMode: document.getElementById('dark')?.checked,
-            gridCheck: document.getElementById('gridCheck')?.checked,
-            magLimit: document.getElementById('magLimitSlider')?.value,
-            mode: document.querySelector('input[name="mode"]:checked')?.value,
-            starName: document.querySelector('input[name="starName"]:checked')?.value,
-            constNameCheck: document.getElementById('constNameCheck')?.checked,
-            constLineCheck: document.getElementById('constLineCheck')?.checked,
-            planetCheck: document.getElementById('planetCheck')?.checked,
-            MessierCheck: document.getElementById('MessierCheck')?.checked,
-            recsCheck: document.getElementById('recsCheck')?.checked
-        };
-        localStorage.setItem('starChartSettings', JSON.stringify(settings));
-    }
-    static loadSettings() {
-        // 保存された設定値を読み込み
-        const savedSettings = localStorage.getItem('starChartSettings');
-        if (savedSettings) {
-            const settings = JSON.parse(savedSettings);
-            // 設定値をフォームに反映
-            if (settings.observer) {
-                document.getElementById('observer').value = settings.observer;
-            }
-            if (settings.latitude) {
-                document.getElementById('lat').value = settings.latitude;
-            }
-            if (settings.longitude) {
-                document.getElementById('lon').value = settings.longitude;
-            }
-            if (settings.darkMode !== undefined) {
-                document.getElementById('dark').checked = settings.darkMode;
-            }
-            if (settings.gridCheck !== undefined) {
-                document.getElementById('gridCheck').checked = settings.gridCheck;
-            }
-            if (settings.magLimit) {
-                document.getElementById('magLimitSlider').value = settings.magLimit;
-            }
-            if (settings.mode) {
-                const modeRadio = document.querySelector(`input[name="mode"][value="${settings.mode}"]`);
-                if (modeRadio)
-                    modeRadio.checked = true;
-            }
-            if (settings.starName) {
-                const starNameRadio = document.querySelector(`input[name="starName"][value="${settings.starName}"]`);
-                if (starNameRadio)
-                    starNameRadio.checked = true;
-            }
-            if (settings.constNameCheck !== undefined) {
-                document.getElementById('constNameCheck').checked = settings.constNameCheck;
-            }
-            if (settings.constLineCheck !== undefined) {
-                document.getElementById('constLineCheck').checked = settings.constLineCheck;
-            }
-            if (settings.planetCheck !== undefined) {
-                document.getElementById('planetCheck').checked = settings.planetCheck;
-            }
-            if (settings.MessierCheck !== undefined) {
-                document.getElementById('MessierCheck').checked = settings.MessierCheck;
-            }
-            if (settings.recsCheck !== undefined) {
-                document.getElementById('recsCheck').checked = settings.recsCheck;
-            }
+    // 現在の設定をlocalStorageに保存
+    static saveConfigToLocalStorage() {
+        console.log('💾 SettingController: Saving current config to localStorage');
+        const config = window.config;
+        if (!config) {
+            console.warn('💾 No config found, cannot save');
+            return;
         }
+        localStorage.setItem('config', JSON.stringify({
+            displaySettings: config.displaySettings,
+            viewState: config.viewState
+            // mode: config.displaySettings.mode,
+            // centerRA: config.viewState.centerRA,
+            // centerDec: config.viewState.centerDec,
+            // centerAz: config.viewState.centerAz,
+            // centerAlt: config.viewState.centerAlt,
+            // fieldOfViewRA: config.viewState.fieldOfViewRA,
+            // fieldOfViewDec: config.viewState.fieldOfViewDec
+        }));
+        console.log('💾 Config saved to localStorage');
+    }
+    // static loadSettingsFromLocalStorage() {
+    //     // 保存された設定値を読み込み
+    //     const savedSettings = localStorage.getItem('starChartSettings');
+    //     if (savedSettings) {
+    //         const settings = JSON.parse(savedSettings);
+    //         // 設定値をフォームに反映
+    //         if (settings.observer) {
+    //             (document.getElementById('observer') as HTMLSelectElement).value = settings.observer;
+    //         }
+    //         if (settings.latitude) {
+    //             (document.getElementById('lat') as HTMLInputElement).value = settings.latitude;
+    //         }
+    //         if (settings.longitude) {
+    //             (document.getElementById('lon') as HTMLInputElement).value = settings.longitude;
+    //         }
+    //         if (settings.darkMode !== undefined) {
+    //             (document.getElementById('dark') as HTMLInputElement).checked = settings.darkMode;
+    //         }
+    //         if (settings.gridCheck !== undefined) {
+    //             (document.getElementById('gridCheck') as HTMLInputElement).checked = settings.gridCheck;
+    //         }
+    //         if (settings.magLimit) {
+    //             (document.getElementById('magLimitSlider') as HTMLInputElement).value = settings.magLimit;
+    //         }
+    //         if (settings.mode) {
+    //             const modeRadio = document.querySelector(`input[name="mode"][value="${settings.mode}"]`) as HTMLInputElement;
+    //             if (modeRadio) modeRadio.checked = true;
+    //         }
+    //         if (settings.starName) {
+    //             const starNameRadio = document.querySelector(`input[name="starName"][value="${settings.starName}"]`) as HTMLInputElement;
+    //             if (starNameRadio) starNameRadio.checked = true;
+    //         }
+    //         if (settings.constNameCheck !== undefined) {
+    //             (document.getElementById('constNameCheck') as HTMLInputElement).checked = settings.constNameCheck;
+    //         }
+    //         if (settings.constLineCheck !== undefined) {
+    //             (document.getElementById('constLineCheck') as HTMLInputElement).checked = settings.constLineCheck;
+    //         }
+    //         if (settings.planetCheck !== undefined) {
+    //             (document.getElementById('planetCheck') as HTMLInputElement).checked = settings.planetCheck;
+    //         }
+    //         if (settings.MessierCheck !== undefined) {
+    //             (document.getElementById('MessierCheck') as HTMLInputElement).checked = settings.MessierCheck;
+    //         }
+    //         if (settings.recsCheck !== undefined) {
+    //             (document.getElementById('recsCheck') as HTMLInputElement).checked = settings.recsCheck;
+    //         }
+    //     }
+    //     // main.tsのconfigからも設定を読み込む
+    //     SettingController.loadSettingsFromConfig();
+    // }
+    // main.tsのconfigから設定をUIに反映するメソッド
+    static loadSettingsFromConfig() {
+        const config = window.config;
+        if (!config)
+            return;
+        console.log('🔧 Loading settings from main config to UI');
+        // 観測地の設定
+        const latInput = document.getElementById('lat');
+        const lonInput = document.getElementById('lon');
+        const nsSelect = document.getElementById('NSCombo');
+        const ewSelect = document.getElementById('EWCombo');
+        if (latInput && lonInput && nsSelect && ewSelect) {
+            const latitude = Math.abs(config.observationSite.latitude);
+            const longitude = Math.abs(config.observationSite.longitude);
+            latInput.value = latitude.toString();
+            lonInput.value = longitude.toString();
+            nsSelect.value = config.observationSite.latitude >= 0 ? '北緯' : '南緯';
+            ewSelect.value = config.observationSite.longitude >= 0 ? '東経' : '西経';
+        }
+        // 表示設定
+        const gridCheck = document.getElementById('gridCheck');
+        const darkMode = document.getElementById('dark');
+        const magLimitSlider = document.getElementById('magLimitSlider');
+        const constNameCheck = document.getElementById('constNameCheck');
+        const constLineCheck = document.getElementById('constLineCheck');
+        const planetCheck = document.getElementById('planetCheck');
+        if (gridCheck)
+            gridCheck.checked = config.displaySettings.showGrid;
+        if (darkMode)
+            darkMode.checked = false; // ダークモードは別途管理
+        if (magLimitSlider)
+            magLimitSlider.value = config.viewState.starSizeKey1.toString();
+        if (constNameCheck)
+            constNameCheck.checked = config.displaySettings.showConstellationNames;
+        if (constLineCheck)
+            constLineCheck.checked = config.displaySettings.showConstellationLines;
+        if (planetCheck)
+            planetCheck.checked = config.displaySettings.showPlanets;
+        // モード設定
+        const modeRadio = document.querySelector(`input[name="mode"][value="${config.displaySettings.mode}"]`);
+        if (modeRadio)
+            modeRadio.checked = true;
+        // 時刻設定
+        const yearInput = document.getElementById('yearText');
+        const monthInput = document.getElementById('monthText');
+        const dayInput = document.getElementById('dateText');
+        const hourInput = document.getElementById('hourText');
+        const minuteInput = document.getElementById('minuteText');
+        if (yearInput && monthInput && dayInput && hourInput && minuteInput) {
+            yearInput.value = config.displayTime.year.toString();
+            monthInput.value = config.displayTime.month.toString();
+            dayInput.value = config.displayTime.day.toString();
+            hourInput.value = config.displayTime.hour.toString();
+            minuteInput.value = config.displayTime.minute.toString();
+        }
+        console.log('🔧 Settings loaded from config to UI');
     }
 }
 //# sourceMappingURL=SettingController.js.map

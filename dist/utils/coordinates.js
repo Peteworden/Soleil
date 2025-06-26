@@ -5,16 +5,21 @@ export class CoordinateConverter {
     constructor() {
         // グローバルなconfigから緯度経度を取得
         const globalConfig = window.config;
-        if (globalConfig && globalConfig.renderOptions && globalConfig.observationSite) {
+        console.log('🌐 globalConfig:', globalConfig);
+        console.log('🌐 globalConfig.displaySettings:', globalConfig.displaySettings);
+        console.log('🌐 globalConfig.viewState:', globalConfig.viewState);
+        console.log('🌐 globalConfig.observationSite:', globalConfig.observationSite);
+        console.log('gggg', globalConfig && globalConfig.displaySettings && globalConfig.viewState && globalConfig.observationSite);
+        if (globalConfig && globalConfig.displaySettings && globalConfig.viewState && globalConfig.observationSite) {
             this.latitude = globalConfig.observationSite.latitude;
             this.longitude = globalConfig.observationSite.longitude;
-            this.centerRA = globalConfig.renderOptions.centerRA;
-            this.centerDec = globalConfig.renderOptions.centerDec;
-            this.centerAz = globalConfig.renderOptions.centerAz;
-            this.centerAlt = globalConfig.renderOptions.centerAlt;
-            this.fieldOfViewRA = globalConfig.renderOptions.fieldOfViewRA;
-            this.fieldOfViewDec = globalConfig.renderOptions.fieldOfViewDec;
-            this.mode = globalConfig.renderOptions.mode;
+            this.centerRA = globalConfig.viewState.centerRA;
+            this.centerDec = globalConfig.viewState.centerDec;
+            this.centerAz = globalConfig.viewState.centerAz;
+            this.centerAlt = globalConfig.viewState.centerAlt;
+            this.fieldOfViewRA = globalConfig.viewState.fieldOfViewRA;
+            this.fieldOfViewDec = globalConfig.viewState.fieldOfViewDec;
+            this.mode = globalConfig.displaySettings.mode;
         }
         else {
             // デフォルト値（東京）
@@ -59,7 +64,7 @@ export class CoordinateConverter {
     // 動的にconfigから現在の値を取得するメソッド
     getCurrentConfig() {
         const globalConfig = window.config;
-        if (!globalConfig || !globalConfig.renderOptions || !globalConfig.observationSite) {
+        if (!globalConfig || !globalConfig.displaySettings || !globalConfig.viewState || !globalConfig.observationSite) {
             console.warn('CoordinateConverter: config not found, using cached values');
             return null;
         }
@@ -70,10 +75,10 @@ export class CoordinateConverter {
         const config = this.getCurrentConfig();
         if (config) {
             return {
-                ra: config.renderOptions.centerRA,
-                dec: config.renderOptions.centerDec,
-                az: config.renderOptions.centerAz,
-                alt: config.renderOptions.centerAlt
+                ra: config.viewState.centerRA,
+                dec: config.viewState.centerDec,
+                az: config.viewState.centerAz,
+                alt: config.viewState.centerAlt
             };
         }
         // フォールバック: キャッシュされた値を使用
@@ -89,8 +94,8 @@ export class CoordinateConverter {
         const config = this.getCurrentConfig();
         if (config) {
             return {
-                ra: config.renderOptions.fieldOfViewRA,
-                dec: config.renderOptions.fieldOfViewDec
+                ra: config.viewState.fieldOfViewRA,
+                dec: config.viewState.fieldOfViewDec
             };
         }
         // フォールバック: キャッシュされた値を使用
@@ -103,7 +108,7 @@ export class CoordinateConverter {
     getCurrentMode() {
         const config = this.getCurrentConfig();
         if (config) {
-            return config.renderOptions.mode;
+            return config.displaySettings.mode;
         }
         // フォールバック: キャッシュされた値を使用
         return this.mode;
@@ -289,6 +294,12 @@ export class CoordinateConverter {
         const y = canvas.height * (0.5 - raDec.dec / fieldOfView.dec);
         return [x, y];
     }
+    screenXYToScreenRaDec(x, y, canvas) {
+        const fieldOfView = this.getCurrentFieldOfView();
+        const ra = (0.5 - x / canvas.width) * fieldOfView.ra;
+        const dec = (0.5 - y / canvas.height) * fieldOfView.dec;
+        return { ra, dec };
+    }
     equatorialToScreenXYifin(raDec, canvas, siderealTime, force = false) {
         const center = this.getCurrentCenter();
         const fieldOfView = this.getCurrentFieldOfView();
@@ -326,14 +337,16 @@ export class CoordinateConverter {
             return [false, [0, 0]];
         }
     }
-    screenRaDecToEquatorial(screenRaDec) {
+    // AEPモードでスクリーンRaDecから赤道座標への変換
+    screenRaDecToEquatorial_AEP(screenRaDec) {
         if (screenRaDec.ra == 0 && screenRaDec.dec == 0) {
-            return { ra: 0, dec: 0 };
+            const center = this.getCurrentCenter();
+            return { ra: center.ra, dec: center.dec };
         }
         else {
             const Ra = screenRaDec.ra * DEG_TO_RAD;
             const Dec = screenRaDec.dec * DEG_TO_RAD;
-            const thetaSH = Math.atan2(Ra, Dec);
+            const thetaSH = Math.atan2(Ra, -Dec);
             const r = Math.sqrt(Ra * Ra + Dec * Dec) * DEG_TO_RAD;
             const center = this.getCurrentCenter();
             const centerDec_rad = center.dec * DEG_TO_RAD;
@@ -349,6 +362,33 @@ export class CoordinateConverter {
             const dec = Math.asin(c) * RAD_TO_DEG;
             const ra = ((Math.atan2(b, a) * RAD_TO_DEG + center.ra) % 360 + 360) % 360;
             return { ra, dec };
+        }
+    }
+    // ViewモードでスクリーンRaDecから地平座標への変換
+    screenRaDecToHorizontal_View(screenRaDec) {
+        if (screenRaDec.ra == 0 && screenRaDec.dec == 0) {
+            const center = this.getCurrentCenter();
+            return { az: center.az, alt: center.alt };
+        }
+        else {
+            const Ra = screenRaDec.ra * DEG_TO_RAD;
+            const Dec = screenRaDec.dec * DEG_TO_RAD;
+            const thetaSH = Math.atan2(Ra, -Dec);
+            const r = Math.sqrt(Ra * Ra + Dec * Dec);
+            const center = this.getCurrentCenter();
+            const centerAlt_rad = center.alt * DEG_TO_RAD;
+            const sinAlt = Math.sin(centerAlt_rad);
+            const cosAlt = Math.cos(centerAlt_rad);
+            const sinR = Math.sin(r);
+            const cosR = Math.cos(r);
+            const sinThetaSH = Math.sin(thetaSH);
+            const cosThetaSH = Math.cos(thetaSH);
+            const abc1 = this.rotateY({ x: sinR * cosThetaSH, y: sinR * sinThetaSH, z: cosR }, Math.PI / 2 - centerAlt_rad);
+            const abc2 = this.rotateZ(abc1, -center.az * DEG_TO_RAD);
+            const { x: a, y: b, z: c } = abc2;
+            const alt = Math.asin(c) * RAD_TO_DEG;
+            const az = ((Math.atan2(-b, a) * RAD_TO_DEG) % 360 + 360) % 360;
+            return { az, alt };
         }
     }
     // CelestialCoordinates型を使用した汎用的な座標変換メソッド
