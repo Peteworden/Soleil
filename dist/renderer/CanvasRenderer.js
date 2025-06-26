@@ -68,17 +68,19 @@ export class CanvasRenderer {
         if (!this.config.displaySettings.showStars)
             return;
         const limitingMagnitude = this.limitingMagnitude(this.config);
+        const siderealTime = window.config.siderealTime;
+        const zeroMagSize = this.starSize_0mag(this.config);
         for (const star of hipStars) {
             const coords = star.getCoordinates();
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
             this.ctx.beginPath();
             this.ctx.fillStyle = this.getStarColor(star.getBv());
-            this.ctx.arc(x, y, this.getStarSize(star.getMagnitude(), limitingMagnitude), 0, Math.PI * 2);
+            this.ctx.arc(x, y, this.getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize), 0, Math.PI * 2);
             this.ctx.fill();
         }
     }
@@ -88,6 +90,8 @@ export class CanvasRenderer {
         const limitingMagnitude = this.limitingMagnitude(this.config);
         if (brightestMagnitude > limitingMagnitude)
             return;
+        const siderealTime = window.config.siderealTime;
+        const zeroMagSize = this.starSize_0mag(this.config);
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         for (const area of this.areaCandidates()) {
@@ -100,12 +104,12 @@ export class CanvasRenderer {
                     continue;
                 // [ra, dec] = J2000toApparent(ra, dec, JD);
                 const coords = { ra: data[0] * 0.001, dec: data[1] * 0.001 };
-                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
                 if (!screenXY[0])
                     continue;
                 const [x, y] = screenXY[1];
                 this.ctx.moveTo(x, y);
-                this.ctx.arc(x, y, this.getStarSize(mag, limitingMagnitude), 0, Math.PI * 2);
+                this.ctx.arc(x, y, this.getStarSize(mag, limitingMagnitude, zeroMagSize), 0, Math.PI * 2);
             }
         }
         this.ctx.fill();
@@ -201,7 +205,6 @@ export class CanvasRenderer {
         return lm;
     }
     starSize_0mag(config) {
-        const lm = this.limitingMagnitude(config);
         return Math.max(13 - 2.4 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 3), 5);
     }
     getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
@@ -211,7 +214,7 @@ export class CanvasRenderer {
         if (starSize_0mag === undefined) {
             starSize_0mag = this.starSize_0mag(this.config);
         }
-        return Math.max(0.7, 0.7 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3));
+        return Math.max(1.0, 1.0 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3));
     }
     getStarColor(bv) {
         let c;

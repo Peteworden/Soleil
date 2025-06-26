@@ -38,6 +38,7 @@ function initializeConfig() {
         displaySettings.showPlanets = savedSettingsObject.displaySettings.showPlanets ? savedSettingsObject.displaySettings.showPlanets : true;
         displaySettings.showConstellationNames = savedSettingsObject.displaySettings.showConstellationNames ? savedSettingsObject.displaySettings.showConstellationNames : true;
         displaySettings.showConstellationLines = savedSettingsObject.displaySettings.showConstellationLines ? savedSettingsObject.displaySettings.showConstellationLines : true;
+        displaySettings.mode = savedSettingsObject.displaySettings.mode ? savedSettingsObject.displaySettings.mode : 'view';
     }
     if (savedSettingsObject && savedSettingsObject.viewState) {
         const savedViewState = savedSettingsObject.viewState;

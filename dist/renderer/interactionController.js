@@ -45,6 +45,10 @@ export class InteractionController {
             // ポインターの座標を更新
             this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.activePointers.size === 1) {
+                const titleText = document.getElementById('titleText');
+                if (titleText) {
+                    titleText.innerHTML = 'dragging';
+                }
                 this.isDragging = true;
                 this.isPinch = false;
                 // 直接e.clientX/Yを使用して座標を計算
@@ -89,7 +93,11 @@ export class InteractionController {
                 this.lastX = e.clientX;
                 this.lastY = e.clientY;
             }
-            else if (this.activePointers.size > 1 && this.baseDistance) {
+            else if (this.activePointers.size > 1) {
+                const titleText = document.getElementById('titleText');
+                if (titleText) {
+                    titleText.innerHTML = 'pinching';
+                }
                 this.isDragging = false;
                 this.isPinch = true;
                 const x1 = this.pointerPositions.get(0)?.x;
@@ -99,6 +107,10 @@ export class InteractionController {
                 if (!x1 || !y1 || !x2 || !y2)
                     return;
                 const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+                if (!this.baseDistance) {
+                    this.baseDistance = distance;
+                    return;
+                }
                 //原点で0, 右に行くと正、上に行くと正
                 const x3 = (x1 + x2) / 2 - this.canvas.offsetLeft - this.canvas.width / 2;
                 const y3 = (y1 + y2) / 2 - this.canvas.offsetTop - this.canvas.height / 2;
@@ -111,7 +123,6 @@ export class InteractionController {
                 else {
                     scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 180.0);
                 }
-                this.baseDistance = distance;
                 this.viewState.fieldOfViewRA /= scale;
                 this.viewState.fieldOfViewDec /= scale;
                 if (this.displaySettings.mode == 'AEP') {
@@ -134,6 +145,7 @@ export class InteractionController {
                     this.viewState.centerRA = pinchEquatorial.ra;
                     this.viewState.centerDec = pinchEquatorial.dec;
                 }
+                this.baseDistance = distance;
             }
             // グローバルconfigも確実に更新
             const globalConfig = window.config;
@@ -225,6 +237,7 @@ export class InteractionController {
                 this.canvas.releasePointerCapture(e.pointerId);
                 console.log('onPointerUp (pinch)', e.pointerType, e.pointerId);
             }
+            this.baseDistance = 0;
             // タッチ操作の場合はonTouchEndで処理するため、ここでは何もしない
         };
         this.onWheel = (e) => {
