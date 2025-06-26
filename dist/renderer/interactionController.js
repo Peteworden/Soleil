@@ -208,8 +208,7 @@ export class InteractionController {
             //     }
             //     return;
             // }
-            // 通常のpointerupの場合
-            if (this.activePointers.size === 0) {
+            if (this.activePointers.size === 1) {
                 this.isDragging = false;
                 this.isPinch = false;
                 const titleElement = document.getElementById('titleText');
@@ -240,7 +239,7 @@ export class InteractionController {
                 }));
                 console.log('💾 Config saved to localStorage:', this.config);
             }
-            else if (this.activePointers.size === 1) {
+            else if (this.activePointers.size === 2) {
                 this.isDragging = true;
                 this.isPinch = false;
                 this.activePointers.delete(e.pointerId);
