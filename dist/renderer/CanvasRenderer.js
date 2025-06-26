@@ -1,4 +1,3 @@
-import { Planet, Moon } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
@@ -26,10 +25,6 @@ export class CanvasRenderer {
     }
     // 天体を描画
     drawObject(object) {
-        if (object instanceof Planet && !this.config.displaySettings.showPlanets)
-            return;
-        if (object instanceof Moon && !this.config.displaySettings.showPlanets)
-            return;
         const coords = object.getCoordinates();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
         if (!screenXY[0])
@@ -39,30 +34,63 @@ export class CanvasRenderer {
         const type = object.getType();
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = 'white';
+        this.ctx.fillStyle = 'yellow';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = 'yellow';
         this.ctx.beginPath();
-        if (type === 'hipStar' && magnitude !== undefined) {
-            this.ctx.arc(x, y, this.getStarSize(magnitude), 0, Math.PI * 2);
-            this.ctx.fillStyle = 'white';
-            this.ctx.fill();
-        }
-        else if (object instanceof Planet) {
-            this.ctx.arc(x, y, 3, 0, Math.PI * 2);
-            this.ctx.fillStyle = 'red';
-            this.ctx.fill();
-            this.ctx.fillStyle = 'yellow';
-            this.ctx.fillText(object.getJapaneseName(), x, y);
-        }
-        else if (object instanceof Moon) {
-            this.ctx.arc(x, y, 30, 0, Math.PI * 2);
-            this.ctx.fillStyle = 'yellow';
-            this.ctx.fill();
+        if (type === 'Gx') {
+            this.ctx.strokeRect(x - 8, y - 4, 16, 8);
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
         else {
-            this.ctx.arc(x, y, 3, 0, Math.PI * 2);
-            this.ctx.fillStyle = 'blue';
-            this.ctx.fill();
+            this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
+    }
+    drawJsonObject(objects) {
+        // if (objects[0] instanceof MessierObject && !this.config.displaySettings.showMessier) return;
+        for (const object of objects) {
+            this.drawObject(object);
+        }
+    }
+    drawPlanets(planets) {
+        if (!this.config.displaySettings.showPlanets)
+            return;
+        this.ctx.font = '16px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'white';
+        for (const planet of planets) {
+            const coords = planet.getCoordinates();
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+            if (!screenXY[0])
+                continue;
+            const [x, y] = screenXY[1];
+            this.ctx.beginPath();
+            this.ctx.fillStyle = 'red';
+            this.ctx.arc(x, y, 3, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.fillStyle = 'yellow';
+            this.ctx.fillText(planet.getJapaneseName(), x + 3, y - 3);
+        }
+    }
+    drawMoon(moon) {
+        if (!this.config.displaySettings.showPlanets)
+            return;
+        this.ctx.font = '16px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'white';
+        const coords = moon.getCoordinates();
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+        if (!screenXY[0])
+            return;
+        const [x, y] = screenXY[1];
+        this.ctx.beginPath();
+        this.ctx.fillStyle = 'yellow';
+        this.ctx.arc(x, y, 20, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = 'yellow';
+        this.ctx.fillText('月', x + 10, y - 10);
     }
     drawHipStars(hipStars) {
         if (!this.config.displaySettings.showStars)

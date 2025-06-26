@@ -185,13 +185,14 @@ export async function main() {
             renderer.clear();
             renderer.drawGrid();
             renderer.drawConstellationLines(Object.values(constellationData));
+            renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
+            renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
             renderer.drawHipStars(hipStars);
+            renderer.drawJsonObject(messierData);
             renderer.writeConstellationNames(Object.values(constellationData));
-            renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
-            renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
-            renderer.drawObject(jupiter);
-            renderer.drawObject(moon);
+            renderer.drawPlanets([jupiter]);
+            renderer.drawMoon(moon);
         }
         const controller = new InteractionController(canvas, config, renderAll);
         // 描画

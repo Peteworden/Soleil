@@ -25,7 +25,23 @@ export class CelestialObject {
 }
 export class HipStar extends CelestialObject {
     constructor(coordinates, magnitude, bv) {
-        super('', coordinates, magnitude, 'hipStar', bv);
+        super('', { ra: coordinates.ra, dec: coordinates.dec }, magnitude, 'hipStar', bv);
+    }
+}
+export class MessierObject extends CelestialObject {
+    constructor(name, alt_name, coordinates, magnitude, type, description) {
+        super(name, coordinates, magnitude, type);
+        this.alt_name = alt_name;
+        this.description = description || '';
+    }
+    getAltName() {
+        return this.alt_name;
+    }
+    getTypeName() {
+        return this.type || '';
+    }
+    getDescription() {
+        return this.description;
     }
 }
 export class Planet extends CelestialObject {

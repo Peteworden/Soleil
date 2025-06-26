@@ -1,4 +1,5 @@
-import { HipStar } from '../models/CelestialObject.js';
+import { HipStar, MessierObject } from '../models/CelestialObject.js';
+import { CoordinateConverter } from './coordinates.js';
 export class DataLoader {
     static async fetchText(url) {
         const response = await fetch(url);
@@ -66,7 +67,13 @@ export class DataLoader {
     }
     // メシエ天体データの読み込み
     static async loadMessierData() {
-        return await this.fetchJson('data/messier.json');
+        const converter = new CoordinateConverter();
+        const data = await this.fetchJson('data/messier.json');
+        const messier = [];
+        for (const object of data) {
+            messier.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.description));
+        }
+        return messier;
     }
     // 星名データの読み込み
     static async loadStarNames() {

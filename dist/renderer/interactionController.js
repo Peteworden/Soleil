@@ -22,7 +22,7 @@ export class InteractionController {
                 this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             }
             if (this.activePointers.size === 1) {
-                this.isDragging = false;
+                this.isDragging = true;
                 this.isPinch = false;
                 this.lastX = e.clientX;
                 this.lastY = e.clientY;
@@ -54,15 +54,11 @@ export class InteractionController {
             e.preventDefault();
             // ポインターの座標を更新
             this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
-            console.log(this.pointerPositions.size, this.activePointers, this.pointerPositions.get(this.getActivePointerIds()[0]));
-            if (this.activePointers.size === 1) {
+            if (this.isDragging) {
                 const titleText = document.getElementById('titleText');
                 if (titleText) {
                     titleText.innerHTML = 'dragging';
                 }
-                this.isDragging = true;
-                this.isPinch = false;
-                // 直接e.clientX/Yを使用して座標を計算
                 const deltaX = e.clientX - this.lastX;
                 const deltaY = e.clientY - this.lastY;
                 // 最小移動量チェック（タッチ操作では1ピクセルに調整）
@@ -104,10 +100,8 @@ export class InteractionController {
                 this.lastX = e.clientX;
                 this.lastY = e.clientY;
             }
-            else if (this.activePointers.size > 1) {
+            else if (this.isPinch) {
                 const titleText = document.getElementById('titleText');
-                this.isDragging = false;
-                this.isPinch = true;
                 const pointerIds = this.getActivePointerIds();
                 if (pointerIds.length < 2)
                     return;
@@ -115,9 +109,6 @@ export class InteractionController {
                 const y1 = this.pointerPositions.get(pointerIds[0])?.y;
                 const x2 = this.pointerPositions.get(pointerIds[1])?.x;
                 const y2 = this.pointerPositions.get(pointerIds[1])?.y;
-                if (titleText) {
-                    titleText.innerHTML = `pinching ${x1} ${y1} ${x2} ${y2}`;
-                }
                 if (!x1 || !y1 || !x2 || !y2)
                     return;
                 const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
@@ -131,6 +122,7 @@ export class InteractionController {
                 //原点で0, 右に行くと正、上に行くと正
                 const x3 = (x1 + x2) / 2 - this.canvas.offsetLeft - this.canvas.width / 2;
                 const y3 = (y1 + y2) / 2 - this.canvas.offsetTop - this.canvas.height / 2;
+                // 1より大きければ拡大、小さければ縮小
                 let scale = distance / this.baseDistance;
                 if (!scale || scale == Infinity)
                     return;
@@ -148,12 +140,12 @@ export class InteractionController {
                     const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
                     this.viewState.centerRA = pinchEquatorial.ra;
                     this.viewState.centerDec = pinchEquatorial.dec;
-                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: this.viewState.centerRA, dec: this.viewState.centerDec }, window.config.siderealTime);
+                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: pinchEquatorial.ra, dec: pinchEquatorial.dec }, window.config.siderealTime);
                     this.viewState.centerAz = centerHorizontal.az;
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    const pinchScreenAz = -this.viewState.fieldOfViewRA * x3 / this.canvas.width;
+                    const pinchScreenAz = this.viewState.fieldOfViewRA * x3 / this.canvas.width;
                     const pinchScreenAlt = -this.viewState.fieldOfViewDec * y3 / this.canvas.height;
                     const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
                     this.viewState.centerAz = pinchHorizontal.az;
@@ -183,40 +175,39 @@ export class InteractionController {
         };
         this.onPointerUp = (e) => {
             console.log('onPointerUp', e.type, e.pointerType, e.pointerId, this.isDragging, this.activePointers.size);
-            this.activePointers.delete(e.pointerId);
-            this.pointerPositions.delete(e.pointerId);
-            // pointercancelの場合は即座にドラッグを停止
-            if (e.type === 'pointercancel') {
-                if (this.isDragging) {
-                    this.isDragging = false;
-                    const titleElement = document.getElementById('titleText');
-                    if (titleElement) {
-                        titleElement.innerHTML = '星図';
-                    }
-                    if (e.pointerType === 'mouse') {
-                        this.canvas.style.cursor = 'grab';
-                        this.canvas.removeEventListener('pointermove', this.onPointerMove);
-                    }
-                    else if (e.pointerType === 'touch') {
-                        // this.canvas.style.touchAction = 'none';  // autoではなくnoneに戻す
-                    }
-                    this.canvas.releasePointerCapture(e.pointerId);
-                    console.log('onPointerUp (cancel)', e.pointerType, e.pointerId);
-                    // localstorageに保存
-                    this.config.viewState.centerRA = this.viewState.centerRA;
-                    this.config.viewState.centerDec = this.viewState.centerDec;
-                    this.config.viewState.centerAz = this.viewState.centerAz;
-                    this.config.viewState.centerAlt = this.viewState.centerAlt;
-                    this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
-                    this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
-                    localStorage.setItem('config', JSON.stringify({
-                        displaySettings: this.config.displaySettings,
-                        viewState: this.config.viewState
-                    }));
-                    console.log('💾 Config saved to localStorage:', this.config);
-                }
-                return;
-            }
+            // // pointercancelの場合は即座にドラッグを停止
+            // if (e.type === 'pointercancel') {
+            //     if (this.isDragging) {
+            //         this.isDragging = false;
+            //         const titleElement = document.getElementById('titleText');
+            //         if (titleElement) {
+            //             titleElement.innerHTML = '星図';
+            //         }
+            //         if (e.pointerType === 'mouse') {
+            //             this.canvas.style.cursor = 'grab';
+            //             this.canvas.removeEventListener('pointermove', this.onPointerMove);
+            //         } else if (e.pointerType === 'touch') {
+            //             this.canvas.style.touchAction = 'none';  // autoではなくnoneに戻す
+            //         }
+            //         this.canvas.releasePointerCapture(e.pointerId);
+            //         console.log('onPointerUp (cancel)', e.pointerType, e.pointerId);
+            //         // localstorageに保存
+            //         this.config.viewState.centerRA = this.viewState.centerRA;
+            //         this.config.viewState.centerDec = this.viewState.centerDec;
+            //         this.config.viewState.centerAz = this.viewState.centerAz;
+            //         this.config.viewState.centerAlt = this.viewState.centerAlt;
+            //         this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
+            //         this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
+            //         localStorage.setItem('config', JSON.stringify({
+            //             displaySettings: this.config.displaySettings,
+            //             viewState: this.config.viewState
+            //         }));
+            //         console.log('💾 Config saved to localStorage:', this.config);
+            //     } else if (this.isPinch) {
+            //         this.isPinch = false;
+            //     }
+            //     return;
+            // }
             // 通常のpointerupの場合
             if (this.activePointers.size === 0) {
                 this.isDragging = false;
@@ -225,17 +216,18 @@ export class InteractionController {
                 if (titleElement) {
                     titleElement.innerHTML = '星図';
                 }
+                this.activePointers.delete(e.pointerId);
+                this.pointerPositions.delete(e.pointerId);
+                this.canvas.releasePointerCapture(e.pointerId);
                 if (e.pointerType === 'mouse') {
                     this.canvas.style.cursor = 'grab';
                     this.canvas.removeEventListener('pointermove', this.onPointerMove);
                 }
                 else if (e.pointerType === 'touch') {
+                    this.canvas.style.touchAction = 'none';
                     this.canvas.removeEventListener('pointermove', this.onPointerMove);
-                    this.canvas.style.touchAction = 'none'; // autoではなくnoneに戻す
-                    this.canvas.releasePointerCapture(e.pointerId); // タッチでもpointer captureを解放
                 }
                 console.log('onPointerUp', e.pointerType, e.pointerId, 'touchCount:', this.activePointers.size);
-                // localstorageに保存
                 this.config.viewState.centerRA = this.viewState.centerRA;
                 this.config.viewState.centerDec = this.viewState.centerDec;
                 this.config.viewState.centerAz = this.viewState.centerAz;
@@ -248,40 +240,58 @@ export class InteractionController {
                 }));
                 console.log('💾 Config saved to localStorage:', this.config);
             }
-            else if (this.isPinch && this.activePointers.size === 1) {
+            else if (this.activePointers.size === 1) {
                 this.isDragging = true;
                 this.isPinch = false;
+                this.activePointers.delete(e.pointerId);
+                this.pointerPositions.delete(e.pointerId);
                 this.canvas.releasePointerCapture(e.pointerId);
-                console.log('onPointerUp (pinch)', e.pointerType, e.pointerId);
+                console.log('onPointerUp (2)', e.pointerType, e.pointerId);
             }
             this.baseDistance = 0;
-            // タッチ操作の場合はonTouchEndで処理するため、ここでは何もしない
         };
         this.onWheel = (e) => {
             e.preventDefault();
-            const zoomAmount = e.deltaY * this.zoomSensitivity;
-            this.viewState.fieldOfViewRA /= (1 - zoomAmount);
-            this.viewState.fieldOfViewDec /= (1 - zoomAmount);
-            // ズーム範囲を制限
-            if (this.viewState.fieldOfViewRA < 1.0) {
-                this.viewState.fieldOfViewRA = 1.0;
-                this.viewState.fieldOfViewDec = this.viewState.fieldOfViewRA * this.canvas.height / this.canvas.width;
+            let scale = 1 - e.deltaY * this.zoomSensitivity;
+            if (!scale || scale == Infinity || scale == 0)
+                return;
+            if (this.canvas.width < this.canvas.height) {
+                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 180.0);
             }
-            else if (this.viewState.fieldOfViewRA > 200) {
-                this.viewState.fieldOfViewRA = 200;
-                this.viewState.fieldOfViewDec = this.viewState.fieldOfViewRA * this.canvas.height / this.canvas.width;
+            else {
+                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 180.0);
             }
-            if (this.viewState.fieldOfViewDec < 1.0) {
-                this.viewState.fieldOfViewDec = 1.0;
-                this.viewState.fieldOfViewRA = this.viewState.fieldOfViewDec * this.canvas.width / this.canvas.height;
+            const x = e.clientX - this.canvas.offsetLeft - this.canvas.width / 2;
+            const y = e.clientY - this.canvas.offsetTop - this.canvas.height / 2;
+            this.viewState.fieldOfViewRA /= scale;
+            this.viewState.fieldOfViewDec /= scale;
+            if (this.displaySettings.mode == 'AEP') {
+                const pinchScreenRA = -this.viewState.fieldOfViewRA * x / this.canvas.width;
+                const pinchScreenDec = -this.viewState.fieldOfViewDec * y / this.canvas.height;
+                const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
+                this.viewState.centerRA = pinchEquatorial.ra;
+                this.viewState.centerDec = pinchEquatorial.dec;
+                const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: pinchEquatorial.ra, dec: pinchEquatorial.dec }, window.config.siderealTime);
+                this.viewState.centerAz = centerHorizontal.az;
+                this.viewState.centerAlt = centerHorizontal.alt;
             }
-            else if (this.viewState.fieldOfViewDec > 180) {
-                this.viewState.fieldOfViewDec = 180;
-                this.viewState.fieldOfViewRA = this.viewState.fieldOfViewDec * this.canvas.width / this.canvas.height;
+            else if (this.displaySettings.mode == 'view') {
+                const pinchScreenAz = this.viewState.fieldOfViewRA * x / this.canvas.width;
+                const pinchScreenAlt = -this.viewState.fieldOfViewDec * y / this.canvas.height;
+                const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
+                this.viewState.centerAz = pinchHorizontal.az;
+                this.viewState.centerAlt = pinchHorizontal.alt;
+                const pinchEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: pinchHorizontal.az, alt: pinchHorizontal.alt }, window.config.siderealTime);
+                this.viewState.centerRA = pinchEquatorial.ra;
+                this.viewState.centerDec = pinchEquatorial.dec;
             }
             // グローバルconfigも確実に更新
             const globalConfig = window.config;
             if (globalConfig && globalConfig.viewState) {
+                globalConfig.viewState.centerRA = this.viewState.centerRA;
+                globalConfig.viewState.centerDec = this.viewState.centerDec;
+                globalConfig.viewState.centerAz = this.viewState.centerAz;
+                globalConfig.viewState.centerAlt = this.viewState.centerAlt;
                 globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
                 globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
             }

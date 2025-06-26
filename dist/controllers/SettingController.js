@@ -128,67 +128,9 @@ export class SettingController {
         localStorage.setItem('config', JSON.stringify({
             displaySettings: config.displaySettings,
             viewState: config.viewState
-            // mode: config.displaySettings.mode,
-            // centerRA: config.viewState.centerRA,
-            // centerDec: config.viewState.centerDec,
-            // centerAz: config.viewState.centerAz,
-            // centerAlt: config.viewState.centerAlt,
-            // fieldOfViewRA: config.viewState.fieldOfViewRA,
-            // fieldOfViewDec: config.viewState.fieldOfViewDec
         }));
         console.log('💾 Config saved to localStorage');
     }
-    // static loadSettingsFromLocalStorage() {
-    //     // 保存された設定値を読み込み
-    //     const savedSettings = localStorage.getItem('starChartSettings');
-    //     if (savedSettings) {
-    //         const settings = JSON.parse(savedSettings);
-    //         // 設定値をフォームに反映
-    //         if (settings.observer) {
-    //             (document.getElementById('observer') as HTMLSelectElement).value = settings.observer;
-    //         }
-    //         if (settings.latitude) {
-    //             (document.getElementById('lat') as HTMLInputElement).value = settings.latitude;
-    //         }
-    //         if (settings.longitude) {
-    //             (document.getElementById('lon') as HTMLInputElement).value = settings.longitude;
-    //         }
-    //         if (settings.darkMode !== undefined) {
-    //             (document.getElementById('dark') as HTMLInputElement).checked = settings.darkMode;
-    //         }
-    //         if (settings.gridCheck !== undefined) {
-    //             (document.getElementById('gridCheck') as HTMLInputElement).checked = settings.gridCheck;
-    //         }
-    //         if (settings.magLimit) {
-    //             (document.getElementById('magLimitSlider') as HTMLInputElement).value = settings.magLimit;
-    //         }
-    //         if (settings.mode) {
-    //             const modeRadio = document.querySelector(`input[name="mode"][value="${settings.mode}"]`) as HTMLInputElement;
-    //             if (modeRadio) modeRadio.checked = true;
-    //         }
-    //         if (settings.starName) {
-    //             const starNameRadio = document.querySelector(`input[name="starName"][value="${settings.starName}"]`) as HTMLInputElement;
-    //             if (starNameRadio) starNameRadio.checked = true;
-    //         }
-    //         if (settings.constNameCheck !== undefined) {
-    //             (document.getElementById('constNameCheck') as HTMLInputElement).checked = settings.constNameCheck;
-    //         }
-    //         if (settings.constLineCheck !== undefined) {
-    //             (document.getElementById('constLineCheck') as HTMLInputElement).checked = settings.constLineCheck;
-    //         }
-    //         if (settings.planetCheck !== undefined) {
-    //             (document.getElementById('planetCheck') as HTMLInputElement).checked = settings.planetCheck;
-    //         }
-    //         if (settings.MessierCheck !== undefined) {
-    //             (document.getElementById('MessierCheck') as HTMLInputElement).checked = settings.MessierCheck;
-    //         }
-    //         if (settings.recsCheck !== undefined) {
-    //             (document.getElementById('recsCheck') as HTMLInputElement).checked = settings.recsCheck;
-    //         }
-    //     }
-    //     // main.tsのconfigからも設定を読み込む
-    //     SettingController.loadSettingsFromConfig();
-    // }
     // main.tsのconfigから設定をUIに反映するメソッド
     static loadSettingsFromConfig() {
         const config = window.config;
