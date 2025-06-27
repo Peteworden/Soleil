@@ -67,7 +67,7 @@ function initializeConfig() {
         viewState.centerAz = savedViewState.centerAz !== undefined ? savedViewState.centerAz : 0;
         viewState.centerAlt = savedViewState.centerAlt !== undefined ? savedViewState.centerAlt : 0;
         viewState.fieldOfViewRA = savedViewState.fieldOfViewRA !== undefined ? savedViewState.fieldOfViewRA : 60;
-        viewState.fieldOfViewDec = savedViewState.fieldOfViewDec !== undefined ? savedViewState.fieldOfViewDec : 60;
+        viewState.fieldOfViewDec = viewState.fieldOfViewRA * window.innerHeight / window.innerWidth;
         console.log('🔧 viewState:', savedViewState);
     }
     console.log('🔧 displaySettings:', displaySettings);
@@ -163,17 +163,19 @@ export async function main() {
         return;
     try {
         // データの読み込み
-        const [hipStars, constellationData, messierData, starNames, gaia100Data, gaia101_110Data, gaia111_115Data, gaia100HelpData, gaia101_110HelpData, gaia111_115HelpData] = await Promise.all([
+        const [hipStars, gaia100Data, gaia101_110Data, gaia111_115Data, gaia100HelpData, gaia101_110HelpData, gaia111_115HelpData, constellationData, messierData, recData, ngcData, starNames] = await Promise.all([
             DataLoader.loadHIPData(),
-            DataLoader.loadConstellationData(),
-            DataLoader.loadMessierData(),
-            DataLoader.loadStarNames(),
             DataLoader.loadGaiaData('-100'),
             DataLoader.loadGaiaData('101-110'),
             DataLoader.loadGaiaData('111-115'),
             DataLoader.loadGaiaHelpData('-100'),
             DataLoader.loadGaiaHelpData('101-110'),
-            DataLoader.loadGaiaHelpData('111-115')
+            DataLoader.loadGaiaHelpData('111-115'),
+            DataLoader.loadConstellationData(),
+            DataLoader.loadMessierData(),
+            DataLoader.loadRecData(),
+            DataLoader.loadNGCData(),
+            DataLoader.loadStarNames(),
         ]);
         document.getElementById('loadingtext').innerHTML = '';
         // キャンバスの取得（HTMLで作成済み）
@@ -211,7 +213,9 @@ export async function main() {
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
             renderer.drawHipStars(hipStars);
-            renderer.drawMessierObjects(messierData);
+            renderer.drawMessier(messierData);
+            renderer.drawRec(recData);
+            renderer.drawNGC(ngcData);
             renderer.writeConstellationNames(Object.values(constellationData));
             renderer.drawPlanets([jupiter]);
             renderer.drawMoon(moon);

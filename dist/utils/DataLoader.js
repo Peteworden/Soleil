@@ -1,4 +1,4 @@
-import { HipStar, MessierObject } from '../models/CelestialObject.js';
+import { CelestialObject, HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
 export class DataLoader {
     static async fetchText(url) {
@@ -61,24 +61,6 @@ export class DataLoader {
         }
         return gaia;
     }
-    // 星座データの読み込み
-    static async loadConstellationData() {
-        return await this.fetchJson('data/constellation.json');
-    }
-    // メシエ天体データの読み込み
-    static async loadMessierData() {
-        const converter = new CoordinateConverter();
-        const data = await this.fetchJson('data/messier.json');
-        const messier = [];
-        for (const object of data) {
-            messier.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.description));
-        }
-        return messier;
-    }
-    // 星名データの読み込み
-    static async loadStarNames() {
-        return await this.fetchJson('data/starnames.json');
-    }
     // HIP星表データの読み込み
     static async loadHIPData() {
         const h = await this.fetchText('data/hip_65.txt');
@@ -95,9 +77,42 @@ export class DataLoader {
         }
         return hips;
     }
+    // 星座データの読み込み
+    static async loadConstellationData() {
+        return await this.fetchJson('data/constellation.json');
+    }
+    // 星名データの読み込み
+    static async loadStarNames() {
+        return await this.fetchJson('data/starnames.json');
+    }
+    // メシエ天体データの読み込み
+    static async loadMessierData() {
+        const converter = new CoordinateConverter();
+        const data = await this.fetchJson('data/messier.json');
+        const messier = [];
+        for (const object of data) {
+            messier.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.description));
+        }
+        return messier;
+    }
+    // おすすめ天体データの読み込み
+    static async loadRecData() {
+        const converter = new CoordinateConverter();
+        const data = await this.fetchJson('data/rec.json');
+        const rec = [];
+        for (const object of data) {
+            rec.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.description));
+        }
+        return rec;
+    }
     // NGC天体データの読み込み
     static async loadNGCData() {
-        return await this.fetchText('data/ngc.txt');
+        const data = (await this.fetchText('data/ngc.txt')).split(',');
+        const ngc = [];
+        for (let i = 0; i < data.length; i += 5) {
+            ngc.push(new CelestialObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]));
+        }
+        return ngc;
     }
     // 明るい星データの読み込み
     static async loadBrightStars() {

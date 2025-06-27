@@ -34,16 +34,77 @@ export class CanvasRenderer {
         const type = object.getType();
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = 'yellow';
+        this.ctx.fillStyle = 'orange';
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = 'yellow';
+        this.ctx.strokeStyle = 'orange';
+        /*
+        Gx       Galaxy 銀河
+        OC       Open star cluster 散開星団
+        Gb       Globular star cluster, usually in the Milky Way Galaxy 球状星団
+        Nb       Bright emission or reflection nebula 散光星雲、超新星残骸
+        Pl       Planetary nebula 惑星状星雲
+        C+N      Cluster associated with nebulosity
+        Ast      Asterism or group of a few stars
+        Kt       Knot or nebulous region in an external galaxy
+        TS       Triple star    (was *** in the CDS table version)
+        DS       Double star    (was ** in the CDS version)
+        SS       Single star    (was * in the CDS version)
+        ?        Uncertain type or may not exist
+        U        Unidentified at the place given, or type unknown (was blank in CDS v.)
+        -        Object called nonexistent in the RNGC (Sulentic and Tifft 1973)
+        PD       Photographic plate defect
+        */
         this.ctx.beginPath();
-        if (type === 'Gx') {
-            this.ctx.strokeRect(x - 8, y - 4, 16, 8);
+        if (type === 'Gx') { // Galaxy, 楕円
+            this.ctx.ellipse(x, y, 8, 3, 0, 0, Math.PI * 2);
+            this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
-        else {
-            this.ctx.arc(x, y, 5, 0, Math.PI * 2);
+        else if (['OC', 'C+N', 'Ast'].includes(type || '')) { // Open Cluster, 上三角形
+            this.ctx.moveTo(x, y - 8);
+            this.ctx.lineTo(x + 6, y + 4);
+            this.ctx.lineTo(x - 6, y + 4);
+            this.ctx.lineTo(x, y - 8);
+            this.ctx.stroke();
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
+        }
+        else if (type == 'Gb') { // Globular Cluster, 円
+            this.ctx.arc(x, y, 6, 0, Math.PI * 2);
+            this.ctx.stroke();
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
+        }
+        else if (['Nb', 'Pl', 'Kt'].includes(type || '')) { // Nebula, 正方形
+            this.ctx.moveTo(x, y - 8);
+            this.ctx.lineTo(x + 8, y);
+            this.ctx.lineTo(x, y + 8);
+            this.ctx.lineTo(x - 8, y);
+            this.ctx.lineTo(x, y - 8);
+            this.ctx.stroke();
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
+        }
+        else if (['DS', 'TS', 'SS'].includes(type || '')) { // Star, 星
+            const a = Math.PI / 5;
+            const b = 8;
+            const c = 5;
+            this.ctx.moveTo(x, y - b);
+            this.ctx.lineTo(x + c * Math.sin(a), y - c * Math.cos(a));
+            this.ctx.lineTo(x + b * Math.sin(2 * a), y - b * Math.cos(2 * a));
+            this.ctx.lineTo(x + c * Math.sin(3 * a), y - c * Math.cos(3 * a));
+            this.ctx.lineTo(x + b * Math.sin(4 * a), y - b * Math.cos(4 * a));
+            this.ctx.lineTo(x + c * Math.sin(5 * a), y - c * Math.cos(5 * a));
+            this.ctx.lineTo(x + b * Math.sin(6 * a), y - b * Math.cos(6 * a));
+            this.ctx.lineTo(x + c * Math.sin(7 * a), y - c * Math.cos(7 * a));
+            this.ctx.lineTo(x + b * Math.sin(8 * a), y - b * Math.cos(8 * a));
+            this.ctx.lineTo(x + c * Math.sin(9 * a), y - c * Math.cos(9 * a));
+            this.ctx.lineTo(x, y - b);
+            this.ctx.stroke();
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
+        }
+        else { // ×印
+            this.ctx.moveTo(x - 6, y - 6);
+            this.ctx.lineTo(x + 6, y + 6);
+            this.ctx.moveTo(x + 6, y - 6);
+            this.ctx.lineTo(x - 6, y + 6);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
@@ -53,10 +114,20 @@ export class CanvasRenderer {
             this.drawObject(object);
         }
     }
-    drawMessierObjects(messierObjects) {
+    drawMessier(messierObjects) {
         if (!this.config.displaySettings.showMessiers)
             return;
         this.drawJsonObject(messierObjects);
+    }
+    drawRec(recObjects) {
+        if (!this.config.displaySettings.showRecs)
+            return;
+        this.drawJsonObject(recObjects);
+    }
+    drawNGC(ngcObjects) {
+        if (!this.config.displaySettings.showNGC)
+            return;
+        this.drawJsonObject(ngcObjects);
     }
     drawPlanets(planets) {
         if (!this.config.displaySettings.showPlanets)
@@ -150,49 +221,168 @@ export class CanvasRenderer {
     drawGrid() {
         if (!this.config.displaySettings.showGrid)
             return;
-        const step = 15; // 15度ごとにグリッド線を描画
-        const vertexStep = 2; // 2度ごとに頂点を描画
-        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        let i, j;
+        const fieldOfViewRA = this.config.viewState.fieldOfViewRA;
+        const fieldOfViewDec = this.config.viewState.fieldOfViewDec;
+        const centerAz = this.config.viewState.centerAz;
+        const centerAlt = this.config.viewState.centerAlt;
+        const minAlt = Math.max(-90, Math.min(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).alt, centerAlt - fieldOfViewDec / 2));
+        const maxAlt = Math.min(90, Math.max(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).alt, centerAlt + fieldOfViewDec / 2));
+        const altGridCalcIv = Math.min(fieldOfViewRA, fieldOfViewDec) / 40;
+        const azGridCalcIv = Math.min(altGridCalcIv / Math.max(Math.cos(centerAlt * Math.PI / 180), 0.1), 8);
+        const gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
+        this.ctx.strokeStyle = 'gray';
         this.ctx.lineWidth = 1;
-        let lastX = null;
-        let lastY = null;
-        let isInScreen = false;
-        // 赤経のグリッド線
-        for (let ra = 0; ra < 360; ra += step) {
-            this.ctx.beginPath();
-            for (let dec = -90; dec <= 90; dec += vertexStep) {
-                const coords = { ra, dec };
-                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
-                if (!screenXY[0])
-                    continue;
-                const [x, y] = screenXY[1];
-                if (dec === -90) {
-                    this.ctx.moveTo(x, y);
+        let altGridIv = 45;
+        for (i = 0; i < gridIvChoices.length; i++) {
+            if (gridIvChoices[i] > Math.min(fieldOfViewDec, fieldOfViewRA) / 6) {
+                altGridIv = gridIvChoices[i];
+                break;
+            }
+        }
+        let azGridIv = 45;
+        for (i = 0; i < gridIvChoices.length; i++) {
+            if (gridIvChoices[i] > altGridIv / Math.cos(centerAlt * Math.PI / 180)) {
+                azGridIv = gridIvChoices[i];
+                break;
+            }
+        }
+        let az, alt, screenRA0, screenDec0;
+        if (maxAlt == 90) {
+            for (i = Math.floor(minAlt / altGridIv); i < Math.ceil(90 / altGridIv); i++) {
+                alt = i * altGridIv;
+                if (alt == 0) {
+                    this.ctx.lineWidth = 3;
                 }
                 else {
-                    this.ctx.lineTo(x, y);
+                    this.ctx.lineWidth = 1;
                 }
+                this.ctx.beginPath();
+                for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
+                    az = j * azGridCalcIv;
+                    [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                }
+                this.ctx.stroke();
             }
-            this.ctx.stroke();
+            this.ctx.lineWidth = 1;
+            for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
+                az = i * azGridIv;
+                for (j = 0; j < Math.ceil(90 / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+                    alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+                    [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                }
+                this.ctx.stroke();
+            }
         }
-        // 赤緯のグリッド線
-        for (let dec = -90; dec <= 90; dec += step) {
-            this.ctx.beginPath();
-            for (let ra = 0; ra <= 360; ra += vertexStep) {
-                const coords = { ra, dec };
-                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
-                if (!screenXY[0])
-                    continue;
-                const [x, y] = screenXY[1];
-                if (ra === 0) {
-                    this.ctx.moveTo(x, y);
+        else if (minAlt == -90) {
+            for (i = Math.floor(-90 / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
+                alt = i * altGridIv;
+                if (alt == 0) {
+                    this.ctx.lineWidth = 3;
                 }
                 else {
-                    this.ctx.lineTo(x, y);
+                    this.ctx.lineWidth = 1;
+                }
+                this.ctx.beginPath();
+                for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
+                    az = j * azGridCalcIv;
+                    [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                }
+                this.ctx.stroke();
+            }
+            this.ctx.lineWidth = 1;
+            for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
+                az = i * azGridCalcIv;
+                for (j = 0; j < Math.ceil((maxAlt + 90) / altGridCalcIv) + 1; j++) {
+                    alt = -90 + j * altGridCalcIv;
+                    [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                }
+                this.ctx.stroke();
+            }
+        }
+        else {
+            const azRange = Math.max((this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).az - centerAz + 360) % 360, (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: 0 }).az - centerAz + 360) % 360, (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).az - centerAz + 360) % 360);
+            for (i = Math.floor(minAlt / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
+                alt = i * altGridIv;
+                if (alt == 0) {
+                    this.ctx.lineWidth = 3;
+                }
+                else {
+                    this.ctx.lineWidth = 1;
+                }
+                this.ctx.beginPath();
+                for (j = 0; j < 2 * azRange / azGridCalcIv + 1; j++) {
+                    az = centerAz - azRange + j * azGridCalcIv;
+                    [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                }
+                this.ctx.stroke();
+            }
+            this.ctx.lineWidth = 1;
+            if (centerAz - azRange < 0) {
+                for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
+                    az = i * azGridIv;
+                    for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+                        alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    }
+                    this.ctx.stroke();
+                }
+                for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
+                    az = i * azGridIv;
+                    for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+                        alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    }
+                    this.ctx.stroke();
                 }
             }
-            this.ctx.stroke();
+            else if (centerAz + azRange > 360) {
+                for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
+                    az = i * azGridIv;
+                    for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+                        alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    }
+                    this.ctx.stroke();
+                }
+                for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
+                    az = i * azGridIv;
+                    for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+                        alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    }
+                    this.ctx.stroke();
+                }
+            }
+            else {
+                for (i = Math.floor((centerAz - azRange) / azGridIv); i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
+                    az = i * azGridIv;
+                    for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+                        alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    }
+                    this.ctx.stroke();
+                }
+            }
         }
+        this.ctx.stroke();
+    }
+    drawHorizontalLine(j, az, alt, screenRA0, screenDec0) {
+        const { ra: screenRA1, dec: screenDec1 } = this.coordinateConverter.horizontalToScreenRaDec({ az: az, alt: alt }, { az: this.config.viewState.centerAz, alt: this.config.viewState.centerAlt });
+        const semiWidthRA = this.config.viewState.fieldOfViewRA / 2;
+        const semiWidthDec = this.config.viewState.fieldOfViewDec / 2;
+        if (j > 0) {
+            if (screenRA0 === undefined || screenDec0 === undefined)
+                return [screenRA1, screenDec1];
+            if ((Math.abs(screenRA0) < semiWidthRA && Math.abs(screenDec0) < semiWidthDec) ||
+                (Math.abs(screenRA1) < semiWidthRA && Math.abs(screenDec1) < semiWidthDec)) {
+                const [x1, y1] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA0, dec: screenDec0 }, this.canvas);
+                const [x2, y2] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA1, dec: screenDec1 }, this.canvas);
+                this.ctx.moveTo(x1, y1);
+                this.ctx.lineTo(x2, y2);
+            }
+        }
+        return [screenRA1, screenDec1];
     }
     // 星座線を描画
     drawConstellationLines(constellations) {

@@ -82,7 +82,7 @@ export class InteractionController {
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    this.viewState.centerAz += deltaX * moveScale;
+                    this.viewState.centerAz -= deltaX * moveScale;
                     this.viewState.centerAlt += deltaY * moveScale;
                     if (this.viewState.centerAz < 0)
                         this.viewState.centerAz += 360;

@@ -1,4 +1,3 @@
-import { toCelestialCoordinates } from '../types/index.js';
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 export class CoordinateConverter {
@@ -207,7 +206,7 @@ export class CoordinateConverter {
         const x = cosLat * sinDec - sinLat * cosDec * cosHourAngle;
         const y = -cosDec * sinHourAngle;
         const z = sinLat * sinDec + cosLat * cosDec * cosHourAngle;
-        const az = (Math.atan2(-y, x) * RAD_TO_DEG + 360) % 360;
+        const az = (Math.atan2(y, x) * RAD_TO_DEG + 360) % 360;
         const alt = Math.asin(z) * RAD_TO_DEG;
         return { az, alt };
     }
@@ -236,38 +235,50 @@ export class CoordinateConverter {
         // const ra = (lst - ha + 360) % 360;
         return { ra, dec };
     }
-    // 赤道座標や地平座標からある方向を中心とした正距方位図法への変換
-    celestialToScreenRaDec(coords, center) {
-        // UnifiedCoordinatesに変換
-        const coordUnified = toCelestialCoordinates(coords);
-        const centerUnified = toCelestialCoordinates(center);
-        if (coordUnified.primary == centerUnified.primary && coordUnified.secondary == centerUnified.secondary) {
-            return { ra: 0, dec: 0 };
-        }
-        const ra = coordUnified.primary * DEG_TO_RAD;
-        const dec = coordUnified.secondary * DEG_TO_RAD;
-        const centerRARad = centerUnified.primary * DEG_TO_RAD;
-        const centerDecRad = centerUnified.secondary * DEG_TO_RAD;
+    // 赤道座標からある方向を中心とした正距方位図法への変換
+    equatorialToScreenRaDec(coords, center) {
+        const ra = coords.ra * DEG_TO_RAD;
+        const dec = coords.dec * DEG_TO_RAD;
+        const centerRARad = center.ra * DEG_TO_RAD;
+        const centerDecRad = center.dec * DEG_TO_RAD;
+        const ra_diff = ra - centerRARad;
         const sinDec = Math.sin(dec);
         const cosDec = Math.cos(dec);
         const sinCenterDec = Math.sin(centerDecRad);
         const cosCenterDec = Math.cos(centerDecRad);
-        const a = sinCenterDec * cosDec * Math.cos(ra - centerRARad) - cosCenterDec * sinDec;
-        const b = cosDec * Math.sin(ra - centerRARad);
-        const c = cosCenterDec * cosDec * Math.cos(ra - centerRARad) + sinCenterDec * sinDec;
+        const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
+        const b = cosDec * Math.sin(ra_diff);
+        const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
+        // const {x: a, y: b, z: c} = this.rotateY({x: cosDec, y: 0, z: sinDec}, Math.PI / 2 - centerDecRad);
         const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRA = r * Math.sin(thetaSH);
         const scrDec = -r * Math.cos(thetaSH);
         return { ra: scrRA, dec: scrDec };
     }
-    // 型ガード関数
-    // private isEquatorialCoordinates(obj: any): obj is EquatorialCoordinates {
-    //     return obj && typeof obj.ra === 'number' && typeof obj.dec === 'number';
-    // }
-    // private isHorizontalCoordinates(obj: any): obj is HorizontalCoordinates {
-    //     return obj && typeof obj.az === 'number' && typeof obj.alt === 'number';
-    // }
+    // 地平座標からある方向を中心とした正距方位図法への変換
+    horizontalToScreenRaDec(coords, center) {
+        const az = coords.az * DEG_TO_RAD;
+        const alt = coords.alt * DEG_TO_RAD;
+        const centerAzRad = center.az * DEG_TO_RAD;
+        const centerAltRad = center.alt * DEG_TO_RAD;
+        const az_diff = -(az - centerAzRad);
+        const sinAlt = Math.sin(alt);
+        const cosAlt = Math.cos(alt);
+        const sinAzDiff = Math.sin(az_diff);
+        const cosAzDiff = Math.cos(az_diff);
+        const sinCenterAlt = Math.sin(centerAltRad);
+        const cosCenterAlt = Math.cos(centerAltRad);
+        // const a = sinCenterAlt * cosAlt * Math.cos(az_diff) - cosCenterAlt * sinAlt;
+        // const b =                cosAlt * Math.sin(az_diff);
+        // const c = cosCenterAlt * cosAlt * Math.cos(az_diff) + sinCenterAlt * sinAlt;
+        const { x: a, y: b, z: c } = this.rotateY({ x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt }, -Math.PI / 2 + centerAltRad);
+        const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
+        const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
+        const scrRa = r * Math.sin(thetaSH);
+        const scrDec = -r * Math.cos(thetaSH);
+        return { ra: scrRa, dec: scrDec };
+    }
     // 赤道座標から直交座標への変換
     equatorialToCartesian(coords, distance = 1) {
         const ra = coords.ra * DEG_TO_RAD;
@@ -305,7 +316,7 @@ export class CoordinateConverter {
         const fieldOfView = this.getCurrentFieldOfView();
         const mode = this.getCurrentMode();
         if (mode == 'AEP') {
-            const screenRaDec = this.celestialToScreenRaDec(raDec, { ra: center.ra, dec: center.dec });
+            const screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: center.ra, dec: center.dec });
             if (Math.abs(screenRaDec.ra) < 0.5 * fieldOfView.ra && Math.abs(screenRaDec.dec) < 0.5 * fieldOfView.dec) {
                 const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
                 return [true, [x, y]];
@@ -320,7 +331,7 @@ export class CoordinateConverter {
         }
         else if (mode == 'view') {
             const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
-            const screenRaDec = this.celestialToScreenRaDec(horizontal, { az: center.az, alt: center.alt });
+            const screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: center.az, alt: center.alt });
             if (Math.abs(screenRaDec.ra) < fieldOfView.ra && Math.abs(screenRaDec.dec) < fieldOfView.dec) {
                 const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
                 return [true, [x, y]];

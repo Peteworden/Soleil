@@ -1,11 +1,10 @@
 import { AstronomicalCalculator } from '../utils/calculations.js';
 export class CelestialObject {
-    constructor(name, coordinates, magnitude, type, bv) {
+    constructor(name, coordinates, magnitude, type) {
         this.name = name || '';
         this.coordinates = coordinates || { ra: 0, dec: 0 };
         this.magnitude = magnitude || 0;
         this.type = type || '';
-        this.bv = bv || 100;
     }
     getName() {
         return this.name;
@@ -19,13 +18,14 @@ export class CelestialObject {
     getType() {
         return this.type;
     }
-    getBv() {
-        return this.bv;
-    }
 }
 export class HipStar extends CelestialObject {
     constructor(coordinates, magnitude, bv) {
-        super('', { ra: coordinates.ra, dec: coordinates.dec }, magnitude, 'hipStar', bv);
+        super('', { ra: coordinates.ra, dec: coordinates.dec }, magnitude, 'hipStar');
+        this.bv = bv;
+    }
+    getBv() {
+        return this.bv;
     }
 }
 export class MessierObject extends CelestialObject {
