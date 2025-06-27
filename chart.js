@@ -1795,7 +1795,6 @@ function show_main(){
                         if (i == 0 || i == Math.ceil(3*rgNS) || j == 0 || j == Math.ceil(3*rgEW)) {
                             let [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                             [ra, dec] = Ah2RADec(A, h, theta);
-                            console.log(A, h, ra, dec);
                             edgeRA.push(ra);
                             edgeDec.push(dec);
                         }
