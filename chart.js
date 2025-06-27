@@ -1836,7 +1836,7 @@ function show_main(){
     //HIP
     ctx.fillStyle = starColor;
     function drawHIPstar(x, y, mag, c) {
-        drawFilledCircle(x, y, size(mag), c);
+        drawFilledCircle(x, y, size(mag)+0.5, c);
         //回折による光の筋みたいなのを作りたい
     }
     var hips_magfilter = hips.filter(hip => hip.mag <= magLim);
@@ -1914,7 +1914,7 @@ function show_main(){
                     }
                 } else if (i != 9 && i != 5) {// 太陽と月と木星以外
                     mag = solarSystemBodies[i].mag;
-                    drawFilledCircle(x, y, Math.max(size(mag), 0.5), '#F33');
+                    drawFilledCircle(x, y, Math.max(size(mag), 1), 'rgb(255, 219, 88)');
                     if (document.getElementById('planetNameCheck').checked && rgEW <= 0.5 * document.getElementById('planetNameFrom').value) {
                         ctx.fillStyle = specialObjectNameColor;
                         ctx.fillText(JPNplanets[i], x, y);
@@ -2193,9 +2193,9 @@ function show_main(){
 
     function size(mag) {
         if (mag > magLim) {
-            return zerosize / (magLim + 1);
+            return Math.max(zerosize / (magLim + 1), 0.6);
         } else {
-            return zerosize / (magLim + 1) + zerosize * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
+            return Math.max(zerosize / (magLim + 1), 0.6) + zerosize * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
             //return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
@@ -2213,9 +2213,9 @@ function show_main(){
             else r = 1.0;
             if (bv < 0) g = 1.0 + bv;
             else if (bv < 0.4) g = 1.0;
-            else g = 1.0 - 0.75 * (bv - 0.4) / 1.6;
+            else g = 1.0 - 0.6 * (bv - 0.4) / 1.6;
             if (bv < 0.4) b = 1.0;
-            else b = 1.0 - (bv - 0.4) / 1.6;
+            else b = 1.0 - 0.8 * (bv - 0.4) / 1.6;
 
             r = Math.round(r * 255);
             g = Math.round(g * 255);
