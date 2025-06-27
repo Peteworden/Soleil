@@ -15,12 +15,22 @@ function initializeConfig() {
     const now = new Date();
     console.log('🔧 savedSettingsObject:', savedSettingsObject);
     const displaySettings = {
+        darkMode: false,
+        mode: 'view',
+        realTime: 'off',
         showGrid: true,
+        showReticle: true,
         showStars: true,
+        showStarNames: true,
         showPlanets: true,
         showConstellationNames: true,
         showConstellationLines: true,
-        mode: 'view'
+        showMessiers: true,
+        showRecs: true,
+        showNGC: false,
+        showCameraView: false,
+        camera: 'r200ss-cmos',
+        showTopography: false // 読み込み時は常にfalse
     };
     const viewState = {
         centerRA: 90,
@@ -33,23 +43,35 @@ function initializeConfig() {
         starSizeKey2: 1.8
     };
     if (savedSettingsObject && savedSettingsObject.displaySettings) {
-        displaySettings.showGrid = savedSettingsObject.displaySettings.showGrid ? savedSettingsObject.displaySettings.showGrid : true;
-        displaySettings.showStars = savedSettingsObject.displaySettings.showStars ? savedSettingsObject.displaySettings.showStars : true;
-        displaySettings.showPlanets = savedSettingsObject.displaySettings.showPlanets ? savedSettingsObject.displaySettings.showPlanets : true;
-        displaySettings.showConstellationNames = savedSettingsObject.displaySettings.showConstellationNames ? savedSettingsObject.displaySettings.showConstellationNames : true;
-        displaySettings.showConstellationLines = savedSettingsObject.displaySettings.showConstellationLines ? savedSettingsObject.displaySettings.showConstellationLines : true;
-        displaySettings.mode = savedSettingsObject.displaySettings.mode ? savedSettingsObject.displaySettings.mode : 'view';
+        const savedDisplaySettings = savedSettingsObject.displaySettings;
+        console.log('🔧 savedDisplaySettings:', savedDisplaySettings);
+        displaySettings.darkMode = savedDisplaySettings.darkMode !== undefined ? savedDisplaySettings.darkMode : displaySettings.darkMode;
+        displaySettings.mode = savedDisplaySettings.mode !== undefined ? savedDisplaySettings.mode : displaySettings.mode;
+        displaySettings.realTime = savedDisplaySettings.realTime !== undefined ? savedDisplaySettings.realTime : displaySettings.realTime;
+        displaySettings.showReticle = savedDisplaySettings.showReticle !== undefined ? savedDisplaySettings.showReticle : displaySettings.showReticle;
+        displaySettings.showGrid = savedDisplaySettings.showGrid !== undefined ? savedDisplaySettings.showGrid : displaySettings.showGrid;
+        displaySettings.showStars = savedDisplaySettings.showStars !== undefined ? savedDisplaySettings.showStars : displaySettings.showStars;
+        displaySettings.showStarNames = savedDisplaySettings.showStarNames !== undefined ? savedDisplaySettings.showStarNames : displaySettings.showStarNames;
+        displaySettings.showPlanets = savedDisplaySettings.showPlanets !== undefined ? savedDisplaySettings.showPlanets : displaySettings.showPlanets;
+        displaySettings.showConstellationNames = savedDisplaySettings.showConstellationNames !== undefined ? savedDisplaySettings.showConstellationNames : displaySettings.showConstellationNames;
+        displaySettings.showConstellationLines = savedDisplaySettings.showConstellationLines !== undefined ? savedDisplaySettings.showConstellationLines : displaySettings.showConstellationLines;
+        displaySettings.showMessiers = savedDisplaySettings.showMessiers !== undefined ? savedDisplaySettings.showMessiers : displaySettings.showMessiers;
+        displaySettings.showRecs = savedDisplaySettings.showRecs !== undefined ? savedDisplaySettings.showRecs : displaySettings.showRecs;
+        displaySettings.showNGC = savedDisplaySettings.showNGC !== undefined ? savedDisplaySettings.showNGC : displaySettings.showNGC;
+        displaySettings.camera = savedDisplaySettings.camera !== undefined ? savedDisplaySettings.camera : displaySettings.camera;
     }
     if (savedSettingsObject && savedSettingsObject.viewState) {
         const savedViewState = savedSettingsObject.viewState;
-        viewState.centerRA = savedViewState.centerRA ? savedViewState.centerRA : 90;
-        viewState.centerDec = savedViewState.centerDec ? savedViewState.centerDec : 0;
-        viewState.centerAz = savedViewState.centerAz ? savedViewState.centerAz : 0;
-        viewState.centerAlt = savedViewState.centerAlt ? savedViewState.centerAlt : 0;
-        viewState.fieldOfViewRA = savedViewState.fieldOfViewRA ? savedViewState.fieldOfViewRA : 60;
-        viewState.fieldOfViewDec = savedViewState.fieldOfViewDec ? savedViewState.fieldOfViewDec : 60;
+        viewState.centerRA = savedViewState.centerRA !== undefined ? savedViewState.centerRA : 90;
+        viewState.centerDec = savedViewState.centerDec !== undefined ? savedViewState.centerDec : 0;
+        viewState.centerAz = savedViewState.centerAz !== undefined ? savedViewState.centerAz : 0;
+        viewState.centerAlt = savedViewState.centerAlt !== undefined ? savedViewState.centerAlt : 0;
+        viewState.fieldOfViewRA = savedViewState.fieldOfViewRA !== undefined ? savedViewState.fieldOfViewRA : 60;
+        viewState.fieldOfViewDec = savedViewState.fieldOfViewDec !== undefined ? savedViewState.fieldOfViewDec : 60;
         console.log('🔧 viewState:', savedViewState);
     }
+    console.log('🔧 displaySettings:', displaySettings);
+    console.log('🔧 viewState:', viewState);
     return {
         displaySettings: displaySettings,
         viewState: viewState,
@@ -162,8 +184,8 @@ export async function main() {
         // キャンバスのサイズを設定
         canvas.width = config.canvasSize.width;
         canvas.height = config.canvasSize.height;
-        // フィールドオブビューの調整
-        config.viewState.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.viewState.fieldOfViewRA;
+        // フィールドオブビューの調整（localStorageから読み込んだ値を尊重するため削除）
+        // config.viewState.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.viewState.fieldOfViewRA;
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config);
         console.log('🎨 CanvasRenderer created');
@@ -189,7 +211,7 @@ export async function main() {
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
             renderer.drawHipStars(hipStars);
-            renderer.drawJsonObject(messierData);
+            renderer.drawMessierObjects(messierData);
             renderer.writeConstellationNames(Object.values(constellationData));
             renderer.drawPlanets([jupiter]);
             renderer.drawMoon(moon);
@@ -205,6 +227,8 @@ export async function main() {
         console.log('🎨 renderer has updateOptions method:', typeof window.renderer.updateOptions);
         setupButtonEvents();
         setupResizeHandler();
+        // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
+        SettingController.loadSettingsFromConfig();
         updateInfoDisplay();
         setupTimeUpdate();
         // 木星データの表示（テスト用）

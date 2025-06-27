@@ -201,12 +201,17 @@
                         <label>グリッド表示:</label>
                         <input type="checkbox" id="gridCheck" checked>
                     </div>
-                </div>
 
-                <!-- 天体設定タブ -->
-                <div id="objects-tab" class="setting-section" style="display: none;">
-                    <h3>天体設定</h3>
-                    
+                    <div class="setting-row">
+                        <label>中心表示:</label>
+                        <input type="checkbox" id="reticleCheck" checked>
+                    </div>
+
+                    <h5>天体</h5>
+                    <div class="setting-row">
+                        <label>恒星:</label>
+                        <input type="checkbox" id="starCheck" checked>
+                    </div>
                     <div class="setting-row">
                         <label>恒星名表示:</label>
                         <select id="starName">
@@ -217,30 +222,47 @@
                         </select>
                     </div>
 
+                    <h5>星座</h5>
                     <div class="setting-row">
                         <label>星座名:</label>
-                        <input type="checkbox" id="constNameCheck" checked>
+                        <input type="checkbox" id="constellationNameCheck" checked>
                     </div>
-
                     <div class="setting-row">
                         <label>星座線:</label>
-                        <input type="checkbox" id="constLineCheck" checked>
+                        <input type="checkbox" id="constellationLineCheck" checked>
                     </div>
-
+                    <h5>太陽系天体</h5>
                     <div class="setting-row">
-                        <label>太陽系天体:</label>
+                        <label>惑星・小惑星・彗星:</label>
                         <input type="checkbox" id="planetCheck" checked>
                     </div>
-
+                    <h5>その他の天体</h5>
                     <div class="setting-row">
                         <label>メシエ天体:</label>
-                        <input type="checkbox" id="MessierCheck" checked>
+                        <input type="checkbox" id="messierCheck" checked>
                     </div>
-
                     <div class="setting-row">
-                        <label>NGC天体:</label>
-                        <input type="checkbox" id="recsCheck" checked>
+                        <label>おすすめ天体:</label>
+                        <input type="checkbox" id="recCheck" checked>
                     </div>
+                    <div class="setting-row">
+                        <label>NGC・IC天体:</label>
+                        <input type="checkbox" id="ngcCheck" checked>
+                    </div>
+                    <h5>画角</h5>
+                    <select id="camera">
+                        <option value="none">なし</option>
+                        <option value="r200ss-cmos">R200SS-CMOS</option>
+                        <option value="fs128-cmos">FS128-CMOS</option>
+                    </select>
+
+                </div>
+
+                <!-- 天体設定タブ -->
+                <div id="objects-tab" class="setting-section" style="display: none;">
+                    <h3>天体設定</h3>
+                    <label>Empty</label>
+
                 </div>
             </div>
 
@@ -303,7 +325,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250626-2230';
+        import { main } from './dist/main.js?v=250627-1440';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

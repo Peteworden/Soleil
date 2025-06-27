@@ -59,26 +59,41 @@ export class SettingController {
             }
         }
         // 表示設定を読み取り
-        const gridCheck = document.getElementById('gridCheck');
-        const darkMode = document.getElementById('dark');
-        const magLimitSlider = document.getElementById('magLimitSlider');
-        const constNameCheck = document.getElementById('constNameCheck');
-        const constLineCheck = document.getElementById('constLineCheck');
-        const planetCheck = document.getElementById('planetCheck');
-        const starNameCheck = document.querySelector('input[name="starName"]:checked');
         const modeSelect = document.getElementById('mode');
-        if (gridCheck && darkMode && magLimitSlider) {
+        const magLimitSlider = document.getElementById('magLimitSlider');
+        const darkMode = document.getElementById('dark');
+        const gridCheck = document.getElementById('gridCheck');
+        const reticleCheck = document.getElementById('reticleCheck');
+        const starCheck = document.getElementById('starCheck');
+        const starNameCheck = document.getElementById('starName');
+        const constellationNameCheck = document.getElementById('constellationNameCheck');
+        const constellationLineCheck = document.getElementById('constellationLineCheck');
+        const planetCheck = document.getElementById('planetCheck');
+        const messierCheck = document.getElementById('messierCheck');
+        const recCheck = document.getElementById('recCheck');
+        const ngcCheck = document.getElementById('ngcCheck');
+        const camera = document.getElementById('camera');
+        if (modeSelect && gridCheck && darkMode && magLimitSlider &&
+            reticleCheck && starCheck && starNameCheck &&
+            planetCheck && messierCheck && recCheck && ngcCheck && camera) {
             const updateConfig = window.updateConfig;
             console.log('🔧 updateConfig function found:', !!updateConfig);
             if (updateConfig) {
                 const currentConfig = window.config;
                 const newDisplaySettings = {
                     ...currentConfig.displaySettings, // 既存の値を保持
+                    mode: modeSelect.value,
                     showGrid: gridCheck.checked,
-                    showPlanets: planetCheck ? planetCheck.checked : true,
-                    showConstellationNames: constNameCheck ? constNameCheck.checked : true,
-                    showConstellationLines: constLineCheck ? constLineCheck.checked : true,
-                    mode: modeSelect ? modeSelect.value : 'AEP'
+                    showReticle: reticleCheck.checked,
+                    showStars: starCheck.checked,
+                    showStarNames: starNameCheck.value,
+                    showPlanets: planetCheck.checked,
+                    showConstellationNames: constellationNameCheck.checked,
+                    showConstellationLines: constellationLineCheck.checked,
+                    showMessiers: messierCheck.checked,
+                    showRecs: recCheck.checked,
+                    showNGC: ngcCheck.checked,
+                    camera: camera.value === 'none' ? null : camera.value
                 };
                 console.log('🔧 About to call updateConfig with newDisplaySettings:', newDisplaySettings);
                 updateConfig({
@@ -125,6 +140,7 @@ export class SettingController {
             console.warn('💾 No config found, cannot save');
             return;
         }
+        console.log('💾 Saving viewState:', config.viewState);
         localStorage.setItem('config', JSON.stringify({
             displaySettings: config.displaySettings,
             viewState: config.viewState
@@ -151,24 +167,48 @@ export class SettingController {
             ewSelect.value = config.observationSite.longitude >= 0 ? '東経' : '西経';
         }
         // 表示設定
-        const gridCheck = document.getElementById('gridCheck');
-        const darkMode = document.getElementById('dark');
+        const modeSelect = document.getElementById('mode');
         const magLimitSlider = document.getElementById('magLimitSlider');
-        const constNameCheck = document.getElementById('constNameCheck');
-        const constLineCheck = document.getElementById('constLineCheck');
+        const darkMode = document.getElementById('dark');
+        const gridCheck = document.getElementById('gridCheck');
+        const reticleCheck = document.getElementById('reticleCheck');
+        const starCheck = document.getElementById('starCheck');
+        const starNameCheck = document.getElementById('starName');
+        const constellationNameCheck = document.getElementById('constellationNameCheck');
+        const constellationLineCheck = document.getElementById('constellationLineCheck');
         const planetCheck = document.getElementById('planetCheck');
-        if (gridCheck)
-            gridCheck.checked = config.displaySettings.showGrid;
-        if (darkMode)
-            darkMode.checked = false; // ダークモードは別途管理
+        const messierCheck = document.getElementById('messierCheck');
+        const recCheck = document.getElementById('recCheck');
+        const ngcCheck = document.getElementById('ngcCheck');
+        const camera = document.getElementById('camera');
+        if (modeSelect)
+            modeSelect.value = config.displaySettings.mode || 'AEP';
         if (magLimitSlider)
             magLimitSlider.value = config.viewState.starSizeKey1.toString();
-        if (constNameCheck)
-            constNameCheck.checked = config.displaySettings.showConstellationNames;
-        if (constLineCheck)
-            constLineCheck.checked = config.displaySettings.showConstellationLines;
+        if (darkMode)
+            darkMode.checked = config.displaySettings.darkMode;
+        if (gridCheck)
+            gridCheck.checked = config.displaySettings.showGrid;
+        if (reticleCheck)
+            reticleCheck.checked = config.displaySettings.showReticle;
+        if (starCheck)
+            starCheck.checked = config.displaySettings.showStars;
+        if (starNameCheck)
+            starNameCheck.value = config.displaySettings.showStarNames ? 'all' : 'no';
+        if (constellationNameCheck)
+            constellationNameCheck.checked = config.displaySettings.showConstellationNames;
+        if (constellationLineCheck)
+            constellationLineCheck.checked = config.displaySettings.showConstellationLines;
         if (planetCheck)
             planetCheck.checked = config.displaySettings.showPlanets;
+        if (messierCheck)
+            messierCheck.checked = config.displaySettings.showMessiers;
+        if (recCheck)
+            recCheck.checked = config.displaySettings.showRecs;
+        if (ngcCheck)
+            ngcCheck.checked = config.displaySettings.showNGC;
+        if (camera)
+            camera.value = config.displaySettings.camera || 'none';
         // モード設定
         const modeRadio = document.querySelector(`input[name="mode"][value="${config.displaySettings.mode}"]`);
         if (modeRadio)

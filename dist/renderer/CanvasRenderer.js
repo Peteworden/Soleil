@@ -49,10 +49,14 @@ export class CanvasRenderer {
         }
     }
     drawJsonObject(objects) {
-        // if (objects[0] instanceof MessierObject && !this.config.displaySettings.showMessier) return;
         for (const object of objects) {
             this.drawObject(object);
         }
+    }
+    drawMessierObjects(messierObjects) {
+        if (!this.config.displaySettings.showMessiers)
+            return;
+        this.drawJsonObject(messierObjects);
     }
     drawPlanets(planets) {
         if (!this.config.displaySettings.showPlanets)

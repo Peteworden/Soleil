@@ -175,39 +175,6 @@ export class InteractionController {
         };
         this.onPointerUp = (e) => {
             console.log('onPointerUp', e.type, e.pointerType, e.pointerId, this.isDragging, this.activePointers.size);
-            // // pointercancelの場合は即座にドラッグを停止
-            // if (e.type === 'pointercancel') {
-            //     if (this.isDragging) {
-            //         this.isDragging = false;
-            //         const titleElement = document.getElementById('titleText');
-            //         if (titleElement) {
-            //             titleElement.innerHTML = '星図';
-            //         }
-            //         if (e.pointerType === 'mouse') {
-            //             this.canvas.style.cursor = 'grab';
-            //             this.canvas.removeEventListener('pointermove', this.onPointerMove);
-            //         } else if (e.pointerType === 'touch') {
-            //             this.canvas.style.touchAction = 'none';  // autoではなくnoneに戻す
-            //         }
-            //         this.canvas.releasePointerCapture(e.pointerId);
-            //         console.log('onPointerUp (cancel)', e.pointerType, e.pointerId);
-            //         // localstorageに保存
-            //         this.config.viewState.centerRA = this.viewState.centerRA;
-            //         this.config.viewState.centerDec = this.viewState.centerDec;
-            //         this.config.viewState.centerAz = this.viewState.centerAz;
-            //         this.config.viewState.centerAlt = this.viewState.centerAlt;
-            //         this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
-            //         this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
-            //         localStorage.setItem('config', JSON.stringify({
-            //             displaySettings: this.config.displaySettings,
-            //             viewState: this.config.viewState
-            //         }));
-            //         console.log('💾 Config saved to localStorage:', this.config);
-            //     } else if (this.isPinch) {
-            //         this.isPinch = false;
-            //     }
-            //     return;
-            // }
             if (this.activePointers.size === 1) {
                 this.isDragging = false;
                 this.isPinch = false;
@@ -237,10 +204,9 @@ export class InteractionController {
                     displaySettings: this.config.displaySettings,
                     viewState: this.config.viewState
                 }));
-                console.log('💾 Config saved to localStorage:', this.config);
             }
             else if (this.activePointers.size === 2) {
-                this.isDragging = true;
+                this.isDragging = false;
                 this.isPinch = false;
                 this.activePointers.delete(e.pointerId);
                 this.pointerPositions.delete(e.pointerId);
@@ -294,6 +260,10 @@ export class InteractionController {
                 globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
                 globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
             }
+            localStorage.setItem('config', JSON.stringify({
+                displaySettings: this.displaySettings,
+                viewState: this.viewState
+            }));
             this.renderCallback();
             // 情報表示を即座に更新
             const updateInfoDisplay = window.updateInfoDisplay;
