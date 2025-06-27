@@ -1,5 +1,10 @@
 # Soleil
-https://peteworden.github.io/Soleil/PeteHOME.html
+トップ: https://peteworden.github.io/Soleil/PeteHOME.html
+星図: https://peteworden.github.io/Soleil/chart.html
+デスクトップアプリ: https://github.com/Peteworden/reticle/releases
+意見・提案フォーム: https://forms.gle/m4v7RbdWMANbt5s28
+画像提供フォーム: https://forms.gle/1YxVyK9DuLgLRq4w7
+星図TypeScript版（作成中）: https://peteworden.github.io/Soleil/chart_ts.html
 
 ## Data Sources
 ### stars
