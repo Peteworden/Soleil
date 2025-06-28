@@ -230,25 +230,25 @@ export class InteractionController {
             const y = e.clientY - this.canvas.offsetTop - this.canvas.height / 2;
             this.viewState.fieldOfViewRA /= scale;
             this.viewState.fieldOfViewDec /= scale;
+            const pinchScreenRA = -this.viewState.fieldOfViewRA * x / this.canvas.width;
+            const pinchScreenDec = -this.viewState.fieldOfViewDec * y / this.canvas.height;
+            const centerNewScreenRA = pinchScreenRA * (1 - 1 / scale);
+            const centerNewScreenDec = pinchScreenDec * (1 - 1 / scale);
             if (this.displaySettings.mode == 'AEP') {
-                const pinchScreenRA = -this.viewState.fieldOfViewRA * x / this.canvas.width;
-                const pinchScreenDec = -this.viewState.fieldOfViewDec * y / this.canvas.height;
-                const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
-                this.viewState.centerRA = pinchEquatorial.ra;
-                this.viewState.centerDec = pinchEquatorial.dec;
-                const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: pinchEquatorial.ra, dec: pinchEquatorial.dec }, window.config.siderealTime);
+                const centerNewEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: centerNewScreenRA, dec: centerNewScreenDec });
+                this.viewState.centerRA = centerNewEquatorial.ra;
+                this.viewState.centerDec = centerNewEquatorial.dec;
+                const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: centerNewEquatorial.ra, dec: centerNewEquatorial.dec }, window.config.siderealTime);
                 this.viewState.centerAz = centerHorizontal.az;
                 this.viewState.centerAlt = centerHorizontal.alt;
             }
             else if (this.displaySettings.mode == 'view') {
-                const pinchScreenAz = this.viewState.fieldOfViewRA * x / this.canvas.width;
-                const pinchScreenAlt = -this.viewState.fieldOfViewDec * y / this.canvas.height;
-                const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
-                this.viewState.centerAz = pinchHorizontal.az;
-                this.viewState.centerAlt = pinchHorizontal.alt;
-                const pinchEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: pinchHorizontal.az, alt: pinchHorizontal.alt }, window.config.siderealTime);
-                this.viewState.centerRA = pinchEquatorial.ra;
-                this.viewState.centerDec = pinchEquatorial.dec;
+                const centerNewHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerNewScreenRA, dec: centerNewScreenDec });
+                this.viewState.centerAz = centerNewHorizontal.az;
+                this.viewState.centerAlt = centerNewHorizontal.alt;
+                const centerNewEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: centerNewHorizontal.az, alt: centerNewHorizontal.alt }, window.config.siderealTime);
+                this.viewState.centerRA = centerNewEquatorial.ra;
+                this.viewState.centerDec = centerNewEquatorial.dec;
             }
             // グローバルconfigも確実に更新
             const globalConfig = window.config;

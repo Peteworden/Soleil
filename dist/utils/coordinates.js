@@ -222,10 +222,16 @@ export class CoordinateConverter {
         const cosLat = Math.cos(lat);
         const sinAz = Math.sin(az);
         const cosAz = Math.cos(az);
-        const x = cosLat * sinAlt - sinLat * cosAlt * cosAz;
+        // const ans = {
+        //     x: cos*coords.x+sin*coords.z,
+        //     y: coords.y,
+        //     z: -sin*coords.x+cos*coords.z
+        // };
+        const x = sinLat * cosAlt * cosAz - cosLat * sinAlt;
         const y = -cosAlt * sinAz;
-        const z = sinLat * sinAlt + cosLat * cosAlt * cosAz;
-        const ra = ((siderealTime - Math.atan2(-y, x)) * RAD_TO_DEG + 360) % 360;
+        const z = cosLat * cosAlt * cosAz + sinLat * sinAlt;
+        // const {x, y, z} = this.rotateY({x: cosAlt * cosAz, y: -cosAlt * sinAz, z: sinAlt}, -Math.PI / 2 + lat);
+        const ra = ((siderealTime + Math.atan2(-y, -x)) * RAD_TO_DEG + 360) % 360;
         const dec = Math.asin(z) * RAD_TO_DEG;
         // const sinDec = Math.sin(alt) * Math.sin(lat) + Math.cos(alt) * Math.cos(lat) * Math.cos(az);
         // const dec = Math.asin(sinDec) * RAD_TO_DEG;
@@ -249,7 +255,6 @@ export class CoordinateConverter {
         const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
         const b = cosDec * Math.sin(ra_diff);
         const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
-        // const {x: a, y: b, z: c} = this.rotateY({x: cosDec, y: 0, z: sinDec}, Math.PI / 2 - centerDecRad);
         const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRA = r * Math.sin(thetaSH);
@@ -402,27 +407,29 @@ export class CoordinateConverter {
             return { az, alt };
         }
     }
-    // CelestialCoordinates型を使用した汎用的な座標変換メソッド
-    celestialToScreenCoordinates(coords, center) {
-        if (coords.primary == center.primary && coords.secondary == center.secondary) {
-            return { primary: 0, secondary: 0 };
-        }
-        const ra = coords.primary * DEG_TO_RAD;
-        const dec = coords.secondary * DEG_TO_RAD;
-        const centerRARad = center.primary * DEG_TO_RAD;
-        const centerDecRad = center.secondary * DEG_TO_RAD;
-        const sinDec = Math.sin(dec);
-        const cosDec = Math.cos(dec);
-        const sinCenterDec = Math.sin(centerDecRad);
-        const cosCenterDec = Math.cos(centerDecRad);
-        const a = sinCenterDec * cosDec * Math.cos(ra - centerRARad) - cosCenterDec * sinDec;
-        const b = cosDec * Math.sin(ra - centerRARad);
-        const c = cosCenterDec * cosDec * Math.cos(ra - centerRARad) + sinCenterDec * sinDec;
-        const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
-        const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
-        const scrRA = r * Math.sin(thetaSH);
-        const scrDec = -r * Math.cos(thetaSH);
-        return { primary: scrRA, secondary: scrDec };
+    pinchNewCenterRaDec(center1, pinchRaDec, pinchScreenRaDec, scale) {
+        // x, yは固定。screenRA_p, screenDec_p(pinchの座標)はscale倍になる。
+        // Equ->screenRaDecの関数でthetaSH=atan2(b, a)は符号も含めて変化せず、arccos(c)はscale倍になる。
+        // 縮尺の変更前を1, 変更後を2とする。
+        // a2^2+b2^2+c2^2=1よりa2 = cos(thetaSH/sqrt(1-c2^2)). b2はsin
+        // 変更前後を通して、RA_p - centerRAの符号は変化しない
+        const centerRA1 = center1.ra * DEG_TO_RAD;
+        const centerDec1 = center1.dec * DEG_TO_RAD;
+        const pinchRA = pinchRaDec.ra * DEG_TO_RAD;
+        const pinchDec = pinchRaDec.dec * DEG_TO_RAD;
+        const ra_diff1 = pinchRA - centerRA1;
+        const thetaSH1 = Math.atan2(pinchScreenRaDec.ra, -pinchScreenRaDec.dec);
+        const r1 = Math.sqrt(pinchScreenRaDec.ra * pinchScreenRaDec.ra + pinchScreenRaDec.dec * pinchScreenRaDec.dec);
+        const c1 = Math.cos(r1 * DEG_TO_RAD);
+        // const c1 = Math.cos(centerDec1) * Math.cos(pinchDec) * Math.cos(ra_diff1) + Math.sin(centerDec1) * Math.sin(pinchDec);
+        const c2 = Math.acos(scale * Math.acos(c1));
+        const a2 = Math.cos(thetaSH1 / Math.sqrt(1 - c1 * c1));
+        const b2 = Math.sin(thetaSH1 / Math.sqrt(1 - c1 * c1));
+        // c2 * sin(centerDec2) - a2 * cos(centerDec2) = sin(pinchDec)
+        // c2 * cos(centerDec2) + a2 * sin(centerDec2) = cos(pinchDec) * cos(ra_diff2)
+        const ra2 = Math.atan2(b2, a2) * RAD_TO_DEG;
+        const dec2 = Math.asin(Math.sin(centerDec1) * Math.sin(c2)) * RAD_TO_DEG;
+        return { ra: 0, dec: 0 };
     }
 }
 //# sourceMappingURL=coordinates.js.map
