@@ -170,7 +170,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
-    {time: '2025-07-03T00:00:00+09:00', text: ['離心率が非常に大きな天体「A11pl3Z」を追加しました。軌道がまだよくわかっていないので位置は概略です']},
+    {time: '2025-07-03T00:00:00+09:00', text: ['離心率が非常に大きな天体「A11pl3Z」を追加しました。軌道がまだよくわかっていないので位置はずれてるかも']},
     {time: '2025-06-25T17:30:00+09:00', text: ['いて座A*、おおかみ座の新星のマークを追加しました', '現在この星図のTypeScript版を作成中です。まだ開発中ですがURLをchart.htmlからchart_ts.htmlに変えると見れます']},
     {time: '2025-05-01T22:10:00+09:00', text: ['KUALAの新機材・R200SSで電視観望するときの画角を出せます', '天体や星座の画像を募集します！右上の３本線をクリックしてフォームを探してください']},
     {time: '2025-04-19T20:10:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
@@ -729,7 +729,6 @@ function showObjectInfo(x, y) {
                 }
             }
             if (nearest[0] == 'A11pl3Z (unconfirmed)') {
-                infoText += '<br><span style="color: orange;">軌道は確定していません。今後大きく変わる可能性があります。（現在のデータの元期は2025年7月2日0時世界時）</span>';
                 if (online) {
                     infoText += `<p>参考</p><a href="https://neofixer.arizona.edu/css-orbit-view?Namev=A11pl3Z&JDTv=2460858.5&av=-0.19840172468031414&Mv=0&ev=9.9842969&Iv=175.20817&Periv=124.51317&Nodev=325.05432&Pv=0&qv=1.7825&Tv=2460971.931866&Cx=618&Cy=-529&Cz=580&CZ=326&YYYY=2025&MM=07&DD=01">https://neofixer.arizona.edu/css-orbit-view</a> (軌道の3D表示)<br><a href="https://cneos.jpl.nasa.gov/scout/#/object/A11pl3Z">https://cneos.jpl.nasa.gov/scout/#/object/A11pl3Z</a> (軌道の情報)`;
                 }
