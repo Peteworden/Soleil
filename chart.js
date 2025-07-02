@@ -170,6 +170,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-07-03T00:00:00+09:00', text: ['離心率が非常に大きな天体「A11pl3Z」を追加しました。軌道がまだよくわかっていないので位置は概略です']},
     {time: '2025-06-25T17:30:00+09:00', text: ['いて座A*、おおかみ座の新星のマークを追加しました', '現在この星図のTypeScript版を作成中です。まだ開発中ですがURLをchart.htmlからchart_ts.htmlに変えると見れます']},
     {time: '2025-05-01T22:10:00+09:00', text: ['KUALAの新機材・R200SSで電視観望するときの画角を出せます', '天体や星座の画像を募集します！右上の３本線をクリックしてフォームを探してください']},
     {time: '2025-04-19T20:10:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
@@ -725,6 +726,12 @@ function showObjectInfo(x, y) {
                 infoText += '<br>ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。';
                 if (online) {
                     infoText += `<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/">名古屋市科学館のサイト</a>がより正確でしょう。`;
+                }
+            }
+            if (nearest[0] == 'A11pl3Z (unconfirmed)') {
+                infoText += '<br><span style="color: orange;">軌道は確定していません。今後大きく変わる可能性があります。（現在のデータの元期は2025年7月2日0時世界時）</span>';
+                if (online) {
+                    infoText += `<p>参考</p><a href="https://neofixer.arizona.edu/css-orbit-view?Namev=A11pl3Z&JDTv=2460858.5&av=-0.19840172468031414&Mv=0&ev=9.9842969&Iv=175.20817&Periv=124.51317&Nodev=325.05432&Pv=0&qv=1.7825&Tv=2460971.931866&Cx=618&Cy=-529&Cz=580&CZ=326&YYYY=2025&MM=07&DD=01">https://neofixer.arizona.edu/css-orbit-view</a> (軌道の3D表示)<br><a href="https://cneos.jpl.nasa.gov/scout/#/object/A11pl3Z">https://cneos.jpl.nasa.gov/scout/#/object/A11pl3Z</a> (軌道の情報)`;
                 }
             }
             document.getElementById('planetTrack').style.display = 'inline-block';
@@ -1308,10 +1315,12 @@ function calc(planet, JD) {
         let e = planet[2];
         if ([Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune].includes(planet)) {
             return cal_planet(planet, JD);
-        } else if (e <= 0.99) {
+        } else if (e <= 0.999) {
             return cal_Ellipse(planet, JD);
-        } else {
+        } else if (e <= 1.001) {
             return cal_Parabola(planet, JD);
+        } else {
+            return cal_hyperbola(planet, JD);
         }
     }
 
@@ -1491,7 +1500,50 @@ function calc(planet, JD) {
 
         return [x, y, z];
     }
+
+    function cal_hyperbola(planet, JD) {        
+        const tp = planet[0];
+        const q = planet[1];
+        const e = planet[2];
+        const peri = planet[3] * deg2rad; //ω
+        const i = planet[4] * deg2rad;
+        const node = planet[5] * deg2rad; //Ω
+        const a = q / (1 - e);
+
+        const Ax = -a/2 * ( cos(peri)*cos(node) - sin(peri)*cos(i)*sin(node));
+        const Bx = -a/2 * (-sin(peri)*cos(node) - cos(peri)*cos(i)*sin(node));
+        const Ay = -a/2 * ( sin(peri)*cos(i)*cos(node)*cose + cos(peri)*sin(node)*cose - sin(peri)*sin(i)*sine);
+        const By = -a/2 * ( cos(peri)*cos(i)*cos(node)*cose - sin(peri)*sin(node)*cose - cos(peri)*sin(i)*sine);
+        const Az = -a/2 * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
+        const Bz = -a/2 * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
+
+        const mu = 0.01720209895 * Math.pow(-a, -1.5);
+        const mut_tp = mu * Math.abs(JD - tp);
+        
+        function f(s) {
+            return e * (s - 1/s) / 2 - Math.log(s) - mut_tp;
+        }
+        function fp(s) { //f_prime
+            return e * (1 + 1/s/s) / 2 - 1/s;
+        }
+        
+        let s = (f(11) - 11 * f(1)) / (f(11) - f(1));
+        let snew = s - f(s) / fp(s);
+        while (Math.abs(snew - s) > 0.0001) {
+            s = snew;
+            snew = s - f(s) / fp(s);
+        }
+        if (JD < tp) s = 1 / snew;
+        else s = snew;
+    
+        let x = Ax * (2*e - s - 1/s) + Bx * Math.sqrt(e*e - 1) * (s - 1/s);
+        let y = Ay * (2*e - s - 1/s) + By * Math.sqrt(e*e - 1) * (s - 1/s);
+        let z = Az * (2*e - s - 1/s) + Bz * Math.sqrt(e*e - 1) * (s - 1/s);
+
+        return [x, y, z];
+    }
 }
+
 
 function riseSetTime(planet, JD, timezone=9) {
     if (planet == Sun) {
@@ -2193,9 +2245,9 @@ function show_main(){
 
     function size(mag) {
         if (mag > magLim) {
-            return Math.max(zerosize / (magLim + 1), 0.6);
+            return Math.max(zerosize / (magLim + 1), 0.8);
         } else {
-            return Math.max(zerosize / (magLim + 1), 0.6) + zerosize * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
+            return Math.max(zerosize / (magLim + 1), 0.8) + zerosize * (magLim / (magLim + 1)) * Math.pow((magLim - mag) / magLim, 1.3);
             //return zerosize * (magLim + 1 - mag) / (magLim + 1);
         }
     }
@@ -3360,20 +3412,21 @@ async function loadFiles() {
         }
     }
 
-    if (online || isElectron || isPWA) {
+    if (online || isElectron || isPWA || isLocalhost) {
         const t0 = performance.now();
         async function loadFile(filename, func, impflag=false) {
             try {
                 let data;
                 if (isElectron) {
-                    const filePath = window.electronAPI.joinPath('data', `${filename}.txt`);
+                    const filePath = window.electronAPI.joinPath('data', `${filename}.txt?v=${Date.now()}`);
                     if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
                         throw new Error(`Path traversal attempt detected: ${filePath}`);
                     }
                     data = await window.electronAPI.readFile(filePath);
                 } else {
                     // ブラウザ環境では fetch を使用
-                    const url_load = `${soleilUrl}/data/${filename}.txt`;
+                    const url_load = `${soleilUrl}/data/${filename}.txt?v=${Date.now()}`;
+                    console.log(url_load);
                     const response = await fetch(url_load);
                     if (!response.ok) {
                         throw new Error(`Failed to load ${filename}: ${response.statusText}`);
@@ -3396,7 +3449,7 @@ async function loadFiles() {
             try {
                 let data;
                 if (isElectron) {
-                    const filePath = window.electronAPI.joinPath('data', `${filename}.json`);
+                    const filePath = window.electronAPI.joinPath('data', `${filename}.json?v=${Date.now()}`);
                     if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
                         throw new Error(`Path traversal attempt detected: ${filePath}`);
                     }
