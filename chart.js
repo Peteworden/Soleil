@@ -2560,6 +2560,7 @@ function show_main(){
                     let ymdhm = JD_to_YMDHM(trackJD);
                     let trackDateText = '';
                     ctx.font = '16px serif'
+                    ctx.fillStyle = yellowColor;
                     if (trackDateType == 'ymd') {
                         trackDateText = `${ymdhm[0]}/${ymdhm[1]}/${ymdhm[2]}`;
                     } else if (trackDateType == 'ymdh') {
