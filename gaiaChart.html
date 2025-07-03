@@ -1,4 +1,5 @@
 <!--2023/10/21~10/22-->
+<!DOCTYPE html>
 <html>
     <head>
         <title>ぴーと｜詳しい星図</title>
@@ -8,69 +9,44 @@
     <body>
         <header>
             <h1>Gaia Archiveのデータから星図を作る</h1>
-            <p><a href="PeteHOME.html">HOME</a>、<a href="chart.html?mode=AEP">ぴーとの星図</a></p>
+            <p><a href="PeteHOME.html">HOME</a>、<a href="chart.html">星図</a></p>
         </header>
 
         <main>
-            <div>
-                <p style="font-size: large; color: red;">下のweb版より便利なPython版を作りました。ご自分のパソコンのPython環境でお使いください。<a href="gaiaChart.py" download="gaiaChart.py">ダウンロード</a> </p>
-            </div>
-            Gaia Archiveのデータを利用して、詳細な星図を作成します。データの取得方法は下のほうで説明しています。パソコン推奨。<br>
-            since:2024/06/06 last updated:2024/06/08<br>
-            <input type="file" id="getFile"/>
-            <div id="info"></div>
-            <canvas id="canvas"></canvas><br>
-            <button onclick="saveImg()">save this chart</button><br>
-            mag_max:<input type="range" id="magmaxSlider" min="5" max="15" step="0.1" value="15">,
-            ra_min:<input type="range" id="raminSlider" min="-3" max="3" step="0.1" value="-3">,
-            ra_max:<input type="range" id="ramaxSlider" min="-3" max="3" step="0.1" value="3">,
-            dec_min:<input type="range" id="decminSlider" min="-3" max="3" step="0.1" value="-3">,
-            dec_max:<input type="range" id="decmaxSlider" min="-3" max="3" step="0.1" value="3">,
-            size1:<input type="range" id="aSlider" min="1" max="2" step="0.01" value="1.6">,
-            size2<input type="range" id="bSlider" min="0" max="0.5" step="0.01" value="0.2">,
-            星の色:<input type="radio" name="starColor" value="white" checked>白/<input type="radio" name="starColor" value="#A00">赤/<input type="radio" name="starColor" value="black">黒,
-            背景色:<input type="radio" name="backgroundColor" value="black" checked>黒/<input type="radio" name="backgroundColor" value="white">白 <br>
-            <ol>
-                <li>
-                    <a href="https://gea.esac.esa.int/archive/" target="_blank" rel="noopener">Gaia Archive</a>からデータを取得するために、
-                    「Search」「Basic」「Position」を開き、下のいずれかの方法で領域を指定する。
-                    <ul>
-                        <li>「Equatorial」「Target in Box」を選択し、ほしい領域の赤経と赤緯それぞれの上限と下限を指定する。幅は10分角~1度くらいがよい。</li>
-                        <li>「Equatorial」「Target in Circle」を選択し、ほしい領域の中心の赤経・赤緯と半径を指定する。半径は5~30分角くらいがよい。</li>
-                        <li>「Name」を選択し、中心にしたい天体の名前を入力する。半径は5~30分角くらいがよい。</li>
-                    </ul>
-                </li>
-                <li>
-                    「Extra conditions」を開き「Add condition」で「designation」を「phot_g_mean_mag」に変更、「=」を「&lt;=」に変更して、
-                    その右の枠に最微等級（たとえば18）を入力する。
-                </li>
-                <li>
-                    「Display columns」を開き「ra」「dec」「phot_g_mean_mag」の位置を確認したあと、下にスクロールして「Select All / None」を2度
-                    クリックし、一旦すべてチェックを外したあと、「ra」「dec」「phot_g_mean_mag」だけにチェックを入れる。
-                </li>
-                <li>一番下の「Submit Query」をクリック</li>
-                <li>
-                    数字が3列並んでいること、画面左下の「1-20 of ****」の****が2000より小さいことを確認する。****が2000の場合は
-                    星が多すぎてすべての星のデータを取得できていないので、領域を狭めたり最微等級を明るくしたりする。
-                </li>
-                <li>下中央の選択肢を「CSV」に変更し、「Download results」をクリック</li>
-                <li>データがダウンロードされるので、拡張子.csvを無理やり.txtに変更する。必要があれば名前や保存場所を変える。</li>
-                <li>この画面上部の「ファイルを選択」のボタンから、今ダウンロードして拡張子を変えたテキストファイルを選択する。</li>
-                <li>ちゃんと表示されましたか？　スライダーを動かすと最微等級や表示する範囲、星の大きさなどを変えられます。ダウンロードかスクリーンショットしてお使いください。</li>
-            </ol>
-            <h3>注意</h3>
+            <p>
+                Gaia Archiveのデータを利用して、詳細な星図を作成します。
+                ESAやNASAのデータを取得しているため位置は非常に信頼できます。
+                私自身も冥王星を見つけるときなどに使っています。
+            </p>
+            <p>since:2024/06/06 last update:2025/07/04</p>
+
+            <img src="images/gaiapy.png" alt="gaia.pyで見たC/2025 N1" width="60%">
+            <h3>ファイル</h3>
+            <p>
+                下の２つのファイルをダウンロードし、同じフォルダに保存してください。
+                density.txtのファイル名は変えないでください。
+                gaia.pyの冒頭を参照し、必要に応じてライブラリをインストールしてください。
+                その後、gaia.pyを実行すると利用できます。
+            </p>
             <ul>
-                <li>赤経はcos(Dec)の補正だけしています。
-                赤経0時の線をまたぐときや極を含むときの例外処理、正距方位図法での投影はしていません。</li>
-                <li>
-                    作って間もないため機能が多くないのはごめんなさい。トリミングを簡単にする、
-                    目盛りをつける、CSVのままで扱えるようにするなどの改良を考えています。
-                </li>
-                <li>作成した画像はご自由にお使いください。このツールや星図を使ったり広めたりしていただけるとうれしいです。</li>
+                <li><a href="./gaia/gaia.py">gaia.py</a></li>
+                <li><a href="./gaia/density.txt">density.txt</a></li>
             </ul>
-            <script src="gaiaChart.js"></script>
+            <h3>このプログラムについて</h3>
+            <ul>
+                <li>
+                    太陽系天体を見つける際は、星図でだいたいの位置を把握したあとに、このプログラムで正確な位置を確認するとよいです。
+                </li>
+                <li>
+                    恒星は<a href="https://gea.esac.esa.int/archive/">Gaia Archive</a>のデータを<a href="https://astroquery.readthedocs.io/en/latest/">Astroquery</a>で取得しています。
+                    太陽系天体の位置は<a href="https://ssd.jpl.nasa.gov/horizons/app.html">JPL Horizons System</a>のものを同じくAstroqueryで取得しています。
+                    DRAWボタンを押すたびに取得するため、ネット環境が良好なところで実行してください。
+                    取得にかかる時間はおよそ20秒から1分程度です。
+                </li>
+                <li>赤経はcos(Dec)の補正だけしています。赤経0時の線をまたぐときや極を含むときの例外処理、正距方位図法での投影はしていません。</li>
+                <li>作成した画像はご自由にお使いください。このツールや星図を使ったり広めたりしてもらえるとうれしいです。</li>
+                <li>バグがあった場合はLINE、Discord等、または<a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank" rel="noopener">星図の意見・提案フォーム</a>まで。</li>
+            </ul>
         </main>
-
-        
-
+    </body>
 </html>
