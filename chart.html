@@ -22,13 +22,27 @@
         <link rel="manifest" href="images/icon/site.webmanifest">
         <!-- Google tag (gtag.js) -->
         <script>
+            // Service Workerを無効化
             if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/Soleil/service-worker.js').then(() => {
-                        console.log('Service Worker registered!');
-                    });
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for(let registration of registrations) {
+                        registration.unregister();
+                    }
+                });
+                // キャッシュを削除
+                caches.keys().then(function(names) {
+                    for (let name of names) {
+                        caches.delete(name);
+                    }
                 });
             }
+            // if ('serviceWorker' in navigator) {
+            //     window.addEventListener('load', () => {
+            //         navigator.serviceWorker.register('/Soleil/service-worker.js').then(() => {
+            //             console.log('Service Worker registered!');
+            //         });
+            //     });
+            // }
 
             if (navigator.onLine) {
                 var link = document.createElement('link');
