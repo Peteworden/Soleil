@@ -170,7 +170,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
-    {time: '2025-07-03T00:00:00+09:00', text: ['離心率が非常に大きな天体「A11pl3Z」を追加しました。軌道がまだよくわかっていないので位置はずれてるかも']},
+    {time: '2025-07-03T00:00:00+09:00', text: ['離心率が非常に大きな天体「C/2025 (ATLAS)」を追加しました。HOME→「細かい星図を作る」のPythonスクリプトも使ってみてください（この天体を見るためには検索窓にC/2025 N1と入力）']},
     {time: '2025-06-25T17:30:00+09:00', text: ['いて座A*、おおかみ座の新星のマークを追加しました', '現在この星図のTypeScript版を作成中です。まだ開発中ですがURLをchart.htmlからchart_ts.htmlに変えると見れます']},
     {time: '2025-05-01T22:10:00+09:00', text: ['KUALAの新機材・R200SSで電視観望するときの画角を出せます', '天体や星座の画像を募集します！右上の３本線をクリックしてフォームを探してください']},
     {time: '2025-04-19T20:10:00+09:00', text: ['風景と重ねるモードで風景の明るさを設定できるようになりました。あんまり使ってる人いないけど、便利だから試してみて']},
@@ -329,10 +329,11 @@ function link(obj) {
     let cenRaJ2000, cenDecJ2000;
     // 見つかったかどうかのフラグ
     let flag = false;
-    for (i=0; i<10; i++) {
+    for (i=0; i<JPNplanets.length; i++) {
         if (JPNplanets[i] == obj) {
             cenRA = solarSystemBodies[i].ra;
             cenDec = solarSystemBodies[i].dec;
+            console.log(`Linking to ${obj}: RA=${cenRA}, Dec=${cenDec}`);
             flag = true;
             break;
         }
@@ -410,6 +411,13 @@ document.getElementById('searchInput').addEventListener('input', function() {
             for (i=0; i<planetNamesHiragana.length; i++) {
                 if (i == Obs_num) continue;
                 if (toUpperCaseOrKatakana(planetNamesHiragana[i][0]) == searchText) {
+                    suggestions1[0].push(JPNplanets[i]);
+                    suggestions1[1].push(JPNplanets[i]);
+                } 
+            }
+            for (i=0; i<JPNplanets.length; i++) {
+                if (i == Obs_num) continue;
+                if (toUpperCaseOrKatakana(JPNplanets[i][0]) == searchText) {
                     suggestions1[0].push(JPNplanets[i]);
                     suggestions1[1].push(JPNplanets[i]);
                 } 
@@ -493,6 +501,18 @@ document.getElementById('searchInput').addEventListener('input', function() {
                 if (i == Obs_num) continue;
                 if (toUpperCaseOrKatakana(planetNamesHiragana[i]).includes(searchText)) {
                     if (toUpperCaseOrKatakana(planetNamesHiragana[i]).startsWith(searchText)) {
+                        suggestions1[0].push(JPNplanets[i]);
+                        suggestions1[1].push(JPNplanets[i]);
+                    } else {
+                        suggestions1[2].push(JPNplanets[i]);
+                        suggestions1[2].push(JPNplanets[i]);
+                    }
+                } 
+            }
+            for (i=0; i<JPNplanets.length; i++) {
+                if (i == Obs_num) continue;
+                if (toUpperCaseOrKatakana(JPNplanets[i]).includes(searchText)) {
+                    if (toUpperCaseOrKatakana(JPNplanets[i]).startsWith(searchText)) {
                         suggestions1[0].push(JPNplanets[i]);
                         suggestions1[1].push(JPNplanets[i]);
                     } else {
@@ -728,9 +748,9 @@ function showObjectInfo(x, y) {
                     infoText += `<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/">名古屋市科学館のサイト</a>がより正確でしょう。`;
                 }
             }
-            if (nearest[0] == 'A11pl3Z (unconfirmed)') {
+            if (nearest[0] == 'C/2025 N1 (ATLAS)') {
                 if (online) {
-                    infoText += `<p>参考</p><a href="https://neofixer.arizona.edu/css-orbit-view?Namev=A11pl3Z&JDTv=2460858.5&av=-0.19840172468031414&Mv=0&ev=9.9842969&Iv=175.20817&Periv=124.51317&Nodev=325.05432&Pv=0&qv=1.7825&Tv=2460971.931866&Cx=618&Cy=-529&Cz=580&CZ=326&YYYY=2025&MM=07&DD=01">https://neofixer.arizona.edu/css-orbit-view</a> (軌道の3D表示)<br><a href="https://cneos.jpl.nasa.gov/scout/#/object/A11pl3Z">https://cneos.jpl.nasa.gov/scout/#/object/A11pl3Z</a> (軌道の情報)`;
+                    infoText += `<p>参考</p><a href="https://neofixer.arizona.edu/css-orbit-view?Namev=A11pl3Z&JDTv=2460858.5&av=-0.19840172468031414&Mv=0&ev=9.9842969&Iv=175.20817&Periv=124.51317&Nodev=325.05432&Pv=0&qv=1.7825&Tv=2460971.931866&Cx=618&Cy=-529&Cz=580&CZ=326&YYYY=2025&MM=07&DD=01">https://neofixer.arizona.edu/css-orbit-view</a> (軌道の3D表示)`;
                 }
             }
             document.getElementById('planetTrack').style.display = 'inline-block';
@@ -1516,29 +1536,27 @@ function calc(planet, JD) {
         const Az = -a/2 * ( sin(peri)*cos(i)*cos(node)*sine + cos(peri)*sin(node)*sine + sin(peri)*sin(i)*cose);
         const Bz = -a/2 * ( cos(peri)*cos(i)*cos(node)*sine - sin(peri)*sin(node)*sine + cos(peri)*sin(i)*cose);
 
-        const mu = 0.01720209895 * Math.pow(-a, -1.5);
+        const mu = 0.01720209895 * Math.pow(Math.abs(a), -1.5);
         const mut_tp = mu * Math.abs(JD - tp);
-        
         function f(s) {
             return e * (s - 1/s) / 2 - Math.log(s) - mut_tp;
         }
         function fp(s) { //f_prime
             return e * (1 + 1/s/s) / 2 - 1/s;
         }
-        
-        let s = (f(11) - 11 * f(1)) / (f(11) - f(1));
+
+        let s = Math.exp(mut_tp / e);
         let snew = s - f(s) / fp(s);
-        while (Math.abs(snew - s) > 0.0001) {
+        while (Math.abs(f(snew)) > 0.000001 || Math.abs(snew - s) > 0.000001) {
             s = snew;
             snew = s - f(s) / fp(s);
         }
         if (JD < tp) s = 1 / snew;
         else s = snew;
     
-        let x = Ax * (2*e - s - 1/s) + Bx * Math.sqrt(e*e - 1) * (s - 1/s);
-        let y = Ay * (2*e - s - 1/s) + By * Math.sqrt(e*e - 1) * (s - 1/s);
-        let z = Az * (2*e - s - 1/s) + Bz * Math.sqrt(e*e - 1) * (s - 1/s);
-
+        const x = Ax * (2*e - s - 1/s) + Bx * Math.sqrt(e*e - 1) * (s - 1/s);
+        const y = Ay * (2*e - s - 1/s) + By * Math.sqrt(e*e - 1) * (s - 1/s);
+        const z = Az * (2*e - s - 1/s) + Bz * Math.sqrt(e*e - 1) * (s - 1/s);
         return [x, y, z];
     }
 }
@@ -3301,13 +3319,13 @@ async function loadFiles() {
             let extraLine = extra[i].split(' ');
             let name = extraLine[1];
             let shortName = name;
-            for (let j=2; j<parseInt(extraLine[0])+1; j++) {
-                if (extraLine[j][0] != '(') {
-                    name += ' ' + extraLine[j];
-                } else {
-                    break;
-                }
-            }
+            // for (let j=2; j<parseInt(extraLine[0])+1; j++) {
+            //     if (extraLine[j][0] != '(') {
+            //         name += ' ' + extraLine[j];
+            //     } else {
+            //         break;
+            //     }
+            // }
             for (let j=2; j<parseInt(extraLine[0])+1; j++) {
                 name += ' ' + extraLine[j];
             }
