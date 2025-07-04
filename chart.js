@@ -1546,10 +1546,11 @@ function calc(planet, JD) {
         }
 
         let s = Math.exp(mut_tp / e);
-        let snew = s - f(s) / fp(s);
+        if (s == Infinity) s = 2 * mut_tp / e;
+        let snew = Math.max(s - f(s) / fp(s), 1.0);
         while (Math.abs(f(snew)) > 0.000001 || Math.abs(snew - s) > 0.000001) {
             s = snew;
-            snew = s - f(s) / fp(s);
+            snew = Math.max(s - f(s) / fp(s), 1.0);
         }
         if (JD < tp) s = 1 / snew;
         else s = snew;
@@ -2882,6 +2883,7 @@ function siderealTime(JD_TT, lon_obs) {
     const h = 24 * ((JD_UT + 0.5) % 1);
     const d_UT = JD_UT - h / 24 - 2451545.0;
     ans = ((6.697375 + (0.065707485828 * d_UT) % 24 + 1.0027379 * h + 0.0854103 * t + 0.0000258 * t*t) % 24) * 15 * deg2rad + lon_obs;
+    console.log('🔍 siderealTime:',JD_TT, ans-lon_obs, lon_obs);
     return ans;
 }
 
@@ -3035,6 +3037,7 @@ function determinZerosize() {
 function newSetting() {
     ObsPlanet = document.getElementById("observer").value;
     Obs_num = JPNplanets.indexOf(ObsPlanet);
+    console.log(ObsPlanet, Obs_num);
 
     // 視点
     if (ObsPlanet == '地球') {
