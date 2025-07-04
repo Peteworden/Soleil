@@ -41,16 +41,7 @@ def show_message(event):
         '「カスタム」の下の座標などが変わることを確認してください。\n'\
         '見たい天体がすでに選ばれている場合も、プログラムを立ち上げた直後以外は必ず一度候補の一覧を開き、\n'\
         'クリックで選択して、座標の設定が変わったことを確認してください。\n\n'\
-        '太陽系天体を中心にしたいときは、太陽系天体のラジオボタンを選択してから、\n'\
-        '枠に天体の英語名や小惑星番号など（一部日本語も対応）を入力し、OKボタンを押して座標が変わることを確認してください。\n'\
-        'セットされるとメッセージが表示されますが、それがセットしたかった天体と違った場合は\n'\
-        '小惑星番号で入力してみたり小惑星名で入力してみたりしてください。\n'\
-        'Barycenterありとなしがあった場合はなしを選んでください。\n'\
-        '天体名の設定についてはhttps://ssd.jpl.nasa.gov/horizons/app.html#/のTarget Bodyの設定画面を参考にしてください。\n'\
         '時刻は世界時で、「yyyy-mm-dd hh:mm」、ユリウス日などが有効です。\n\n'\
-        '日本語に対応している天体は「冥王星」「海王星」「天王星」「土星」です。\n'\
-        '周期彗星を入力すると回帰ごとのリストが出てくるので左端の列の番号を入力してください。\n'\
-        '入力例：「ceres」「halley」「31416」(<-小惑星Peteworden)「hayabusa」(<-探査機)「17656」(<-小惑星Hayabusa)「Uranus」\n\n'\
         '例外処理などはあんまりがんばってないのでいじめないであげてください。\n\n'\
         '恒星データ：Gaia Archive (European Space Agency)\n'\
         '太陽系天体のデータ：Horizons System (Jet Propulsion Laboratory)\n\n'\
@@ -151,8 +142,7 @@ class GaiaChartApp:
         preset_frame.pack(fill=tk.X, pady=5)
         radio2 = tk.Radiobutton(preset_frame, value=1, variable=self.radio_var, text='プリセット', fg='white', bg='black', selectcolor='red')
         radio2.pack(anchor=tk.W, padx=5)
-        preset_combo = ttk.Combobox(preset_frame, textvariable=self.preset_var, 
-                                    values=self.presets, state="readonly")
+        preset_combo = ttk.Combobox(preset_frame, textvariable=self.preset_var, values=self.presets, state="readonly")
         preset_combo.bind('<<ComboboxSelected>>', self.preset_combo_select)
         preset_combo.pack(anchor=tk.N, padx=indent)
 
@@ -170,7 +160,7 @@ class GaiaChartApp:
         planet_hint_btn = tk.Button(horizons_frame, text='hint', command=self.open_planet_hint, width=6)
         planet_hint_btn.grid(row=1, column=2, sticky=tk.N, padx=indent)
         # Time
-        label = tk.Label(horizons_frame, text='Time (JST)', fg='white', bg='black')
+        label = tk.Label(horizons_frame, text='Time (UT)', fg='white', bg='black')
         label.grid(row=2, column=0, sticky=tk.N, padx=indent)
         time_box = tk.Entry(horizons_frame, width=18)
         time_box.grid(row=2, column=1, sticky=tk.N, padx=indent)
@@ -504,6 +494,10 @@ class GaiaChartApp:
         new_parallax = result['parallax'].data
         new_distance = np.array([])
         for i in range(new_star_number):
+            if new_designation[i][:-19:] == "4120379796005671808":
+                print('4120379796005671808', new_ra[i], new_dec[i], new_mag[i])
+            elif i < 10:
+                print(f"{i:02d} {new_designation[i]} {new_ra[i]} {new_dec[i]} {new_mag[i]}")
             if np.isfinite(new_parallax[i]) and new_parallax[i] > 0:
                 new_distance = np.append(new_distance, f"{top2digitsint(3261.57 / new_parallax[i])} ly")
             else:
@@ -555,7 +549,7 @@ class GaiaChartApp:
 
         # しきい値（座標単位で0.02程度、調整可）
         if min_dist < 0.02:
-            info = f"RA: {self.ra[min_idx]:.5f}\nDec: {self.dec[min_idx]:.5f}\nGmag: {self.mag[min_idx]:.2f}\nDistance: {self.distance[min_idx]}"
+            info = f"Gaia DR3: {self.designation[min_idx]}\nRA: {self.ra[min_idx]:.5f}\nDec: {self.dec[min_idx]:.5f}\nGmag: {self.mag[min_idx]:.2f}\nDistance: {self.distance[min_idx]}"
             self.annotation = self.ax.annotate(
                 info,
                 (self.ra[min_idx], self.dec[min_idx]),
@@ -654,18 +648,20 @@ class GaiaChartApp:
     def open_planet_hint(self):
         root_planet_hint = tk.Tk()
         root_planet_hint.title('Object name hint')
-        root_planet_hint.geometry("800x300+400+200")
+        root_planet_hint.geometry("800x500+400+100")
         root_planet_hint.configure(bg="black")
         planet_hint_label = tk.Message(
             root_planet_hint,
             text="""
-                例：\n
-                Pluto, Neptune, Uranus, Saturn, ...\n
-                Ceres, Vesta, Pallas, ...\n
-                1 (=Ceres), 2 (=Vesta), 3 (=Pallas), ... (この書き方はたまに違う天体を指します)\n
-                C/2025 N1,...\n
-                エラーが出ていくつか候補が表示されたときは指示通りに番号を入力してください。\n
-                名前を入力してsetボタンを押したら、ポップアップが出るのと座標が変わったことを確認してください。
+                ＜例＞\n
+                天体名：Saturn, Uranus, Neptune, Neptune, Pluto, 土星, 天王星, 海王星, 冥王星, Ceres, Vesta, Pallas, ...\n
+                小惑星番号：1 (=Ceres), 2 (=Vesta), 3 (=Pallas), 17656 (=Hayabusa), 134340 (=Pluto), ... (この書き方はたまに違う天体を指します)\n
+                特別な番号：699 (=Saturn), 799 (=Uranus), 899 (=Neptune), ...\n
+                彗星、探査機：Hayabusa (<-探査機), halley, C/2025 N1 (これは小文字だとエラー), ...\n
+                setボタンを押すとエラーが出ていくつか候補が表示されたときは指示通りに番号を入力してください。
+                周期彗星の場合は回帰ごとに区別します。Barycenterありとなしがあった場合はなしがおすすめです。
+                詳しくは https://ssd.jpl.nasa.gov/horizons/app.html#/ のTarget Bodyの設定画面を参考にしてください。\n'
+                名前を入力してsetボタンを押したら、ポップアップが出て座標が変わることを確認してください。
             """,
             fg='white',
             bg='black',
