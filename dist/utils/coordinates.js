@@ -4,11 +4,6 @@ export class CoordinateConverter {
     constructor() {
         // グローバルなconfigから緯度経度を取得
         const globalConfig = window.config;
-        console.log('🌐 globalConfig:', globalConfig);
-        console.log('🌐 globalConfig.displaySettings:', globalConfig.displaySettings);
-        console.log('🌐 globalConfig.viewState:', globalConfig.viewState);
-        console.log('🌐 globalConfig.observationSite:', globalConfig.observationSite);
-        console.log('gggg', globalConfig && globalConfig.displaySettings && globalConfig.viewState && globalConfig.observationSite);
         if (globalConfig && globalConfig.displaySettings && globalConfig.viewState && globalConfig.observationSite) {
             this.latitude = globalConfig.observationSite.latitude;
             this.longitude = globalConfig.observationSite.longitude;

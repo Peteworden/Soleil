@@ -38,8 +38,8 @@ export function updateInfoDisplay() {
         const raHours = Math.floor(centerRA / 15);
         const raMinutes = Math.floor((centerRA % 15) * 4);
         const decSign = centerDec >= 0 ? '+' : '';
-        const centerText = `赤経${raHours}h${raMinutes}m 赤緯${decSign}${centerDec.toFixed(1)}° 高度${centerAlt.toFixed(1)}° 方位角${centerAz.toFixed(1)}°`;
-        centerInfo.textContent = centerText;
+        const centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${centerDec.toFixed(1)}°<br>高度${centerAlt.toFixed(1)}°, 方位角${centerAz.toFixed(1)}°`;
+        centerInfo.innerHTML = centerText;
     }
     // 視野角情報を更新
     if (fovInfo) {

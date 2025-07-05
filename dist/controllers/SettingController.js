@@ -1,3 +1,5 @@
+import { AstronomicalCalculator } from "../utils/calculations.js";
+import { TimeController } from "./TimeController.js";
 export class SettingController {
     static switchSettingTab(tabName) {
         // すべてのタブコンテンツを非表示
@@ -77,7 +79,6 @@ export class SettingController {
             reticleCheck && starCheck && starNameCheck &&
             planetCheck && messierCheck && recCheck && ngcCheck && camera) {
             const updateConfig = window.updateConfig;
-            console.log('🔧 updateConfig function found:', !!updateConfig);
             if (updateConfig) {
                 const currentConfig = window.config;
                 const newDisplaySettings = {
@@ -106,17 +107,37 @@ export class SettingController {
             }
         }
         // 時刻設定を読み取り
-        const yearInput = document.getElementById('yearText');
-        const monthInput = document.getElementById('monthText');
-        const dayInput = document.getElementById('dateText');
-        const hourInput = document.getElementById('hourText');
-        const minuteInput = document.getElementById('minuteText');
-        if (yearInput && monthInput && dayInput && hourInput && minuteInput) {
-            const year = parseInt(yearInput.value);
-            const month = parseInt(monthInput.value);
-            const day = parseInt(dayInput.value);
-            const hour = parseInt(hourInput.value);
-            const minute = parseInt(minuteInput.value);
+        const dtlInput = document.getElementById('dtl');
+        const realTime = document.getElementById('realTime');
+        if (dtlInput && realTime) {
+            let year, month, day, hour, minute, second, jd;
+            const currentConfig = window.config;
+            if (realTime.value === 'off') {
+                const dtlValue = dtlInput.value; // "2024-01-15T10:30" 形式
+                if (dtlValue) {
+                    const date = new Date(dtlValue);
+                    year = date.getFullYear();
+                    month = date.getMonth();
+                    day = date.getDate();
+                    hour = date.getHours();
+                    minute = date.getMinutes();
+                    second = date.getSeconds();
+                }
+                else {
+                    // デフォルト値
+                    year = currentConfig.displayTime.year;
+                    month = currentConfig.displayTime.month;
+                    day = currentConfig.displayTime.day;
+                    hour = currentConfig.displayTime.hour;
+                    minute = currentConfig.displayTime.minute;
+                    second = currentConfig.displayTime.second;
+                }
+                jd = AstronomicalCalculator.calculateJdFromYmdhms(year, month, day, hour, minute, second);
+            }
+            else {
+                jd = AstronomicalCalculator.calculateCurrentJdTT();
+                [year, month, day, hour, minute, second] = AstronomicalCalculator.calculateYmdhmJstFromJdTT(jd);
+            }
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 updateConfig({
@@ -126,9 +147,13 @@ export class SettingController {
                         day: day,
                         hour: hour,
                         minute: minute,
-                        second: 0
+                        second: second,
+                        jd: jd,
+                        realTime: realTime.value || 'off'
                     }
                 });
+                console.log(jd, window.config.displayTime.jd);
+                TimeController.initialize();
             }
         }
     }
@@ -143,9 +168,9 @@ export class SettingController {
         console.log('💾 Saving viewState:', config.viewState);
         localStorage.setItem('config', JSON.stringify({
             displaySettings: config.displaySettings,
-            viewState: config.viewState
+            viewState: config.viewState,
+            displayTime: config.displayTime
         }));
-        console.log('💾 Config saved to localStorage');
     }
     // main.tsのconfigから設定をUIに反映するメソッド
     static loadSettingsFromConfig() {
@@ -214,17 +239,22 @@ export class SettingController {
         if (modeRadio)
             modeRadio.checked = true;
         // 時刻設定
-        const yearInput = document.getElementById('yearText');
-        const monthInput = document.getElementById('monthText');
-        const dayInput = document.getElementById('dateText');
-        const hourInput = document.getElementById('hourText');
-        const minuteInput = document.getElementById('minuteText');
-        if (yearInput && monthInput && dayInput && hourInput && minuteInput) {
-            yearInput.value = config.displayTime.year.toString();
-            monthInput.value = config.displayTime.month.toString();
-            dayInput.value = config.displayTime.day.toString();
-            hourInput.value = config.displayTime.hour.toString();
-            minuteInput.value = config.displayTime.minute.toString();
+        // const yearInput = document.getElementById('yearText') as HTMLInputElement;
+        // const monthInput = document.getElementById('monthText') as HTMLInputElement;
+        // const dayInput = document.getElementById('dateText') as HTMLInputElement;
+        // const hourInput = document.getElementById('hourText') as HTMLInputElement;
+        // const minuteInput = document.getElementById('minuteText') as HTMLInputElement;
+        const dtlInput = document.getElementById('dtl');
+        const realTime = document.getElementById('realTime');
+        if (dtlInput && realTime) {
+            // yearInput.value = config.displayTime.year.toString();
+            // monthInput.value = config.displayTime.month.toString();
+            // dayInput.value = config.displayTime.day.toString();
+            // hourInput.value = config.displayTime.hour.toString();
+            // minuteInput.value = (config.displayTime.minute + config.displayTime.second / 60).toString().toFixed(1);
+            const date = new Date(config.displayTime.year, config.displayTime.month - 1, config.displayTime.day, config.displayTime.hour, config.displayTime.minute);
+            dtlInput.value = date.toISOString().slice(0, 16);
+            realTime.value = config.displayTime.realTime;
         }
         console.log('🔧 Settings loaded from config to UI');
     }

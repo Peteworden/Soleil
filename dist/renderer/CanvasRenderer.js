@@ -191,6 +191,7 @@ export class CanvasRenderer {
         if (!this.config.displaySettings.showStars)
             return;
         const limitingMagnitude = this.limitingMagnitude(this.config);
+        console.log(brightestMagnitude, limitingMagnitude);
         if (brightestMagnitude > limitingMagnitude)
             return;
         const siderealTime = window.config.siderealTime;

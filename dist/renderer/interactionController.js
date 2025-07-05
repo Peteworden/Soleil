@@ -28,10 +28,6 @@ export class InteractionController {
                 this.lastY = e.clientY;
                 this.canvas.releasePointerCapture(e.pointerId);
                 this.canvas.setPointerCapture(e.pointerId);
-                const titleElement = document.getElementById('titleText');
-                if (titleElement) {
-                    titleElement.innerHTML = e.pointerType;
-                }
                 if (e.pointerType === 'mouse') {
                     this.canvas.style.cursor = 'grabbing';
                     this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: false });
@@ -44,10 +40,6 @@ export class InteractionController {
             else if (this.activePointers.size === 2) {
                 this.isDragging = false;
                 this.isPinch = true;
-                const titleElement = document.getElementById('titleText');
-                if (titleElement) {
-                    titleElement.innerHTML = 'pinching';
-                }
             }
         };
         this.onPointerMove = (e) => {
@@ -55,10 +47,6 @@ export class InteractionController {
             // ポインターの座標を更新
             this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
-                const titleText = document.getElementById('titleText');
-                if (titleText) {
-                    titleText.innerHTML = 'dragging';
-                }
                 const deltaX = e.clientX - this.lastX;
                 const deltaY = e.clientY - this.lastY;
                 // 最小移動量チェック（タッチ操作では1ピクセルに調整）
@@ -101,7 +89,6 @@ export class InteractionController {
                 this.lastY = e.clientY;
             }
             else if (this.isPinch) {
-                const titleText = document.getElementById('titleText');
                 const pointerIds = this.getActivePointerIds();
                 if (pointerIds.length < 2)
                     return;
@@ -112,9 +99,6 @@ export class InteractionController {
                 if (!x1 || !y1 || !x2 || !y2)
                     return;
                 const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-                if (titleText) {
-                    titleText.innerHTML = `pinching ${this.baseDistance} ${distance}`;
-                }
                 if (this.baseDistance == 0)
                     this.baseDistance = distance;
                 if (distance == 0)
@@ -145,7 +129,7 @@ export class InteractionController {
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    const pinchScreenAz = this.viewState.fieldOfViewRA * x3 / this.canvas.width;
+                    const pinchScreenAz = -this.viewState.fieldOfViewRA * x3 / this.canvas.width;
                     const pinchScreenAlt = -this.viewState.fieldOfViewDec * y3 / this.canvas.height;
                     const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
                     this.viewState.centerAz = pinchHorizontal.az;
@@ -174,14 +158,9 @@ export class InteractionController {
             }
         };
         this.onPointerUp = (e) => {
-            console.log('onPointerUp', e.type, e.pointerType, e.pointerId, this.isDragging, this.activePointers.size);
             if (this.activePointers.size === 1) {
                 this.isDragging = false;
                 this.isPinch = false;
-                const titleElement = document.getElementById('titleText');
-                if (titleElement) {
-                    titleElement.innerHTML = '星図';
-                }
                 this.activePointers.delete(e.pointerId);
                 this.pointerPositions.delete(e.pointerId);
                 this.canvas.releasePointerCapture(e.pointerId);
@@ -193,7 +172,6 @@ export class InteractionController {
                     this.canvas.style.touchAction = 'none';
                     this.canvas.removeEventListener('pointermove', this.onPointerMove);
                 }
-                console.log('onPointerUp', e.pointerType, e.pointerId, 'touchCount:', this.activePointers.size);
                 this.config.viewState.centerRA = this.viewState.centerRA;
                 this.config.viewState.centerDec = this.viewState.centerDec;
                 this.config.viewState.centerAz = this.viewState.centerAz;
