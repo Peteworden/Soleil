@@ -1,4 +1,4 @@
-//npm run dev
+//npm run start
 import { AstronomicalCalculator } from './utils/calculations.js';
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
 import { Planet, Moon } from './models/CelestialObject.js';
@@ -7,13 +7,14 @@ import { InteractionController } from "./renderer/interactionController.js";
 import { jupiterData } from './data/planets.js';
 import { SettingController } from './controllers/SettingController.js';
 import { SearchController } from './controllers/SearchController.js';
+import { TimeController } from './controllers/TimeController.js';
 import { updateInfoDisplay, handleResize, setupTimeUpdate } from './utils/uiUtils.js';
 // 初期設定を読み込む関数
 function initializeConfig() {
     const savedSettings = localStorage.getItem('config');
     const savedSettingsObject = savedSettings ? JSON.parse(savedSettings) : null;
     const now = new Date();
-    console.log('🔧 savedSettingsObject:', savedSettingsObject);
+    // console.log('🔧 savedSettingsObject:', savedSettingsObject);
     const displaySettings = {
         darkMode: false,
         mode: 'view',
@@ -42,9 +43,24 @@ function initializeConfig() {
         starSizeKey1: 11.5,
         starSizeKey2: 1.8
     };
+    const observationSite = {
+        name: '東京',
+        latitude: 35.0,
+        longitude: 135.0,
+        timezone: 9
+    };
+    const displayTime = {
+        year: now.getFullYear(),
+        month: now.getMonth() + 1,
+        day: now.getDate(),
+        hour: now.getHours(),
+        minute: now.getMinutes(),
+        second: now.getSeconds(),
+        jd: AstronomicalCalculator.calculateCurrentJdTT(),
+        realTime: 'off'
+    };
     if (savedSettingsObject && savedSettingsObject.displaySettings) {
         const savedDisplaySettings = savedSettingsObject.displaySettings;
-        console.log('🔧 savedDisplaySettings:', savedDisplaySettings);
         displaySettings.darkMode = savedDisplaySettings.darkMode !== undefined ? savedDisplaySettings.darkMode : displaySettings.darkMode;
         displaySettings.mode = savedDisplaySettings.mode !== undefined ? savedDisplaySettings.mode : displaySettings.mode;
         displaySettings.realTime = savedDisplaySettings.realTime !== undefined ? savedDisplaySettings.realTime : displaySettings.realTime;
@@ -68,31 +84,36 @@ function initializeConfig() {
         viewState.centerAlt = savedViewState.centerAlt !== undefined ? savedViewState.centerAlt : 0;
         viewState.fieldOfViewRA = savedViewState.fieldOfViewRA !== undefined ? savedViewState.fieldOfViewRA : 60;
         viewState.fieldOfViewDec = viewState.fieldOfViewRA * window.innerHeight / window.innerWidth;
-        console.log('🔧 viewState:', savedViewState);
     }
-    console.log('🔧 displaySettings:', displaySettings);
-    console.log('🔧 viewState:', viewState);
+    if (savedSettingsObject && savedSettingsObject.observationSite) {
+        const savedObservationSite = savedSettingsObject.observationSite;
+        observationSite.name = savedObservationSite.name !== undefined ? savedObservationSite.name : '東京';
+        observationSite.latitude = savedObservationSite.latitude !== undefined ? savedObservationSite.latitude : 35.0;
+        observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : 135.0;
+        observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : 9;
+    }
+    if (savedSettingsObject && savedSettingsObject.displayTime &&
+        savedSettingsObject.displayTime.realTime !== undefined &&
+        savedSettingsObject.displayTime.realTime === 'off') {
+        displayTime.year = savedSettingsObject.displayTime.year;
+        displayTime.month = savedSettingsObject.displayTime.month;
+        displayTime.day = savedSettingsObject.displayTime.day;
+        displayTime.hour = savedSettingsObject.displayTime.hour;
+        displayTime.minute = savedSettingsObject.displayTime.minute;
+        displayTime.second = savedSettingsObject.displayTime.second;
+        displayTime.jd = savedSettingsObject.displayTime.jd;
+        displayTime.realTime = savedSettingsObject.displayTime.realTime;
+    }
     return {
         displaySettings: displaySettings,
         viewState: viewState,
-        observationSite: {
-            latitude: 35.0,
-            longitude: 135.0,
-            timezone: 9
-        },
-        displayTime: {
-            year: now.getFullYear(),
-            month: now.getMonth() + 1,
-            day: now.getDate(),
-            hour: now.getHours(),
-            minute: now.getMinutes(),
-            second: now.getSeconds()
-        },
+        observationSite: observationSite,
+        displayTime: displayTime,
         canvasSize: {
             width: window.innerWidth,
             height: window.innerHeight
         },
-        siderealTime: 0 // 恒星時（度）- 初期値、後で計算で更新
+        siderealTime: AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude) // 恒星時（度）- 初期値、後で計算して更新
     };
 }
 // 星空表示の設定
@@ -109,33 +130,33 @@ export function resetConfig() {
 }
 // newconfigを受け取り、configを更新する
 export function updateConfig(newConfig) {
-    console.log('🔧 updateConfig called with:', newConfig);
     Object.assign(config, newConfig);
     window.config = config;
     if (newConfig.displaySettings) {
-        console.log('🔧 Updating displaySettings:', newConfig.displaySettings);
         Object.assign(config.displaySettings, newConfig.displaySettings);
-        console.log('🔧 displaySettings after update:', config.displaySettings);
         window.renderer.updateOptions(config.displaySettings);
         window.controller.updateOptions(config.displaySettings);
-        console.log('🔧 Renderer and controller updated');
     }
     //globalのconfigは更新される？
-    if (newConfig.observationSite || newConfig.displayTime) {
-        console.log('🔧 Observation site or time updated, recalculating sidereal time');
-        updateSiderealTime();
+    // if (newConfig.observationSite || newConfig.displayTime) {
+    //     console.log('🔧 Observation site or time updated, recalculating sidereal time');
+    //     updateSiderealTime();
+    // }
+    // 時刻関連の更新があればTimeControllerも更新
+    if (newConfig.displayTime) {
+        TimeController.onConfigUpdate();
     }
-    console.log('🔧 Calling renderAll from updateConfig');
     window.renderAll();
     updateInfoDisplay();
 }
 // 恒星時を計算・更新する関数
-export function updateSiderealTime() {
-    const jd = AstronomicalCalculator.calculateCurrentJdTT();
-    const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude);
-    config.siderealTime = siderealTime;
-    console.log('🌟 Sidereal time updated:', siderealTime, 'degrees');
-}
+// export function updateSiderealTime(): void {
+//     const jd = AstronomicalCalculator.calculateCurrentJdTT();
+//     console.log('🌟 jd:', jd);
+//     const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude);
+//     config.siderealTime = siderealTime;
+//     console.log('🌟 Sidereal time updated:', siderealTime, 'degrees');
+// }
 // ViewStateのみを更新する関数
 export function updateViewState(newViewState) {
     Object.assign(config.viewState, newViewState);
@@ -146,16 +167,18 @@ export function updateViewState(newViewState) {
 }
 // グローバルにconfigを公開（SettingControllerからアクセス可能）
 window.config = config;
-console.log('🌐 config published to window:', window.config);
-console.log('🌐 config reference check:', config === window.config);
+// console.log('🌐 config published to window:', (window as any).config);
+// console.log('🌐 config reference check:', config === (window as any).config);
 window.updateConfig = updateConfig;
 window.updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
-window.updateSiderealTime = updateSiderealTime;
+// (window as any).updateSiderealTime = updateSiderealTime;
 window.resetConfig = resetConfig;
 window.saveConfig = SettingController.saveConfigToLocalStorage;
 // (window as any).loadSettingsFromLocalStorage = SettingController.loadSettingsFromLocalStorage;
 window.loadSettingsFromConfig = SettingController.loadSettingsFromConfig;
+window.updateTimeSlider = TimeController.updateSlider;
+window.toggleRealTime = TimeController.toggleRealTime;
 // メイン関数
 export async function main() {
     const app = document.getElementById('app');
@@ -186,26 +209,20 @@ export async function main() {
         // キャンバスのサイズを設定
         canvas.width = config.canvasSize.width;
         canvas.height = config.canvasSize.height;
-        // フィールドオブビューの調整（localStorageから読み込んだ値を尊重するため削除）
-        // config.viewState.fieldOfViewDec = config.canvasSize.height / config.canvasSize.width * config.viewState.fieldOfViewRA;
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config);
         console.log('🎨 CanvasRenderer created');
-        console.log('🎨 renderer.config === config:', renderer.config === config);
-        console.log('🎨 renderer.config reference:', renderer.config);
-        console.log('🎨 config reference:', config);
         // 天体の作成
         const jupiter = new Planet(jupiterData);
         const moon = new Moon();
         // 現在のユリウス日を計算
         const jd = AstronomicalCalculator.calculateCurrentJdTT();
         // 初期恒星時を計算
-        updateSiderealTime();
+        // updateSiderealTime();
         // 天体の位置を更新
         jupiter.updatePosition(jd);
         moon.updatePosition(jd);
         function renderAll() {
-            console.log('🎨 renderAll called');
             renderer.clear();
             renderer.drawGrid();
             renderer.drawConstellationLines(Object.values(constellationData));
@@ -227,12 +244,12 @@ export async function main() {
         window.renderAll = renderAll;
         window.renderer = renderer;
         window.controller = controller;
-        console.log('🎨 renderer published to window:', window.renderer);
-        console.log('🎨 renderer has updateOptions method:', typeof window.renderer.updateOptions);
         setupButtonEvents();
         setupResizeHandler();
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
         SettingController.loadSettingsFromConfig();
+        // 時刻コントローラーを初期化
+        TimeController.initialize();
         updateInfoDisplay();
         setupTimeUpdate();
         // 木星データの表示（テスト用）
