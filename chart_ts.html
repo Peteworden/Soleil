@@ -116,6 +116,27 @@
                 <!-- 基本設定タブ -->
                 <div id="basic-tab" class="setting-section">
                     <h3>場所/日時</h3>
+
+                    <div class="setting-row">
+                        <label>時刻:</label>
+                        <input type="datetime-local" id="dtl" name="dtl" value=""/>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                var dtlElement = document.getElementById('dtl');
+                                if (dtlElement) {
+                                    var ymdhm = new Date();
+                                    dtlElement.value = ymdhm.getFullYear() + '-' + 
+                                        String(ymdhm.getMonth() + 1).padStart(2, '0') + '-' + 
+                                        String(ymdhm.getDate()).padStart(2, '0') + 'T' + 
+                                        String(ymdhm.getHours()).padStart(2, '0') + ':' + 
+                                        String(ymdhm.getMinutes()).padStart(2, '0');
+                                    console.log('DateTime set:', dtlElement.value);
+                                } else {
+                                    console.warn('Element with id "dtl" not found');
+                                }
+                            });
+                        </script>
+                    </div>
                     
                     <div class="setting-row">
                         <label>視点:</label>
@@ -167,6 +188,11 @@
                         </select>
                         <input type="text" id="lon" size="1" value="135">°
                     </div>
+                </div>
+
+                <!-- 表示設定タブ -->
+                <div id="display-tab" class="setting-section" style="display: none;">
+                    <h3>表示設定</h3>
 
                     <div class="setting-row">
                         <label>表示モード:</label>
@@ -177,11 +203,6 @@
                             <option value="ar" disabled>風景と重ねる</option>
                         </select>
                     </div>
-                </div>
-
-                <!-- 表示設定タブ -->
-                <div id="display-tab" class="setting-section" style="display: none;">
-                    <h3>表示設定</h3>
 
                     <div class="setting-row">
                         <label>最微等級:</label>
@@ -190,6 +211,15 @@
                             <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
                             <img src="images/キラキラ2.png" alt="" class="magLimit-image magLimit-right-image">
                         </div>
+                    </div>
+
+                    <div class="setting-row">
+                        <label>リアルタイム表示:</label>
+                        <select id="realTime">
+                            <option value="off" checked>オフ</option>
+                            <option value="radec" disabled>赤経・赤緯固定</option>
+                            <option value="azalt" disabled>方位・高度固定</option>
+                        </select>
                     </div>
 
                     <div class="setting-row">
@@ -289,7 +319,7 @@
     <!-- 説明画面 -->
     <div id="description" class="description" style="display: none;">
         <h3>メニュー</h3>
-        <p>これを開いた右上のボタンで閉じます</p>
+        <p>これを開いたボタンで閉じます</p>
         <!-- 説明内容は省略 -->
     </div>
 
@@ -300,18 +330,15 @@
         <div id="objectInfoImage"></div>
         <div id="objectInfoText"></div>
     </div>
-    
-    <!-- 座標表示 -->
-    <div id="coordtext" class="coordtext">coord here</div>
 
-    <!-- 情報表示エリア -->
-    <div class="info-lb">
+    <!-- スライダー -->
+    <div class="control-panel">
         <div id="showingData" class="showingData"></div>
         <div id="aovSliderDiv" class="aovSliderDiv">
             <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1">
         </div>
         <div id="timeSliderDiv" class="timeSliderDiv">
-            <input type="range" id="timeSlider" class="timeSlider" min="-60" max="60" step="1">
+            <input type="range" id="timeSlider" class="timeSlider" min="0" max="10" step="0.00964"">
         </div>
     </div>
     
@@ -325,7 +352,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250628-1500';
+        import { main } from './dist/main.js?v=250705-1200';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>
