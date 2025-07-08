@@ -1,5 +1,6 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
 import { AstronomicalCalculator } from "../utils/calculations.js";
+import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 export class TimeController {
     static initialize() {
         this.setupTimeSlider();
@@ -92,7 +93,7 @@ export class TimeController {
     //         });
     //     }
     // }
-    static handleSliderInput(event) {
+    static async handleSliderInput(event) {
         const target = event.target;
         const jd = parseFloat(target.value); // JDの値を直接取得
         const config = window.config;
@@ -133,6 +134,8 @@ export class TimeController {
         if (renderAll) {
             renderAll();
         }
+        // ★ スライダー操作時に全天体データを更新
+        SolarSystemDataManager.updateAllData(jd);
     }
     static addDays(days) {
         const config = window.config;

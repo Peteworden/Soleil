@@ -1,13 +1,12 @@
-//npm run start
-import { AstronomicalCalculator } from './utils/calculations.js';
-import { CanvasRenderer } from './renderer/CanvasRenderer.js';
-import { Planet, Moon } from './models/CelestialObject.js';
-import { DataLoader } from './utils/DataLoader.js';
-import { InteractionController } from "./renderer/interactionController.js";
-import { jupiterData } from './data/planets.js';
 import { SettingController } from './controllers/SettingController.js';
 import { SearchController } from './controllers/SearchController.js';
+import { SolarSystemController } from './controllers/SolarSystemController.js';
 import { TimeController } from './controllers/TimeController.js';
+import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
+import { CanvasRenderer } from './renderer/CanvasRenderer.js';
+import { InteractionController } from "./renderer/interactionController.js";
+import { AstronomicalCalculator } from './utils/calculations.js';
+import { DataLoader } from './utils/DataLoader.js';
 import { updateInfoDisplay, handleResize, setupTimeUpdate } from './utils/uiUtils.js';
 // 初期設定を読み込む関数
 function initializeConfig() {
@@ -44,6 +43,7 @@ function initializeConfig() {
         starSizeKey2: 1.8
     };
     const observationSite = {
+        observerPlanet: '地球',
         name: '東京',
         latitude: 35.0,
         longitude: 135.0,
@@ -78,31 +78,35 @@ function initializeConfig() {
     }
     if (savedSettingsObject && savedSettingsObject.viewState) {
         const savedViewState = savedSettingsObject.viewState;
-        viewState.centerRA = savedViewState.centerRA !== undefined ? savedViewState.centerRA : 90;
-        viewState.centerDec = savedViewState.centerDec !== undefined ? savedViewState.centerDec : 0;
-        viewState.centerAz = savedViewState.centerAz !== undefined ? savedViewState.centerAz : 0;
-        viewState.centerAlt = savedViewState.centerAlt !== undefined ? savedViewState.centerAlt : 0;
-        viewState.fieldOfViewRA = savedViewState.fieldOfViewRA !== undefined ? savedViewState.fieldOfViewRA : 60;
-        viewState.fieldOfViewDec = viewState.fieldOfViewRA * window.innerHeight / window.innerWidth;
+        viewState.centerRA = savedViewState.centerRA !== undefined ? savedViewState.centerRA : viewState.centerRA;
+        viewState.centerDec = savedViewState.centerDec !== undefined ? savedViewState.centerDec : viewState.centerDec;
+        viewState.centerAz = savedViewState.centerAz !== undefined ? savedViewState.centerAz : viewState.centerAz;
+        viewState.centerAlt = savedViewState.centerAlt !== undefined ? savedViewState.centerAlt : viewState.centerAlt;
+        viewState.fieldOfViewRA = savedViewState.fieldOfViewRA !== undefined ? savedViewState.fieldOfViewRA : viewState.fieldOfViewRA;
+        viewState.fieldOfViewDec = savedViewState.fieldOfViewDec !== undefined ? savedViewState.fieldOfViewDec : viewState.fieldOfViewDec;
+        viewState.starSizeKey1 = savedViewState.starSizeKey1 !== undefined ? savedViewState.starSizeKey1 : viewState.starSizeKey1;
+        viewState.starSizeKey2 = savedViewState.starSizeKey2 !== undefined ? savedViewState.starSizeKey2 : viewState.starSizeKey2;
     }
+    viewState.fieldOfViewDec = viewState.fieldOfViewRA * window.innerHeight / window.innerWidth;
     if (savedSettingsObject && savedSettingsObject.observationSite) {
         const savedObservationSite = savedSettingsObject.observationSite;
-        observationSite.name = savedObservationSite.name !== undefined ? savedObservationSite.name : '東京';
-        observationSite.latitude = savedObservationSite.latitude !== undefined ? savedObservationSite.latitude : 35.0;
-        observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : 135.0;
-        observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : 9;
+        observationSite.observerPlanet = savedObservationSite.observerPlanet !== undefined ? savedObservationSite.observerPlanet : observationSite.observerPlanet;
+        observationSite.name = savedObservationSite.name !== undefined ? savedObservationSite.name : observationSite.name;
+        observationSite.latitude = savedObservationSite.latitude !== undefined ? savedObservationSite.latitude : observationSite.latitude;
+        observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : observationSite.longitude;
+        observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : observationSite.timezone;
     }
     if (savedSettingsObject && savedSettingsObject.displayTime &&
         savedSettingsObject.displayTime.realTime !== undefined &&
         savedSettingsObject.displayTime.realTime === 'off') {
-        displayTime.year = savedSettingsObject.displayTime.year;
-        displayTime.month = savedSettingsObject.displayTime.month;
-        displayTime.day = savedSettingsObject.displayTime.day;
-        displayTime.hour = savedSettingsObject.displayTime.hour;
-        displayTime.minute = savedSettingsObject.displayTime.minute;
-        displayTime.second = savedSettingsObject.displayTime.second;
-        displayTime.jd = savedSettingsObject.displayTime.jd;
-        displayTime.realTime = savedSettingsObject.displayTime.realTime;
+        displayTime.year = savedSettingsObject.displayTime.year !== undefined ? savedSettingsObject.displayTime.year : displayTime.year;
+        displayTime.month = savedSettingsObject.displayTime.month !== undefined ? savedSettingsObject.displayTime.month : displayTime.month;
+        displayTime.day = savedSettingsObject.displayTime.day !== undefined ? savedSettingsObject.displayTime.day : displayTime.day;
+        displayTime.hour = savedSettingsObject.displayTime.hour !== undefined ? savedSettingsObject.displayTime.hour : displayTime.hour;
+        displayTime.minute = savedSettingsObject.displayTime.minute !== undefined ? savedSettingsObject.displayTime.minute : displayTime.minute;
+        displayTime.second = savedSettingsObject.displayTime.second !== undefined ? savedSettingsObject.displayTime.second : displayTime.second;
+        displayTime.jd = savedSettingsObject.displayTime.jd !== undefined ? savedSettingsObject.displayTime.jd : displayTime.jd;
+        displayTime.realTime = savedSettingsObject.displayTime.realTime !== undefined ? savedSettingsObject.displayTime.realTime : displayTime.realTime;
     }
     return {
         displaySettings: displaySettings,
@@ -200,6 +204,11 @@ export async function main() {
             DataLoader.loadNGCData(),
             DataLoader.loadStarNames(),
         ]);
+        await SolarSystemController.initialize();
+        // SolarSystemController.setObserverPlanet(config.observationSite.observerPlanet);
+        // SolarSystemController.updatePositions(config.displayTime.jd);
+        // ★ 初回読み込み時に全天体データを更新
+        SolarSystemDataManager.updateAllData(config.displayTime.jd);
         document.getElementById('loadingtext').innerHTML = '';
         // キャンバスの取得（HTMLで作成済み）
         const canvas = document.getElementById('starChartCanvas');
@@ -213,15 +222,11 @@ export async function main() {
         const renderer = new CanvasRenderer(canvas, config);
         console.log('🎨 CanvasRenderer created');
         // 天体の作成
-        const jupiter = new Planet(jupiterData);
-        const moon = new Moon();
-        // 現在のユリウス日を計算
-        const jd = AstronomicalCalculator.calculateCurrentJdTT();
-        // 初期恒星時を計算
-        // updateSiderealTime();
+        // const planets = SolarSystemObjectFactory.createFromArray(planetsData);
+        // const moon = new Moon();
         // 天体の位置を更新
-        jupiter.updatePosition(jd);
-        moon.updatePosition(jd);
+        // jupiter.updatePosition(jd);
+        // moon.updatePosition(jd);
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();
@@ -234,8 +239,9 @@ export async function main() {
             renderer.drawRec(recData);
             renderer.drawNGC(ngcData);
             renderer.writeConstellationNames(Object.values(constellationData));
-            renderer.drawPlanets([jupiter]);
-            renderer.drawMoon(moon);
+            renderer.drawSolarSystemObjects();
+            // renderer.drawPlanets([jupiter]);
+            // renderer.drawMoon(moon);
         }
         const controller = new InteractionController(canvas, config, renderAll);
         // 描画
@@ -252,26 +258,6 @@ export async function main() {
         TimeController.initialize();
         updateInfoDisplay();
         setupTimeUpdate();
-        // 木星データの表示（テスト用）
-        const info = document.createElement('div');
-        info.style.cssText = `
-            position: fixed;
-            top: 100px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            z-index: 10;
-            font-size: 12px;
-        `;
-        info.innerHTML = `
-            <h4>木星の情報</h4>
-            <p>日本語名: ${jupiterData.jpnName}</p>
-            <p>英語名: ${jupiterData.engName}</p>
-            <p>軌道長半径: ${jupiterData.a} AU</p>
-        `;
-        // app.appendChild(info);
     }
     catch (error) {
         console.error('データの読み込みに失敗しました:', error);

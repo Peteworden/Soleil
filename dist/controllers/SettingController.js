@@ -1,5 +1,6 @@
 import { AstronomicalCalculator } from "../utils/calculations.js";
 import { TimeController } from "./TimeController.js";
+import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 export class SettingController {
     static switchSettingTab(tabName) {
         // すべてのタブコンテンツを非表示
@@ -21,11 +22,12 @@ export class SettingController {
             activeTab.classList.add('active');
         }
     }
-    static finishSetting() {
+    // OKボタンが押されたら
+    static async finishSetting() {
         console.log('🔧 finishSetting called');
         // 設定値を読み取ってconfigを更新
         SettingController.updateConfigFromInputs();
-        // 設定を適用する処理
+        // 設定画面を隠す
         const setting = document.getElementById('setting');
         if (window.innerWidth <= 768) {
             setting.style.display = 'block';
@@ -36,23 +38,28 @@ export class SettingController {
                 setting.style.display = 'none';
             }
         }
-        // 設定値を保存
+        // 設定値をローカルストレージに保存
         SettingController.saveConfigToLocalStorage();
+        // 設定反映後に全天体データを更新
+        SolarSystemDataManager.updateAllData(window.config.displayTime.jd);
     }
     static updateConfigFromInputs() {
         console.log('🔧 updateConfigFromInputs called');
         // 観測地の設定を読み取り
+        const observerPlanetSelect = document.getElementById('observer_planet');
         const latInput = document.getElementById('lat');
         const lonInput = document.getElementById('lon');
         const nsSelect = document.getElementById('NSCombo');
         const ewSelect = document.getElementById('EWCombo');
-        if (latInput && lonInput && nsSelect && ewSelect) {
+        if (observerPlanetSelect && latInput && lonInput && nsSelect && ewSelect) {
+            const observerPlanet = observerPlanetSelect.value;
             const latitude = parseFloat(latInput.value) * (nsSelect.value === '北緯' ? 1 : -1);
             const longitude = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 updateConfig({
                     observationSite: {
+                        observerPlanet: observerPlanet,
                         latitude: latitude,
                         longitude: longitude,
                         timezone: 9
@@ -179,11 +186,13 @@ export class SettingController {
             return;
         console.log('🔧 Loading settings from main config to UI');
         // 観測地の設定
+        const observerPlanetSelect = document.getElementById('observer_planet');
         const latInput = document.getElementById('lat');
         const lonInput = document.getElementById('lon');
         const nsSelect = document.getElementById('NSCombo');
         const ewSelect = document.getElementById('EWCombo');
-        if (latInput && lonInput && nsSelect && ewSelect) {
+        if (observerPlanetSelect && latInput && lonInput && nsSelect && ewSelect) {
+            observerPlanetSelect.value = config.observationSite.observerPlanet;
             const latitude = Math.abs(config.observationSite.latitude);
             const longitude = Math.abs(config.observationSite.longitude);
             latInput.value = latitude.toString();
@@ -239,19 +248,9 @@ export class SettingController {
         if (modeRadio)
             modeRadio.checked = true;
         // 時刻設定
-        // const yearInput = document.getElementById('yearText') as HTMLInputElement;
-        // const monthInput = document.getElementById('monthText') as HTMLInputElement;
-        // const dayInput = document.getElementById('dateText') as HTMLInputElement;
-        // const hourInput = document.getElementById('hourText') as HTMLInputElement;
-        // const minuteInput = document.getElementById('minuteText') as HTMLInputElement;
         const dtlInput = document.getElementById('dtl');
         const realTime = document.getElementById('realTime');
         if (dtlInput && realTime) {
-            // yearInput.value = config.displayTime.year.toString();
-            // monthInput.value = config.displayTime.month.toString();
-            // dayInput.value = config.displayTime.day.toString();
-            // hourInput.value = config.displayTime.hour.toString();
-            // minuteInput.value = (config.displayTime.minute + config.displayTime.second / 60).toString().toFixed(1);
             const date = new Date(config.displayTime.year, config.displayTime.month - 1, config.displayTime.day, config.displayTime.hour, config.displayTime.minute);
             dtlInput.value = date.toISOString().slice(0, 16);
             realTime.value = config.displayTime.realTime;

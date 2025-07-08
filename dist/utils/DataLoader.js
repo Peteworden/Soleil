@@ -1,5 +1,7 @@
+// import { SolarObjectsLoader } from './SolarObjectsLoader.js';
 import { CelestialObject, HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
+// import { SolarSystemDataManager, SolarSystemObjectBase } from '../models/SolarSystemObjects.js';
 export class DataLoader {
     static async fetchText(url) {
         const response = await fetch(url);
@@ -61,6 +63,10 @@ export class DataLoader {
         }
         return gaia;
     }
+    // static async loadSolarSystemObjects(): Promise<SolarSystemObjectBase[]> {
+    //     const solarObjects = await SolarSystemDataManager.loadSolarSystemObjectElements();
+    //     return solarObjects;
+    // }
     // HIP星表データの読み込み
     static async loadHIPData() {
         const h = await this.fetchText('data/hip_65.txt');

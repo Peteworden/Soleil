@@ -1,4 +1,3 @@
-import { AstronomicalCalculator } from '../utils/calculations.js';
 export class CelestialObject {
     constructor(name, coordinates, magnitude, type) {
         this.name = name || '';
@@ -42,37 +41,6 @@ export class MessierObject extends CelestialObject {
     }
     getDescription() {
         return this.description;
-    }
-}
-export class Planet extends CelestialObject {
-    constructor(data) {
-        super(data.jpnName, { ra: 0, dec: 0 });
-        this.data = data;
-    }
-    updatePosition(jd) {
-        const position = AstronomicalCalculator.calculatePlanetPosition(this.data, jd);
-        this.coordinates = {
-            ra: Math.atan2(position.y, position.x) * 180 / Math.PI,
-            dec: Math.asin(position.z / Math.sqrt(position.x * position.x + position.y * position.y + position.z * position.z)) * 180 / Math.PI
-        };
-    }
-    getJapaneseName() {
-        return this.data.jpnName;
-    }
-    getHiraganaName() {
-        return this.data.hiraganaName;
-    }
-    getEnglishName() {
-        return this.data.engName;
-    }
-}
-export class Moon extends CelestialObject {
-    constructor() {
-        super('月', { ra: 0, dec: 0 });
-    }
-    updatePosition(jd) {
-        const position = AstronomicalCalculator.calculateMoonPosition(jd);
-        this.coordinates = position;
     }
 }
 //# sourceMappingURL=CelestialObject.js.map

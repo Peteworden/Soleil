@@ -1,3 +1,5 @@
+// 太陽系天体の型を再エクスポート
+export * from './solarObjects.js';
 // 座標系の型ガード関数
 export function isEquatorialCoordinates(obj) {
     return obj && typeof obj.ra === 'number' && typeof obj.dec === 'number';

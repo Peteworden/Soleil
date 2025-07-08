@@ -1,3 +1,4 @@
+import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
@@ -32,11 +33,11 @@ export class CanvasRenderer {
         const [x, y] = screenXY[1];
         const magnitude = object.getMagnitude();
         const type = object.getType();
-        this.ctx.font = '16px Arial';
+        this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = 'orange';
+        this.ctx.fillStyle = 'darkorange';
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = 'orange';
+        this.ctx.strokeStyle = 'darkorange';
         /*
         Gx       Galaxy 銀河
         OC       Open star cluster 散開星団
@@ -56,36 +57,36 @@ export class CanvasRenderer {
         */
         this.ctx.beginPath();
         if (type === 'Gx') { // Galaxy, 楕円
-            this.ctx.ellipse(x, y, 8, 3, 0, 0, Math.PI * 2);
+            this.ctx.ellipse(x, y, 6, 2, 0, 0, Math.PI * 2);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
         else if (['OC', 'C+N', 'Ast'].includes(type || '')) { // Open Cluster, 上三角形
-            this.ctx.moveTo(x, y - 8);
-            this.ctx.lineTo(x + 6, y + 4);
-            this.ctx.lineTo(x - 6, y + 4);
-            this.ctx.lineTo(x, y - 8);
+            this.ctx.moveTo(x, y - 6);
+            this.ctx.lineTo(x + 4, y + 3);
+            this.ctx.lineTo(x - 4, y + 3);
+            this.ctx.lineTo(x, y - 6);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
         else if (type == 'Gb') { // Globular Cluster, 円
-            this.ctx.arc(x, y, 6, 0, Math.PI * 2);
+            this.ctx.arc(x, y, 4, 0, Math.PI * 2);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
         else if (['Nb', 'Pl', 'Kt'].includes(type || '')) { // Nebula, 正方形
-            this.ctx.moveTo(x, y - 8);
-            this.ctx.lineTo(x + 8, y);
-            this.ctx.lineTo(x, y + 8);
-            this.ctx.lineTo(x - 8, y);
-            this.ctx.lineTo(x, y - 8);
+            this.ctx.moveTo(x, y - 6);
+            this.ctx.lineTo(x + 6, y);
+            this.ctx.lineTo(x, y + 6);
+            this.ctx.lineTo(x - 6, y);
+            this.ctx.lineTo(x, y - 6);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
         else if (['DS', 'TS', 'SS'].includes(type || '')) { // Star, 星
             const a = Math.PI / 5;
-            const b = 8;
-            const c = 5;
+            const b = 6;
+            const c = 4;
             this.ctx.moveTo(x, y - b);
             this.ctx.lineTo(x + c * Math.sin(a), y - c * Math.cos(a));
             this.ctx.lineTo(x + b * Math.sin(2 * a), y - b * Math.cos(2 * a));
@@ -101,10 +102,10 @@ export class CanvasRenderer {
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
         else { // ×印
-            this.ctx.moveTo(x - 6, y - 6);
-            this.ctx.lineTo(x + 6, y + 6);
-            this.ctx.moveTo(x + 6, y - 6);
-            this.ctx.lineTo(x - 6, y + 6);
+            this.ctx.moveTo(x - 4, y - 4);
+            this.ctx.lineTo(x + 4, y + 4);
+            this.ctx.moveTo(x + 4, y - 4);
+            this.ctx.lineTo(x - 4, y + 4);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
@@ -129,34 +130,58 @@ export class CanvasRenderer {
             return;
         this.drawJsonObject(ngcObjects);
     }
-    drawPlanets(planets) {
-        if (!this.config.displaySettings.showPlanets)
-            return;
+    drawSolarSystemObjects() {
+        const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
-        for (const planet of planets) {
-            const coords = planet.getCoordinates();
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
-            if (!screenXY[0])
-                continue;
-            const [x, y] = screenXY[1];
-            this.ctx.beginPath();
-            this.ctx.fillStyle = 'red';
-            this.ctx.arc(x, y, 3, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.fillStyle = 'yellow';
-            this.ctx.fillText(planet.getJapaneseName(), x + 3, y - 3);
+        const objects = SolarSystemDataManager.getAllObjects();
+        for (const object of objects) {
+            if (object.getType() === 'sun') {
+                // this.drawSun(object as Sun);
+            }
+            else if (object.getType() === 'moon') {
+                this.drawMoon(object, objects.find(obj => obj.getType() === 'sun'));
+            }
+            else if (object.getType() === 'planet') {
+                this.drawPlanet(object);
+            }
+            else if (object.getType() === 'asteroid') {
+                // this.draMinorObject(object as MinorObject);
+            }
         }
     }
-    drawMoon(moon) {
+    drawPlanet(planet) {
         if (!this.config.displaySettings.showPlanets)
             return;
+        const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
-        const coords = moon.getCoordinates();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+        const coords = planet.getRaDec();
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+        if (!screenXY[0])
+            return;
+        const [x, y] = screenXY[1];
+        this.ctx.beginPath();
+        this.ctx.fillStyle = 'red';
+        this.ctx.arc(x, y, 3, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillStyle = 'yellow';
+        this.ctx.fillText(planet.getJapaneseName(), x + 3, y - 3);
+    }
+    drawMoon(moon, sun) {
+        if (!this.config.displaySettings.showPlanets)
+            return;
+        // if (this.config.observerPlanet !== '地球') return;
+        const sunRaDec = sun.getRaDec();
+        const moonRaDec = moon.getRaDec();
+        const moonDist = moon.getDistance();
+        const radius = Math.max(this.canvas.width * (0.259 / (moonDist / 384400)) / this.config.viewState.fieldOfViewRA, 13);
+        this.ctx.font = '16px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'white';
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(moonRaDec, this.canvas, window.config.siderealTime);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -167,6 +192,16 @@ export class CanvasRenderer {
         this.ctx.fillStyle = 'yellow';
         this.ctx.fillText('月', x + 10, y - 10);
     }
+    // drawSolarSystemObjects(solarSystemObjects: SolarSystemObjectBase[]): void {
+    //     if (!this.config.displaySettings.showPlanets) return;
+    //     // const observerPlanet = this.config.displaySettings.observerPlanet;
+    //     const observerPlanet = '地球';
+    //     const observerPlanetObject = solarSystemObjects.find(obj => obj.getJapaneseName() === observerPlanet);
+    //     if (!observerPlanetObject) return;
+    //     const coords = observerPlanetObject.getCoordinates();
+    //     const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, (window as any).config.siderealTime);
+    //     if (!screenXY[0]) return;
+    // }
     drawHipStars(hipStars) {
         if (!this.config.displaySettings.showStars)
             return;
@@ -191,7 +226,6 @@ export class CanvasRenderer {
         if (!this.config.displaySettings.showStars)
             return;
         const limitingMagnitude = this.limitingMagnitude(this.config);
-        console.log(brightestMagnitude, limitingMagnitude);
         if (brightestMagnitude > limitingMagnitude)
             return;
         const siderealTime = window.config.siderealTime;
@@ -393,12 +427,13 @@ export class CanvasRenderer {
             return;
         this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
         this.ctx.lineWidth = 1;
+        const siderealTime = window.config.siderealTime;
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
                 const coords1 = { ra: line[0], dec: line[1] };
                 const coords2 = { ra: line[2], dec: line[3] };
-                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.canvas, window.config.siderealTime, true);
-                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.canvas, window.config.siderealTime, true);
+                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.canvas, siderealTime, true);
+                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.canvas, siderealTime, true);
                 if (!ifin1 && !ifin2)
                     continue;
                 this.ctx.beginPath();
@@ -413,9 +448,10 @@ export class CanvasRenderer {
             return;
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'center';
+        const siderealTime = window.config.siderealTime;
         for (const constellation of constellations) {
             const coords = { ra: constellation.ra, dec: constellation.dec };
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
