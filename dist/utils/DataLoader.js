@@ -1,7 +1,6 @@
 // import { SolarObjectsLoader } from './SolarObjectsLoader.js';
 import { CelestialObject, HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
-// import { SolarSystemDataManager, SolarSystemObjectBase } from '../models/SolarSystemObjects.js';
 export class DataLoader {
     static async fetchText(url) {
         const response = await fetch(url);

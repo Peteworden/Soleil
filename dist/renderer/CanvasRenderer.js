@@ -138,7 +138,7 @@ export class CanvasRenderer {
         const objects = SolarSystemDataManager.getAllObjects();
         for (const object of objects) {
             if (object.getType() === 'sun') {
-                // this.drawSun(object as Sun);
+                this.drawSun(object);
             }
             else if (object.getType() === 'moon') {
                 this.drawMoon(object, objects.find(obj => obj.getType() === 'sun'));
@@ -147,15 +147,33 @@ export class CanvasRenderer {
                 this.drawPlanet(object);
             }
             else if (object.getType() === 'asteroid') {
-                // this.draMinorObject(object as MinorObject);
+                // this.drawMinorObject(object as MinorObject);
             }
         }
+    }
+    drawSun(sun) {
+        if (!this.config.displaySettings.showPlanets)
+            return;
+        const siderealTime = window.config.siderealTime;
+        const coords = sun.getRaDec();
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+        if (!screenXY[0])
+            return;
+        const [x, y] = screenXY[1];
+        const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fieldOfViewRA, 13);
+        this.ctx.font = '16px serif';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'yellow';
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillText(sun.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawPlanet(planet) {
         if (!this.config.displaySettings.showPlanets)
             return;
         const siderealTime = window.config.siderealTime;
-        this.ctx.font = '16px Arial';
+        this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
         const coords = planet.getRaDec();
@@ -163,45 +181,78 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
+        const radius = Math.max(this.getStarSize(planet.getMagnitude(), this.limitingMagnitude(this.config), this.starSize_0mag(this.config)), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = 'red';
-        this.ctx.arc(x, y, 3, 0, Math.PI * 2);
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.fillStyle = 'yellow';
-        this.ctx.fillText(planet.getJapaneseName(), x + 3, y - 3);
+        this.ctx.fillText(planet.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawMoon(moon, sun) {
-        if (!this.config.displaySettings.showPlanets)
+        if (this.config.observationSite.observerPlanet !== '地球')
             return;
-        // if (this.config.observerPlanet !== '地球') return;
-        const sunRaDec = sun.getRaDec();
-        const moonRaDec = moon.getRaDec();
+        const { ra: sunRa, dec: sunDec } = sun.getRaDec();
+        const { ra: moonRa, dec: moonDec } = moon.getRaDec();
         const moonDist = moon.getDistance();
         const radius = Math.max(this.canvas.width * (0.259 / (moonDist / 384400)) / this.config.viewState.fieldOfViewRA, 13);
-        this.ctx.font = '16px Arial';
-        this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = 'white';
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(moonRaDec, this.canvas, window.config.siderealTime);
+        const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
+        const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
+        let p, RA1, Dec1, A1, h1, scrRA1, scrDec1, x1, y1;
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRa, dec: moonDec }, this.canvas, window.config.siderealTime);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
+        if (this.config.displaySettings.mode == 'AEP') {
+            p = Math.atan2(Math.cos(sunDec) * Math.sin(moonRa - sunRa), -Math.sin(moonDec) * Math.cos(sunDec) * Math.cos(moonRa - sunRa) + Math.cos(moonDec) * Math.sin(sunDec));
+            RA1 = (moonRa - 0.2 * Math.cos(p) / Math.cos(moonDec)) * Math.PI / 180;
+            Dec1 = (moonDec - 0.2 * Math.sin(p)) * Math.PI / 180;
+            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.canvas, window.config.siderealTime, true);
+            const [x1, y1] = screenXY1[1];
+            p = Math.atan2(y1 - y, x1 - x);
+        }
+        else if (this.config.displaySettings.mode == 'EtP') {
+            p = Math.atan2(Math.cos(sunDec) * Math.sin(moonRa - sunRa), -Math.sin(moonDec) * Math.cos(sunDec) * Math.cos(moonRa - sunRa) + Math.cos(moonDec) * Math.sin(sunDec));
+        }
+        else if (this.config.displaySettings.mode == 'view') {
+            p = Math.atan2(Math.cos(sunDec) * Math.sin(moonRa - sunRa), -Math.sin(moonDec) * Math.cos(sunDec) * Math.cos(moonRa - sunRa) + Math.cos(moonDec) * Math.sin(sunDec));
+            RA1 = (moonRa - 0.2 * Math.cos(p) / Math.cos(moonDec)) * 180 / Math.PI;
+            Dec1 = (moonDec - 0.2 * Math.sin(p)) * 180 / Math.PI;
+            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.canvas, window.config.siderealTime, true);
+            const [x1, y1] = screenXY1[1];
+            p = Math.atan2(y1 - y, x1 - x);
+        }
+        else {
+            return;
+        }
+        this.ctx.font = '16px serif';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
+        if (k < 0.5) {
+            this.ctx.fillStyle = 'yellow';
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.fillStyle = '#333';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, radius, p, p + Math.PI);
+            this.ctx.ellipse(x, y, radius, radius * (1 - 2 * k), p - Math.PI, 0, Math.PI);
+            this.ctx.fill();
+        }
+        else {
+            this.ctx.fillStyle = '#333';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, radius, p - Math.PI, p);
+            this.ctx.fill();
+            this.ctx.fillStyle = 'yellow';
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, radius, p - Math.PI, p);
+            this.ctx.ellipse(x, y, radius, radius * (2 * k - 1), p, 0, Math.PI);
+            this.ctx.fill();
+        }
         this.ctx.fillStyle = 'yellow';
-        this.ctx.arc(x, y, 20, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.fillStyle = 'yellow';
-        this.ctx.fillText('月', x + 10, y - 10);
+        this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
-    // drawSolarSystemObjects(solarSystemObjects: SolarSystemObjectBase[]): void {
-    //     if (!this.config.displaySettings.showPlanets) return;
-    //     // const observerPlanet = this.config.displaySettings.observerPlanet;
-    //     const observerPlanet = '地球';
-    //     const observerPlanetObject = solarSystemObjects.find(obj => obj.getJapaneseName() === observerPlanet);
-    //     if (!observerPlanetObject) return;
-    //     const coords = observerPlanetObject.getCoordinates();
-    //     const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, (window as any).config.siderealTime);
-    //     if (!screenXY[0]) return;
-    // }
     drawHipStars(hipStars) {
         if (!this.config.displaySettings.showStars)
             return;
@@ -421,27 +472,35 @@ export class CanvasRenderer {
         }
         return [screenRA1, screenDec1];
     }
-    // 星座線を描画
+    // 星座線
     drawConstellationLines(constellations) {
         if (!this.config.displaySettings.showConstellationLines)
             return;
         this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
         this.ctx.lineWidth = 1;
+        const xmax = this.canvas.width;
+        const xmin = 0;
+        const ymax = this.canvas.height;
+        const ymin = 0;
+        const fieldSize = Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        const maxLength = 30 * 2 * Math.max(xmax, ymax) / fieldSize;
         const siderealTime = window.config.siderealTime;
+        this.ctx.beginPath();
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
                 const coords1 = { ra: line[0], dec: line[1] };
                 const coords2 = { ra: line[2], dec: line[3] };
                 const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.canvas, siderealTime, true);
                 const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.canvas, siderealTime, true);
-                if (!ifin1 && !ifin2)
+                if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin)
                     continue;
-                this.ctx.beginPath();
+                if ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) > maxLength * maxLength)
+                    continue;
                 this.ctx.moveTo(x1, y1);
                 this.ctx.lineTo(x2, y2);
-                this.ctx.stroke();
             }
         }
+        this.ctx.stroke();
     }
     writeConstellationNames(constellations) {
         if (!this.config.displaySettings.showConstellationNames)

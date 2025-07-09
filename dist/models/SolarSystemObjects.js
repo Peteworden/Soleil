@@ -50,6 +50,14 @@ export class Sun extends SolarSystemObjectBase {
 export class Moon extends SolarSystemObjectBase {
     constructor(data) {
         super(data);
+        this.Ms = 0;
+        this.ws = 0;
+        this.lon_moon = 0;
+        this.lat_moon = 0;
+        this.Ms = data.Ms || 0;
+        this.ws = data.ws || 0;
+        this.lon_moon = data.lon_moon || 0;
+        this.lat_moon = data.lat_moon || 0;
     }
     updatePosition(jd) {
         // 空実装
@@ -91,6 +99,9 @@ export function isAsteroid(obj) {
 }
 export function isComet(obj) {
     return obj.type === 'comet';
+}
+export function isMinorObject(obj) {
+    return obj.type === 'asteroid' || obj.type === 'comet';
 }
 export function isSun(obj) {
     return obj.type === 'sun';

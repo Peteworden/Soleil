@@ -4,6 +4,7 @@ export function updateInfoDisplay() {
     const timeInfo = document.getElementById('timeInfo');
     const centerInfo = document.getElementById('centerInfo');
     const fovInfo = document.getElementById('fovInfo');
+    const limitingMagnitudeInfo = document.getElementById('limitingMagnitudeInfo');
     // configからデータを取得
     const config = window.config;
     if (!config) {
@@ -46,6 +47,10 @@ export function updateInfoDisplay() {
         const { fieldOfViewRA, fieldOfViewDec } = config.viewState;
         const fovText = `${fieldOfViewRA.toFixed(1)}° × ${fieldOfViewDec.toFixed(1)}°`;
         fovInfo.textContent = fovText;
+    }
+    if (limitingMagnitudeInfo) {
+        const { limitingMagnitude } = config.displaySettings;
+        limitingMagnitudeInfo.textContent = limitingMagnitude.toFixed(1);
     }
 }
 export function handleResize() {

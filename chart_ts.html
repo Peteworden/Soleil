@@ -71,6 +71,10 @@
             <span class="info-label">視野:</span>
             <span class="info-value" id="fovInfo">90°</span>
         </div>
+        <div class="info-row">
+            <span class="info-label">最微等級:</span>
+            <span class="info-value" id="limitingMagnitudeInfo">11.5</span>
+        </div>
     </div>
 
     <!-- PC用ボタン配置 -->
@@ -140,7 +144,7 @@
                     
                     <div class="setting-row">
                         <label>視点:</label>
-                        <select id="observer">
+                        <select id="observer_planet">
                             <option>太陽</option>
                             <option>水星</option>
                             <option>金星</option>
@@ -352,7 +356,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250705-1200';
+        import { main } from './dist/main.js?v=250709-1900';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>
