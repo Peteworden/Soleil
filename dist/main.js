@@ -278,6 +278,16 @@ function setupButtonEvents() {
     document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
     // 天体説明画面の閉じるボタン
     document.getElementById('closeObjectInfo')?.addEventListener('click', closeObjectInfo);
+    document.getElementById('dtlNow')?.addEventListener('click', function () {
+        const dtl = document.getElementById('dtl');
+        const now = new Date();
+        dtl.value = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0') + 'T' +
+            String(now.getHours()).padStart(2, '0') + ':' +
+            String(now.getMinutes()).padStart(2, '0');
+        console.log(dtl.value);
+    });
     document.getElementById('magLimitSlider')?.addEventListener('change', function () {
         const magLimitSlider = document.getElementById('magLimitSlider');
         const magLimitSliderValue = parseFloat(magLimitSlider.value);

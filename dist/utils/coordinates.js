@@ -217,23 +217,11 @@ export class CoordinateConverter {
         const cosLat = Math.cos(lat);
         const sinAz = Math.sin(az);
         const cosAz = Math.cos(az);
-        // const ans = {
-        //     x: cos*coords.x+sin*coords.z,
-        //     y: coords.y,
-        //     z: -sin*coords.x+cos*coords.z
-        // };
         const x = sinLat * cosAlt * cosAz - cosLat * sinAlt;
         const y = -cosAlt * sinAz;
         const z = cosLat * cosAlt * cosAz + sinLat * sinAlt;
-        // const {x, y, z} = this.rotateY({x: cosAlt * cosAz, y: -cosAlt * sinAz, z: sinAlt}, -Math.PI / 2 + lat);
         const ra = ((siderealTime + Math.atan2(-y, -x)) * RAD_TO_DEG + 360) % 360;
         const dec = Math.asin(z) * RAD_TO_DEG;
-        // const sinDec = Math.sin(alt) * Math.sin(lat) + Math.cos(alt) * Math.cos(lat) * Math.cos(az);
-        // const dec = Math.asin(sinDec) * RAD_TO_DEG;
-        // const cosHA = (Math.sin(alt) - Math.sin(dec * DEG_TO_RAD) * Math.sin(lat)) / (Math.cos(dec * DEG_TO_RAD) * Math.cos(lat));
-        // const sinHA = -Math.sin(az) * Math.cos(alt) / Math.cos(dec * DEG_TO_RAD);
-        // const ha = Math.atan2(sinHA, cosHA) * RAD_TO_DEG;
-        // const ra = (lst - ha + 360) % 360;
         return { ra, dec };
     }
     // 赤道座標からある方向を中心とした正距方位図法への変換

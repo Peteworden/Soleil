@@ -174,7 +174,6 @@ export class CanvasRenderer {
         const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = 'white';
         const coords = planet.getRaDec();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
         if (!screenXY[0])
@@ -182,10 +181,9 @@ export class CanvasRenderer {
         const [x, y] = screenXY[1];
         const radius = Math.max(this.getStarSize(planet.getMagnitude(), AstronomicalCalculator.limitingMagnitude(this.config), this.starSize_0mag(this.config)), 1);
         this.ctx.beginPath();
-        this.ctx.fillStyle = 'red';
+        this.ctx.fillStyle = 'rgb(255, 219, 88)';
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
-        this.ctx.fillStyle = 'yellow';
         this.ctx.fillText(planet.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawMoon(moon, sun) {
@@ -587,9 +585,108 @@ export class CanvasRenderer {
     areaNumber(ra, dec) {
         return Math.floor(360 * Math.floor(dec + 90) + Math.floor(ra));
     }
+    /**
+     * スキャンラインアルゴリズムを使用して領域内のマスを効率的に計算
+     * 境界線との交点を計算して、より正確に領域を塗りつぶす
+     * @param RA_min 最小赤経
+     * @param RA_max 最大赤経
+     * @param Dec_min 最小赤緯
+     * @param Dec_max 最大赤緯
+     * @param edgeRA 境界の赤経配列
+     * @param edgeDec 境界の赤緯配列
+     * @returns 領域内のマス番号の配列
+     */
+    floodFillAreaCandidates(edgeRA, edgeDec) {
+        const candidates = [];
+        const RA_min = Math.min(...edgeRA);
+        const RA_max = Math.max(...edgeRA);
+        const Dec_min = Math.min(...edgeDec);
+        const Dec_max = Math.max(...edgeDec);
+        // 境界線をセグメントに分割
+        const segments = [];
+        for (let i = 0; i < edgeRA.length - 1; i++) {
+            segments.push({
+                ra1: edgeRA[i], dec1: edgeDec[i],
+                ra2: edgeRA[i + 1], dec2: edgeDec[i + 1]
+            });
+        }
+        segments.push({
+            ra1: edgeRA[edgeRA.length - 1], dec1: edgeDec[edgeDec.length - 1],
+            ra2: edgeRA[0], dec2: edgeDec[0]
+        });
+        // 赤緯の範囲を1度ずつ処理
+        for (let dec = Math.floor(Dec_min); dec <= Math.floor(Dec_max); dec++) {
+            const intersections = [];
+            // 現在の赤緯線と境界線の交点を計算
+            for (const segment of segments) {
+                if ((segment.dec1 <= dec && dec <= segment.dec2) ||
+                    (segment.dec2 <= dec && dec <= segment.dec1)) {
+                    // 線形補間で交点の赤経を計算
+                    const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
+                    const intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
+                    // 0度線をまたぐ場合の処理
+                    let normalizedRA = intersectionRA;
+                    if (Math.abs(segment.ra2 - segment.ra1) > 180) {
+                        // 0度線をまたぐセグメントの場合
+                        if (segment.ra1 > segment.ra2) {
+                            normalizedRA = intersectionRA > 180 ? intersectionRA : intersectionRA + 360;
+                        }
+                        else {
+                            normalizedRA = intersectionRA < 180 ? intersectionRA + 360 : intersectionRA;
+                        }
+                    }
+                    // console.log(dec, segment, normalizedRA);
+                    intersections.push(normalizedRA);
+                }
+            }
+            // 交点をソート
+            intersections.sort((a, b) => a - b);
+            // 交点のペアで領域を決定
+            const raRanges = [];
+            if (intersections.length === 0) {
+                // 交点がない場合は範囲全体を含める
+                if (RA_max > 330 && RA_min < 30) {
+                    raRanges.push([0, Math.min(RA_max, 359.9)]);
+                    raRanges.push([Math.max(RA_min, 0), 359.9]);
+                }
+                else {
+                    raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9)]);
+                }
+            }
+            else {
+                // 交点のペアで領域を決定
+                for (let i = 0; i < intersections.length - 1; i += 2) {
+                    const startRA = Math.max(intersections[i], RA_min);
+                    const endRA = Math.min(intersections[i + 1], RA_max);
+                    if (startRA < endRA) {
+                        raRanges.push([startRA, endRA]);
+                    }
+                }
+                // 0度線をまたぐ場合の特別処理
+                if (RA_max > 330 && RA_min < 30) {
+                    const leftIntersections = intersections.filter(ra => ra < 180);
+                    const rightIntersections = intersections.filter(ra => ra >= 180);
+                    if (leftIntersections.length > 0) {
+                        raRanges.push([0, Math.min(...leftIntersections)]);
+                    }
+                    if (rightIntersections.length > 0) {
+                        raRanges.push([Math.max(...rightIntersections), 359.9]);
+                    }
+                }
+            }
+            // 各範囲をマス番号に変換
+            // console.log(dec, raRanges);
+            for (const [startRA, endRA] of raRanges) {
+                const startArea = this.areaNumber(startRA, dec);
+                const endArea = this.areaNumber(endRA, dec);
+                candidates.push([startArea, endArea]);
+            }
+        }
+        return candidates;
+    }
     areaCandidates() {
-        const areaCandidates = [];
         if (this.config.displaySettings.mode == 'AEP') {
+            const areaCandidates = [];
             const minDec = Math.max(-90, Math.min(this.config.viewState.centerDec - this.config.viewState.fieldOfViewDec, 90));
             const maxDec = Math.min(90, Math.max(this.config.viewState.centerDec + this.config.viewState.fieldOfViewDec, -90));
             if (minDec === -90) {
@@ -604,20 +701,22 @@ export class CanvasRenderer {
                     areaCandidates.push([this.areaNumber(0, i), this.areaNumber(359, i)]);
                 }
             }
+            return areaCandidates;
         }
         else if (this.config.displaySettings.mode == 'view') {
             const centerRA = this.config.viewState.centerRA;
             const centerDec = this.config.viewState.centerDec;
             const siderealTime = window.config.siderealTime;
-            const np = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.canvas, window.config.siderealTime);
-            const sp = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.canvas, window.config.siderealTime);
+            const np = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.canvas, siderealTime);
+            const sp = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.canvas, siderealTime);
             if (np[0]) {
                 const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
                 const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
                 const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
                 const corner2Equatorial = this.coordinateConverter.horizontalToEquatorial(corner2Horizontal, siderealTime);
                 const minDec = Math.min(corner1Equatorial.dec, corner2Equatorial.dec);
-                areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]);
+                const areaCandidates = [[this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]];
+                return areaCandidates;
             }
             else if (sp[0]) {
                 const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
@@ -625,79 +724,46 @@ export class CanvasRenderer {
                 const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
                 const corner2Equatorial = this.coordinateConverter.horizontalToEquatorial(corner2Horizontal, siderealTime);
                 const maxDec = Math.max(corner1Equatorial.dec, corner2Equatorial.dec);
-                areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, maxDec)]);
+                const areaCandidates = [[this.areaNumber(0, -90), this.areaNumber(359, maxDec)]];
+                return areaCandidates;
             }
             else {
                 let RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
                 const edgeRA = [];
                 const edgeDec = [];
-                const screenRA = this.config.viewState.fieldOfViewRA / 2 + 1.0;
-                const screenDec = this.config.viewState.fieldOfViewDec / 2 + 1.0;
-                const supi = Math.ceil(3.0 * (this.config.viewState.fieldOfViewRA / 2 + 1.0));
-                const supj = Math.ceil(3.0 * (this.config.viewState.fieldOfViewDec / 2 + 1.0));
-                for (let j = 0; j <= supj; j++) {
-                    let horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: screenDec * j / supj });
-                    let equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
-                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA, dec: screenDec * j / supj });
-                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
-                    if (j == 0)
-                        continue;
-                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: -screenDec * j / supj });
-                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
-                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA, dec: -screenDec * j / supj });
-                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
+                // ちょっと広めにとった範囲
+                const raWidth = this.config.viewState.fieldOfViewRA + 0.0;
+                const decWidth = this.config.viewState.fieldOfViewDec + 0.0;
+                const supi = Math.ceil(3.0 * raWidth / 2) * 2;
+                const supj = Math.ceil(3.0 * decWidth / 2) * 2;
+                // 右上から左上
+                for (let i = 0; i < supi; i++) {
+                    this.addEdge(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec, siderealTime);
                 }
-                for (let i = 0; i <= supi; i++) {
-                    let horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA * i / supi, dec: screenDec });
-                    let equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
-                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA * i / supi, dec: -screenDec });
-                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
-                    if (i == 0)
-                        continue;
-                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA * i / supi, dec: screenDec });
-                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
-                    horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -screenRA * i / supi, dec: -screenDec });
-                    equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
-                    edgeRA.push(equatorial.ra);
-                    edgeDec.push(equatorial.dec);
+                // 左上から左下
+                for (let j = 0; j < supj; j++) {
+                    this.addEdge(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec, siderealTime);
                 }
-                Dec_max = Math.max(...edgeDec);
-                Dec_min = Math.min(...edgeDec);
-                RA_max = Math.max(...edgeRA);
-                RA_min = Math.min(...edgeRA);
-                if (RA_max > 330 && RA_min < 30) {
-                    RA_max = Math.max(...edgeRA.filter(function (value) { return value < (centerRA + 180) % 360; }));
-                    RA_min = Math.min(...edgeRA.filter(function (value) { return value > (centerRA + 180) % 360; }));
-                    areaCandidates.push([this.areaNumber(0, Dec_min), this.areaNumber(RA_max, Dec_min)]);
-                    areaCandidates.push([this.areaNumber(RA_min, Dec_min), this.areaNumber(359.9, Dec_min)]);
-                    for (let i = 1; i <= Math.floor(Dec_max) - Math.floor(Dec_min); i++) {
-                        areaCandidates.push([areaCandidates[0][0] + 360 * i, areaCandidates[0][1] + 360 * i]);
-                        areaCandidates.push([areaCandidates[1][0] + 360 * i, areaCandidates[1][1] + 360 * i]);
-                    }
+                // 左下から右下
+                for (let i = 0; i < supi; i++) {
+                    this.addEdge(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec, siderealTime);
                 }
-                else {
-                    areaCandidates.push([this.areaNumber(RA_min, Dec_min), this.areaNumber(RA_max, Dec_min)]);
-                    for (let i = 1; i <= Math.floor(Dec_max) - Math.floor(Dec_min); i++) {
-                        areaCandidates.push([areaCandidates[0][0] + 360 * i, areaCandidates[0][1] + 360 * i]);
-                    }
+                // 右下から右上
+                for (let j = 0; j < supj; j++) {
+                    this.addEdge(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec, siderealTime);
                 }
+                // フラッドフィル方式
+                const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec);
+                return areaCandidates;
             }
         }
-        return areaCandidates;
+        return [];
+    }
+    addEdge(screenRA, screenDec, edgeRA, edgeDec, siderealTime) {
+        const horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: screenDec });
+        const equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+        edgeRA.push(equatorial.ra);
+        edgeDec.push(equatorial.dec);
     }
     // 描画オプションを更新
     updateOptions(options) {
