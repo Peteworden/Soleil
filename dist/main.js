@@ -17,7 +17,6 @@ function initializeConfig() {
     const displaySettings = {
         darkMode: false,
         mode: 'view',
-        realTime: 'off',
         showGrid: true,
         showReticle: true,
         showStars: true,
@@ -63,7 +62,6 @@ function initializeConfig() {
         const savedDisplaySettings = savedSettingsObject.displaySettings;
         displaySettings.darkMode = savedDisplaySettings.darkMode !== undefined ? savedDisplaySettings.darkMode : displaySettings.darkMode;
         displaySettings.mode = savedDisplaySettings.mode !== undefined ? savedDisplaySettings.mode : displaySettings.mode;
-        displaySettings.realTime = savedDisplaySettings.realTime !== undefined ? savedDisplaySettings.realTime : displaySettings.realTime;
         displaySettings.showReticle = savedDisplaySettings.showReticle !== undefined ? savedDisplaySettings.showReticle : displaySettings.showReticle;
         displaySettings.showGrid = savedDisplaySettings.showGrid !== undefined ? savedDisplaySettings.showGrid : displaySettings.showGrid;
         displaySettings.showStars = savedDisplaySettings.showStars !== undefined ? savedDisplaySettings.showStars : displaySettings.showStars;
@@ -98,7 +96,7 @@ function initializeConfig() {
     }
     console.log(savedSettingsObject.displayTime.realTime);
     if (savedSettingsObject && savedSettingsObject.displayTime &&
-        savedSettingsObject.displayTime.realTime &&
+        savedSettingsObject.displayTime.realTime !== undefined &&
         savedSettingsObject.displayTime.realTime === 'off') {
         displayTime.year = savedSettingsObject.displayTime.year !== undefined ? savedSettingsObject.displayTime.year : displayTime.year;
         displayTime.month = savedSettingsObject.displayTime.month !== undefined ? savedSettingsObject.displayTime.month : displayTime.month;
