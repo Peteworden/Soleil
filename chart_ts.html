@@ -124,22 +124,6 @@
                     <div class="setting-row">
                         <label>時刻:</label>
                         <input type="datetime-local" id="dtl" name="dtl" value=""/>
-                        <script>
-                            document.addEventListener('DOMContentLoaded', function() {
-                                var dtlElement = document.getElementById('dtl');
-                                if (dtlElement) {
-                                    var ymdhm = new Date();
-                                    dtlElement.value = ymdhm.getFullYear() + '-' + 
-                                        String(ymdhm.getMonth() + 1).padStart(2, '0') + '-' + 
-                                        String(ymdhm.getDate()).padStart(2, '0') + 'T' + 
-                                        String(ymdhm.getHours()).padStart(2, '0') + ':' + 
-                                        String(ymdhm.getMinutes()).padStart(2, '0');
-                                    console.log('DateTime set:', dtlElement.value);
-                                } else {
-                                    console.warn('Element with id "dtl" not found');
-                                }
-                            });
-                        </script>
                     </div>
                     
                     <div class="setting-row">
@@ -356,7 +340,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250709-1900';
+        import { main } from './dist/main.js?v=250710-1500';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

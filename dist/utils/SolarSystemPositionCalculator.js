@@ -252,9 +252,8 @@ export class SolarSystemPositionCalculator {
         const y = Py * x0 + Qy * y0;
         const z = Pz * x0 + Qz * y0;
         planet.xyz = { x: x, y: y, z: z };
-        // return {x: x, y: y, z: z};
     }
-    // 月の位置を計算（簡易版）
+    // 月の位置
     static calculateMoonPosition(moon, jd, sun) {
         const d = jd - 2451543.5;
         const Ms = (356.0470 + 0.9856002585 * d) % 360 * DEG_TO_RAD;
@@ -308,7 +307,7 @@ export class SolarSystemPositionCalculator {
         const Ye = (-Math.sin(lat_moon) * sinEpsl + Math.cos(lat_moon) * Math.sin(lon_moon) * cosEpsl) * dist * 6378.14 / 1.49598e8; //au
         const Ze = (Math.sin(lat_moon) * cosEpsl + Math.cos(lat_moon) * Math.sin(lon_moon) * sinEpsl) * dist * 6378.14 / 1.49598e8; //au
         const obsLat = window.config.observationSite.latitude * DEG_TO_RAD;
-        const siderealTime = window.config.siderealTime * DEG_TO_RAD;
+        const siderealTime = window.config.siderealTime;
         const xe = Xe - Math.cos(obsLat) * Math.cos(siderealTime) * 6378.14 / 1.49598e8; //au
         const ye = Ye - Math.cos(obsLat) * Math.sin(siderealTime) * 6378.14 / 1.49598e8; //au
         const ze = Ze - Math.sin(obsLat) * 6378.14 / 1.49598e8; //au
@@ -317,9 +316,7 @@ export class SolarSystemPositionCalculator {
         dist *= 6378.14;
         moon.xyz = { x: xe, y: ye, z: ze };
         moon.raDec = { ra: RA, dec: Dec };
-        console.log(RA, Dec);
         moon.distance = dist;
-        //Ms, ws, lon_moon, lat_moon
         moon.Ms = Ms;
         moon.ws = ws;
         moon.lon_moon = lon_moon;

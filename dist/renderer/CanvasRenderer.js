@@ -1,5 +1,6 @@
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
+import { AstronomicalCalculator } from '../utils/calculations.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
         this.canvas = canvas;
@@ -35,9 +36,9 @@ export class CanvasRenderer {
         const type = object.getType();
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'left';
-        this.ctx.fillStyle = 'darkorange';
+        this.ctx.fillStyle = 'orange';
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = 'darkorange';
+        this.ctx.strokeStyle = 'orange';
         /*
         Gx       Galaxy 銀河
         OC       Open star cluster 散開星団
@@ -57,7 +58,7 @@ export class CanvasRenderer {
         */
         this.ctx.beginPath();
         if (type === 'Gx') { // Galaxy, 楕円
-            this.ctx.ellipse(x, y, 6, 2, 0, 0, Math.PI * 2);
+            this.ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
@@ -86,7 +87,7 @@ export class CanvasRenderer {
         else if (['DS', 'TS', 'SS'].includes(type || '')) { // Star, 星
             const a = Math.PI / 5;
             const b = 6;
-            const c = 4;
+            const c = 3;
             this.ctx.moveTo(x, y - b);
             this.ctx.lineTo(x + c * Math.sin(a), y - c * Math.cos(a));
             this.ctx.lineTo(x + b * Math.sin(2 * a), y - b * Math.cos(2 * a));
@@ -131,6 +132,8 @@ export class CanvasRenderer {
         this.drawJsonObject(ngcObjects);
     }
     drawSolarSystemObjects() {
+        if (!this.config.displaySettings.showPlanets)
+            return;
         const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'left';
@@ -152,8 +155,6 @@ export class CanvasRenderer {
         }
     }
     drawSun(sun) {
-        if (!this.config.displaySettings.showPlanets)
-            return;
         const siderealTime = window.config.siderealTime;
         const coords = sun.getRaDec();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
@@ -170,8 +171,6 @@ export class CanvasRenderer {
         this.ctx.fillText(sun.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawPlanet(planet) {
-        if (!this.config.displaySettings.showPlanets)
-            return;
         const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
@@ -181,7 +180,7 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
-        const radius = Math.max(this.getStarSize(planet.getMagnitude(), this.limitingMagnitude(this.config), this.starSize_0mag(this.config)), 1);
+        const radius = Math.max(this.getStarSize(planet.getMagnitude(), AstronomicalCalculator.limitingMagnitude(this.config), this.starSize_0mag(this.config)), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = 'red';
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -192,32 +191,38 @@ export class CanvasRenderer {
     drawMoon(moon, sun) {
         if (this.config.observationSite.observerPlanet !== '地球')
             return;
-        const { ra: sunRa, dec: sunDec } = sun.getRaDec();
-        const { ra: moonRa, dec: moonDec } = moon.getRaDec();
+        const { ra: sunRaDeg, dec: sunDecDeg } = sun.getRaDec();
+        const { ra: moonRaDeg, dec: moonDecDeg } = moon.getRaDec();
+        const sunRaRad = sunRaDeg * Math.PI / 180;
+        const sunDecRad = sunDecDeg * Math.PI / 180;
+        const moonRaRad = moonRaDeg * Math.PI / 180;
+        const moonDecRad = moonDecDeg * Math.PI / 180;
         const moonDist = moon.getDistance();
         const radius = Math.max(this.canvas.width * (0.259 / (moonDist / 384400)) / this.config.viewState.fieldOfViewRA, 13);
         const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
         const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
         let p, RA1, Dec1, A1, h1, scrRA1, scrDec1, x1, y1;
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRa, dec: moonDec }, this.canvas, window.config.siderealTime);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.canvas, window.config.siderealTime);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
         if (this.config.displaySettings.mode == 'AEP') {
-            p = Math.atan2(Math.cos(sunDec) * Math.sin(moonRa - sunRa), -Math.sin(moonDec) * Math.cos(sunDec) * Math.cos(moonRa - sunRa) + Math.cos(moonDec) * Math.sin(sunDec));
-            RA1 = (moonRa - 0.2 * Math.cos(p) / Math.cos(moonDec)) * Math.PI / 180;
-            Dec1 = (moonDec - 0.2 * Math.sin(p)) * Math.PI / 180;
+            p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
+            RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
+            Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
             const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.canvas, window.config.siderealTime, true);
             const [x1, y1] = screenXY1[1];
             p = Math.atan2(y1 - y, x1 - x);
+            // console.log(p * 180/Math.PI);
         }
         else if (this.config.displaySettings.mode == 'EtP') {
-            p = Math.atan2(Math.cos(sunDec) * Math.sin(moonRa - sunRa), -Math.sin(moonDec) * Math.cos(sunDec) * Math.cos(moonRa - sunRa) + Math.cos(moonDec) * Math.sin(sunDec));
+            p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
         }
         else if (this.config.displaySettings.mode == 'view') {
-            p = Math.atan2(Math.cos(sunDec) * Math.sin(moonRa - sunRa), -Math.sin(moonDec) * Math.cos(sunDec) * Math.cos(moonRa - sunRa) + Math.cos(moonDec) * Math.sin(sunDec));
-            RA1 = (moonRa - 0.2 * Math.cos(p) / Math.cos(moonDec)) * 180 / Math.PI;
-            Dec1 = (moonDec - 0.2 * Math.sin(p)) * 180 / Math.PI;
+            p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
+            // console.log(p * 180/Math.PI);
+            RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
+            Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
             const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.canvas, window.config.siderealTime, true);
             const [x1, y1] = screenXY1[1];
             p = Math.atan2(y1 - y, x1 - x);
@@ -256,7 +261,7 @@ export class CanvasRenderer {
     drawHipStars(hipStars) {
         if (!this.config.displaySettings.showStars)
             return;
-        const limitingMagnitude = this.limitingMagnitude(this.config);
+        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const siderealTime = window.config.siderealTime;
         const zeroMagSize = this.starSize_0mag(this.config);
         for (const star of hipStars) {
@@ -276,7 +281,7 @@ export class CanvasRenderer {
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
         if (!this.config.displaySettings.showStars)
             return;
-        const limitingMagnitude = this.limitingMagnitude(this.config);
+        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         if (brightestMagnitude > limitingMagnitude)
             return;
         const siderealTime = window.config.siderealTime;
@@ -518,18 +523,30 @@ export class CanvasRenderer {
             this.ctx.fillText(constellation.JPNname, x, y);
         }
     }
-    limitingMagnitude(config) {
-        const key1 = config.viewState.starSizeKey1;
-        const key2 = config.viewState.starSizeKey2;
-        const lm = Math.min(key1, Math.max(5, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
-        return lm;
+    drawReticle() {
+        if (!this.config.displaySettings.showReticle)
+            return;
+        this.ctx.strokeStyle = 'white';
+        this.ctx.lineWidth = 1;
+        const a = 20;
+        const b = 4;
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.canvas.width / 2, this.canvas.height / 2 - a);
+        this.ctx.lineTo(this.canvas.width / 2, this.canvas.height / 2 - b);
+        this.ctx.moveTo(this.canvas.width / 2, this.canvas.height / 2 + a);
+        this.ctx.lineTo(this.canvas.width / 2, this.canvas.height / 2 + b);
+        this.ctx.moveTo(this.canvas.width / 2 - a, this.canvas.height / 2);
+        this.ctx.lineTo(this.canvas.width / 2 - b, this.canvas.height / 2);
+        this.ctx.moveTo(this.canvas.width / 2 + a, this.canvas.height / 2);
+        this.ctx.lineTo(this.canvas.width / 2 + b, this.canvas.height / 2);
+        this.ctx.stroke();
     }
     starSize_0mag(config) {
         return Math.max(13 - 2.4 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 3), 5);
     }
     getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
         if (limitingMagnitude === undefined) {
-            limitingMagnitude = this.limitingMagnitude(this.config);
+            limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         }
         if (starSize_0mag === undefined) {
             starSize_0mag = this.starSize_0mag(this.config);

@@ -42,6 +42,7 @@ export class SettingController {
         SettingController.saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
         SolarSystemDataManager.updateAllData(window.config.displayTime.jd);
+        window.renderAll();
     }
     static updateConfigFromInputs() {
         console.log('🔧 updateConfigFromInputs called');
@@ -124,11 +125,12 @@ export class SettingController {
                 if (dtlValue) {
                     const date = new Date(dtlValue);
                     year = date.getFullYear();
-                    month = date.getMonth();
+                    month = date.getMonth() + 1;
                     day = date.getDate();
                     hour = date.getHours();
                     minute = date.getMinutes();
                     second = date.getSeconds();
+                    console.log(year, month, day, hour, minute, second);
                 }
                 else {
                     // デフォルト値
@@ -139,7 +141,7 @@ export class SettingController {
                     minute = currentConfig.displayTime.minute;
                     second = currentConfig.displayTime.second;
                 }
-                jd = AstronomicalCalculator.calculateJdFromYmdhms(year, month, day, hour, minute, second);
+                jd = AstronomicalCalculator.jdTTFromYmdhmsJst(year, month, day, hour, minute, second);
             }
             else {
                 jd = AstronomicalCalculator.calculateCurrentJdTT();
@@ -166,13 +168,11 @@ export class SettingController {
     }
     // 現在の設定をlocalStorageに保存
     static saveConfigToLocalStorage() {
-        console.log('💾 SettingController: Saving current config to localStorage');
         const config = window.config;
         if (!config) {
             console.warn('💾 No config found, cannot save');
             return;
         }
-        console.log('💾 Saving viewState:', config.viewState);
         localStorage.setItem('config', JSON.stringify({
             displaySettings: config.displaySettings,
             viewState: config.viewState,
@@ -184,7 +184,6 @@ export class SettingController {
         const config = window.config;
         if (!config)
             return;
-        console.log('🔧 Loading settings from main config to UI');
         // 観測地の設定
         const observerPlanetSelect = document.getElementById('observer_planet');
         const latInput = document.getElementById('lat');
@@ -251,8 +250,16 @@ export class SettingController {
         const dtlInput = document.getElementById('dtl');
         const realTime = document.getElementById('realTime');
         if (dtlInput && realTime) {
-            const date = new Date(config.displayTime.year, config.displayTime.month - 1, config.displayTime.day, config.displayTime.hour, config.displayTime.minute);
-            dtlInput.value = date.toISOString().slice(0, 16);
+            // ローカル時間で日時を作成（世界時変換を避ける）
+            const year = config.displayTime.year;
+            const month = String(config.displayTime.month).padStart(2, '0');
+            const day = String(config.displayTime.day).padStart(2, '0');
+            const hour = String(config.displayTime.hour).padStart(2, '0');
+            const minute = String(config.displayTime.minute).padStart(2, '0');
+            // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
+            const localDateTime = `${year}-${month}-${day}T${hour}:${minute}`;
+            dtlInput.value = localDateTime;
+            console.log('Local datetime set:', localDateTime);
             realTime.value = config.displayTime.realTime;
         }
         console.log('🔧 Settings loaded from config to UI');

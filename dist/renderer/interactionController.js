@@ -1,4 +1,5 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
+import { SettingController } from "../controllers/SettingController.js";
 export class InteractionController {
     constructor(canvas, config, renderCallback) {
         // 状態管理
@@ -178,10 +179,7 @@ export class InteractionController {
                 this.config.viewState.centerAlt = this.viewState.centerAlt;
                 this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
                 this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
-                localStorage.setItem('config', JSON.stringify({
-                    displaySettings: this.config.displaySettings,
-                    viewState: this.config.viewState
-                }));
+                SettingController.saveConfigToLocalStorage();
             }
             else if (this.activePointers.size === 2) {
                 this.isDragging = false;
@@ -238,10 +236,7 @@ export class InteractionController {
                 globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
                 globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
             }
-            localStorage.setItem('config', JSON.stringify({
-                displaySettings: this.displaySettings,
-                viewState: this.viewState
-            }));
+            SettingController.saveConfigToLocalStorage();
             this.renderCallback();
             // 情報表示を即座に更新
             const updateInfoDisplay = window.updateInfoDisplay;

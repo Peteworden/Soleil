@@ -29,28 +29,6 @@ export class TimeController {
             // step値に合わせて値を調整してから設定
             const adjustedJd = parseFloat(this.timeSlider.min) + Math.round((currentJd - parseFloat(this.timeSlider.min)) / stepValue) * stepValue;
             this.timeSlider.value = String(adjustedJd);
-            console.log('Slider setup:', {
-                originalJd: currentJd,
-                adjustedJd: adjustedJd,
-                stepValue: stepValue,
-                diff: adjustedJd - currentJd,
-                min: this.timeSlider.min,
-                max: this.timeSlider.max,
-                value: this.timeSlider.value,
-                step: this.timeSlider.step
-            });
-            // 直接DOM要素との比較
-            const directElement = document.getElementById('timeSlider');
-            console.log('Element comparison:', {
-                thisTimeSlider: this.timeSlider,
-                directElement: directElement,
-                sameElement: this.timeSlider === directElement,
-                thisValue: this.timeSlider.value,
-                directValue: directElement?.value,
-                directMin: directElement?.min,
-                directMax: directElement?.max,
-                directStep: directElement?.step
-            });
         }
         else {
             this.timeSlider.style.display = 'none';

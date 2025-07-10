@@ -1,3 +1,4 @@
+import { AstronomicalCalculator } from "./calculations.js";
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
     const locationInfo = document.getElementById('locationInfo');
@@ -49,7 +50,7 @@ export function updateInfoDisplay() {
         fovInfo.textContent = fovText;
     }
     if (limitingMagnitudeInfo) {
-        const { limitingMagnitude } = config.displaySettings;
+        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(config);
         limitingMagnitudeInfo.textContent = limitingMagnitude.toFixed(1);
     }
 }

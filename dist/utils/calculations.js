@@ -22,9 +22,13 @@ export class AstronomicalCalculator {
             + 1721088.5;
         return ans;
     }
+    static jdTTFromYmdhmsJst(year, month, day, hour = 0, minute = 0, second = 0) {
+        const jdJST = this.calculateJdFromYmdhms(year, month, day, hour, minute, second);
+        return this.jdJSTtoJdTT(jdJST);
+    }
     static calculateCurrentJdTT() {
         const now = new Date();
-        return this.jdJSTtoJdTT(this.calculateJdFromYmdhms(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()));
+        return this.jdTTFromYmdhmsJst(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
     }
     static calculateYmdhmJstFromJdTT(jd_TT) {
         const jd_JST = this.jdTTtoJST(jd_TT) + 1 / 2880;
@@ -61,6 +65,12 @@ export class AstronomicalCalculator {
     static calculateLocalSiderealTime(jd_TT, longitude) {
         const greenwichSiderealTime = this.calculateGreenwichSiderealTime(jd_TT);
         return greenwichSiderealTime + longitude * DEG_TO_RAD;
+    }
+    static limitingMagnitude(config) {
+        const key1 = config.viewState.starSizeKey1;
+        const key2 = config.viewState.starSizeKey2;
+        const lm = Math.min(key1, Math.max(5, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
+        return lm;
     }
 }
 //# sourceMappingURL=calculations.js.map

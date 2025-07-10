@@ -96,6 +96,7 @@ function initializeConfig() {
         observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : observationSite.longitude;
         observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : observationSite.timezone;
     }
+    console.log(savedSettingsObject.displayTime.realTime);
     if (savedSettingsObject && savedSettingsObject.displayTime &&
         savedSettingsObject.displayTime.realTime !== undefined &&
         savedSettingsObject.displayTime.realTime === 'off') {
@@ -108,6 +109,7 @@ function initializeConfig() {
         displayTime.jd = savedSettingsObject.displayTime.jd !== undefined ? savedSettingsObject.displayTime.jd : displayTime.jd;
         displayTime.realTime = savedSettingsObject.displayTime.realTime !== undefined ? savedSettingsObject.displayTime.realTime : displayTime.realTime;
     }
+    console.log(displayTime);
     return {
         displaySettings: displaySettings,
         viewState: viewState,
@@ -153,14 +155,6 @@ export function updateConfig(newConfig) {
     window.renderAll();
     updateInfoDisplay();
 }
-// 恒星時を計算・更新する関数
-// export function updateSiderealTime(): void {
-//     const jd = AstronomicalCalculator.calculateCurrentJdTT();
-//     console.log('🌟 jd:', jd);
-//     const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude);
-//     config.siderealTime = siderealTime;
-//     console.log('🌟 Sidereal time updated:', siderealTime, 'degrees');
-// }
 // ViewStateのみを更新する関数
 export function updateViewState(newViewState) {
     Object.assign(config.viewState, newViewState);
@@ -171,8 +165,6 @@ export function updateViewState(newViewState) {
 }
 // グローバルにconfigを公開（SettingControllerからアクセス可能）
 window.config = config;
-// console.log('🌐 config published to window:', (window as any).config);
-// console.log('🌐 config reference check:', config === (window as any).config);
 window.updateConfig = updateConfig;
 window.updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
@@ -205,8 +197,6 @@ export async function main() {
             DataLoader.loadStarNames(),
         ]);
         await SolarSystemController.initialize();
-        // SolarSystemController.setObserverPlanet(config.observationSite.observerPlanet);
-        // SolarSystemController.updatePositions(config.displayTime.jd);
         // ★ 初回読み込み時に全天体データを更新
         SolarSystemDataManager.updateAllData(config.displayTime.jd);
         document.getElementById('loadingtext').innerHTML = '';
@@ -221,12 +211,6 @@ export async function main() {
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config);
         console.log('🎨 CanvasRenderer created');
-        // 天体の作成
-        // const planets = SolarSystemObjectFactory.createFromArray(planetsData);
-        // const moon = new Moon();
-        // 天体の位置を更新
-        // jupiter.updatePosition(jd);
-        // moon.updatePosition(jd);
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();
@@ -240,8 +224,7 @@ export async function main() {
             renderer.drawNGC(ngcData);
             renderer.writeConstellationNames(Object.values(constellationData));
             renderer.drawSolarSystemObjects();
-            // renderer.drawPlanets([jupiter]);
-            // renderer.drawMoon(moon);
+            renderer.drawReticle();
         }
         const controller = new InteractionController(canvas, config, renderAll);
         // 描画
