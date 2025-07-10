@@ -94,9 +94,8 @@ function initializeConfig() {
         observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : observationSite.longitude;
         observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : observationSite.timezone;
     }
-    console.log(savedSettingsObject.displayTime.realTime);
     if (savedSettingsObject && savedSettingsObject.displayTime &&
-        savedSettingsObject.displayTime.realTime !== undefined &&
+        savedSettingsObject.displayTime.realTime &&
         savedSettingsObject.displayTime.realTime === 'off') {
         displayTime.year = savedSettingsObject.displayTime.year !== undefined ? savedSettingsObject.displayTime.year : displayTime.year;
         displayTime.month = savedSettingsObject.displayTime.month !== undefined ? savedSettingsObject.displayTime.month : displayTime.month;
