@@ -14,7 +14,8 @@ export class DataLoader {
         if (!response.ok) {
             throw new Error(`Failed to load ${url}: ${response.statusText}`);
         }
-        return await response.json();
+        const data = await response.json();
+        return Object.values(data);
     }
     static async fetchCsvData(url) {
         const response = await fetch(url);

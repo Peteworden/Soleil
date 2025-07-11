@@ -94,8 +94,7 @@ export class SolarSystemPositionCalculator {
         };
         const distance = this.calculateDistance(xyz);
         const equatorialCoordsJ2000 = this.calculateEquatorialCoordinates(xyz, distance);
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', jd);
-        const equatorialCoords = this.coordinateConverter.precessionEquatorial(equatorialCoordsJ2000, precessionAngle);
+        const equatorialCoords = this.coordinateConverter.precessionEquatorial(equatorialCoordsJ2000, undefined, 'j2000', jd);
         // 天体の座標と距離と等級を更新
         obj.raDec = equatorialCoords;
         obj.distance = distance;

@@ -2,6 +2,7 @@ import { SettingController } from './controllers/SettingController.js';
 import { SearchController } from './controllers/SearchController.js';
 import { SolarSystemController } from './controllers/SolarSystemController.js';
 import { TimeController } from './controllers/TimeController.js';
+import { DataStore } from './models/DataStore.js';
 import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
 import { InteractionController } from "./renderer/interactionController.js";
@@ -193,6 +194,15 @@ export async function main() {
             DataLoader.loadNGCData(),
             DataLoader.loadStarNames(),
         ]);
+        DataStore.hipStars = hipStars;
+        DataStore.gaia100Data = gaia100Data;
+        DataStore.gaia101_110Data = gaia101_110Data;
+        DataStore.gaia111_115Data = gaia111_115Data;
+        DataStore.constellationData = constellationData;
+        DataStore.messierData = messierData;
+        DataStore.recData = recData;
+        DataStore.ngcData = ngcData;
+        DataStore.starNames = starNames;
         await SolarSystemController.initialize();
         // ★ 初回読み込み時に全天体データを更新
         SolarSystemDataManager.updateAllData(config.displayTime.jd);
@@ -211,7 +221,7 @@ export async function main() {
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();
-            renderer.drawConstellationLines(Object.values(constellationData));
+            renderer.drawConstellationLines(constellationData);
             renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
@@ -219,7 +229,7 @@ export async function main() {
             renderer.drawMessier(messierData);
             renderer.drawRec(recData);
             renderer.drawNGC(ngcData);
-            renderer.writeConstellationNames(Object.values(constellationData));
+            renderer.writeConstellationNames(constellationData);
             renderer.drawSolarSystemObjects();
             renderer.drawReticle();
         }
@@ -252,8 +262,8 @@ function setupButtonEvents() {
     document.getElementById('settingBtn')?.addEventListener('click', showSetting);
     document.getElementById('settingBtnMobile')?.addEventListener('click', showSetting);
     // 検索ボタン
-    document.getElementById('searchBtn')?.addEventListener('click', openSearch);
-    document.getElementById('searchBtnMobile')?.addEventListener('click', openSearch);
+    document.getElementById('searchBtn')?.addEventListener('click', SearchController.toggleSearch);
+    document.getElementById('searchBtnMobile')?.addEventListener('click', SearchController.toggleSearch);
     // 説明ボタン
     document.getElementById('descriptionBtn')?.addEventListener('click', descriptionFunc);
     document.getElementById('descriptionBtnMobile')?.addEventListener('click', descriptionFunc);
@@ -271,8 +281,9 @@ function setupButtonEvents() {
     });
     // 設定画面のOKボタン
     document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
+    SearchController.setupSearchInput();
     // 検索画面の閉じるボタン
-    document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
+    // document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
     // 天体説明画面の閉じるボタン
     document.getElementById('closeObjectInfo')?.addEventListener('click', closeObjectInfo);
     document.getElementById('dtlNow')?.addEventListener('click', function () {
@@ -312,11 +323,6 @@ function showSetting() {
     }
     // 設定画面を開く際に、現在のconfigからUIに値を反映
     SettingController.loadSettingsFromConfig();
-}
-function openSearch() {
-    const searchDiv = document.getElementById('searchDiv');
-    searchDiv.style.display = 'block';
-    document.getElementById('searchInput')?.focus();
 }
 function descriptionFunc() {
     const description = document.getElementById('description');

@@ -56,11 +56,11 @@
     <!-- 情報表示エリア -->
     <div class="info-display" id="infoDisplay">
         <div class="info-row">
-            <span class="info-label">観測地:</span>
+            <!-- <span class="info-label">観測地:</span> -->
             <span class="info-value" id="locationInfo">北緯35° 東経135°</span>
         </div>
         <div class="info-row">
-            <span class="info-label">時刻:</span>
+            <!-- <span class="info-label">時刻:</span> -->
             <span class="info-value" id="timeInfo">2024年1月1日 12:00</span>
         </div>
         <div class="info-row">
@@ -277,9 +277,9 @@
 
                 </div>
 
-                <!-- 天体設定タブ -->
+                <!-- 色などの設定タブ -->
                 <div id="objects-tab" class="setting-section" style="display: none;">
-                    <h3>天体設定</h3>
+                    <h3>高度な設定</h3>
                     <label>Empty</label>
 
                 </div>
@@ -299,10 +299,11 @@
     </div>
 
     <!-- 検索画面 -->
-    <div id="searchDiv" class="big-window" style="display: none;">
-        <input type="text" id="searchInput" class="big-window-textinput" placeholder="ここに入力して検索">
-        <button id="closeSearch" type="button">閉じる</button>
-        <div id="suggestionButtonContainer"></div>
+    <div id="search" class="search" style="display: none;">
+        <input type="text" id="searchInput" class="search-input" placeholder="ここに入力して検索">
+        <div id="numberOfResults" class="numberOfResults"></div>
+        <div id="suggestionButtonContainer" class="suggestionButtonContainer"></div>
+        <!-- <button id="closeSearch" type="button">閉</button> -->
     </div>
 
     <!-- 説明画面 -->
@@ -324,7 +325,7 @@
     <div class="control-panel">
         <div id="showingData" class="showingData"></div>
         <div id="aovSliderDiv" class="aovSliderDiv">
-            <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1">
+            <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1" style="display: none;">
         </div>
         <div id="timeSliderDiv" class="timeSliderDiv">
             <input type="range" id="timeSlider" class="timeSlider" min="0" max="10" step="0.00964"">

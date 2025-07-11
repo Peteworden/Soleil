@@ -243,8 +243,8 @@ export class CoordinateConverter {
             else if (typeof time1 == 'string' && time1 == 'j2000') {
                 time1 = 2451545.0;
             }
-            else {
-                console.warn('precessionEquatorial: time1 is invalid');
+            else if (typeof time1 != 'number') {
+                console.warn('precessionEquatorial: time1 is invalid:', time1);
                 return coords;
             }
             if (time2 == undefined) {
@@ -253,8 +253,8 @@ export class CoordinateConverter {
             else if (typeof time2 == 'string' && time2 == 'j2000') {
                 time2 = 2451545.0;
             }
-            else {
-                console.warn('precessionEquatorial: time2 is invalid');
+            else if (typeof time2 != 'number') {
+                console.warn('precessionEquatorial: time2 is invalid:', time2, typeof time2);
                 return coords;
             }
             precessionAngle = this.precessionAngle(time1, time2);
