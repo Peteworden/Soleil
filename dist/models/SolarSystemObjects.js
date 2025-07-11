@@ -157,11 +157,8 @@ export class SolarSystemDataManager {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            console.log(data);
             this.solarObjects = SolarSystemObjectFactory.createFromArray(data);
             this.isLoaded = true;
-            console.log(`太陽系天体データを読み込みました: ${this.solarObjects.length}個の天体`);
-            console.log(this.solarObjects);
         }
         catch (error) {
             console.error('太陽系天体データの読み込みに失敗:', error);

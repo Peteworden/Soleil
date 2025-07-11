@@ -176,6 +176,7 @@ export class SettingController {
         localStorage.setItem('config', JSON.stringify({
             displaySettings: config.displaySettings,
             viewState: config.viewState,
+            observationSite: config.observationSite,
             displayTime: config.displayTime
         }));
     }

@@ -1,8 +1,9 @@
 import { isMinorObject, isMoon } from '../models/SolarSystemObjects.js';
 import { isPlanet, isSun } from '../types/index.js';
+import { CoordinateConverter } from './coordinates.js';
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
-const epsilon = 23.4392911 * DEG_TO_RAD;
+const epsilon = 0.4090926;
 const cosEpsl = Math.cos(epsilon);
 const sinEpsl = Math.sin(epsilon);
 /**
@@ -50,7 +51,6 @@ export class SolarSystemPositionCalculator {
             return;
         }
         // すべての太陽系天体の日心直交座標を計算
-        // const xyzs: CartesianCoordinates[] = [];
         objects.forEach(obj => {
             // 原点は太陽
             // 月のみ地球から見た赤経・赤緯も計算、xyzが地球基準になる
@@ -93,7 +93,9 @@ export class SolarSystemPositionCalculator {
             z: obj.xyz.z - this.observerPlanetPosition.z
         };
         const distance = this.calculateDistance(xyz);
-        const equatorialCoords = this.calculateEquatorialCoordinates(xyz, distance);
+        const equatorialCoordsJ2000 = this.calculateEquatorialCoordinates(xyz, distance);
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', jd);
+        const equatorialCoords = this.coordinateConverter.precessionEquatorial(equatorialCoordsJ2000, precessionAngle);
         // 天体の座標と距離と等級を更新
         obj.raDec = equatorialCoords;
         obj.distance = distance;
@@ -403,4 +405,5 @@ export class SolarSystemPositionCalculator {
 }
 SolarSystemPositionCalculator.observerPlanetName = '地球';
 SolarSystemPositionCalculator.observerPlanetPosition = { x: 0, y: 0, z: 0 };
+SolarSystemPositionCalculator.coordinateConverter = new CoordinateConverter();
 //# sourceMappingURL=SolarSystemPositionCalculator.js.map

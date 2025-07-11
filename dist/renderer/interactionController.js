@@ -250,7 +250,6 @@ export class InteractionController {
         this.viewState = config.viewState;
         this.renderCallback = renderCallback;
         this.baseDistance = 0;
-        console.log('🎨 InteractionController constructor: renderCallback:', this.renderCallback);
         this.coordinateConverter = new CoordinateConverter();
         // タッチ操作のデフォルト動作を無効化
         this.canvas.style.touchAction = 'none';

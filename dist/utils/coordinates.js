@@ -1,5 +1,8 @@
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
+const epsilon = 0.4090926;
+const cosEpsl = Math.cos(epsilon);
+const sinEpsl = Math.sin(epsilon);
 export class CoordinateConverter {
     constructor() {
         // グローバルなconfigから緯度経度を取得
@@ -92,7 +95,6 @@ export class CoordinateConverter {
                 dec: config.viewState.fieldOfViewDec
             };
         }
-        // フォールバック: キャッシュされた値を使用
         return {
             ra: this.fieldOfViewRA,
             dec: this.fieldOfViewDec
@@ -185,6 +187,91 @@ export class CoordinateConverter {
         }
         return [d, m];
     }
+    // 赤道座標から直交座標への変換
+    equatorialToCartesian(coords, distance = 1) {
+        const ra = coords.ra * DEG_TO_RAD;
+        const dec = coords.dec * DEG_TO_RAD;
+        return {
+            x: distance * Math.cos(dec) * Math.cos(ra),
+            y: distance * Math.cos(dec) * Math.sin(ra),
+            z: distance * Math.sin(dec)
+        };
+    }
+    // 直交座標から赤道座標への変換
+    cartesianToEquatorial(coords) {
+        const distance = Math.sqrt(coords.x * coords.x + coords.y * coords.y + coords.z * coords.z);
+        let dec;
+        if (Math.abs(coords.z / distance) > 0.99999999999999) {
+            dec = 90 * Math.sign(coords.z);
+        }
+        else {
+            dec = Math.asin(coords.z / distance) * RAD_TO_DEG;
+        }
+        const ra = Math.atan2(coords.y, coords.x) * RAD_TO_DEG;
+        return {
+            ra: (ra + 360) % 360,
+            dec: dec
+        };
+    }
+    precessionAngle(time1, time2) {
+        if (typeof time1 == 'string') {
+            if (time1 == 'j2000') {
+                time1 = 2451545.0;
+            }
+            else {
+                console.warn('precessionAngle: time1 is not a valid string');
+                return 0;
+            }
+        }
+        if (typeof time2 == 'string') {
+            if (time2 == 'j2000') {
+                time2 = 2451545.0;
+            }
+            else {
+                console.warn('precessionAngle: time2 is not a valid string');
+                return 0;
+            }
+        }
+        const timeDiff = (time2 - time1) / 36525.0;
+        return 5029.0 / 3600.0 * timeDiff * DEG_TO_RAD;
+    }
+    precessionEquatorial(coords, precessionAngle, time1, time2) {
+        if (precessionAngle == undefined) {
+            if (time1 == undefined) {
+                time1 = 2451545.0;
+            }
+            else if (typeof time1 == 'string' && time1 == 'j2000') {
+                time1 = 2451545.0;
+            }
+            else {
+                console.warn('precessionEquatorial: time1 is invalid');
+                return coords;
+            }
+            if (time2 == undefined) {
+                time2 = 2451545.0;
+            }
+            else if (typeof time2 == 'string' && time2 == 'j2000') {
+                time2 = 2451545.0;
+            }
+            else {
+                console.warn('precessionEquatorial: time2 is invalid');
+                return coords;
+            }
+            precessionAngle = this.precessionAngle(time1, time2);
+        }
+        const { x, y, z } = this.equatorialToCartesian(coords, 1);
+        const sin = Math.sin(precessionAngle);
+        const cos = Math.cos(precessionAngle);
+        // const xyz2 = this.rotateX(xyz1, -epsilon);
+        // const xyz3 = this.rotateZ(xyz2, precessionAngle);
+        // const xyz4 = this.rotateX(xyz3, epsilon);
+        const xyz2 = {
+            x: x * cos - y * cosEpsl * sin - z * sinEpsl * sin,
+            y: cosEpsl * (x * sin + cos * (y * cosEpsl + z * sinEpsl)) - sinEpsl * (-y * sinEpsl + z * cosEpsl),
+            z: sinEpsl * (x * sin + cos * (y * cosEpsl + z * sinEpsl)) + cosEpsl * (-y * sinEpsl + z * cosEpsl)
+        };
+        return this.cartesianToEquatorial(xyz2);
+    }
     // 赤道座標から地平座標への変換
     equatorialToHorizontal(coords, siderealTime) {
         const ra = coords.ra * DEG_TO_RAD;
@@ -267,38 +354,21 @@ export class CoordinateConverter {
         const scrDec = -r * Math.cos(thetaSH);
         return { ra: scrRa, dec: scrDec };
     }
-    // 赤道座標から直交座標への変換
-    equatorialToCartesian(coords, distance = 1) {
-        const ra = coords.ra * DEG_TO_RAD;
-        const dec = coords.dec * DEG_TO_RAD;
-        return {
-            x: distance * Math.cos(dec) * Math.cos(ra),
-            y: distance * Math.cos(dec) * Math.sin(ra),
-            z: distance * Math.sin(dec)
-        };
-    }
-    // 直交座標から赤道座標への変換
-    cartesianToEquatorial(coords) {
-        const distance = Math.sqrt(coords.x * coords.x + coords.y * coords.y + coords.z * coords.z);
-        const dec = Math.asin(coords.z / distance) * RAD_TO_DEG;
-        const ra = Math.atan2(coords.y, coords.x) * RAD_TO_DEG;
-        return {
-            ra: (ra + 360) % 360,
-            dec: dec
-        };
-    }
+    // スクリーン座標からスクリーンRaDecへの変換
     screenRaDecToScreenXY(raDec, canvas) {
         const fieldOfView = this.getCurrentFieldOfView();
         const x = canvas.width * (0.5 - raDec.ra / fieldOfView.ra);
         const y = canvas.height * (0.5 - raDec.dec / fieldOfView.dec);
         return [x, y];
     }
+    // スクリーン座標からスクリーンRaDecへの変換
     screenXYToScreenRaDec(x, y, canvas) {
         const fieldOfView = this.getCurrentFieldOfView();
         const ra = (0.5 - x / canvas.width) * fieldOfView.ra;
         const dec = (0.5 - y / canvas.height) * fieldOfView.dec;
         return { ra, dec };
     }
+    // 赤道座標からスクリーン座標への変換、判定
     equatorialToScreenXYifin(raDec, canvas, siderealTime, force = false) {
         const center = this.getCurrentCenter();
         const fieldOfView = this.getCurrentFieldOfView();
@@ -343,10 +413,8 @@ export class CoordinateConverter {
             return { ra: center.ra, dec: center.dec };
         }
         else {
-            const Ra = screenRaDec.ra * DEG_TO_RAD;
-            const Dec = screenRaDec.dec * DEG_TO_RAD;
-            const thetaSH = Math.atan2(Ra, -Dec);
-            const r = Math.sqrt(Ra * Ra + Dec * Dec) * DEG_TO_RAD;
+            const thetaSH = Math.atan2(screenRaDec.ra, -screenRaDec.dec);
+            const r = Math.sqrt(screenRaDec.ra * screenRaDec.ra + screenRaDec.dec * screenRaDec.dec) * DEG_TO_RAD;
             const center = this.getCurrentCenter();
             const centerDec_rad = center.dec * DEG_TO_RAD;
             const sinDec = Math.sin(centerDec_rad);

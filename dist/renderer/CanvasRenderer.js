@@ -12,12 +12,9 @@ export class CanvasRenderer {
         const globalConfig = window.config;
         if (globalConfig && config.displaySettings && config.viewState) {
             this.config = globalConfig;
-            console.log('🎨 CanvasRenderer constructor: Using global config.displaySettings reference');
-            console.log('🎨 this.config === globalConfig.displaySettings:', this.config === globalConfig);
         }
         else {
             this.config = config;
-            console.log('🎨 CanvasRenderer constructor: Using passed options (global config not available)');
         }
         this.coordinateConverter = new CoordinateConverter();
     }
@@ -27,7 +24,9 @@ export class CanvasRenderer {
     }
     // 天体を描画
     drawObject(object) {
-        const coords = object.getCoordinates();
+        const coordsJ2000 = object.getCoordinates();
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
+        const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
         if (!screenXY[0])
             return;
@@ -261,11 +260,12 @@ export class CanvasRenderer {
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const siderealTime = window.config.siderealTime;
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         const zeroMagSize = this.starSize_0mag(this.config);
         for (const star of hipStars) {
-            const coords = star.getCoordinates();
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
+            const coords = this.coordinateConverter.precessionEquatorial(star.getCoordinates(), precessionAngle);
             const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
             if (!screenXY[0])
                 continue;
@@ -283,6 +283,7 @@ export class CanvasRenderer {
         if (brightestMagnitude > limitingMagnitude)
             return;
         const siderealTime = window.config.siderealTime;
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         const zeroMagSize = this.starSize_0mag(this.config);
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
@@ -294,8 +295,8 @@ export class CanvasRenderer {
                 const mag = data[2] * 0.1;
                 if (mag >= limitingMagnitude)
                     continue;
-                // [ra, dec] = J2000toApparent(ra, dec, JD);
-                const coords = { ra: data[0] * 0.001, dec: data[1] * 0.001 };
+                const coordsJ2000 = { ra: data[0] * 0.001, dec: data[1] * 0.001 };
+                const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
                 const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
                 if (!screenXY[0])
                     continue;
@@ -488,11 +489,14 @@ export class CanvasRenderer {
         const fieldSize = Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
         const maxLength = 30 * 2 * Math.max(xmax, ymax) / fieldSize;
         const siderealTime = window.config.siderealTime;
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         this.ctx.beginPath();
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
-                const coords1 = { ra: line[0], dec: line[1] };
-                const coords2 = { ra: line[2], dec: line[3] };
+                const coords1J2000 = { ra: line[0], dec: line[1] };
+                const coords1 = this.coordinateConverter.precessionEquatorial(coords1J2000, precessionAngle);
+                const coords2J2000 = { ra: line[2], dec: line[3] };
+                const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
                 const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.canvas, siderealTime, true);
                 const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.canvas, siderealTime, true);
                 if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin)
@@ -511,8 +515,10 @@ export class CanvasRenderer {
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'center';
         const siderealTime = window.config.siderealTime;
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         for (const constellation of constellations) {
-            const coords = { ra: constellation.ra, dec: constellation.dec };
+            const coordsJ2000 = { ra: constellation.ra, dec: constellation.dec };
+            const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
             const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
             if (!screenXY[0])
                 continue;
@@ -635,7 +641,6 @@ export class CanvasRenderer {
                             normalizedRA = intersectionRA < 180 ? intersectionRA + 360 : intersectionRA;
                         }
                     }
-                    // console.log(dec, segment, normalizedRA);
                     intersections.push(normalizedRA);
                 }
             }
@@ -696,10 +701,31 @@ export class CanvasRenderer {
                 areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]);
             }
             else {
-                areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, minDec)]);
-                for (let i = minDec + 1; i < maxDec + 1; i++) {
-                    areaCandidates.push([this.areaNumber(0, i), this.areaNumber(359, i)]);
+                const edgeRA = [];
+                const edgeDec = [];
+                // ちょっと広めにとった範囲
+                const raWidth = this.config.viewState.fieldOfViewRA + 2.0;
+                const decWidth = this.config.viewState.fieldOfViewDec + 2.0;
+                const supi = Math.ceil(3.0 * raWidth / 2) * 2;
+                const supj = Math.ceil(3.0 * decWidth / 2) * 2;
+                // 右上から左上
+                for (let i = 0; i < supi; i++) {
+                    this.addEdgeAEP(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec);
                 }
+                // 左上から左下
+                for (let j = 0; j < supj; j++) {
+                    this.addEdgeAEP(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec);
+                }
+                // 左下から右下
+                for (let i = 0; i < supi; i++) {
+                    this.addEdgeAEP(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec);
+                }
+                // 右下から右上
+                for (let j = 0; j < supj; j++) {
+                    this.addEdgeAEP(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec);
+                }
+                const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec);
+                return areaCandidates;
             }
             return areaCandidates;
         }
@@ -728,38 +754,41 @@ export class CanvasRenderer {
                 return areaCandidates;
             }
             else {
-                let RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
                 const edgeRA = [];
                 const edgeDec = [];
                 // ちょっと広めにとった範囲
-                const raWidth = this.config.viewState.fieldOfViewRA + 0.0;
-                const decWidth = this.config.viewState.fieldOfViewDec + 0.0;
+                const raWidth = this.config.viewState.fieldOfViewRA + 2.0;
+                const decWidth = this.config.viewState.fieldOfViewDec + 2.0;
                 const supi = Math.ceil(3.0 * raWidth / 2) * 2;
                 const supj = Math.ceil(3.0 * decWidth / 2) * 2;
                 // 右上から左上
                 for (let i = 0; i < supi; i++) {
-                    this.addEdge(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec, siderealTime);
+                    this.addEdgeView(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec, siderealTime);
                 }
                 // 左上から左下
                 for (let j = 0; j < supj; j++) {
-                    this.addEdge(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec, siderealTime);
+                    this.addEdgeView(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec, siderealTime);
                 }
                 // 左下から右下
                 for (let i = 0; i < supi; i++) {
-                    this.addEdge(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec, siderealTime);
+                    this.addEdgeView(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec, siderealTime);
                 }
                 // 右下から右上
                 for (let j = 0; j < supj; j++) {
-                    this.addEdge(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec, siderealTime);
+                    this.addEdgeView(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec, siderealTime);
                 }
-                // フラッドフィル方式
                 const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec);
                 return areaCandidates;
             }
         }
         return [];
     }
-    addEdge(screenRA, screenDec, edgeRA, edgeDec, siderealTime) {
+    addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec) {
+        const equatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRA, dec: screenDec });
+        edgeRA.push(equatorial.ra);
+        edgeDec.push(equatorial.dec);
+    }
+    addEdgeView(screenRA, screenDec, edgeRA, edgeDec, siderealTime) {
         const horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: screenDec });
         const equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
         edgeRA.push(equatorial.ra);
