@@ -273,11 +273,13 @@ export class CoordinateConverter {
         return this.cartesianToEquatorial(xyz2);
     }
     // 赤道座標から地平座標への変換
-    equatorialToHorizontal(coords, siderealTime) {
+    equatorialToHorizontal(coords, siderealTime, latitude) {
+        if (latitude == undefined) {
+            latitude = this.getLocation().latitude;
+        }
         const ra = coords.ra * DEG_TO_RAD;
         const dec = coords.dec * DEG_TO_RAD;
-        const location = this.getLocation();
-        const lat = location.latitude * DEG_TO_RAD;
+        const lat = latitude * DEG_TO_RAD;
         const hourAngle = siderealTime - ra;
         const sinDec = Math.sin(dec);
         const cosDec = Math.cos(dec);
@@ -293,11 +295,13 @@ export class CoordinateConverter {
         return { az, alt };
     }
     // 地平座標から赤道座標への変換
-    horizontalToEquatorial(coords, siderealTime) {
+    horizontalToEquatorial(coords, siderealTime, latitude) {
+        if (latitude == undefined) {
+            latitude = this.getLocation().latitude;
+        }
         const az = coords.az * DEG_TO_RAD;
         const alt = coords.alt * DEG_TO_RAD;
-        const location = this.getLocation();
-        const lat = location.latitude * DEG_TO_RAD;
+        const lat = latitude * DEG_TO_RAD;
         const sinAlt = Math.sin(alt);
         const cosAlt = Math.cos(alt);
         const sinLat = Math.sin(lat);

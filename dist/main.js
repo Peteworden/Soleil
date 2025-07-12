@@ -7,6 +7,7 @@ import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
 import { InteractionController } from "./renderer/interactionController.js";
 import { AstronomicalCalculator } from './utils/calculations.js';
+import { CoordinateConverter } from './utils/coordinates.js';
 import { DataLoader } from './utils/DataLoader.js';
 import { updateInfoDisplay, handleResize, setupTimeUpdate } from './utils/uiUtils.js';
 // 初期設定を読み込む関数
@@ -35,8 +36,8 @@ function initializeConfig() {
     const viewState = {
         centerRA: 90,
         centerDec: 0,
-        centerAz: 0,
-        centerAlt: 0,
+        centerAz: 180,
+        centerAlt: 45,
         fieldOfViewRA: 60,
         fieldOfViewDec: 60,
         starSizeKey1: 11.5,
@@ -107,7 +108,18 @@ function initializeConfig() {
         displayTime.jd = savedSettingsObject.displayTime.jd !== undefined ? savedSettingsObject.displayTime.jd : displayTime.jd;
         displayTime.realTime = savedSettingsObject.displayTime.realTime !== undefined ? savedSettingsObject.displayTime.realTime : displayTime.realTime;
     }
-    console.log(displayTime);
+    const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
+    const converter = new CoordinateConverter();
+    if (displaySettings.mode === 'AEP') {
+        const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
+        viewState.centerAz = centerHorizontal.az;
+        viewState.centerAlt = centerHorizontal.alt;
+    }
+    else if (displaySettings.mode === 'view') {
+        const centerEquatorial = converter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, siderealTime, observationSite.latitude);
+        viewState.centerRA = centerEquatorial.ra;
+        viewState.centerDec = centerEquatorial.dec;
+    }
     return {
         displaySettings: displaySettings,
         viewState: viewState,
@@ -117,7 +129,7 @@ function initializeConfig() {
             width: window.innerWidth,
             height: window.innerHeight
         },
-        siderealTime: AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude) // 恒星時（度）- 初期値、後で計算して更新
+        siderealTime: siderealTime
     };
 }
 // 星空表示の設定
@@ -126,7 +138,7 @@ export const config = initializeConfig();
 // 設定をリセットする関数
 export function resetConfig() {
     console.log('🔄 Resetting config to default values');
-    localStorage.removeItem('settings');
+    localStorage.removeItem('config');
     const defaultConfig = initializeConfig();
     Object.assign(config, defaultConfig);
     window.config = config;
@@ -141,11 +153,6 @@ export function updateConfig(newConfig) {
         window.renderer.updateOptions(config.displaySettings);
         window.controller.updateOptions(config.displaySettings);
     }
-    //globalのconfigは更新される？
-    // if (newConfig.observationSite || newConfig.displayTime) {
-    //     console.log('🔧 Observation site or time updated, recalculating sidereal time');
-    //     updateSiderealTime();
-    // }
     // 時刻関連の更新があればTimeControllerも更新
     if (newConfig.displayTime) {
         TimeController.onConfigUpdate();
@@ -161,15 +168,18 @@ export function updateViewState(newViewState) {
     window.renderAll();
     updateInfoDisplay();
 }
+function resetAll() {
+    // LocalStorage, config, UIをリセット
+    resetConfig();
+    SettingController.loadSettingsFromConfig();
+}
 // グローバルにconfigを公開（SettingControllerからアクセス可能）
 window.config = config;
 window.updateConfig = updateConfig;
 window.updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
-// (window as any).updateSiderealTime = updateSiderealTime;
 window.resetConfig = resetConfig;
 window.saveConfig = SettingController.saveConfigToLocalStorage;
-// (window as any).loadSettingsFromLocalStorage = SettingController.loadSettingsFromLocalStorage;
 window.loadSettingsFromConfig = SettingController.loadSettingsFromConfig;
 window.updateTimeSlider = TimeController.updateSlider;
 window.toggleRealTime = TimeController.toggleRealTime;
@@ -194,17 +204,18 @@ export async function main() {
             DataLoader.loadNGCData(),
             DataLoader.loadStarNames(),
         ]);
+        document.getElementById('loadingtext').innerHTML = 'storing...';
         DataStore.hipStars = hipStars;
-        DataStore.gaia100Data = gaia100Data;
-        DataStore.gaia101_110Data = gaia101_110Data;
-        DataStore.gaia111_115Data = gaia111_115Data;
+        // DataStore.gaia100Data = gaia100Data;
+        // DataStore.gaia101_110Data = gaia101_110Data;
+        // DataStore.gaia111_115Data = gaia111_115Data;
         DataStore.constellationData = constellationData;
         DataStore.messierData = messierData;
         DataStore.recData = recData;
         DataStore.ngcData = ngcData;
         DataStore.starNames = starNames;
         await SolarSystemController.initialize();
-        // ★ 初回読み込み時に全天体データを更新
+        // ★ 初回読み込み時に全太陽系天体データを更新
         SolarSystemDataManager.updateAllData(config.displayTime.jd);
         document.getElementById('loadingtext').innerHTML = '';
         // キャンバスの取得（HTMLで作成済み）
@@ -217,7 +228,6 @@ export async function main() {
         canvas.height = config.canvasSize.height;
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config);
-        console.log('🎨 CanvasRenderer created');
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();
@@ -281,6 +291,7 @@ function setupButtonEvents() {
     });
     // 設定画面のOKボタン
     document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
+    document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
     SearchController.setupSearchInput();
     // 検索画面の閉じるボタン
     // document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);

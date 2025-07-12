@@ -1,5 +1,5 @@
 // import { SolarObjectsLoader } from './SolarObjectsLoader.js';
-import { CelestialObject, HipStar, MessierObject } from '../models/CelestialObject.js';
+import { HipStar, MessierObject, NGCObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
 export class DataLoader {
     static async fetchText(url) {
@@ -116,7 +116,7 @@ export class DataLoader {
         const data = (await this.fetchText('data/ngc.txt')).split(',');
         const ngc = [];
         for (let i = 0; i < data.length; i += 5) {
-            ngc.push(new CelestialObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]));
+            ngc.push(new NGCObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]));
         }
         return ngc;
     }

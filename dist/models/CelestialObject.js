@@ -33,6 +33,12 @@ export class MessierObject extends CelestialObject {
         this.alt_name = alt_name;
         this.description = description || '';
     }
+    getNumber() {
+        return parseInt(this.name.replace('M', ''));
+    }
+    getNumberChar() {
+        return this.name.replace('M', '');
+    }
     getAltName() {
         return this.alt_name;
     }
@@ -41,6 +47,28 @@ export class MessierObject extends CelestialObject {
     }
     getDescription() {
         return this.description;
+    }
+}
+export class NGCObject extends CelestialObject {
+    constructor(name, coordinates, magnitude, type) {
+        super(name, coordinates, magnitude, type);
+    }
+    getCatalog() {
+        if (this.name.slice(0, 3) === 'NGC') {
+            return 'NGC';
+        }
+        else if (this.name.slice(0, 2) === 'IC') {
+            return 'IC';
+        }
+        else {
+            return '';
+        }
+    }
+    getNumber() {
+        return parseInt(this.name.replace(this.getCatalog(), ''));
+    }
+    getNumberChar() {
+        return this.name.replace(this.getCatalog(), '');
     }
 }
 //# sourceMappingURL=CelestialObject.js.map
