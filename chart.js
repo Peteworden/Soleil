@@ -333,7 +333,6 @@ function link(obj) {
         if (JPNplanets[i] == obj) {
             cenRA = solarSystemBodies[i].ra;
             cenDec = solarSystemBodies[i].dec;
-            console.log(`Linking to ${obj}: RA=${cenRA}, Dec=${cenDec}`);
             flag = true;
             break;
         }
@@ -875,8 +874,6 @@ let dragFlag = false;
 
 // タッチ開始
 function ontouchstart(e) {
-    // e.preventDefault();
-    console.log(e.touches.length);
     if (e.touches.length === 1) {
         pinchFlag = false;
         dragFlag = false;
@@ -2883,7 +2880,6 @@ function siderealTime(JD_TT, lon_obs) {
     const h = 24 * ((JD_UT + 0.5) % 1);
     const d_UT = JD_UT - h / 24 - 2451545.0;
     ans = ((6.697375 + (0.065707485828 * d_UT) % 24 + 1.0027379 * h + 0.0854103 * t + 0.0000258 * t*t) % 24) * 15 * deg2rad + lon_obs;
-    console.log('🔍 siderealTime:',JD_TT, ans-lon_obs, lon_obs);
     return ans;
 }
 
@@ -3037,7 +3033,6 @@ function determinZerosize() {
 function newSetting() {
     ObsPlanet = document.getElementById("observer").value;
     Obs_num = JPNplanets.indexOf(ObsPlanet);
-    console.log(ObsPlanet, Obs_num);
 
     // 視点
     if (ObsPlanet == '地球') {
@@ -4186,7 +4181,6 @@ let currentMarker = null;
 document.getElementById('observation-site-select').addEventListener('change', function() {
     const observationSite = document.getElementById('observation-site-select').value;
     if (observationSites[observationSite] != null) {
-        console.log(observationSites[observationSite]);
         setObservationSite(...observationSites[observationSite]);
     } else if (observationSite == '現在地') {
         function success(position) {
@@ -4201,13 +4195,6 @@ document.getElementById('observation-site-select').addEventListener('change', fu
     } else if (observationSite == '地図上で選択') {
         if (online) {
             document.getElementById('observation-site-map-div').style.visibility = 'visible';
-
-            // if (map  == undefined) {
-            //     console.log('map is undefined');
-            // }
-            // if (!map) {
-            //     map = null;
-            // }
             if (map) {
                 map.remove();
             }
@@ -4268,8 +4255,6 @@ function show_JD_minus1(){
 }
 
 function setObservationSite(lat_deg=35, lon_deg=135, latflag=true, lonflag=true) {
-    console.log(lat_deg);
-    console.log(lat_deg, lon_deg, latflag, lonflag);
     if (latflag) {
         if (!isNumber(lat_deg) || lat_deg < -90 || lat_deg > 90) {
             lat_deg = 35;
