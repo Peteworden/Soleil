@@ -1,3 +1,4 @@
+import { ObservationSiteController } from './controllers/ObservationSiteController.js';
 import { SettingController } from './controllers/SettingController.js';
 import { SearchController } from './controllers/SearchController.js';
 import { SolarSystemController } from './controllers/SolarSystemController.js';
@@ -45,7 +46,7 @@ function initializeConfig() {
     };
     const observationSite = {
         observerPlanet: '地球',
-        name: '東京',
+        name: 'カスタム',
         latitude: 35.0,
         longitude: 135.0,
         timezone: 9
@@ -244,8 +245,6 @@ export async function main() {
             renderer.drawReticle();
         }
         const controller = new InteractionController(canvas, config, renderAll);
-        // 描画
-        renderAll();
         // renderAll関数とrenderer、controllerをグローバルに公開
         window.renderAll = renderAll;
         window.renderer = renderer;
@@ -256,8 +255,12 @@ export async function main() {
         SettingController.loadSettingsFromConfig();
         // 時刻コントローラーを初期化
         TimeController.initialize();
+        // 観測地コントローラーを初期化
+        ObservationSiteController.initialize();
         updateInfoDisplay();
         setupTimeUpdate();
+        // 描画
+        renderAll();
     }
     catch (error) {
         console.error('データの読み込みに失敗しました:', error);

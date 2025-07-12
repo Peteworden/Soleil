@@ -48,12 +48,19 @@ export class SettingController {
         console.log('🔧 updateConfigFromInputs called');
         // 観測地の設定を読み取り
         const observerPlanetSelect = document.getElementById('observer_planet');
+        const observationSiteSelect = document.getElementById('observation-site-select');
         const latInput = document.getElementById('lat');
         const lonInput = document.getElementById('lon');
         const nsSelect = document.getElementById('NSCombo');
         const ewSelect = document.getElementById('EWCombo');
-        if (observerPlanetSelect && latInput && lonInput && nsSelect && ewSelect) {
+        if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
             const observerPlanet = observerPlanetSelect.value;
+            if (latInput.value.length === 0) {
+                latInput.value = '35.00';
+            }
+            if (lonInput.value.length === 0) {
+                lonInput.value = '135.00';
+            }
             const latitude = parseFloat(latInput.value) * (nsSelect.value === '北緯' ? 1 : -1);
             const longitude = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
             const updateConfig = window.updateConfig;
@@ -61,6 +68,7 @@ export class SettingController {
                 updateConfig({
                     observationSite: {
                         observerPlanet: observerPlanet,
+                        name: observationSiteSelect.value,
                         latitude: latitude,
                         longitude: longitude,
                         timezone: 9
@@ -161,7 +169,6 @@ export class SettingController {
                         realTime: realTime.value || 'off'
                     }
                 });
-                console.log(jd, window.config.displayTime.jd);
                 TimeController.initialize();
             }
         }
@@ -187,12 +194,14 @@ export class SettingController {
             return;
         // 観測地の設定
         const observerPlanetSelect = document.getElementById('observer_planet');
+        const observationSiteSelect = document.getElementById('observation-site-select');
         const latInput = document.getElementById('lat');
         const lonInput = document.getElementById('lon');
         const nsSelect = document.getElementById('NSCombo');
         const ewSelect = document.getElementById('EWCombo');
-        if (observerPlanetSelect && latInput && lonInput && nsSelect && ewSelect) {
+        if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
             observerPlanetSelect.value = config.observationSite.observerPlanet;
+            observationSiteSelect.value = config.observationSite.name;
             const latitude = Math.abs(config.observationSite.latitude);
             const longitude = Math.abs(config.observationSite.longitude);
             latInput.value = latitude.toString();

@@ -18,7 +18,7 @@ export function updateInfoDisplay() {
         const ew = longitude >= 0 ? 'E' : 'W';
         const latAbs = Math.abs(latitude);
         const lonAbs = Math.abs(longitude);
-        const locationText = `${latAbs.toFixed(1)}° ${ns} ${lonAbs.toFixed(1)}° ${ew}`;
+        const locationText = `${latAbs.toFixed(2)}° ${ns} ${lonAbs.toFixed(2)}° ${ew}`;
         locationInfo.textContent = locationText;
     }
     // 時刻情報を更新
