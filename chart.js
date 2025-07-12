@@ -170,6 +170,7 @@ let defaultcheck = 0;
 let loaded = [];
 let lastVisitDate;
 let news = [
+    {time: '2025-07-12T13:00:00+09:00', text: ['<a href="https://peteworden.github.io/Soleil/chart_ts.html">TypeScriptバージョン</a>がどんどん進化を遂げています。テスト前なのにおかしいな。']},
     {time: '2025-07-03T00:00:00+09:00', text: ['離心率が非常に大きな天体「C/2025 (ATLAS)」を追加しました。HOME→「細かい星図を作る」のPythonスクリプトも使ってみてください（この天体を見るためには検索窓にC/2025 N1と入力）']},
     {time: '2025-06-25T17:30:00+09:00', text: ['いて座A*、おおかみ座の新星のマークを追加しました', '現在この星図のTypeScript版を作成中です。まだ開発中ですがURLをchart.htmlからchart_ts.htmlに変えると見れます']},
     {time: '2025-05-01T22:10:00+09:00', text: ['KUALAの新機材・R200SSで電視観望するときの画角を出せます', '天体や星座の画像を募集します！右上の３本線をクリックしてフォームを探してください']},
@@ -4031,6 +4032,10 @@ function showNews(lastVisit) {
                     newsText.appendChild(newsDiv);
                 }
                 newsDiv = document.createElement('div'); // 年月日と内容
+                newsDiv.style.color = 'white';
+                // リンクの色を白に設定
+                newsDiv.style.setProperty('--link-color', 'white');
+                newsDiv.innerHTML = '<style>a { color: white !important; text-decoration: underline; } a:hover { color: #cccccc !important; }</style>';
                 newsDate = news[i].time.split('T')[0];
                 let newsDateElem = document.createElement('p')
                 newsDateElem.textContent = `${newsDate}`;
@@ -4038,7 +4043,7 @@ function showNews(lastVisit) {
                 newsTextList = document.createElement('ul');
                 news[i].text.forEach(text => {
                     const listItem = document.createElement('li');
-                    listItem.textContent = text;
+                    listItem.innerHTML = text;
                     newsTextList.appendChild(listItem);
                 });
             }
