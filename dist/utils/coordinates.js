@@ -379,7 +379,7 @@ export class CoordinateConverter {
         const mode = this.getCurrentMode();
         if (mode == 'AEP') {
             const screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: center.ra, dec: center.dec });
-            if (Math.abs(screenRaDec.ra) < 0.5 * fieldOfView.ra && Math.abs(screenRaDec.dec) < 0.5 * fieldOfView.dec) {
+            if (Math.abs(screenRaDec.ra) < fieldOfView.ra * 0.5 && Math.abs(screenRaDec.dec) < fieldOfView.dec * 0.5) {
                 const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
                 return [true, [x, y]];
             }
@@ -394,7 +394,7 @@ export class CoordinateConverter {
         else if (mode == 'view') {
             const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
             const screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: center.az, alt: center.alt });
-            if (Math.abs(screenRaDec.ra) < fieldOfView.ra && Math.abs(screenRaDec.dec) < fieldOfView.dec) {
+            if (Math.abs(screenRaDec.ra) < fieldOfView.ra * 0.5 && Math.abs(screenRaDec.dec) < fieldOfView.dec * 0.5) {
                 const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
                 return [true, [x, y]];
             }

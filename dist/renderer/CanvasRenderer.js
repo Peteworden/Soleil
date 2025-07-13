@@ -666,12 +666,13 @@ export class CanvasRenderer {
      * @param edgeDec 境界の赤緯配列
      * @returns 領域内のマス番号の配列
      */
-    floodFillAreaCandidates(edgeRA, edgeDec) {
+    floodFillAreaCandidates(edgeRA, edgeDec, np, sp) {
         const candidates = [];
         const RA_min = Math.min(...edgeRA);
         const RA_max = Math.max(...edgeRA);
-        const Dec_min = Math.min(...edgeDec);
-        const Dec_max = Math.max(...edgeDec);
+        const Dec_min = sp ? -90 : Math.min(...edgeDec);
+        const Dec_max = np ? 89.9 : Math.max(...edgeDec);
+        let ra0Dec = []; // 赤経0度線を横切るときの赤緯
         // 境界線をセグメントに分割
         const segments = [];
         for (let i = 0; i < edgeRA.length - 1; i++) {
@@ -679,33 +680,98 @@ export class CanvasRenderer {
                 ra1: edgeRA[i], dec1: edgeDec[i],
                 ra2: edgeRA[i + 1], dec2: edgeDec[i + 1]
             });
+            if (edgeRA[i] > 300 && edgeRA[i + 1] < 60) {
+                ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i + 1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
+            }
+            else if (edgeRA[i] < 60 && edgeRA[i + 1] > 300) {
+                ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i] - edgeRA[i + 1] + 360) * edgeRA[i]);
+            }
         }
         segments.push({
             ra1: edgeRA[edgeRA.length - 1], dec1: edgeDec[edgeDec.length - 1],
             ra2: edgeRA[0], dec2: edgeDec[0]
         });
+        if (edgeRA[edgeRA.length - 1] > 300 && edgeRA[0] < 60) {
+            ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[0] - edgeRA[edgeRA.length - 1] + 360) * (360 - edgeRA[edgeRA.length - 1]));
+        }
+        else if (edgeRA[edgeRA.length - 1] < 60 && edgeRA[0] > 300) {
+            ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[edgeRA.length - 1] - edgeRA[0] + 360) * edgeRA[edgeRA.length - 1]);
+        }
+        if (np) {
+            if (ra0Dec.length !== 1) {
+                // console.log("np but ra0Dec.length !== 1", ra0Dec);
+            }
+            else {
+                // console.log("np ra0Dec.length === 1", ra0Dec);
+                segments.push({
+                    ra1: 0, dec1: ra0Dec[0],
+                    ra2: 0, dec2: 89.9
+                });
+                segments.push({
+                    ra1: 359.99, dec1: ra0Dec[0],
+                    ra2: 359.99, dec2: 89.9
+                });
+            }
+        }
+        else if (sp) {
+            if (ra0Dec.length !== 1) {
+                // console.log("sp but ra0Dec.length !== 1", ra0Dec);
+            }
+            else {
+                segments.push({
+                    ra1: 0, dec1: -90,
+                    ra2: 0, dec2: ra0Dec[0]
+                });
+                segments.push({
+                    ra1: 359.99, dec1: ra0Dec[0],
+                    ra2: 359.99, dec2: -90
+                });
+            }
+        }
+        else if (ra0Dec.length !== 0 && ra0Dec.length !== 2) {
+            // console.log("ra0Dec.length !== 0 && ra0Dec.length !== 2", ra0Dec);
+        }
+        else if (ra0Dec.length === 2) {
+            // console.log("ra0Dec.length === 2", ra0Dec);
+            segments.push({
+                ra1: 0, dec1: ra0Dec[0],
+                ra2: 0, dec2: ra0Dec[1]
+            });
+            segments.push({
+                ra1: 359.99, dec1: ra0Dec[0],
+                ra2: 359.99, dec2: ra0Dec[1]
+            });
+        }
+        else {
+            // console.log("ra0Dec.length === 0", ra0Dec);
+        }
         // 赤緯の範囲を1度ずつ処理
         for (let dec = Math.floor(Dec_min); dec <= Math.floor(Dec_max); dec++) {
             const intersections = [];
-            // 現在の赤緯線と境界線の交点を計算
+            // 赤緯線と境界線の交点を計算
             for (const segment of segments) {
-                if ((segment.dec1 <= dec && dec <= segment.dec2) ||
-                    (segment.dec2 <= dec && dec <= segment.dec1)) {
+                if ((segment.dec1 - dec) * (segment.dec2 - dec) <= 0) {
                     // 線形補間で交点の赤経を計算
                     const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
-                    const intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
-                    // 0度線をまたぐ場合の処理
-                    let normalizedRA = intersectionRA;
-                    if (Math.abs(segment.ra2 - segment.ra1) > 180) {
-                        // 0度線をまたぐセグメントの場合
-                        if (segment.ra1 > segment.ra2) {
-                            normalizedRA = intersectionRA > 180 ? intersectionRA : intersectionRA + 360;
-                        }
-                        else {
-                            normalizedRA = intersectionRA < 180 ? intersectionRA + 360 : intersectionRA;
-                        }
+                    let intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
+                    if (segment.ra1 > 300 && segment.ra2 < 60) {
+                        intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
                     }
-                    intersections.push(normalizedRA);
+                    else if (segment.ra1 < 60 && segment.ra2 > 300) {
+                        intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
+                    }
+                    // const intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
+                    // // 0度線をまたぐ場合の処理
+                    // let normalizedRA = intersectionRA;
+                    // if (Math.abs(segment.ra2 - segment.ra1) > 180) {
+                    //     // 0度線をまたぐセグメントの場合
+                    //     if (segment.ra1 > segment.ra2) { //359°側から1°側へ行く場合は180~540
+                    //         normalizedRA = intersectionRA > 180 ? intersectionRA : intersectionRA + 360;
+                    //     } else { //1°側から359°側へ
+                    //         normalizedRA = intersectionRA < 180 ? intersectionRA + 360 : intersectionRA;
+                    //     }
+                    // }
+                    intersections.push(intersectionRA);
                 }
             }
             // 交点をソート
@@ -714,37 +780,38 @@ export class CanvasRenderer {
             const raRanges = [];
             if (intersections.length === 0) {
                 // 交点がない場合は範囲全体を含める
-                if (RA_max > 330 && RA_min < 30) {
-                    raRanges.push([0, Math.min(RA_max, 359.9)]);
-                    raRanges.push([Math.max(RA_min, 0), 359.9]);
+                if (RA_max > 300 && RA_min < 60) {
+                    raRanges.push([0, Math.min(RA_min, 359.9)]);
+                    raRanges.push([Math.max(RA_max, 0), 359.9]);
                 }
                 else {
                     raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9)]);
                 }
             }
             else {
-                // 交点のペアで領域を決定
+                // if (!np && !sp) {
+                //     // 交点のペアで領域を決定
+                //     if (RA_min > 10 && RA_max < 350) {
                 for (let i = 0; i < intersections.length - 1; i += 2) {
-                    const startRA = Math.max(intersections[i], RA_min);
-                    const endRA = Math.min(intersections[i + 1], RA_max);
+                    const startRA = Math.max(intersections[i], 0);
+                    const endRA = Math.min(intersections[i + 1], 359.9);
                     if (startRA < endRA) {
                         raRanges.push([startRA, endRA]);
                     }
                 }
-                // 0度線をまたぐ場合の特別処理
-                if (RA_max > 330 && RA_min < 30) {
-                    const leftIntersections = intersections.filter(ra => ra < 180);
-                    const rightIntersections = intersections.filter(ra => ra >= 180);
-                    if (leftIntersections.length > 0) {
-                        raRanges.push([0, Math.min(...leftIntersections)]);
-                    }
-                    if (rightIntersections.length > 0) {
-                        raRanges.push([Math.max(...rightIntersections), 359.9]);
-                    }
-                }
+                // } else {
+                //     const leftIntersections = intersections.filter(ra => ra < 180);
+                //     const rightIntersections = intersections.filter(ra => ra >= 180);
+                //     if (leftIntersections.length > 0) {
+                //         raRanges.push([0, Math.min(...leftIntersections)]);
+                //     }
+                //     if (rightIntersections.length > 0) {
+                //         raRanges.push([Math.max(...rightIntersections), 359.9]);
+                //     }
+                // }
+                // }
             }
             // 各範囲をマス番号に変換
-            // console.log(dec, raRanges);
             for (const [startRA, endRA] of raRanges) {
                 const startArea = this.areaNumber(startRA, dec);
                 const endArea = this.areaNumber(endRA, dec);
@@ -788,7 +855,7 @@ export class CanvasRenderer {
                 for (let j = 0; j < supj; j++) {
                     this.addEdgeAEP(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec);
                 }
-                const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec);
+                const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, maxDec === 90, minDec === -90);
                 return areaCandidates;
             }
             return areaCandidates;
@@ -796,9 +863,15 @@ export class CanvasRenderer {
         else if (this.config.displaySettings.mode == 'view') {
             const centerRA = this.config.viewState.centerRA;
             const centerDec = this.config.viewState.centerDec;
+            const centerAz = this.config.viewState.centerAz;
+            const centerAlt = this.config.viewState.centerAlt;
             const siderealTime = window.config.siderealTime;
-            const np = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.canvas, siderealTime);
-            const sp = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.canvas, siderealTime);
+            const northPoleHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: 0, dec: 90 }, siderealTime);
+            const southPoleHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: 0, dec: -90 }, siderealTime);
+            const northPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(northPoleHorizontal, { az: centerAz, alt: centerAlt });
+            const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, { az: centerAz, alt: centerAlt });
+            // console.log(np, sp);
+            /*
             if (np[0]) {
                 const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
                 const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
@@ -807,8 +880,7 @@ export class CanvasRenderer {
                 const minDec = Math.min(corner1Equatorial.dec, corner2Equatorial.dec);
                 const areaCandidates = [[this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]];
                 return areaCandidates;
-            }
-            else if (sp[0]) {
+            } else if (sp[0]) {
                 const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
                 const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
                 const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
@@ -816,34 +888,39 @@ export class CanvasRenderer {
                 const maxDec = Math.max(corner1Equatorial.dec, corner2Equatorial.dec);
                 const areaCandidates = [[this.areaNumber(0, -90), this.areaNumber(359, maxDec)]];
                 return areaCandidates;
+            } else {*/
+            const edgeRA = [];
+            const edgeDec = [];
+            // ちょっと広めにとった範囲
+            const raWidth = this.config.viewState.fieldOfViewRA + 2.0;
+            const decWidth = this.config.viewState.fieldOfViewDec + 2.0;
+            const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth * 0.5 && Math.abs(northPoleScreenRaDec.dec) < decWidth * 0.5;
+            const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth * 0.5 && Math.abs(southPoleScreenRaDec.dec) < decWidth * 0.5;
+            // if (!spIsIn) {
+            //     console.log("sp is not in");
+            //     console.log(southPoleScreenRaDec, raWidth/2, decWidth/2, southPoleHorizontal);
+            // }
+            const supi = Math.ceil(3.0 * raWidth / 2) * 2;
+            const supj = Math.ceil(3.0 * decWidth / 2) * 2;
+            // 右上から左上
+            for (let i = 0; i < supi; i++) {
+                this.addEdgeView(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec, siderealTime);
             }
-            else {
-                const edgeRA = [];
-                const edgeDec = [];
-                // ちょっと広めにとった範囲
-                const raWidth = this.config.viewState.fieldOfViewRA + 2.0;
-                const decWidth = this.config.viewState.fieldOfViewDec + 2.0;
-                const supi = Math.ceil(3.0 * raWidth / 2) * 2;
-                const supj = Math.ceil(3.0 * decWidth / 2) * 2;
-                // 右上から左上
-                for (let i = 0; i < supi; i++) {
-                    this.addEdgeView(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec, siderealTime);
-                }
-                // 左上から左下
-                for (let j = 0; j < supj; j++) {
-                    this.addEdgeView(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec, siderealTime);
-                }
-                // 左下から右下
-                for (let i = 0; i < supi; i++) {
-                    this.addEdgeView(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec, siderealTime);
-                }
-                // 右下から右上
-                for (let j = 0; j < supj; j++) {
-                    this.addEdgeView(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec, siderealTime);
-                }
-                const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec);
-                return areaCandidates;
+            // 左上から左下
+            for (let j = 0; j < supj; j++) {
+                this.addEdgeView(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec, siderealTime);
             }
+            // 左下から右下
+            for (let i = 0; i < supi; i++) {
+                this.addEdgeView(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec, siderealTime);
+            }
+            // 右下から右上
+            for (let j = 0; j < supj; j++) {
+                this.addEdgeView(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec, siderealTime);
+            }
+            const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
+            return areaCandidates;
+            // }
         }
         return [];
     }
