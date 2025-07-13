@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mobile-reticle-star-atlas-v20250703';
+const CACHE_NAME = 'mobile-reticle-star-atlas-v20250713';
 const FILES_TO_CACHE = [
   // '/Soleil/styles/styleChart.css',
   // '/Soleil/manifest.json',

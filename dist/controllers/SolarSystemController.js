@@ -15,7 +15,7 @@ export class SolarSystemController {
             console.log('太陽系天体データを初期化中...');
             await SolarSystemDataManager.loadSolarSystemObjectElements();
             this.isInitialized = true;
-            console.log('太陽系天体データの初期化が完了しました');
+            console.log('太陽系天体データの初期化が完了しました', SolarSystemDataManager.getAllObjects().length);
         }
         catch (error) {
             console.error('太陽系天体データの初期化に失敗:', error);

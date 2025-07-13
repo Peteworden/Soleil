@@ -23,7 +23,7 @@ function initializeConfig() {
         showGrid: true,
         showReticle: true,
         showStars: true,
-        showStarNames: true,
+        showStarNames: 'to2',
         showPlanets: true,
         showConstellationNames: true,
         showConstellationLines: true,
@@ -205,20 +205,10 @@ export async function main() {
             DataLoader.loadNGCData(),
             DataLoader.loadStarNames(),
         ]);
-        document.getElementById('loadingtext').innerHTML = 'storing...';
-        DataStore.hipStars = hipStars;
-        // DataStore.gaia100Data = gaia100Data;
-        // DataStore.gaia101_110Data = gaia101_110Data;
-        // DataStore.gaia111_115Data = gaia111_115Data;
-        DataStore.constellationData = constellationData;
-        DataStore.messierData = messierData;
-        DataStore.recData = recData;
-        DataStore.ngcData = ngcData;
-        DataStore.starNames = starNames;
         await SolarSystemController.initialize();
+        document.getElementById('loadingtext').innerHTML = 'setting...';
         // ★ 初回読み込み時に全太陽系天体データを更新
         SolarSystemDataManager.updateAllData(config.displayTime.jd);
-        document.getElementById('loadingtext').innerHTML = '';
         // キャンバスの取得（HTMLで作成済み）
         const canvas = document.getElementById('starChartCanvas');
         if (!canvas) {
@@ -237,6 +227,7 @@ export async function main() {
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
             renderer.drawHipStars(hipStars);
+            renderer.writeStarNames(starNames);
             renderer.drawMessier(messierData);
             renderer.drawRec(recData);
             renderer.drawNGC(ngcData);
@@ -261,6 +252,17 @@ export async function main() {
         setupTimeUpdate();
         // 描画
         renderAll();
+        document.getElementById('loadingtext').innerHTML = 'storing...';
+        DataStore.hipStars = hipStars;
+        // DataStore.gaia100Data = gaia100Data;
+        // DataStore.gaia101_110Data = gaia101_110Data;
+        // DataStore.gaia111_115Data = gaia111_115Data;
+        DataStore.constellationData = constellationData;
+        DataStore.messierData = messierData;
+        DataStore.recData = recData;
+        DataStore.ngcData = ngcData;
+        DataStore.starNames = starNames;
+        document.getElementById('loadingtext').innerHTML = '';
     }
     catch (error) {
         console.error('データの読み込みに失敗しました:', error);

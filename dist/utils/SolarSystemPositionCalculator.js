@@ -23,23 +23,6 @@ export class SolarSystemPositionCalculator {
     static getObserverPlanetName() {
         return this.observerPlanetName;
     }
-    /**
-     * 時刻変更時に全天体の位置を更新
-     */
-    // static updateAllXYZ(objects: SolarSystemObjectBase[], jd: number): CartesianCoordinates[] {
-    //     if (objects.length === 0) {
-    //         console.warn('天体データがありません');
-    //         return [];
-    //     }
-    //     const positions: CartesianCoordinates[] = [];
-    //     objects.forEach(obj => {
-    //         const position = this.calculateSolarXYZ(obj, jd);
-    //         if (position) {
-    //             positions.push(position);
-    //         }
-    //     });
-    //     return positions;
-    // }
     static updateAllData(objects, jd) {
         if (objects.length === 0) {
             console.warn('天体データがありません');
@@ -161,12 +144,12 @@ export class SolarSystemPositionCalculator {
         else if (obj.type === 'asteroid') {
             const asteroid = obj;
             const H = asteroid.orbit.H;
-            const G = asteroid.orbit.G;
-            if (H !== undefined && G !== undefined) {
+            const G = asteroid.orbit.G ?? 0.15;
+            if (H !== undefined) {
                 const { x, y, z } = obj.xyz;
                 const a = Math.acos((sun_ast2 + obs_ast2 - sun_obs2) / (2 * distance * Math.sqrt(obs_ast2)));
-                const phi1 = Math.exp(-3.33 * (Math.tan(a / 2)) ** 0.63);
-                const phi2 = Math.exp(-1.87 * (Math.tan(a / 2)) ** 1.22);
+                const phi1 = Math.exp(-3.33 * (Math.tan(a * 0.5)) ** 0.63);
+                const phi2 = Math.exp(-1.87 * (Math.tan(a * 0.5)) ** 1.22);
                 obj.magnitude = H - 2.5 * Math.log10((1 - G) * phi1 + G * phi2) + 5 * Math.log10(distance * Math.sqrt(obs_ast2));
             }
             else {
@@ -218,37 +201,27 @@ export class SolarSystemPositionCalculator {
         const elements = {
             a: orbit.a + orbit.da * t,
             e: orbit.e + orbit.de * t,
-            incl: (orbit.incl + orbit.dIncl * t) * DEG_TO_RAD,
-            meanLong: (orbit.meanLong + orbit.dMeanLong * t) * DEG_TO_RAD,
-            longPeri: (orbit.longPeri + orbit.dLongPeri * t) * DEG_TO_RAD,
-            node: (orbit.node + orbit.dNode * t) * DEG_TO_RAD
+            incl: (orbit.incl + orbit.dIncl * t),
+            meanLong: (orbit.meanLong + orbit.dMeanLong * t),
+            longPeri: (orbit.longPeri + orbit.dLongPeri * t),
+            node: (orbit.node + orbit.dNode * t)
         };
         const peri = elements.longPeri - elements.node;
-        const meanAnomaly = (elements.meanLong - elements.longPeri) % (2 * Math.PI);
+        const meanAnomaly = ((elements.meanLong - elements.longPeri) % 360) * DEG_TO_RAD;
+        const e = elements.e;
         // ケプラー方程式を解く
-        let eccentricAnomaly = meanAnomaly + elements.e * Math.sin(meanAnomaly);
-        let newE = meanAnomaly + elements.e * Math.sin(eccentricAnomaly);
+        let eccentricAnomaly = meanAnomaly + e * Math.sin(meanAnomaly);
+        let newE = meanAnomaly + e * Math.sin(eccentricAnomaly);
         while (Math.abs(newE - eccentricAnomaly) > 0.00000001) {
             eccentricAnomaly = newE;
-            newE = meanAnomaly + elements.e * Math.sin(eccentricAnomaly);
+            newE = meanAnomaly + e * Math.sin(eccentricAnomaly);
         }
         eccentricAnomaly = newE;
         // 軌道面での座標
-        const x0 = elements.a * (Math.cos(eccentricAnomaly) - elements.e);
-        const y0 = elements.a * Math.sqrt(1 - elements.e * elements.e) * Math.sin(eccentricAnomaly);
+        const x0 = elements.a * (Math.cos(eccentricAnomaly) - e);
+        const y0 = elements.a * Math.sqrt(1 - e * e) * Math.sin(eccentricAnomaly);
         // 赤道面への変換
-        const cosPeri = Math.cos(peri);
-        const sinPeri = Math.sin(peri);
-        const cosNode = Math.cos(elements.node);
-        const sinNode = Math.sin(elements.node);
-        const cosIncl = Math.cos(elements.incl);
-        const sinIncl = Math.sin(elements.incl);
-        const Px = cosPeri * cosNode - sinPeri * cosIncl * sinNode;
-        const Qx = -sinPeri * cosNode - cosPeri * cosIncl * sinNode;
-        const Py = sinPeri * cosIncl * cosNode * cosEpsl + cosPeri * sinNode * cosEpsl - sinPeri * sinIncl * sinEpsl;
-        const Qy = cosPeri * cosIncl * cosNode * cosEpsl - sinPeri * sinNode * cosEpsl - cosPeri * sinIncl * sinEpsl;
-        const Pz = sinPeri * cosIncl * cosNode * sinEpsl + cosPeri * sinNode * sinEpsl + sinPeri * sinIncl * cosEpsl;
-        const Qz = cosPeri * cosIncl * cosNode * sinEpsl - sinPeri * sinNode * sinEpsl + cosPeri * sinIncl * cosEpsl;
+        const { Px, Qx, Py, Qy, Pz, Qz } = this.calculatePQ(elements.incl, elements.node, peri);
         const x = Px * x0 + Qx * y0;
         const y = Py * x0 + Qy * y0;
         const z = Pz * x0 + Qz * y0;
@@ -329,14 +302,13 @@ export class SolarSystemPositionCalculator {
             return;
         if (orbit.e > 0.999)
             return;
-        const t = (jd - orbit.t0) / 36525;
         const a = orbit.a;
         if (a == undefined)
             return;
         const e = orbit.e;
-        const incl = orbit.incl * DEG_TO_RAD;
-        const node = orbit.node * DEG_TO_RAD;
-        const peri = orbit.peri * DEG_TO_RAD;
+        // const incl = orbit.incl * DEG_TO_RAD;
+        // const node = orbit.node * DEG_TO_RAD;
+        // const peri = orbit.peri * DEG_TO_RAD;
         const m0 = orbit.m0 * DEG_TO_RAD;
         // ケプラー方程式を解く
         const n = 0.01720209895 * Math.pow(a, -1.5); //平均日日運動(rad)
@@ -352,6 +324,66 @@ export class SolarSystemPositionCalculator {
         const x0 = a * (Math.cos(ea) - e);
         const y0 = a * Math.sqrt(1 - e * e) * Math.sin(ea);
         // 赤道面への変換
+        const { Px, Qx, Py, Qy, Pz, Qz } = this.calculatePQ(orbit.incl, orbit.node, orbit.peri);
+        const x = Px * x0 + Qx * y0;
+        const y = Py * x0 + Qy * y0;
+        const z = Pz * x0 + Qz * y0;
+        minorObject.xyz = { x: x, y: y, z: z };
+    }
+    static calculateParabolicOrbitPositions(minorObject, jd) {
+        const orbit = minorObject.orbit;
+        if (orbit == undefined)
+            return;
+        const q = orbit.q;
+        const { Px, Qx, Py, Qy, Pz, Qz } = this.calculatePQ(orbit.incl, orbit.node, orbit.peri);
+        const b = Math.atan(54.80779386 * Math.pow(q, 1.5) / (jd - orbit.t0));
+        const sign = Math.tan(b / 2) >= 0 ? 1 : -1;
+        const g = sign * Math.atan(Math.pow(sign * Math.tan(b / 2), 1 / 3));
+        const tanv2 = 2 / Math.tan(2 * g);
+        const x = q * Px * (1 - tanv2 ** 2) + 2 * q * Qx * tanv2;
+        const y = q * Py * (1 - tanv2 ** 2) + 2 * q * Qy * tanv2;
+        const z = q * Pz * (1 - tanv2 ** 2) + 2 * q * Qz * tanv2;
+        minorObject.xyz = { x: x, y: y, z: z };
+    }
+    static calculateHyperbolicOrbitPositions(minorObject, jd) {
+        const orbit = minorObject.orbit;
+        if (orbit == undefined)
+            return;
+        const q = orbit.q;
+        const e = orbit.e;
+        const { Px, Qx, Py, Qy, Pz, Qz } = this.calculatePQ(orbit.incl, orbit.node, orbit.peri);
+        const a = q / (1 - e);
+        const mu = 0.01720209895 * Math.pow(Math.abs(a), -1.5);
+        const mut_tp = mu * Math.abs(jd - orbit.t0);
+        function f(s) {
+            return e * (s - 1 / s) * 0.5 - Math.log(s) - mut_tp;
+        }
+        function fp(s) {
+            return e * (1 + 1 / (s * s)) * 0.5 - 1 / s;
+        }
+        let s = Math.exp(mut_tp / e);
+        if (s == Infinity)
+            s = 2 * mut_tp / e;
+        let snew = Math.max(s - f(s) / fp(s), 1.0);
+        while (Math.abs(f(snew)) > 0.000001 || Math.abs(snew - s) > 0.000001) {
+            s = snew;
+            snew = Math.max(s - f(s) / fp(s), 1.0);
+        }
+        if (jd < orbit.t0)
+            s = 1 / snew;
+        else
+            s = snew;
+        const coefP = -a * 0.5 * (2 * e - s - 1 / s);
+        const coefQ = -a * 0.5 * Math.sqrt(e * e - 1) * (s - 1 / s);
+        const x = coefP * Px + coefQ * Qx;
+        const y = coefP * Py + coefQ * Qy;
+        const z = coefP * Pz + coefQ * Qz;
+        minorObject.xyz = { x: x, y: y, z: z };
+    }
+    static calculatePQ(inclDec, nodeDec, periDec) {
+        const incl = inclDec * DEG_TO_RAD;
+        const node = nodeDec * DEG_TO_RAD;
+        const peri = periDec * DEG_TO_RAD;
         const cosPeri = Math.cos(peri);
         const sinPeri = Math.sin(peri);
         const cosNode = Math.cos(node);
@@ -364,42 +396,7 @@ export class SolarSystemPositionCalculator {
         const Qy = cosPeri * cosIncl * cosNode * cosEpsl - sinPeri * sinNode * cosEpsl - cosPeri * sinIncl * sinEpsl;
         const Pz = sinPeri * cosIncl * cosNode * sinEpsl + cosPeri * sinNode * sinEpsl + sinPeri * sinIncl * cosEpsl;
         const Qz = cosPeri * cosIncl * cosNode * sinEpsl - sinPeri * sinNode * sinEpsl + cosPeri * sinIncl * cosEpsl;
-        const x = Px * x0 + Qx * y0;
-        const y = Py * x0 + Qy * y0;
-        const z = Pz * x0 + Qz * y0;
-        minorObject.xyz = { x: x, y: y, z: z };
-    }
-    static calculateHyperbolicOrbitPositions(minorObject, jd) {
-        const orbit = minorObject.orbit;
-        if (orbit == undefined)
-            return;
-        if (orbit.e > 1.001)
-            return;
-        const t = (jd - orbit.t0) / 36525;
-        const q = orbit.q;
-        if (q == undefined)
-            return;
-        const e = orbit.e;
-        const incl = orbit.incl * DEG_TO_RAD;
-        const node = orbit.node * DEG_TO_RAD;
-        const peri = orbit.peri * DEG_TO_RAD;
-        minorObject.xyz = { x: 0, y: 0, z: 0 };
-    }
-    static calculateParabolicOrbitPositions(minorObject, jd) {
-        const orbit = minorObject.orbit;
-        if (orbit == undefined)
-            return;
-        if (orbit.e > 1.001)
-            return;
-        const t = (jd - orbit.t0) / 36525;
-        const q = orbit.q;
-        if (q == undefined)
-            return;
-        const e = orbit.e;
-        const incl = orbit.incl * DEG_TO_RAD;
-        const node = orbit.node * DEG_TO_RAD;
-        const peri = orbit.peri * DEG_TO_RAD;
-        return { x: 0, y: 0, z: 0 };
+        return { Px: Px, Qx: Qx, Py: Py, Qy: Qy, Pz: Pz, Qz: Qz };
     }
 }
 SolarSystemPositionCalculator.observerPlanetName = '地球';

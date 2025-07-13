@@ -83,7 +83,7 @@ export class SettingController {
         const gridCheck = document.getElementById('gridCheck');
         const reticleCheck = document.getElementById('reticleCheck');
         const starCheck = document.getElementById('starCheck');
-        const starNameCheck = document.getElementById('starName');
+        const starNameSelect = document.getElementById('starName');
         const constellationNameCheck = document.getElementById('constellationNameCheck');
         const constellationLineCheck = document.getElementById('constellationLineCheck');
         const planetCheck = document.getElementById('planetCheck');
@@ -92,7 +92,7 @@ export class SettingController {
         const ngcCheck = document.getElementById('ngcCheck');
         const camera = document.getElementById('camera');
         if (modeSelect && gridCheck && darkMode && magLimitSlider &&
-            reticleCheck && starCheck && starNameCheck &&
+            reticleCheck && starCheck && starNameSelect &&
             planetCheck && messierCheck && recCheck && ngcCheck && camera) {
             const updateConfig = window.updateConfig;
             if (updateConfig) {
@@ -103,7 +103,7 @@ export class SettingController {
                     showGrid: gridCheck.checked,
                     showReticle: reticleCheck.checked,
                     showStars: starCheck.checked,
-                    showStarNames: starNameCheck.value,
+                    showStarNames: starNameSelect.value,
                     showPlanets: planetCheck.checked,
                     showConstellationNames: constellationNameCheck.checked,
                     showConstellationLines: constellationLineCheck.checked,
@@ -138,7 +138,6 @@ export class SettingController {
                     hour = date.getHours();
                     minute = date.getMinutes();
                     second = date.getSeconds();
-                    console.log(year, month, day, hour, minute, second);
                 }
                 else {
                     // デフォルト値
@@ -216,7 +215,7 @@ export class SettingController {
         const gridCheck = document.getElementById('gridCheck');
         const reticleCheck = document.getElementById('reticleCheck');
         const starCheck = document.getElementById('starCheck');
-        const starNameCheck = document.getElementById('starName');
+        const starNameSelect = document.getElementById('starName');
         const constellationNameCheck = document.getElementById('constellationNameCheck');
         const constellationLineCheck = document.getElementById('constellationLineCheck');
         const planetCheck = document.getElementById('planetCheck');
@@ -236,8 +235,8 @@ export class SettingController {
             reticleCheck.checked = config.displaySettings.showReticle;
         if (starCheck)
             starCheck.checked = config.displaySettings.showStars;
-        if (starNameCheck)
-            starNameCheck.value = config.displaySettings.showStarNames ? 'all' : 'no';
+        if (starNameSelect)
+            starNameSelect.value = config.displaySettings.showStarNames;
         if (constellationNameCheck)
             constellationNameCheck.checked = config.displaySettings.showConstellationNames;
         if (constellationLineCheck)
@@ -269,7 +268,6 @@ export class SettingController {
             // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
             const localDateTime = `${year}-${month}-${day}T${hour}:${minute}`;
             dtlInput.value = localDateTime;
-            console.log('Local datetime set:', localDateTime);
             realTime.value = config.displayTime.realTime;
         }
         console.log('🔧 Settings loaded from config to UI');

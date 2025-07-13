@@ -89,7 +89,18 @@ export class DataLoader {
     }
     // 星名データの読み込み
     static async loadStarNames() {
-        return await this.fetchJson('data/starnames.json');
+        const data = await this.fetchJson('data/starnames.json');
+        const starNames = [];
+        for (const starName of data) {
+            starNames.push({
+                name: starName.name,
+                ra: starName.ra,
+                dec: starName.dec,
+                tier: starName.tier,
+                jpnName: starName.jpnname
+            });
+        }
+        return starNames;
     }
     // メシエ天体データの読み込み
     static async loadMessierData() {

@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="images/icon/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="images/icon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="images/icon/favicon-16x16.png">
-    <link rel="manifest" href="./manifest.json">
+    <!-- <link rel="manifest" href="./manifest.json"> -->
     <link rel="manifest" href="images/icon/site.webmanifest">
     <!-- Google tag (gtag.js) -->
     <script>
@@ -149,13 +149,14 @@
                         <label>観測地:</label>
                         <select id="observation-site-select">
                             <option selected>カスタム</option>
-                            <option disabled>現在地</option>
-                            <option disabled>京大西部構内</option>
-                            <option disabled>鵜倉園地</option>
-                            <option disabled>乗鞍高原</option>
-                            <option disabled>仙台</option>
-                            <option disabled>東京</option>
-                            <option disabled>大阪</option>
+                            <option>現在地</option>
+                            <option>京大西部構内</option>
+                            <option>鵜倉園地</option>
+                            <option>乗鞍高原</option>
+                            <option>仙台</option>
+                            <option>東京</option>
+                            <option>大阪</option>
+                            <option>石垣島</option>
                             <option disabled>地図上で選択</option>
                         </select>
                     </div>
@@ -234,9 +235,9 @@
                     <div class="setting-row">
                         <label>恒星名表示:</label>
                         <select id="starName">
-                            <option value="no">なし</option>
-                            <option value="one" checked>1等星まで</option>
-                            <option value="bright">2等星まで</option>
+                            <option value="off">なし</option>
+                            <option value="to1">1等星まで</option>
+                            <option value="to2" checked>2等星まで</option>
                             <option value="all">すべて</option>
                         </select>
                     </div>
@@ -342,7 +343,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250712-1300';
+        import { main } from './dist/main.js?v=250712-2040';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

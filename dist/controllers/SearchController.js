@@ -144,15 +144,37 @@ export class SearchController {
                 }
             }
         }
+        const matchStarNamesStart = [];
+        const matchStarNamesInclude = [];
+        if (DataStore.starNames) {
+            for (const starName of DataStore.starNames) {
+                if (this.normalizeText(starName.name).startsWith(query)) {
+                    matchStarNamesStart.push({ title: starName.name, position: { ra: starName.ra, dec: starName.dec } });
+                }
+                else if (this.normalizeText(starName.name).includes(query)) {
+                    matchStarNamesInclude.push({ title: starName.name, position: { ra: starName.ra, dec: starName.dec } });
+                }
+                if (starName.jpnName) {
+                    if (this.normalizeText(starName.jpnName).startsWith(query)) {
+                        matchStarNamesStart.push({ title: starName.jpnName, position: { ra: starName.ra, dec: starName.dec } });
+                    }
+                    else if (this.normalizeText(starName.jpnName).includes(query)) {
+                        matchStarNamesInclude.push({ title: starName.jpnName, position: { ra: starName.ra, dec: starName.dec } });
+                    }
+                }
+            }
+        }
         // クエリにマッチする結果をフィルタリング
         const allResults = [
             ...matchConstellationsStart,
             ...matchMessierStart,
             ...matchRecStart,
             ...matchNgc,
+            ...matchStarNamesStart,
             ...matchConstellationsInclude,
             ...matchMessierInclude,
-            ...matchRecInclude
+            ...matchRecInclude,
+            ...matchStarNamesInclude
         ];
         allResults.forEach((result) => {
             const button = document.createElement('button');

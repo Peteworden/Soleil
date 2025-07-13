@@ -134,6 +134,8 @@ export class CanvasRenderer {
         if (!this.config.displaySettings.showPlanets)
             return;
         const siderealTime = window.config.siderealTime;
+        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
+        const zeroMagSize = this.starSize_0mag(this.config);
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
@@ -146,10 +148,10 @@ export class CanvasRenderer {
                 this.drawMoon(object, objects.find(obj => obj.getType() === 'sun'));
             }
             else if (object.getType() === 'planet') {
-                this.drawPlanet(object);
+                this.drawPlanet(object, limitingMagnitude, zeroMagSize);
             }
             else if (object.getType() === 'asteroid') {
-                // this.drawMinorObject(object as MinorObject);
+                this.drawMinorObject(object, limitingMagnitude, zeroMagSize);
             }
         }
     }
@@ -169,7 +171,7 @@ export class CanvasRenderer {
         this.ctx.fill();
         this.ctx.fillText(sun.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
-    drawPlanet(planet) {
+    drawPlanet(planet, limitingMagnitude, zeroMagSize) {
         const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
@@ -178,12 +180,13 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
-        const radius = Math.max(this.getStarSize(planet.getMagnitude(), AstronomicalCalculator.limitingMagnitude(this.config), this.starSize_0mag(this.config)), 1);
+        const radius = Math.max(this.getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = 'rgb(255, 219, 88)';
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
-        this.ctx.fillText(planet.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
+        const dxy = Math.max(2, 0.8 * radius);
+        this.ctx.fillText(planet.getJapaneseName(), x + dxy, y - dxy);
     }
     drawMoon(moon, sun) {
         if (this.config.observationSite.observerPlanet !== '地球')
@@ -255,6 +258,23 @@ export class CanvasRenderer {
         this.ctx.fillStyle = 'yellow';
         this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
+    drawMinorObject(minorObject, limitingMagnitude, zeroMagSize) {
+        const siderealTime = window.config.siderealTime;
+        this.ctx.font = '14px serif';
+        this.ctx.textAlign = 'left';
+        const coords = minorObject.getRaDec();
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+        if (!screenXY[0])
+            return;
+        const [x, y] = screenXY[1];
+        const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude);
+        const radius = Math.max(this.getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
+        this.ctx.beginPath();
+        this.ctx.fillStyle = 'rgb(255, 219, 88)';
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.fillText(minorObject.getJapaneseName(), x + 2, y - 2);
+    }
     drawHipStars(hipStars) {
         if (!this.config.displaySettings.showStars)
             return;
@@ -275,6 +295,47 @@ export class CanvasRenderer {
             this.ctx.arc(x, y, this.getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize), 0, Math.PI * 2);
             this.ctx.fill();
         }
+    }
+    writeStarNames(starNames) {
+        const showStarNames = this.config.displaySettings.showStarNames;
+        if (this.config.displaySettings.showStarNames == 'off')
+            return;
+        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
+        const siderealTime = window.config.siderealTime;
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
+        const zeroMagSize = this.starSize_0mag(this.config);
+        const tier_range = [180, 90, 60, 40, 30, 30];
+        let tierLimit = 3;
+        if (showStarNames == 'to1') {
+            tierLimit = 1;
+        }
+        else if (showStarNames == 'to2') {
+            tierLimit = 2;
+        }
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        for (const starName of starNames) {
+            if (tierLimit == 1 && starName.tier > 0)
+                continue;
+            if (tierLimit == 2 && starName.tier > 1)
+                continue;
+            if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) > tier_range[starName.tier - 1])
+                continue;
+            const coords = this.coordinateConverter.precessionEquatorial({ ra: starName.ra, dec: starName.dec }, precessionAngle);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+            if (!screenXY[0])
+                continue;
+            const [x, y] = screenXY[1];
+            this.ctx.font = `${18 - 1 * starName.tier}px serif`;
+            if (starName.jpnName) {
+                this.ctx.fillText(starName.jpnName, x + 2, y - 2);
+            }
+            else {
+                this.ctx.fillText(starName.name, x + 2, y - 2);
+            }
+        }
+        this.ctx.fill();
     }
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
         if (!this.config.displaySettings.showStars)
@@ -555,7 +616,10 @@ export class CanvasRenderer {
         if (starSize_0mag === undefined) {
             starSize_0mag = this.starSize_0mag(this.config);
         }
-        return Math.max(1.0, 1.0 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3));
+        if (magnitude > limitingMagnitude)
+            return 1;
+        else
+            return 1.0 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3);
     }
     getStarColor(bv) {
         let c;
@@ -576,11 +640,11 @@ export class CanvasRenderer {
             else if (bv < 0.4)
                 g = 1.0;
             else
-                g = 1.0 - 0.75 * (bv - 0.4) / 1.6;
+                g = 1.0 - 0.6 * (bv - 0.4) / 1.6;
             if (bv < 0.4)
                 b = 1.0;
             else
-                b = 1.0 - (bv - 0.4) / 1.6;
+                b = 1.0 - 0.8 * (bv - 0.4) / 1.6;
             r = Math.round(r * 255);
             g = Math.round(g * 255);
             b = Math.round(b * 255);
