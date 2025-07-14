@@ -31,7 +31,7 @@ function initializeConfig() {
         showRecs: true,
         showNGC: false,
         showCameraView: false,
-        camera: 'r200ss-cmos',
+        camera: 'none',
         showTopography: false // 読み込み時は常にfalse
     };
     const viewState = {
@@ -222,6 +222,7 @@ export async function main() {
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();
+            renderer.drawCameraView();
             renderer.drawConstellationLines(constellationData);
             renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
@@ -319,6 +320,9 @@ function setupButtonEvents() {
             starSizeKey1: magLimitSliderValue,
             starSizeKey2: 1.8
         });
+    });
+    document.getElementById('cameraTiltSlider')?.addEventListener('input', function () {
+        window.renderAll();
     });
 }
 function setupResizeHandler() {

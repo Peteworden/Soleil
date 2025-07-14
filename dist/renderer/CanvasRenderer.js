@@ -606,6 +606,50 @@ export class CanvasRenderer {
         this.ctx.lineTo(this.canvas.width / 2 + b, this.canvas.height / 2);
         this.ctx.stroke();
     }
+    drawCameraView() {
+        if (!this.config.displaySettings.camera || this.config.displaySettings.camera == 'none')
+            return;
+        if (this.config.displaySettings.mode != 'AEP' && this.config.displaySettings.mode != 'view')
+            return;
+        const cameraSelect = document.getElementById('camera');
+        if (!cameraSelect)
+            return;
+        const cameraTiltSlider = document.getElementById('cameraTiltSlider');
+        if (!cameraTiltSlider || cameraTiltSlider.style.display == 'none')
+            return;
+        const cameraView = [
+            { name: '85-cmos', w: 3.34, h: 2.27 },
+            { name: 'fs128-cmos', w: 1.36, h: 0.91 },
+            { name: 'r200ss-cmos', w: 1.44, h: 0.99 },
+        ];
+        const cameraName = cameraView.find(camera => camera.name == cameraSelect.value);
+        if (!cameraName)
+            return;
+        const w = cameraName.w;
+        const h = cameraName.h;
+        const cameraTilt = +cameraTiltSlider.value * Math.PI / 180;
+        const sinCameraTilt = Math.sin(cameraTilt);
+        const cosCameraTilt = Math.cos(cameraTilt);
+        const w1 = w * cosCameraTilt + h * sinCameraTilt;
+        const w2 = w * cosCameraTilt - h * sinCameraTilt;
+        const h1 = -w * sinCameraTilt + h * cosCameraTilt;
+        const h2 = -w * sinCameraTilt - h * cosCameraTilt;
+        const raWidth = this.config.viewState.fieldOfViewRA;
+        const decWidth = this.config.viewState.fieldOfViewDec;
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        this.ctx.strokeStyle = 'orange';
+        this.ctx.fillStyle = 'rgba(255, 255, 0, 0.1)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(centerX * (1 - w1 / raWidth), centerY * (1 - h1 / decWidth));
+        this.ctx.lineTo(centerX * (1 + w2 / raWidth), centerY * (1 + h2 / decWidth));
+        this.ctx.lineTo(centerX * (1 + w1 / raWidth), centerY * (1 + h1 / decWidth));
+        this.ctx.lineTo(centerX * (1 - w2 / raWidth), centerY * (1 - h2 / decWidth));
+        this.ctx.lineTo(centerX * (1 - w1 / raWidth), centerY * (1 - h1 / decWidth));
+        this.ctx.fill();
+        this.ctx.stroke();
+    }
     starSize_0mag(config) {
         return Math.max(13 - 2.4 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 3), 5);
     }
@@ -655,17 +699,6 @@ export class CanvasRenderer {
     areaNumber(ra, dec) {
         return Math.floor(360 * Math.floor(dec + 90) + Math.floor(ra));
     }
-    /**
-     * スキャンラインアルゴリズムを使用して領域内のマスを効率的に計算
-     * 境界線との交点を計算して、より正確に領域を塗りつぶす
-     * @param RA_min 最小赤経
-     * @param RA_max 最大赤経
-     * @param Dec_min 最小赤緯
-     * @param Dec_max 最大赤緯
-     * @param edgeRA 境界の赤経配列
-     * @param edgeDec 境界の赤緯配列
-     * @returns 領域内のマス番号の配列
-     */
     floodFillAreaCandidates(edgeRA, edgeDec, np, sp) {
         const candidates = [];
         const RA_min = Math.min(...edgeRA);
@@ -728,9 +761,6 @@ export class CanvasRenderer {
                 });
             }
         }
-        else if (ra0Dec.length !== 0 && ra0Dec.length !== 2) {
-            // console.log("ra0Dec.length !== 0 && ra0Dec.length !== 2", ra0Dec);
-        }
         else if (ra0Dec.length === 2) {
             // console.log("ra0Dec.length === 2", ra0Dec);
             segments.push({
@@ -743,6 +773,7 @@ export class CanvasRenderer {
             });
         }
         else {
+            // ra0Dec.length !== 0 && ra0Dec.length !== 2
             // console.log("ra0Dec.length === 0", ra0Dec);
         }
         // 赤緯の範囲を1度ずつ処理
@@ -760,17 +791,6 @@ export class CanvasRenderer {
                     else if (segment.ra1 < 60 && segment.ra2 > 300) {
                         intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
                     }
-                    // const intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
-                    // // 0度線をまたぐ場合の処理
-                    // let normalizedRA = intersectionRA;
-                    // if (Math.abs(segment.ra2 - segment.ra1) > 180) {
-                    //     // 0度線をまたぐセグメントの場合
-                    //     if (segment.ra1 > segment.ra2) { //359°側から1°側へ行く場合は180~540
-                    //         normalizedRA = intersectionRA > 180 ? intersectionRA : intersectionRA + 360;
-                    //     } else { //1°側から359°側へ
-                    //         normalizedRA = intersectionRA < 180 ? intersectionRA + 360 : intersectionRA;
-                    //     }
-                    // }
                     intersections.push(intersectionRA);
                 }
             }
@@ -779,6 +799,7 @@ export class CanvasRenderer {
             // 交点のペアで領域を決定
             const raRanges = [];
             if (intersections.length === 0) {
+                // この場合はないはず
                 // 交点がない場合は範囲全体を含める
                 if (RA_max > 300 && RA_min < 60) {
                     raRanges.push([0, Math.min(RA_min, 359.9)]);
@@ -789,9 +810,6 @@ export class CanvasRenderer {
                 }
             }
             else {
-                // if (!np && !sp) {
-                //     // 交点のペアで領域を決定
-                //     if (RA_min > 10 && RA_max < 350) {
                 for (let i = 0; i < intersections.length - 1; i += 2) {
                     const startRA = Math.max(intersections[i], 0);
                     const endRA = Math.min(intersections[i + 1], 359.9);
@@ -799,17 +817,6 @@ export class CanvasRenderer {
                         raRanges.push([startRA, endRA]);
                     }
                 }
-                // } else {
-                //     const leftIntersections = intersections.filter(ra => ra < 180);
-                //     const rightIntersections = intersections.filter(ra => ra >= 180);
-                //     if (leftIntersections.length > 0) {
-                //         raRanges.push([0, Math.min(...leftIntersections)]);
-                //     }
-                //     if (rightIntersections.length > 0) {
-                //         raRanges.push([Math.max(...rightIntersections), 359.9]);
-                //     }
-                // }
-                // }
             }
             // 各範囲をマス番号に変換
             for (const [startRA, endRA] of raRanges) {
@@ -821,117 +828,115 @@ export class CanvasRenderer {
         return candidates;
     }
     areaCandidates() {
+        const edgeRA = [];
+        const edgeDec = [];
+        const raWidth = this.config.viewState.fieldOfViewRA * 0.5 + 1.0;
+        const decWidth = this.config.viewState.fieldOfViewDec * 0.5 + 1.0;
+        const siderealTime = window.config.siderealTime;
+        const jd = window.config.jd;
+        const currentNorthPoleJ2000 = this.coordinateConverter.precessionEquatorial({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
+        const currentSouthPoleJ2000 = this.coordinateConverter.precessionEquatorial({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
         if (this.config.displaySettings.mode == 'AEP') {
-            const areaCandidates = [];
-            const minDec = Math.max(-90, Math.min(this.config.viewState.centerDec - this.config.viewState.fieldOfViewDec, 90));
-            const maxDec = Math.min(90, Math.max(this.config.viewState.centerDec + this.config.viewState.fieldOfViewDec, -90));
-            if (minDec === -90) {
-                areaCandidates.push([this.areaNumber(0, -90), this.areaNumber(359, maxDec)]);
-            }
-            else if (maxDec === 90) {
-                areaCandidates.push([this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]);
-            }
-            else {
-                const edgeRA = [];
-                const edgeDec = [];
-                // ちょっと広めにとった範囲
-                const raWidth = this.config.viewState.fieldOfViewRA + 2.0;
-                const decWidth = this.config.viewState.fieldOfViewDec + 2.0;
-                const supi = Math.ceil(3.0 * raWidth / 2) * 2;
-                const supj = Math.ceil(3.0 * decWidth / 2) * 2;
-                // 右上から左上
-                for (let i = 0; i < supi; i++) {
-                    this.addEdgeAEP(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec);
-                }
-                // 左上から左下
-                for (let j = 0; j < supj; j++) {
-                    this.addEdgeAEP(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec);
-                }
-                // 左下から右下
-                for (let i = 0; i < supi; i++) {
-                    this.addEdgeAEP(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec);
-                }
-                // 右下から右上
-                for (let j = 0; j < supj; j++) {
-                    this.addEdgeAEP(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec);
-                }
-                const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, maxDec === 90, minDec === -90);
-                return areaCandidates;
-            }
-            return areaCandidates;
-        }
-        else if (this.config.displaySettings.mode == 'view') {
             const centerRA = this.config.viewState.centerRA;
             const centerDec = this.config.viewState.centerDec;
-            const centerAz = this.config.viewState.centerAz;
-            const centerAlt = this.config.viewState.centerAlt;
-            const siderealTime = window.config.siderealTime;
-            const northPoleHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: 0, dec: 90 }, siderealTime);
-            const southPoleHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: 0, dec: -90 }, siderealTime);
-            const northPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(northPoleHorizontal, { az: centerAz, alt: centerAlt });
-            const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, { az: centerAz, alt: centerAlt });
-            // console.log(np, sp);
-            /*
-            if (np[0]) {
-                const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
-                const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
-                const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
-                const corner2Equatorial = this.coordinateConverter.horizontalToEquatorial(corner2Horizontal, siderealTime);
-                const minDec = Math.min(corner1Equatorial.dec, corner2Equatorial.dec);
-                const areaCandidates = [[this.areaNumber(0, minDec), this.areaNumber(359, 89.5)]];
-                return areaCandidates;
-            } else if (sp[0]) {
-                const corner1Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: centerDec * 0.5 });
-                const corner2Horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerRA * 0.5, dec: -centerDec * 0.5 });
-                const corner1Equatorial = this.coordinateConverter.horizontalToEquatorial(corner1Horizontal, siderealTime);
-                const corner2Equatorial = this.coordinateConverter.horizontalToEquatorial(corner2Horizontal, siderealTime);
-                const maxDec = Math.max(corner1Equatorial.dec, corner2Equatorial.dec);
-                const areaCandidates = [[this.areaNumber(0, -90), this.areaNumber(359, maxDec)]];
-                return areaCandidates;
-            } else {*/
-            const edgeRA = [];
-            const edgeDec = [];
-            // ちょっと広めにとった範囲
-            const raWidth = this.config.viewState.fieldOfViewRA + 2.0;
-            const decWidth = this.config.viewState.fieldOfViewDec + 2.0;
-            const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth * 0.5 && Math.abs(northPoleScreenRaDec.dec) < decWidth * 0.5;
-            const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth * 0.5 && Math.abs(southPoleScreenRaDec.dec) < decWidth * 0.5;
-            // if (!spIsIn) {
-            //     console.log("sp is not in");
-            //     console.log(southPoleScreenRaDec, raWidth/2, decWidth/2, southPoleHorizontal);
-            // }
-            const supi = Math.ceil(3.0 * raWidth / 2) * 2;
-            const supj = Math.ceil(3.0 * decWidth / 2) * 2;
+            const northPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec(currentNorthPoleJ2000, { ra: centerRA, dec: centerDec });
+            const southPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec(currentSouthPoleJ2000, { ra: centerRA, dec: centerDec });
+            const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
+            const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
+            let screenRa = -raWidth;
+            let screenDec = decWidth;
+            let dscreenRa = 0.0;
+            let dscreenDec = 0.0;
             // 右上から左上
-            for (let i = 0; i < supi; i++) {
-                this.addEdgeView(raWidth * (-0.5 + i / supi), decWidth * 0.5, edgeRA, edgeDec, siderealTime);
+            while (screenRa < raWidth) {
+                this.addEdgeAEP(screenRa, decWidth, edgeRA, edgeDec, jd);
+                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
+                screenRa += dscreenRa;
             }
             // 左上から左下
-            for (let j = 0; j < supj; j++) {
-                this.addEdgeView(raWidth * 0.5, decWidth * (0.5 - j / supj), edgeRA, edgeDec, siderealTime);
+            screenRa = raWidth;
+            screenDec = decWidth;
+            while (screenDec > -decWidth) {
+                this.addEdgeAEP(raWidth, screenDec, edgeRA, edgeDec, jd);
+                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
+                screenDec -= dscreenDec;
             }
             // 左下から右下
-            for (let i = 0; i < supi; i++) {
-                this.addEdgeView(raWidth * (0.5 - i / supi), -decWidth * 0.5, edgeRA, edgeDec, siderealTime);
+            screenRa = raWidth;
+            screenDec = -decWidth;
+            while (screenRa > -raWidth) {
+                this.addEdgeAEP(screenRa, -decWidth, edgeRA, edgeDec, jd);
+                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
+                screenRa -= dscreenRa;
             }
             // 右下から右上
-            for (let j = 0; j < supj; j++) {
-                this.addEdgeView(-raWidth * 0.5, decWidth * (-0.5 + j / supj), edgeRA, edgeDec, siderealTime);
+            screenRa = -raWidth;
+            screenDec = -decWidth;
+            while (screenDec < decWidth) {
+                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
+                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
+                screenDec += dscreenDec;
             }
             const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
             return areaCandidates;
-            // }
+        }
+        else if (this.config.displaySettings.mode == 'view') {
+            const centerAz = this.config.viewState.centerAz;
+            const centerAlt = this.config.viewState.centerAlt;
+            const northPoleHorizontal = this.coordinateConverter.equatorialToHorizontal(currentNorthPoleJ2000, siderealTime);
+            const southPoleHorizontal = this.coordinateConverter.equatorialToHorizontal(currentSouthPoleJ2000, siderealTime);
+            const northPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(northPoleHorizontal, { az: centerAz, alt: centerAlt });
+            const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, { az: centerAz, alt: centerAlt });
+            const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
+            const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
+            let screenRa = -raWidth;
+            let screenDec = decWidth;
+            let dscreenRa = 0.0;
+            let dscreenDec = 0.0;
+            // 右上から左上
+            while (screenRa < raWidth) {
+                this.addEdgeView(screenRa, decWidth, edgeRA, edgeDec, siderealTime, jd);
+                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
+                screenRa += dscreenRa;
+            }
+            // 左上から左下
+            screenRa = raWidth;
+            screenDec = decWidth;
+            while (screenDec > -decWidth) {
+                this.addEdgeView(raWidth, screenDec, edgeRA, edgeDec, siderealTime, jd);
+                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
+                screenDec -= dscreenDec;
+            }
+            // 左下から右下
+            screenRa = raWidth;
+            screenDec = -decWidth;
+            while (screenRa > -raWidth) {
+                this.addEdgeView(screenRa, -decWidth, edgeRA, edgeDec, siderealTime, jd);
+                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
+                screenRa -= dscreenRa;
+            }
+            // 右下から右上
+            screenRa = -raWidth;
+            screenDec = -decWidth;
+            while (screenDec < decWidth) {
+                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
+                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
+                screenDec += dscreenDec;
+            }
+            const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
+            return areaCandidates;
         }
         return [];
     }
-    addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec) {
-        const equatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRA, dec: screenDec });
+    addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd) {
+        const equatorialApparent = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRA, dec: screenDec });
+        const equatorial = this.coordinateConverter.precessionEquatorial(equatorialApparent, undefined, jd, 'j2000');
         edgeRA.push(equatorial.ra);
         edgeDec.push(equatorial.dec);
     }
-    addEdgeView(screenRA, screenDec, edgeRA, edgeDec, siderealTime) {
-        const horizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: screenRA, dec: screenDec });
-        const equatorial = this.coordinateConverter.horizontalToEquatorial(horizontal, siderealTime);
+    addEdgeView(screenRA, screenDec, edgeRA, edgeDec, siderealTime, jd) {
+        const equatorialApparent = this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRA, dec: screenDec }, siderealTime);
+        const equatorial = this.coordinateConverter.precessionEquatorial(equatorialApparent, undefined, jd, 'j2000');
         edgeRA.push(equatorial.ra);
         edgeDec.push(equatorial.dec);
     }

@@ -274,6 +274,7 @@
                         <option value="none">なし</option>
                         <option value="r200ss-cmos">R200SS-CMOS</option>
                         <option value="fs128-cmos">FS128-CMOS</option>
+                        <option value="85-cmos">85-CMOS</option>
                     </select>
 
                 </div>
@@ -325,8 +326,8 @@
     <!-- スライダー -->
     <div class="control-panel">
         <div id="showingData" class="showingData"></div>
-        <div id="aovSliderDiv" class="aovSliderDiv">
-            <input type="range" id="aovSlider" class="aovSlider" min="-120" max="120" step="1" style="display: none;">
+        <div id="cameraTiltSliderDiv" class="cameraTiltSliderDiv" style="display: none;">
+            <input type="range" id="cameraTiltSlider" class="cameraTiltSlider" min="-120" max="120" step="1">
         </div>
         <div id="timeSliderDiv" class="timeSliderDiv">
             <input type="range" id="timeSlider" class="timeSlider" min="0" max="10" step="0.00964"">
@@ -343,7 +344,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250712-2040';
+        import { main } from './dist/main.js?v=250714-2200';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

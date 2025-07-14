@@ -55,32 +55,22 @@ export class InteractionController {
                 if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minMove) {
                     return;
                 }
-                // ズームレベルに応じて移動量を調整
+                // ピクセル数に掛けると角度になる
                 const moveScale = this.viewState.fieldOfViewRA / this.canvas.width;
                 if (this.displaySettings.mode == 'AEP') {
-                    this.viewState.centerRA += deltaX * moveScale;
-                    this.viewState.centerDec += deltaY * moveScale;
-                    // 値を正規化
-                    this.viewState.centerRA = ((this.viewState.centerRA % 360) + 360) % 360;
-                    if (this.viewState.centerDec > 90)
-                        this.viewState.centerDec = 90;
-                    if (this.viewState.centerDec < -90)
-                        this.viewState.centerDec = -90;
+                    const dcenterRA = Math.max(-3, Math.min(3, deltaX * moveScale / Math.cos(this.viewState.centerDec * Math.PI / 180)));
+                    const dcenterDec = deltaY * moveScale;
+                    this.viewState.centerRA = ((this.viewState.centerRA + dcenterRA) % 360 + 360) % 360;
+                    this.viewState.centerDec = Math.min(Math.max(this.viewState.centerDec + dcenterDec, -90), 90);
                     const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: this.viewState.centerRA, dec: this.viewState.centerDec }, window.config.siderealTime);
                     this.viewState.centerAz = centerHorizontal.az;
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    this.viewState.centerAz -= deltaX * moveScale;
-                    this.viewState.centerAlt += deltaY * moveScale;
-                    if (this.viewState.centerAz < 0)
-                        this.viewState.centerAz += 360;
-                    if (this.viewState.centerAz > 360)
-                        this.viewState.centerAz -= 360;
-                    if (this.viewState.centerAlt > 90)
-                        this.viewState.centerAlt = 90;
-                    if (this.viewState.centerAlt < -90)
-                        this.viewState.centerAlt = -90;
+                    const dcenterAz = -Math.max(-3, Math.min(3, deltaX * moveScale / Math.cos(this.viewState.centerAlt * Math.PI / 180)));
+                    const dcenterAlt = deltaY * moveScale;
+                    this.viewState.centerAz = ((this.viewState.centerAz + dcenterAz) % 360 + 360) % 360;
+                    this.viewState.centerAlt = Math.min(Math.max(this.viewState.centerAlt + dcenterAlt, -90), 90);
                     const centerEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: this.viewState.centerAz, alt: this.viewState.centerAlt }, window.config.siderealTime);
                     this.viewState.centerRA = centerEquatorial.ra;
                     this.viewState.centerDec = centerEquatorial.dec;

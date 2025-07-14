@@ -462,6 +462,10 @@ export class CoordinateConverter {
             return { az, alt };
         }
     }
+    screenRaDecToEquatorial_View(screenRaDec, siderealTime) {
+        const horizontal = this.screenRaDecToHorizontal_View(screenRaDec);
+        return this.horizontalToEquatorial(horizontal, siderealTime, this.getLocation().latitude);
+    }
     pinchNewCenterRaDec(center1, pinchRaDec, pinchScreenRaDec, scale) {
         // x, yは固定。screenRA_p, screenDec_p(pinchの座標)はscale倍になる。
         // Equ->screenRaDecの関数でthetaSH=atan2(b, a)は符号も含めて変化せず、arccos(c)はscale倍になる。

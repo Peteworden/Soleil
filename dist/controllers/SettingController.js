@@ -38,6 +38,16 @@ export class SettingController {
                 setting.style.display = 'none';
             }
         }
+        const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
+        const cameraSelect = document.getElementById('camera');
+        if (cameraTiltSliderDiv && cameraSelect) {
+            if (cameraSelect.value != 'none') {
+                cameraTiltSliderDiv.style.display = 'block';
+            }
+            else {
+                cameraTiltSliderDiv.style.display = 'none';
+            }
+        }
         // 設定値をローカルストレージに保存
         SettingController.saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
@@ -110,7 +120,7 @@ export class SettingController {
                     showMessiers: messierCheck.checked,
                     showRecs: recCheck.checked,
                     showNGC: ngcCheck.checked,
-                    camera: camera.value === 'none' ? null : camera.value
+                    camera: camera.value
                 };
                 console.log('🔧 About to call updateConfig with newDisplaySettings:', newDisplaySettings);
                 updateConfig({
@@ -250,11 +260,17 @@ export class SettingController {
         if (ngcCheck)
             ngcCheck.checked = config.displaySettings.showNGC;
         if (camera)
-            camera.value = config.displaySettings.camera || 'none';
-        // モード設定
-        const modeRadio = document.querySelector(`input[name="mode"][value="${config.displaySettings.mode}"]`);
-        if (modeRadio)
-            modeRadio.checked = true;
+            camera.value = config.displaySettings.camera;
+        if (camera.value != 'none') {
+            const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
+            if (cameraTiltSliderDiv)
+                cameraTiltSliderDiv.style.display = 'block';
+        }
+        else {
+            const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
+            if (cameraTiltSliderDiv)
+                cameraTiltSliderDiv.style.display = 'none';
+        }
         // 時刻設定
         const dtlInput = document.getElementById('dtl');
         const realTime = document.getElementById('realTime');
