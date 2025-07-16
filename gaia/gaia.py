@@ -105,7 +105,7 @@ class GaiaChartApp:
         self.c = 0.5
 
         self.sync_radio_var = tk.IntVar()
-        self.sync_radio_var.set(0)
+        self.sync_radio_var.set(1)
 
         self.create_ui()
 
@@ -223,9 +223,9 @@ class GaiaChartApp:
 
         submit_frame = tk.Frame(main_frame, bg='black')
         submit_frame.pack(fill=tk.X, pady=5)
-        sync_radio1 = tk.Radiobutton(submit_frame, value=0, variable=self.sync_radio_var, text='少しずつ（やや速い）', fg='white', bg='black', selectcolor='red')
+        sync_radio1 = tk.Radiobutton(submit_frame, value=0, variable=self.sync_radio_var, text='多いときは少しずつ', fg='white', bg='black', selectcolor='red')
         sync_radio1.grid(row=0, column=0, columnspan=2, sticky=tk.W, padx=5)
-        sync_radio2 = tk.Radiobutton(submit_frame, value=1, variable=self.sync_radio_var, text='一気に（遅いことも）', fg='white', bg='black', selectcolor='red')
+        sync_radio2 = tk.Radiobutton(submit_frame, value=1, variable=self.sync_radio_var, text='多くても一気に', fg='white', bg='black', selectcolor='red')
         sync_radio2.grid(row=1, column=0, columnspan=2, sticky=tk.W, padx=5)
         self.submit_btn = tk.Button(submit_frame, textvariable=self.submitText, command=self.start_drawing, width=10, height=3, bg='orange', fg='black')
         self.submit_btn.grid(row=2, column=0, columnspan=2, sticky=tk.N, padx=10, pady=10)
@@ -544,6 +544,9 @@ class GaiaChartApp:
 
         # 星との距離を計算
         dists = np.sqrt((self.ra - x)**2 + (self.dec - y)**2)
+        if (len(dists) == 0):
+            print("dist empty")
+            return
         min_idx = np.argmin(dists)
         min_dist = dists[min_idx]
 
@@ -596,7 +599,7 @@ class GaiaChartApp:
 
     def set_current_time(self):
         self.time_box.delete(0, tk.END)
-        self.time_box.insert(tk.END, datetime.now(timezone(timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S'))
+        self.time_box.insert(tk.END, datetime.now(timezone(timedelta(hours=0))).strftime('%Y-%m-%d %H:%M:%S'))
 
     def preset_combo_select(self, event):
         name = self.preset_var.get()
