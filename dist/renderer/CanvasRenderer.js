@@ -3,11 +3,22 @@ import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
+        this.imageCache = {};
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context)
             throw new Error('Failed to get canvas context');
         this.ctx = context;
+        const imageCache = [
+            // { name: 'M13', src: 'M13.jpg' },
+            // { name: 'M42', src: 'M42.jpg' },
+            { name: 'M31', src: 'M31.png' }
+        ];
+        for (const image of imageCache) {
+            const img = new Image();
+            img.src = `./chartImage/overlay/${image.src}`;
+            this.imageCache[image.name] = img;
+        }
         // グローバルconfigのrenderOptionsと同じ参照にする
         const globalConfig = window.config;
         if (globalConfig && config.displaySettings && config.viewState) {
@@ -108,6 +119,45 @@ export class CanvasRenderer {
             this.ctx.lineTo(x - 4, y + 4);
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
+        }
+        if (['AEP', 'view'].includes(this.config.displaySettings.mode) &&
+            object.getName() in this.imageCache &&
+            this.config.viewState.fieldOfViewRA < 30) {
+            const img = this.imageCache[object.getName()];
+            if (img.complete) {
+                this.ctx.save();
+                this.ctx.globalAlpha = 0.5;
+                const overlaySize = 3.0 * this.canvas.width / this.config.viewState.fieldOfViewRA;
+                if (this.config.displaySettings.mode == 'view') {
+                    this.ctx.translate(x, y);
+                    const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.canvas, this.config.siderealTime, true);
+                    const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
+                    this.ctx.rotate(rotation);
+                    this.ctx.drawImage(img, -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
+                }
+                else {
+                    this.ctx.drawImage(img, x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
+                }
+                this.ctx.restore();
+            }
+            else {
+                img.onload = () => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = 0.5;
+                    const overlaySize = 3.0 * this.canvas.width / this.config.viewState.fieldOfViewRA;
+                    if (this.config.displaySettings.mode == 'view') {
+                        this.ctx.translate(x, y);
+                        const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.canvas, this.config.siderealTime, true);
+                        const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
+                        this.ctx.rotate(rotation);
+                        this.ctx.drawImage(img, -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
+                    }
+                    else {
+                        this.ctx.drawImage(img, x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
+                    }
+                    this.ctx.restore();
+                };
+            }
         }
     }
     drawJsonObject(objects) {
@@ -849,7 +899,7 @@ export class CanvasRenderer {
             let dscreenDec = 0.0;
             // 右上から左上
             while (screenRa < raWidth) {
-                this.addEdgeAEP(screenRa, decWidth, edgeRA, edgeDec, jd);
+                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
                 dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
                 screenRa += dscreenRa;
             }
@@ -857,7 +907,7 @@ export class CanvasRenderer {
             screenRa = raWidth;
             screenDec = decWidth;
             while (screenDec > -decWidth) {
-                this.addEdgeAEP(raWidth, screenDec, edgeRA, edgeDec, jd);
+                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
                 dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
                 screenDec -= dscreenDec;
             }
@@ -865,7 +915,7 @@ export class CanvasRenderer {
             screenRa = raWidth;
             screenDec = -decWidth;
             while (screenRa > -raWidth) {
-                this.addEdgeAEP(screenRa, -decWidth, edgeRA, edgeDec, jd);
+                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
                 dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
                 screenRa -= dscreenRa;
             }
@@ -895,7 +945,7 @@ export class CanvasRenderer {
             let dscreenDec = 0.0;
             // 右上から左上
             while (screenRa < raWidth) {
-                this.addEdgeView(screenRa, decWidth, edgeRA, edgeDec, siderealTime, jd);
+                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
                 dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
                 screenRa += dscreenRa;
             }
@@ -903,7 +953,7 @@ export class CanvasRenderer {
             screenRa = raWidth;
             screenDec = decWidth;
             while (screenDec > -decWidth) {
-                this.addEdgeView(raWidth, screenDec, edgeRA, edgeDec, siderealTime, jd);
+                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
                 dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
                 screenDec -= dscreenDec;
             }
@@ -911,7 +961,7 @@ export class CanvasRenderer {
             screenRa = raWidth;
             screenDec = -decWidth;
             while (screenRa > -raWidth) {
-                this.addEdgeView(screenRa, -decWidth, edgeRA, edgeDec, siderealTime, jd);
+                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
                 dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
                 screenRa -= dscreenRa;
             }

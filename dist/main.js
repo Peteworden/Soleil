@@ -148,6 +148,9 @@ export function resetConfig() {
 // newconfigを受け取り、configを更新する
 export function updateConfig(newConfig) {
     Object.assign(config, newConfig);
+    if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
+        config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
+    }
     window.config = config;
     if (newConfig.displaySettings) {
         Object.assign(config.displaySettings, newConfig.displaySettings);
@@ -155,8 +158,8 @@ export function updateConfig(newConfig) {
         window.controller.updateOptions(config.displaySettings);
     }
     // 時刻関連の更新があればTimeControllerも更新
-    if (newConfig.displayTime) {
-        TimeController.onConfigUpdate();
+    if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
+        // TimeController.initialize();
     }
     window.renderAll();
     updateInfoDisplay();
