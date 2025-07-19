@@ -28,9 +28,18 @@ export class HipStar extends CelestialObject {
     }
 }
 export class MessierObject extends CelestialObject {
-    constructor(name, alt_name, coordinates, magnitude, type, description) {
+    constructor(name, alt_name, coordinates, magnitude, type, overlay, description) {
         super(name, coordinates, magnitude, type);
         this.alt_name = alt_name;
+        if (overlay) {
+            this.overlay = {
+                width: overlay.width !== undefined ? overlay.width : 1, // 赤緯の幅
+                opacity: overlay.opacity !== undefined ? overlay.opacity : 0.5
+            };
+        }
+        else {
+            this.overlay = { width: 1, opacity: 0.5 };
+        }
         this.description = description || '';
     }
     getNumber() {
@@ -44,6 +53,9 @@ export class MessierObject extends CelestialObject {
     }
     getTypeName() {
         return this.type || '';
+    }
+    getOverlay() {
+        return this.overlay;
     }
     getDescription() {
         return this.description;

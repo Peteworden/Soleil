@@ -222,6 +222,15 @@ export async function main() {
         canvas.height = config.canvasSize.height;
         // レンダラーの作成
         const renderer = new CanvasRenderer(canvas, config);
+        // imageCacheの初期化
+        const imageCache = {};
+        const imageCacheNames = ['M31'];
+        for (const name of imageCacheNames) {
+            const img = new Image();
+            img.src = `./chartImage/overlay/${name}.png`;
+            imageCache[name] = img;
+        }
+        renderer.setImageCache(imageCache);
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();

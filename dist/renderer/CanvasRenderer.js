@@ -1,4 +1,5 @@
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
+import { MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 export class CanvasRenderer {
@@ -9,16 +10,6 @@ export class CanvasRenderer {
         if (!context)
             throw new Error('Failed to get canvas context');
         this.ctx = context;
-        const imageCache = [
-            // { name: 'M13', src: 'M13.jpg' },
-            // { name: 'M42', src: 'M42.jpg' },
-            { name: 'M31', src: 'M31.png' }
-        ];
-        for (const image of imageCache) {
-            const img = new Image();
-            img.src = `./chartImage/overlay/${image.src}`;
-            this.imageCache[image.name] = img;
-        }
         // グローバルconfigのrenderOptionsと同じ参照にする
         const globalConfig = window.config;
         if (globalConfig && config.displaySettings && config.viewState) {
@@ -28,6 +19,10 @@ export class CanvasRenderer {
             this.config = config;
         }
         this.coordinateConverter = new CoordinateConverter();
+    }
+    // imageCacheを設定
+    setImageCache(imageCache) {
+        this.imageCache = imageCache;
     }
     // 描画をクリア
     clear() {
@@ -120,45 +115,44 @@ export class CanvasRenderer {
             this.ctx.stroke();
             this.ctx.fillText(object.getName(), x + 5, y - 5);
         }
-        if (['AEP', 'view'].includes(this.config.displaySettings.mode) &&
+        if (object instanceof MessierObject &&
+            ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
             object.getName() in this.imageCache &&
             this.config.viewState.fieldOfViewRA < 30) {
             const img = this.imageCache[object.getName()];
-            if (img.complete) {
-                this.ctx.save();
-                this.ctx.globalAlpha = 0.5;
-                const overlaySize = 3.0 * this.canvas.width / this.config.viewState.fieldOfViewRA;
-                if (this.config.displaySettings.mode == 'view') {
-                    this.ctx.translate(x, y);
-                    const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.canvas, this.config.siderealTime, true);
-                    const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
-                    this.ctx.rotate(rotation);
-                    this.ctx.drawImage(img, -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
-                }
-                else {
-                    this.ctx.drawImage(img, x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
-                }
-                this.ctx.restore();
+            // 画像が正常に読み込まれているかチェック
+            if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+                this.drawOverlay(object.getName(), coords, object.getOverlay(), x, y, this.config.displaySettings.mode);
             }
-            else {
+            else if (!img.complete) {
+                // 画像がまだ読み込み中の場合
                 img.onload = () => {
-                    this.ctx.save();
-                    this.ctx.globalAlpha = 0.5;
-                    const overlaySize = 3.0 * this.canvas.width / this.config.viewState.fieldOfViewRA;
-                    if (this.config.displaySettings.mode == 'view') {
-                        this.ctx.translate(x, y);
-                        const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.canvas, this.config.siderealTime, true);
-                        const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
-                        this.ctx.rotate(rotation);
-                        this.ctx.drawImage(img, -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
+                    // 読み込み完了後も再度チェック
+                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+                        this.drawOverlay(object.getName(), coords, object.getOverlay(), x, y, this.config.displaySettings.mode);
                     }
-                    else {
-                        this.ctx.drawImage(img, x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
-                    }
-                    this.ctx.restore();
+                };
+                img.onerror = () => {
+                    console.warn(`Failed to load image for ${object.getName()}`);
                 };
             }
         }
+    }
+    drawOverlay(name, coords, overlay, x, y, mode) {
+        this.ctx.save();
+        const overlaySize = overlay.width * this.canvas.width / this.config.viewState.fieldOfViewRA;
+        this.ctx.globalAlpha = overlay.opacity;
+        if (mode == 'AEP') {
+            this.ctx.drawImage(this.imageCache[name], x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
+        }
+        else if (mode == 'view') {
+            this.ctx.translate(x, y);
+            const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.canvas, this.config.siderealTime, true);
+            const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
+            this.ctx.rotate(rotation);
+            this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
+        }
+        this.ctx.restore();
     }
     drawJsonObject(objects) {
         for (const object of objects) {
