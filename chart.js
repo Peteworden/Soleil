@@ -570,10 +570,12 @@ document.getElementById('searchInput').addEventListener('input', function() {
                     suggestions1[0].push(rec.name);
                     suggestions1[1].push(rec.name);
                     recsugs.push(rec.name);
+                    continue;
                 } else if (toUpperCaseOrKatakana(rec.name).includes(searchText)) {
                     suggestions2[0].push(rec.name);
                     suggestions2[1].push(rec.name);
                     recsugs.push(rec.name);
+                    continue;
                 }
                 for (let alt of rec.alt_name) {
                     if (toUpperCaseOrKatakana(alt).startsWith(searchText)) {
@@ -898,10 +900,10 @@ function ontouchmove(e) {
                 if (mode == 'AEP') {
                     let prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     let prescrDec = -rgNS * (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    let [preRA, preDec] = scr2RADec(prescrRA, prescrDec);
+                    let [preRA, preDec] = scr2RADecAEP(prescrRA, prescrDec);
                     let movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     let movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    let [moveRA, moveDec] = scr2RADec(movescrRA, movescrDec);
+                    let [moveRA, moveDec] = scr2RADecAEP(movescrRA, movescrDec);
                     cenRA = ((cenRA - moveRA + preRA) % 360 + 360) % 360;
                     cenDec = Math.min(Math.max(cenDec - moveDec + preDec, -90), 90);
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
@@ -912,10 +914,10 @@ function ontouchmove(e) {
                 } else if (mode == 'view') {
                     let prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     let prescrDec = -rgNS* (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    let [preAzm, preAlt] = SHtoAh(prescrRA, prescrDec);
+                    let [preAzm, preAlt] = scr2AhView(prescrRA, prescrDec);
                     let movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
                     let movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-                    let [moveAzm, moveAlt] = SHtoAh(movescrRA, movescrDec);
+                    let [moveAzm, moveAlt] = scr2AhView(movescrRA, movescrDec);
                     cenAzm = ((cenAzm - moveAzm + preAzm) % 360 + 360) % 360;
                     cenAlt = Math.min(Math.max(cenAlt - moveAlt + preAlt, -90), 90);
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
@@ -949,7 +951,7 @@ function ontouchmove(e) {
                 if (mode == 'AEP') {
                     let pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
                     let pinchscrDec = -rgNS * y3 / (canvas.height / 2);
-                    [cenRA, cenDec] = scr2RADec(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
+                    [cenRA, cenDec] = scr2RADecAEP(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
                 } else if (mode == 'EtP') {
                     let pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
@@ -960,7 +962,7 @@ function ontouchmove(e) {
                 } else if (mode == 'view') {
                     let pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
                     let pinchscrDec = -rgNS * y3 / (canvas.height / 2);
-                    [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
+                    [cenAzm, cenAlt] = scr2AhView(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
                     [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
                 }
                 document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
@@ -1019,28 +1021,33 @@ function onmousemove(e) {
     dragFlag = true;
     moveX = e.pageX;
     moveY = e.pageY;
-    if ((moveX-preX)*(moveX-preX) + (moveY-preY)*(moveY-preY) > dist_detect*dist_detect) {
+    const x1 = preX - canvas.offsetLeft - canvas.width / 2;
+    const y1 = preY - canvas.offsetTop - canvas.height / 2;
+    const x2 = moveX - canvas.offsetLeft - canvas.width / 2;
+    const y2 = moveY - canvas.offsetTop - canvas.height / 2;
+    const moveScale = rgEW / (canvas.width / 2);
+    if ((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1) > dist_detect*dist_detect) {
         if (mode == 'AEP') {
-            let prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            let prescrDec = -rgNS* (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            let [preRA, preDec] = scr2RADec(prescrRA, prescrDec);
-            let movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            let movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            let [moveRA, moveDec] = scr2RADec(movescrRA, movescrDec);
+            let prescrRA = -x1 * moveScale;
+            let prescrDec = -y1 * moveScale;
+            let [preRA, preDec] = scr2RADecAEP(prescrRA, prescrDec);
+            let movescrRA = -x2 * moveScale;
+            let movescrDec = -y2 * moveScale;
+            let [moveRA, moveDec] = scr2RADecAEP(movescrRA, movescrDec);
             cenRA = ((cenRA - moveRA + preRA) % 360 + 360) % 360;
             cenDec = Math.min(Math.max(cenDec - moveDec + preDec, -90), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'EtP') {
-            cenRA  = ((cenRA  + 2 * rgEW * (moveX - preX) / canvas.width ) % 360 + 360) % 360;
-            cenDec =  Math.min(Math.max(cenDec + 2 * rgNS * (moveY - preY) / canvas.height, -90), 90);
+            cenRA  = ((cenRA  + 2 * (x2 - x1) * moveScale ) % 360 + 360) % 360;
+            cenDec =  Math.min(Math.max(cenDec + 2 * (y2 - y1) * moveScale, -90), 90);
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'view') {
-            let prescrRA = -rgEW * (preX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
-            let prescrDec = -rgNS* (preY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            let [preAzm, preAlt] = SHtoAh(prescrRA, prescrDec);
-            let movescrRA = -rgEW * (moveX - canvas.offsetLeft - canvas.width  / 2) / (canvas.width  / 2);
+            let prescrRA = -x1 * moveScale;
+            let prescrDec = -y1 * moveScale;
+            let [preAzm, preAlt] = scr2AhView(prescrRA, prescrDec);
+            let movescrRA = -x2 * moveScale;
             let movescrDec = -rgNS * (moveY - canvas.offsetTop - canvas.height / 2) / (canvas.height / 2);
-            let [moveAzm, moveAlt] = SHtoAh(movescrRA, movescrDec);
+            let [moveAzm, moveAlt] = scr2AhView(movescrRA, movescrDec);
             cenAzm = ((cenAzm - moveAzm + preAzm) % 360 + 360) % 360;
             cenAlt = Math.min(Math.max(cenAlt - moveAlt + preAlt, -90), 90);
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
@@ -1095,7 +1102,7 @@ function onwheel(event) {
         if (mode == 'AEP') {
             let pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
             let pinchscrDec = -rgNS * y3 / (canvas.height / 2);
-            [cenRA, cenDec] = scr2RADec(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
+            [cenRA, cenDec] = scr2RADecAEP(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
         } else if (mode == 'EtP') {
             let pinchRA  = cenRA  - rgEW * x3 / (canvas.width  / 2);
@@ -1106,7 +1113,7 @@ function onwheel(event) {
         } else if (mode == 'view') {
             let pinchscrRA  = -rgEW * x3 / (canvas.width  / 2);
             let pinchscrDec = -rgNS * y3 / (canvas.height / 2);
-            [cenAzm, cenAlt] = SHtoAh(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
+            [cenAzm, cenAlt] = scr2AhView(pinchscrRA * (1 - 1 / scale), pinchscrDec * (1 - 1 / scale));
             [cenRA, cenDec] = Ah2RADec(cenAzm, cenAlt, theta);
         }
         document.getElementById('arVideo').style.height = `${Math.round(100*videoHeight/2/rgNS)}%`;
@@ -1163,7 +1170,7 @@ function calculation(JD) {
     theta = siderealTime(JD, lon_obs);
 
     [X, Y, Z] = calc(planets[Obs_num], JD); // J2000.0
-    let [ra, dec, dist] = xyz_to_RADec(-X, -Y, -Z);
+    let [ra, dec, dist] = xyzToRADec(-X, -Y, -Z);
     [ra, dec] = J2000toApparent(ra, dec, JD);
     solarSystemBodies[0] = {x: X, y: Y, z: Z, ra: ra, dec: dec, dist: dist, mag: 100};
 
@@ -1176,7 +1183,7 @@ function calculation(JD) {
             solarSystemBodies[9] = {x: x, y: y, z: z, ra: ra, dec: dec, dist: dist, mag: 100};
         } else {
             [x, y, z] = calc(planet, JD);
-            [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+            [ra, dec, dist] = xyzToRADec(x-X, y-Y, z-Z);
             [ra, dec] = J2000toApparent(ra, dec, JD);
             solarSystemBodies[i] = {x: x, y: y, z: z, ra: ra, dec: dec, dist: dist, mag: 100}
         }
@@ -1582,7 +1589,7 @@ function show_main(){
     const JD = showingJD;
     let theta = siderealTime(JD, lon_obs);
     if (['live', 'ar'].includes(mode)) {
-        [cenAzm, cenAlt] = screen2liveAh(0, 0);
+        [cenAzm, cenAlt] = scr2AhLive(0, 0);
     }
     if (['AEP', 'EtP'].includes(mode)) {
         [cenAzm, cenAlt] = RADec2Ah(cenRA, cenDec, theta);
@@ -1763,76 +1770,76 @@ function show_main(){
     //Gaia
     // messierに含まれない6.5等級より明るい星もあるので、magLim > 5で余裕を持たせる
     if (magLim > 5 && gaia100[0] != null && gaia100_help[0] != null) {
-        let skyareas = [];
+        let areaCandidates = [];
         if (mode == 'AEP') {
-            let minDec = Math.max(-90, Math.min(scr2RADec(rgEW, -rgNS)[1], cenDec-rgNS));
-            let maxDec = Math.min( 90, Math.max(scr2RADec(rgEW,  rgNS)[1], cenDec+rgNS));
+            let minDec = Math.max(-90, Math.min(scr2RADecAEP(rgEW, -rgNS)[1], cenDec-rgNS));
+            let maxDec = Math.min( 90, Math.max(scr2RADecAEP(rgEW,  rgNS)[1], cenDec+rgNS));
 
             if (minDec == -90) {
-                skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
+                areaCandidates = [[areaNumber(0, -90), areaNumber(359.9, maxDec)]];
             } else if (maxDec == 90) {
-                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
+                areaCandidates = [[areaNumber(0, minDec), areaNumber(359.9, 89.9)]];
             } else {
-                let RArange1 = (scr2RADec(rgEW,  rgNS)[0] - cenRA + 360) % 360;
-                let RArange2 = (scr2RADec(rgEW,     0)[0] - cenRA + 360) % 360;
-                let RArange3 = (scr2RADec(rgEW, -rgNS)[0] - cenRA + 360) % 360;
+                let RArange1 = (scr2RADecAEP(rgEW,  rgNS)[0] - cenRA + 360) % 360;
+                let RArange2 = (scr2RADecAEP(rgEW,     0)[0] - cenRA + 360) % 360;
+                let RArange3 = (scr2RADecAEP(rgEW, -rgNS)[0] - cenRA + 360) % 360;
                 let RArange = Math.max(RArange1, RArange2, RArange3);
 
                 if (cenRA - RArange < 0) {
-                    skyareas = [[SkyArea(                0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                [SkyArea(cenRA-RArange+360, minDec), SkyArea(        359.9, minDec)]];
+                    areaCandidates = [[areaNumber(                0, minDec), areaNumber(cenRA+RArange, minDec)],
+                                [areaNumber(cenRA-RArange+360, minDec), areaNumber(        359.9, minDec)]];
                     for (i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                        areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
+                        areaCandidates.push([areaCandidates[1][0]+360*i, areaCandidates[1][1]+360*i]);
                     }
                 } else if (cenRA + RArange > 360) {
-                    skyareas = [[SkyArea(            0, minDec), SkyArea(cenRA+RArange, minDec)],
-                                [SkyArea(cenRA-RArange, minDec), SkyArea(        359.9, minDec)]];
+                    areaCandidates = [[areaNumber(            0, minDec), areaNumber(cenRA+RArange, minDec)],
+                                [areaNumber(cenRA-RArange, minDec), areaNumber(        359.9, minDec)]];
                     for (i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                        areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
+                        areaCandidates.push([areaCandidates[1][0]+360*i, areaCandidates[1][1]+360*i]);
                     }
                 } else {
-                    skyareas = [[SkyArea(cenRA-RArange, minDec), SkyArea(cenRA+RArange, minDec)]];
+                    areaCandidates = [[areaNumber(cenRA-RArange, minDec), areaNumber(cenRA+RArange, minDec)]];
                     for (i=1; i<=Math.floor(maxDec)-Math.floor(minDec); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                        areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
                     }
                 }
             }
-            drawGaia(gaia100, gaia100_help, skyareas);
+            drawGaia(gaia100, gaia100_help, areaCandidates);
             if (magLim > 10 && gaia101_110[0] != null && gaia101_110_help[0] != null) {
-                drawGaia(gaia101_110, gaia101_110_help, skyareas);
+                drawGaia(gaia101_110, gaia101_110_help, areaCandidates);
                 if (magLim > 11 && gaia111_115[0] != null && gaia111_115_help[0] != null) {
-                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
+                    drawGaia(gaia111_115, gaia111_115_help, areaCandidates);
                 }
             }
         } else if (mode == 'EtP') { //正距円筒図法
             if (cenRA - rgEW < 0) {
-                //skyareasは[[a, b]]のaの領域とbの領域を両方含む
-                skyareas = [[SkyArea(0,              cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)],
-                            [SkyArea(cenRA-rgEW+360, cenDec-rgNS), SkyArea(359.9,      cenDec-rgNS)]];
+                //areaCandidatesは[[a, b]]のaの領域とbの領域を両方含む
+                areaCandidates = [[areaNumber(0,              cenDec-rgNS), areaNumber(cenRA+rgEW, cenDec-rgNS)],
+                            [areaNumber(cenRA-rgEW+360, cenDec-rgNS), areaNumber(359.9,      cenDec-rgNS)]];
                 for (i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                    skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                    areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
+                    areaCandidates.push([areaCandidates[1][0]+360*i, areaCandidates[1][1]+360*i]);
                 }
             } else if (cenRA + rgEW >= 360) {
-                skyareas = [[SkyArea(0,          cenDec-rgNS), SkyArea(cenRA+rgEW-360, cenDec-rgNS)],
-                            [SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(359.9,          cenDec-rgNS)]];
+                areaCandidates = [[areaNumber(0,          cenDec-rgNS), areaNumber(cenRA+rgEW-360, cenDec-rgNS)],
+                            [areaNumber(cenRA-rgEW, cenDec-rgNS), areaNumber(359.9,          cenDec-rgNS)]];
                 for (i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                    skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                    areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
+                    areaCandidates.push([areaCandidates[1][0]+360*i, areaCandidates[1][1]+360*i]);
                 }
             } else {
-                skyareas = [[SkyArea(cenRA-rgEW, cenDec-rgNS), SkyArea(cenRA+rgEW, cenDec-rgNS)]];
+                areaCandidates = [[areaNumber(cenRA-rgEW, cenDec-rgNS), areaNumber(cenRA+rgEW, cenDec-rgNS)]];
                 for (i=1; i<=Math.floor(cenDec+rgNS)-Math.floor(cenDec-rgNS); i++) {
-                    skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                    areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
                 }
             }
-            drawGaia(gaia100, gaia100_help, skyareas);
+            drawGaia(gaia100, gaia100_help, areaCandidates);
             if (magLim > 10 && gaia101_110[0] != null && gaia101_110_help[0] != null) {
-                drawGaia(gaia101_110, gaia101_110_help, skyareas);
+                drawGaia(gaia101_110, gaia101_110_help, areaCandidates);
                 if (magLim > 11 && gaia111_115[0] != null && gaia111_115_help[0] != null) {
-                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
+                    drawGaia(gaia111_115, gaia111_115_help, areaCandidates);
                 }
             }
         } else if (mode == 'view') {
@@ -1840,20 +1847,20 @@ function show_main(){
             let [scrRA_SP, scrDec_SP] = RADec2scrview(0, -90);
             if (Math.abs(scrRA_NP) < rgEW && Math.abs(scrDec_NP) < rgNS) {
                 let minDec = Math.min(
-                    Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
+                    Ah2RADec(...scr2AhView(rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...scr2AhView(-rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...scr2AhView(rgEW, rgNS), theta)[1],
+                    Ah2RADec(...scr2AhView(-rgEW, rgNS), theta)[1]
                 );
-                skyareas = [[SkyArea(0, minDec), SkyArea(359.9, 89.9)]];
+                areaCandidates = [[areaNumber(0, minDec), areaNumber(359.9, 89.9)]];
             } else if (Math.abs(scrRA_SP) < rgEW && Math.abs(scrDec_SP) < rgNS) {
                 let maxDec = Math.max(
-                    Ah2RADec(...SHtoAh(rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, -rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(rgEW, rgNS), theta)[1],
-                    Ah2RADec(...SHtoAh(-rgEW, rgNS), theta)[1]
+                    Ah2RADec(...scr2AhView(rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...scr2AhView(-rgEW, -rgNS), theta)[1],
+                    Ah2RADec(...scr2AhView(rgEW, rgNS), theta)[1],
+                    Ah2RADec(...scr2AhView(-rgEW, rgNS), theta)[1]
                 );
-                skyareas = [[SkyArea(0, -90), SkyArea(359.9, maxDec)]];
+                areaCandidates = [[areaNumber(0, -90), areaNumber(359.9, maxDec)]];
             } else {
                 let RA_max = 0, RA_min = 360, Dec_max = -90, Dec_min = 90;
                 let edgeRA = [];
@@ -1861,7 +1868,7 @@ function show_main(){
                 for (j=0; j<=Math.ceil(3*rgEW); j++) {
                     for (i=0; i<=Math.ceil(3*rgNS); i++) {
                         if (i == 0 || i == Math.ceil(3*rgNS) || j == 0 || j == Math.ceil(3*rgEW)) {
-                            let [A, h] = SHtoAh((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
+                            let [A, h] = scr2AhView((2*j/Math.ceil(3*rgEW)-1)*rgEW, (2*i/Math.ceil(3*rgNS)-1)*rgNS);
                             [ra, dec] = Ah2RADec(A, h, theta);
                             edgeRA.push(ra);
                             edgeDec.push(dec);
@@ -1875,23 +1882,23 @@ function show_main(){
                 if (RA_max > 330 && RA_min < 30) {
                     RA_max = Math.max(...edgeRA.filter(function(value) {return value < (cenRA + 180) % 360;}));
                     RA_min = Math.min(...edgeRA.filter(function(value) {return value > (cenRA + 180) % 360;}));
-                    skyareas = [[SkyArea(0, Dec_min), SkyArea(RA_max, Dec_min)], [SkyArea(RA_min, Dec_min), SkyArea(359.9, Dec_min)]]
+                    areaCandidates = [[areaNumber(0, Dec_min), areaNumber(RA_max, Dec_min)], [areaNumber(RA_min, Dec_min), areaNumber(359.9, Dec_min)]]
                     for (i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
-                        skyareas.push([skyareas[1][0]+360*i, skyareas[1][1]+360*i]);
+                        areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
+                        areaCandidates.push([areaCandidates[1][0]+360*i, areaCandidates[1][1]+360*i]);
                     }
                 } else {
-                    skyareas = [[SkyArea(RA_min, Dec_min), SkyArea(RA_max, Dec_min)]];
+                    areaCandidates = [[areaNumber(RA_min, Dec_min), areaNumber(RA_max, Dec_min)]];
                     for (i=1; i<=Math.floor(Dec_max)-Math.floor(Dec_min); i++) {
-                        skyareas.push([skyareas[0][0]+360*i, skyareas[0][1]+360*i]);
+                        areaCandidates.push([areaCandidates[0][0]+360*i, areaCandidates[0][1]+360*i]);
                     }
                 }
             }
-            drawGaia(gaia100, gaia100_help, skyareas);
+            drawGaia(gaia100, gaia100_help, areaCandidates);
             if (magLim > 10 && gaia101_110[0] != null && gaia101_110_help[0] != null) {
-                drawGaia(gaia101_110, gaia101_110_help, skyareas);
+                drawGaia(gaia101_110, gaia101_110_help, areaCandidates);
                 if (magLim > 11 && gaia111_115[0] != null && gaia111_115_help[0] != null) {
-                    drawGaia(gaia111_115, gaia111_115_help, skyareas);
+                    drawGaia(gaia111_115, gaia111_115_help, areaCandidates);
                 }
             }
         }
@@ -2034,7 +2041,7 @@ function show_main(){
                         for (let j = 0; j < 4; j++) {
                             galileo_ecl = [doubleSin(...galileo[j][0]), doubleSin(...galileo[j][1]), doubleSin(...galileo[j][2])]
                             galileo_equ = Rx([jupiter_ecl[0]+galileo_ecl[0], jupiter_ecl[1]+galileo_ecl[1], jupiter_ecl[2]+galileo_ecl[2]], eps);
-                            galileo_radecdist = xyz_to_RADec(...galileo_equ);
+                            galileo_radecdist = xyzToRADec(...galileo_equ);
                             galileo_radecdist = J2000toApparent(galileo_radecdist[0], galileo_radecdist[1], JD);
                             [x, y, inFlag] = xyIfInCanvas(galileo_radecdist[0], galileo_radecdist[1]);
                             drawFilledCircle(x, y, 1, '#F33');
@@ -2146,8 +2153,93 @@ function show_main(){
         document.getElementById("coordtext").innerHTML = `${centerConstellation} ${rgtext} ${magLimtext}<br>${apparentText}<br>${J2000Text}<br>${Astr}${hstr}`;
     }
 
-    function SkyArea(RA, Dec) { //(RA, Dec)はHelperで↓行目（0始まり）の行数からのブロックに入ってる
+    function areaNumber(RA, Dec) { //(RA, Dec)はHelperで↓行目（0始まり）の行数からのブロックに入ってる
         return parseInt(360 * Math.floor(Dec + 90) + Math.floor(RA));
+    }
+
+    function areaCandidates() {
+        let edgeRA = [];
+        let edgeDec = [];
+        let raWidth = rgEW + 1.0;
+        let decWidth = rgNS + 1.0;
+        let currentNorthPoleJ2000 = J2000toApparent(0, 90,  jd);
+        let currentSouthPoleJ2000 = J2000toApparent(0, -90, jd);
+        if (mode == 'AEP') {
+            const northPoleScreenRaDec = RADec2scrAEP(...currentNorthPoleJ2000);
+            const southPoleScreenRaDec = RADec2scrAEP(...currentSouthPoleJ2000);
+            const npIsIn = Math.abs(northPoleScreenRaDec[0]) < raWidth && Math.abs(northPoleScreenRaDec[1]) < decWidth;
+            const spIsIn = Math.abs(southPoleScreenRaDec[0]) < raWidth && Math.abs(southPoleScreenRaDec[1]) < decWidth;
+            let screenRA = -raWidth;
+            let screenDec = decWidth;
+            let dscreenRa = 0.0;
+            let dscreenDec = 0.0;
+            // 右上から左上
+            while (screenRA < raWidth) {
+                addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd);
+                dscreenRa = 0.3 * Math.cos(scr2RADecAEP(screenRA, screenDec)[1] * Math.PI / 180);
+                screenRA += dscreenRa;
+            }
+            // 左上から左下
+            screenRA = raWidth;
+            screenDec = decWidth;
+            while (screenDec > -decWidth) {
+                addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd);
+                dscreenDec = 0.3 * Math.cos(scr2RADecAEP(screenRA, screenDec)[1] * Math.PI / 180);
+                screenDec -= dscreenDec;
+            }
+            // 左下から右下
+            screenRA = raWidth;
+            screenDec = -decWidth;
+            while (screenRA > -raWidth) {
+                addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd);
+                dscreenRa = 0.3 * Math.cos(scr2RADecAEP(screenRA, screenDec)[1] * Math.PI / 180);
+                screenRA -= dscreenRa;
+            }
+            // 右下から右上
+            screenRA = -raWidth;
+            screenDec = -decWidth;
+            while (screenDec < decWidth) {
+                addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd);
+                dscreenDec = 0.3 * Math.cos(scr2RADecAEP(screenRA, screenDec)[1] * Math.PI / 180);
+                screenDec += dscreenDec;
+            }
+            const areaCandidates = floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
+            return areaCandidates;
+        } else if (mode == 'view') {
+            const northPoleScreenRaDec = RADec2scrview(...currentNorthPoleJ2000);
+            const southPoleScreenRaDec = RADec2scrview(...currentSouthPoleJ2000);
+            const npIsIn = Math.abs(northPoleScreenRaDec[0]) < raWidth && Math.abs(northPoleScreenRaDec[1]) < decWidth;
+            const spIsIn = Math.abs(southPoleScreenRaDec[0]) < raWidth && Math.abs(southPoleScreenRaDec[1]) < decWidth;
+            let screenRA = -raWidth;
+            let screenDec = decWidth;
+            let dscreenRa = 0.0;
+            let dscreenDec = 0.0;
+            // 右上から左上
+            while (screenRA < raWidth) {
+                addEdgeView(screenRA, screenDec, edgeRA, edgeDec, siderealTime, jd);
+                dscreenRa = 0.3 * Math.cos(scr2RADecAEP(screenRA, screenDec)[1] * Math.PI / 180);
+                screenRA += dscreenRa;
+            }
+            // 左上から左下
+            screenRA = raWidth;
+            screenDec = decWidth;
+        }
+
+        function addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd) {
+            const equatorialApparent = scr2RADecAEP(screenRA, screenDec);
+            const equatorial = J2000toApparent(equatorialApparent[0], equatorialApparent[1], jd);
+            edgeRA.push(equatorial[0]);
+            edgeDec.push(equatorial[1]);
+        }
+
+        function addEdgeView(screenRA, screenDec, edgeRA, edgeDec, siderealTime, jd) {
+            const horizontal = scr2AhView(screenRA, screenDec);
+            const equatorialJ2000 = Ah2RADec(horizontal[0], horizontal[1], siderealTime);
+            const equatorial = J2000toApparent(equatorialJ2000[0], equatorialJ2000[1], jd);
+            edgeRA.push(equatorial[0]);
+            edgeDec.push(equatorial[1]);
+        }
+        
     }
 
     // 座標変換
@@ -2331,15 +2423,15 @@ function show_main(){
         ctx.fill();
     }
 
-    function drawGaia(gaia, help, skyareas) {
+    function drawGaia(gaia, help, areaCandidates) {
         ctx.fillStyle = starColor;
         ctx.beginPath();
-        for (let arearange of skyareas) {
+        for (let candidate of areaCandidates) {
             // help[0] = 0
             // help[1<=i<180*360] = i番目の領域に入る直前までの星の数
             // help[180*360] = gaia.length
-            let st = help[arearange[0]];
-            let fi = help[arearange[1]+1];
+            let st = help[candidate[0]];
+            let fi = help[candidate[1]+1];
             for (i=st; i<fi; i++) {
                 let data = gaia[i];
                 let mag = data[2] * 0.1;
@@ -2555,7 +2647,7 @@ function show_main(){
     function drawPlanetMotion(trackElem, trackJD, k) {
         let [X, Y, Z] = calc(planets[Obs_num], trackJD);
         let [x, y, z] = calc(trackElem, trackJD);
-        let [ra, dec, dist] = xyz_to_RADec(x-X, y-Y, z-Z);
+        let [ra, dec, dist] = xyzToRADec(x-X, y-Y, z-Z);
         [x, y, inFlag] = xyIfInCanvas(...J2000toApparent(ra, dec, JD));
         if (inFlag) {
             if (!(trackPlanet == '月' && ObsPlanet != '地球')) {
@@ -2606,8 +2698,8 @@ function show_main(){
 
     function drawGrid() {
         let i, j;
-        let minAlt = Math.max(-90, Math.min(SHtoAh(rgEW, -rgNS)[1], cenAlt-rgNS));
-        let maxAlt = Math.min( 90, Math.max(SHtoAh(rgEW,  rgNS)[1], cenAlt+rgNS));
+        let minAlt = Math.max(-90, Math.min(scr2AhView(rgEW, -rgNS)[1], cenAlt-rgNS));
+        let maxAlt = Math.min( 90, Math.max(scr2AhView(rgEW,  rgNS)[1], cenAlt+rgNS));
 
         let altGridCalcIv = Math.min(rgEW, rgNS) / 20;
         let azmGridCalcIv = Math.min(altGridCalcIv / Math.max(cos(cenAlt*deg2rad), 0.1), 8);
@@ -2679,9 +2771,9 @@ function show_main(){
                 ctx.stroke();
             }
         } else {
-            let azmRange = Math.max((SHtoAh(-rgEW,  rgNS)[0] - cenAzm + 360) % 360,
-                                    (SHtoAh(-rgEW,     0)[0] - cenAzm + 360) % 360,
-                                    (SHtoAh(-rgEW, -rgNS)[0] - cenAzm + 360) % 360);
+            let azmRange = Math.max((scr2AhView(-rgEW,  rgNS)[0] - cenAzm + 360) % 360,
+                                    (scr2AhView(-rgEW,     0)[0] - cenAzm + 360) % 360,
+                                    (scr2AhView(-rgEW, -rgNS)[0] - cenAzm + 360) % 360);
 
             for (i=Math.floor(minAlt/altGridIv); i<Math.ceil(maxAlt/altGridIv); i++) {
                 h = i * altGridIv;
@@ -2890,7 +2982,7 @@ function J2000toApparent(raJ2000, decJ2000, JD) {
     let xyz = radecToXYZ(raJ2000, decJ2000, 1);
     const precession = 5029 / 3600 * t * deg2rad;
     xyz = Rx(Rz(Rx(xyz, -eps), precession), eps);
-    const apparent = xyz_to_RADec(xyz[0], xyz[1], xyz[2]);
+    const apparent = xyzToRADec(xyz[0], xyz[1], xyz[2]);
     return [apparent[0], apparent[1]]; //deg
 }
 
@@ -2899,7 +2991,7 @@ function apparentToJ2000(raApp, decApp, JD) {
     let xyz = radecToXYZ(raApp, decApp, 1);
     const precession = 5029 / 3600 * t * deg2rad;
     xyz = Rx(Rz(Rx(xyz, -eps), -precession), eps);
-    const J2000 = xyz_to_RADec(xyz[0], xyz[1], xyz[2]);
+    const J2000 = xyzToRADec(xyz[0], xyz[1], xyz[2]);
     return [J2000[0], J2000[1]]; //deg
 }
 
@@ -2921,7 +3013,7 @@ function Ah2RADec (A, h, theta) {
     return [RA, Dec]; //deg
 }
 
-function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+function scr2RADecAEP (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
     if (scrRA == 0 && scrDec == 0) {
         return [cenRA, cenDec];
     } else {
@@ -2939,7 +3031,7 @@ function scr2RADec (scrRA, scrDec) { //deg 画面中心を原点とし、各軸�
     }
 }
 
-function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
+function scr2AhView (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の向きはいつも通り
     let A, h;
     if (scrRA == 0 && scrDec == 0) {
         A = cenAzm;
@@ -2957,7 +3049,7 @@ function SHtoAh (scrRA, scrDec) { //deg 画面中心を原点とし、各軸の�
     return [A, h];
 }
 
-function screen2liveAh (scrRA, scrDec) {
+function scr2AhLive (scrRA, scrDec) {
     let scrTheta = Math.atan2(scrDec, -scrRA); //画面上で普通に極座標
     let r = Math.sqrt(scrRA*scrRA + scrDec*scrDec) * deg2rad;
     let [x, y, z] = Rz(Rx(Ry([sin(r)*cos(scrTheta), sin(r)*sin(scrTheta), -cos(r)], dev[2]), dev[1]), dev[0]);
@@ -2966,7 +3058,7 @@ function screen2liveAh (scrRA, scrDec) {
     return [A, h];
 }
 
-function xyz_to_RADec(x, y, z) { //deg
+function xyzToRADec(x, y, z) { //deg
     let dist = Math.sqrt(x*x + y*y + z*z);
     let ra, dec;
     if (dist  < 0.00000001){
