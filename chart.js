@@ -2430,19 +2430,24 @@ function show_main(){
             // help[0] = 0
             // help[1<=i<180*360] = i番目の領域に入る直前までの星の数
             // help[180*360] = gaia.length
-            let st = help[candidate[0]];
-            let fi = help[candidate[1]+1];
-            for (i=st; i<fi; i++) {
-                let data = gaia[i];
-                let mag = data[2] * 0.1;
-                if (mag >= magLim) continue;
-                let ra = data[0] * 0.001;
-                let dec = data[1] * 0.001;
-                [ra, dec] = J2000toApparent(ra, dec, JD);
-                let [x, y, inFlag] = xyIfInCanvas(ra, dec);
-                if (inFlag) {
-                    ctx.moveTo(x, y);
-                    ctx.arc(x, y, size(mag), 0, 2 * pi, false);
+            for (let unit = candidate[0]; unit < candidate[1]+1; unit++) {
+                let raInt = unit % 360;
+                let decInt = Math.floor(unit / 360) - 90;
+                let st = help[unit];
+                let fi = help[unit+1];
+                for (i=st; i<fi; i++) {
+                    let data = gaia[i];
+                    // console.log(data);
+                    let mag = data[2];
+                    if (mag >= magLim) continue;
+                    let ra = raInt + data[0];
+                    let dec = decInt + data[1];
+                    [ra, dec] = J2000toApparent(ra, dec, JD);
+                    let [x, y, inFlag] = xyIfInCanvas(ra, dec);
+                    if (inFlag) {
+                        ctx.moveTo(x, y);
+                        ctx.arc(x, y, size(mag), 0, 2 * pi, false);
+                    }
                 }
             }
         }
@@ -3617,13 +3622,13 @@ async function loadFiles() {
             try {
                 let buffer;
                 if (isElectron) {
-                    const filePath = window.electronAPI.joinPath('data', `gaia_${filename}.bin`);
+                    const filePath = window.electronAPI.joinPath('data', `gaia_${filename}_liten250719.bin`);
                     if (!filePath.startsWith(window.electronAPI.joinPath('data'))) {
                         throw new Error(`Path traversal attempt detected: ${filePath}`);
                     }
                     buffer = await window.electronAPI.readFile(filePath, { encoding: 'binary' });
                 } else {
-                    const response = await fetch(`${soleilUrl}/data/gaia_${filename}.bin`);
+                    const response = await fetch(`${soleilUrl}/data/gaia_${filename}_liten250719.bin`);
                     if (!response.ok) {
                         throw new Error(`Failed to load ${filename}: ${response.statusText}`);
                     }
@@ -3632,20 +3637,46 @@ async function loadFiles() {
                 const view = new DataView(buffer);
                 let index = 0;
                 const bufferByteLength = buffer.byteLength;
-                for (let i = 0; i < bufferByteLength; i += 6) {
-                    const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
-                    const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
-                    const decPart = Math.floor(decMag / 10);
-                    const dec = decPart - 90000;
-                    if (filename == '101-110') {
-                        const mag = decMag - 10 * decPart + 101;
-                        gaia101_110[index] = [ra, dec, mag];
-                    } else if (filename == '111-115') {
-                        const mag = decMag - 10 * decPart + 111;
-                        gaia111_115[index] = [ra, dec, mag];
+                if (filename == '-100') {
+                    console.log(filename, bufferByteLength);
+                    for (let i = 0; i < bufferByteLength; i += 4) {
+                        const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                        const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                        const mag = (((view.getUint8(i + 2) & 0x0F) << 3) | ((view.getUint8(i + 3) & 0xE0) >> 5)) * 0.1 - 2.0;
+                        gaia100[index] = [ra, dec, mag];
+                        index++;
                     }
-                    index++;
+                } else if (filename == '101-110') {
+                    for (let i = 0; i < bufferByteLength; i += 3) {
+                        const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                        const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                        const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + 10.1;
+                        gaia101_110[index] = [ra, dec, mag];
+                        index++;
+                    }
+                } else if (filename == '111-115') {
+                    for (let i = 0; i < bufferByteLength; i += 3) {
+                        const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                        const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                        const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + 11.1;
+                        gaia111_115[index] = [ra, dec, mag];
+                        index++;
+                    }
                 }
+                // for (let i = 0; i < bufferByteLength; i += 6) {
+                //     const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
+                //     const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
+                //     const decPart = Math.floor(decMag / 10);
+                //     const dec = decPart - 90000;
+                //     if (filename == '101-110') {
+                //         const mag = decMag - 10 * decPart + 101;
+                //         gaia101_110[index] = [ra, dec, mag];
+                //     } else if (filename == '111-115') {
+                //         const mag = decMag - 10 * decPart + 111;
+                //         gaia111_115[index] = [ra, dec, mag];
+                //     }
+                //     index++;
+                // }
                 xhrcheck++;
                 if (impflag) xhrimpcheck++;
                 loaded.push(filename)
@@ -3763,9 +3794,10 @@ async function loadFiles() {
         });
 
         //gaia offlineはまだ
-        await loadCsvData('gaia_-100', (data) => {
-            gaia100 = data;
-        });
+        await loadGaiaBinData("-100");
+        // await loadCsvData('gaia_-100', (data) => {
+        //     gaia100 = data;
+        // });
         await loadFile("gaia_-100_helper", (data) => {
             gaia100_help = data.split(',').map(Number);
         });
