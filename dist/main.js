@@ -224,7 +224,7 @@ export async function main() {
         const renderer = new CanvasRenderer(canvas, config);
         // imageCacheの初期化
         const imageCache = {};
-        const imageCacheNames = ['M31'];
+        const imageCacheNames = ['M31', 'クレセント星雲'];
         for (const name of imageCacheNames) {
             const img = new Image();
             img.src = `./chartImage/overlay/${name}.png`;
