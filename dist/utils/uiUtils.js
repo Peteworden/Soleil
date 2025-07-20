@@ -37,10 +37,16 @@ export function updateInfoDisplay() {
     // 中心座標情報を更新
     if (centerInfo) {
         const { centerRA, centerDec, centerAlt, centerAz } = config.viewState;
-        const raHours = Math.floor(centerRA / 15);
-        const raMinutes = Math.floor((centerRA % 15) * 4);
+        let centerRArounded = Math.round(centerRA * 4 * 10);
+        if (centerRArounded == 1440)
+            centerRArounded = 0;
+        const raHours = Math.floor(centerRArounded / 600);
+        const raMinutes = Math.floor((centerRArounded % 600) / 10) + "." + Math.floor(centerRArounded % 10);
         const decSign = centerDec >= 0 ? '+' : '';
-        const centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${centerDec.toFixed(1)}°<br>高度${centerAlt.toFixed(1)}°, 方位角${centerAz.toFixed(1)}°`;
+        let centerDecrounded = Math.round(Math.abs(centerDec) * 60);
+        const decDegrees = Math.floor(centerDecrounded / 60);
+        const decMinutes = Math.floor(centerDecrounded % 60);
+        const centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${decDegrees}°${decMinutes}'<br>高度${centerAlt.toFixed(1)}°, 方位角${centerAz.toFixed(1)}°`;
         centerInfo.innerHTML = centerText;
     }
     // 視野角情報を更新

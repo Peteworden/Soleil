@@ -63,6 +63,7 @@ export class SearchController {
         const container = document.getElementById('suggestionButtonContainer');
         if (!container)
             return;
+        console.log("displaySearchResults", query);
         // 検索結果をクリア
         container.innerHTML = '';
         // queryで始まるものと始まらないが含むものを分ける
@@ -87,7 +88,9 @@ export class SearchController {
             // 「数字のみ」「m+数字」のときのみ検索
             if ((query[0] === 'm' && this.isInteger(query.slice(1))) || this.isInteger(query)) {
                 const queryNumber = this.isInteger(query) ? query : query.slice(1);
+                console.log(queryNumber, DataStore.messierData.length);
                 for (const messier of DataStore.messierData) {
+                    console.log(messier.getNumberChar(), queryNumber);
                     if (messier.getNumberChar() === queryNumber) {
                         matchMessierStart.push({ title: messier.getName(), position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec } });
                         break;

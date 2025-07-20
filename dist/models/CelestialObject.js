@@ -38,7 +38,7 @@ export class MessierObject extends CelestialObject {
             };
         }
         else {
-            this.overlay = { width: 1, opacity: 0.5 };
+            this.overlay = null;
         }
         this.description = description || '';
     }
@@ -55,7 +55,12 @@ export class MessierObject extends CelestialObject {
         return this.type || '';
     }
     getOverlay() {
-        return this.overlay;
+        if (this.overlay !== null && this.overlay !== undefined && this.overlay.width !== null && this.overlay.opacity !== null) {
+            return this.overlay;
+        }
+        else {
+            return null;
+        }
     }
     getDescription() {
         return this.description;

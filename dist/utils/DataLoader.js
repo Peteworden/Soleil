@@ -35,31 +35,36 @@ export class DataLoader {
         const buffer = await response.arrayBuffer();
         const view = new DataView(buffer);
         const bufferByteLength = buffer.byteLength;
-        let index = 0;
         let gaia = [];
-        if (url == 'data/gaia_-100.bin') {
-            gaia = new Array(505972).fill(0);
-        }
-        else if (url == 'data/gaia_101-110.bin') {
-            gaia = new Array(800359).fill(0);
-        }
-        else if (url == 'data/gaia_111-115.bin') {
-            gaia = new Array(666677).fill(0);
-        }
-        for (let i = 0; i < bufferByteLength; i += 6) {
-            const ra = (view.getUint8(i) << 16) | (view.getUint8(i + 1) << 8) | view.getUint8(i + 2);
-            const decMag = (view.getUint8(i + 3) << 16) | (view.getUint8(i + 4) << 8) | view.getUint8(i + 5);
-            const decPart = Math.floor(decMag / 10);
-            const dec = decPart - 90000;
-            let mag = 0;
-            if (url == 'data/gaia_101-110.bin') {
-                mag = decMag - 10 * decPart + 101;
+        if (url == 'data/gaia_-100_liten250719.bin') {
+            const count = Math.floor(bufferByteLength / 4);
+            gaia = new Array(count);
+            for (let i = 0; i < bufferByteLength; i += 4) {
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                const mag = (((view.getUint8(i + 2) & 0x0F) << 3) | ((view.getUint8(i + 3) & 0xE0) >> 5)) * 0.1 - 2.0;
+                gaia[i >> 2] = [ra, dec, mag];
             }
-            else if (url == 'data/gaia_111-115.bin') {
-                mag = decMag - 10 * decPart + 111;
+        }
+        else if (url == 'data/gaia_101-110_liten250719.bin') {
+            const count = Math.floor(bufferByteLength / 3);
+            gaia = new Array(count);
+            for (let i = 0; i < bufferByteLength; i += 3) {
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + 10.1;
+                gaia[i / 3] = [ra, dec, mag];
             }
-            gaia[index] = [ra, dec, mag];
-            index++;
+        }
+        else if (url == 'data/gaia_111-115_liten250719.bin') {
+            const count = Math.floor(bufferByteLength / 3);
+            gaia = new Array(count);
+            for (let i = 0; i < bufferByteLength; i += 3) {
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + 11.1;
+                gaia[i / 3] = [ra, dec, mag];
+            }
         }
         return gaia;
     }
@@ -118,7 +123,16 @@ export class DataLoader {
         const data = await this.fetchJson('data/rec.json');
         const rec = [];
         for (const object of data) {
-            rec.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.overlay, object.description));
+            let ra, dec;
+            if (object.ra.includes(' ')) {
+                ra = converter.rahmToDeg(object.ra);
+                dec = converter.decdmToDeg(object.dec);
+            }
+            else {
+                ra = +object.ra;
+                dec = +object.dec;
+            }
+            rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.overlay, object.description));
         }
         return rec;
     }
@@ -142,10 +156,16 @@ export class DataLoader {
     // Gaiaデータの読み込み
     static async loadGaiaData(magnitudeRange) {
         if (magnitudeRange == '-100') {
-            return await this.fetchCsvData(`data/gaia_${magnitudeRange}.csv`);
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}_liten250719.bin`);
+        }
+        else if (magnitudeRange == '101-110') {
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}_liten250719.bin`);
+        }
+        else if (magnitudeRange == '111-115') {
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}_liten250719.bin`);
         }
         else {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
+            throw new Error(`Invalid magnitude range: ${magnitudeRange}`);
         }
     }
     static async loadGaiaHelpData(magnitudeRange) {

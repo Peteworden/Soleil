@@ -1,10 +1,16 @@
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { MessierObject } from '../models/CelestialObject.js';
+import { HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
         this.imageCache = {};
+        this.areaCandidatesCache = null;
+        this.precessionCache = null;
+        this.hipStarsCache = null;
+        this.gaiaDataCache1 = null;
+        this.gaiaDataCache2 = null;
+        this.gaiaDataCache3 = null;
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context)
@@ -29,7 +35,7 @@ export class CanvasRenderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
     // 天体を描画
-    drawObject(object) {
+    drawObject(object, nameCorner) {
         const coordsJ2000 = object.getCoordinates();
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
@@ -62,10 +68,16 @@ export class CanvasRenderer {
         PD       Photographic plate defect
         */
         this.ctx.beginPath();
+        if (nameCorner == 'bottom-right') {
+            this.ctx.fillText(object.getName(), x + 5, y + 10);
+        }
+        else {
+            this.ctx.fillText(object.getName(), x + 5, y - 5);
+        }
         if (type === 'Gx') { // Galaxy, 楕円
             this.ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2);
             this.ctx.stroke();
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else if (['OC', 'C+N', 'Ast'].includes(type || '')) { // Open Cluster, 上三角形
             this.ctx.moveTo(x, y - 6);
@@ -73,12 +85,12 @@ export class CanvasRenderer {
             this.ctx.lineTo(x - 4, y + 3);
             this.ctx.lineTo(x, y - 6);
             this.ctx.stroke();
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else if (type == 'Gb') { // Globular Cluster, 円
             this.ctx.arc(x, y, 4, 0, Math.PI * 2);
             this.ctx.stroke();
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else if (['Nb', 'Pl', 'Kt'].includes(type || '')) { // Nebula, 正方形
             this.ctx.moveTo(x, y - 6);
@@ -87,7 +99,7 @@ export class CanvasRenderer {
             this.ctx.lineTo(x - 6, y);
             this.ctx.lineTo(x, y - 6);
             this.ctx.stroke();
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else if (['DS', 'TS', 'SS'].includes(type || '')) { // Star, 星
             const a = Math.PI / 5;
@@ -105,7 +117,7 @@ export class CanvasRenderer {
             this.ctx.lineTo(x + c * Math.sin(9 * a), y - c * Math.cos(9 * a));
             this.ctx.lineTo(x, y - b);
             this.ctx.stroke();
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else { // ×印
             this.ctx.moveTo(x - 4, y - 4);
@@ -113,12 +125,13 @@ export class CanvasRenderer {
             this.ctx.moveTo(x + 4, y - 4);
             this.ctx.lineTo(x - 4, y + 4);
             this.ctx.stroke();
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         if (object instanceof MessierObject &&
             ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
             object.getName() in this.imageCache &&
-            this.config.viewState.fieldOfViewRA < 30) {
+            object.getOverlay() !== null &&
+            this.config.viewState.fieldOfViewRA < 20) {
             const img = this.imageCache[object.getName()];
             // 画像が正常に読み込まれているかチェック
             if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -154,9 +167,11 @@ export class CanvasRenderer {
         }
         this.ctx.restore();
     }
-    drawJsonObject(objects) {
+    drawJsonObject(objects, nameCorner) {
+        if (objects.length == 0)
+            return;
         for (const object of objects) {
-            this.drawObject(object);
+            this.drawObject(object, nameCorner);
         }
     }
     drawMessier(messierObjects) {
@@ -172,18 +187,19 @@ export class CanvasRenderer {
     drawNGC(ngcObjects) {
         if (!this.config.displaySettings.showNGC)
             return;
-        this.drawJsonObject(ngcObjects);
+        this.drawJsonObject(ngcObjects, 'bottom-right');
     }
     drawSolarSystemObjects() {
         if (!this.config.displaySettings.showPlanets)
             return;
-        const siderealTime = window.config.siderealTime;
+        const objects = SolarSystemDataManager.getAllObjects();
+        if (objects.length == 0)
+            return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const zeroMagSize = this.starSize_0mag(this.config);
-        this.ctx.font = '16px Arial';
+        this.ctx.font = '18px Arial';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
-        const objects = SolarSystemDataManager.getAllObjects();
         for (const object of objects) {
             if (object.getType() === 'sun') {
                 this.drawSun(object);
@@ -197,6 +213,9 @@ export class CanvasRenderer {
             else if (object.getType() === 'asteroid') {
                 this.drawMinorObject(object, limitingMagnitude, zeroMagSize);
             }
+            else if (object.getType() === 'comet') {
+                this.drawMinorObject(object, limitingMagnitude, zeroMagSize);
+            }
         }
     }
     drawSun(sun) {
@@ -207,7 +226,7 @@ export class CanvasRenderer {
             return;
         const [x, y] = screenXY[1];
         const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fieldOfViewRA, 13);
-        this.ctx.font = '16px serif';
+        this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'yellow';
         this.ctx.beginPath();
@@ -217,7 +236,7 @@ export class CanvasRenderer {
     }
     drawPlanet(planet, limitingMagnitude, zeroMagSize) {
         const siderealTime = window.config.siderealTime;
-        this.ctx.font = '16px serif';
+        this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
         const coords = planet.getRaDec();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
@@ -274,7 +293,7 @@ export class CanvasRenderer {
         else {
             return;
         }
-        this.ctx.font = '16px serif';
+        this.ctx.font = '18x serif';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
@@ -304,7 +323,7 @@ export class CanvasRenderer {
     }
     drawMinorObject(minorObject, limitingMagnitude, zeroMagSize) {
         const siderealTime = window.config.siderealTime;
-        this.ctx.font = '14px serif';
+        this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
         const coords = minorObject.getRaDec();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
@@ -320,16 +339,31 @@ export class CanvasRenderer {
         this.ctx.fillText(minorObject.getJapaneseName(), x + 2, y - 2);
     }
     drawHipStars(hipStars) {
+        if (hipStars.length == 0)
+            return;
         if (!this.config.displaySettings.showStars)
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const siderealTime = window.config.siderealTime;
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
+        const currentJd = window.config.displayTime.jd;
+        // 歳差運動補正をキャッシュ
+        let precessionAngle;
+        if (this.precessionCache && Math.abs(this.precessionCache.jd - currentJd) < 10.0) {
+            precessionAngle = this.precessionCache.angle;
+        }
+        else {
+            precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
+            this.precessionCache = { angle: precessionAngle, jd: currentJd };
+        }
+        // キャッシュされたHIP星データを使用
+        const cachedStars = this.getCachedHipStars(hipStars, currentJd);
+        if (cachedStars.length == 0)
+            return;
         const zeroMagSize = this.starSize_0mag(this.config);
-        for (const star of hipStars) {
+        for (const star of cachedStars) {
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
-            const coords = this.coordinateConverter.precessionEquatorial(star.getCoordinates(), precessionAngle);
+            const coords = star.getCoordinates();
             const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
             if (!screenXY[0])
                 continue;
@@ -341,12 +375,25 @@ export class CanvasRenderer {
         }
     }
     writeStarNames(starNames) {
+        if (starNames.length == 0)
+            return;
         const showStarNames = this.config.displaySettings.showStarNames;
         if (this.config.displaySettings.showStarNames == 'off')
             return;
+        if (starNames.length == 0)
+            return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const siderealTime = window.config.siderealTime;
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
+        const currentJd = window.config.displayTime.jd;
+        // 歳差運動補正をキャッシュ
+        let precessionAngle;
+        if (this.precessionCache && Math.abs(this.precessionCache.jd - currentJd) < 10.0) {
+            precessionAngle = this.precessionCache.angle;
+        }
+        else {
+            precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
+            this.precessionCache = { angle: precessionAngle, jd: currentJd };
+        }
         const zeroMagSize = this.starSize_0mag(this.config);
         const tier_range = [180, 90, 60, 40, 30, 30];
         let tierLimit = 3;
@@ -384,30 +431,79 @@ export class CanvasRenderer {
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
         if (!this.config.displaySettings.showStars)
             return;
+        if (!gaiaData || gaiaData.length == 0)
+            return;
+        if (!gaiaHelpData || gaiaHelpData.length == 0)
+            return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         if (brightestMagnitude > limitingMagnitude)
             return;
+        let gaiaNum = 0;
+        if (brightestMagnitude < 10) {
+            gaiaNum = 1;
+        }
+        else if (brightestMagnitude === 10.1) {
+            gaiaNum = 2;
+        }
+        else if (brightestMagnitude === 11.1) {
+            gaiaNum = 3;
+        }
+        else {
+            console.error("brightestMagnitude looks strange: ", brightestMagnitude);
+            return;
+        }
         const siderealTime = window.config.siderealTime;
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
-        const zeroMagSize = this.starSize_0mag(this.config);
+        const currentJd = window.config.displayTime.jd;
+        // 歳差運動補正をキャッシュ
+        let precessionAngle;
+        let recalculate = false;
+        if (this.precessionCache && Math.abs(this.precessionCache.jd - currentJd) < 10.0) {
+            precessionAngle = this.precessionCache.angle;
+        }
+        else {
+            precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
+            this.precessionCache = { angle: precessionAngle, jd: currentJd };
+            recalculate = true;
+        }
+        // キャッシュされたGaiaデータを使用
+        // const cachedGaiaData = this.getCachedGaiaData(gaiaNum, gaiaData, currentJd);
+        // const cachedGaiaData = gaiaData;
+        // if (cachedGaiaData.length == 0) return;
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
-        for (const area of this.areaCandidates()) {
-            let st = gaiaHelpData[area[0]];
-            let fi = gaiaHelpData[area[1] + 1];
-            for (let i = st; i < fi; i++) {
-                const data = gaiaData[i];
-                const mag = data[2] * 0.1;
-                if (mag >= limitingMagnitude)
-                    continue;
-                const coordsJ2000 = { ra: data[0] * 0.001, dec: data[1] * 0.001 };
-                const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
-                if (!screenXY[0])
-                    continue;
-                const [x, y] = screenXY[1];
-                this.ctx.moveTo(x, y);
-                this.ctx.arc(x, y, this.getStarSize(mag, limitingMagnitude, zeroMagSize), 0, Math.PI * 2);
+        const zeroMagSize = this.starSize_0mag(this.config);
+        // キャッシュされた領域候補を使用（毎回計算しない）
+        const areas = this.areaCandidates();
+        for (const area of areas) {
+            for (let unit = area[0]; unit < area[1] + 1; unit++) {
+                const raInt = unit % 360;
+                const decInt = Math.floor(unit / 360) - 90;
+                const st = gaiaHelpData[unit];
+                const fi = gaiaHelpData[unit + 1];
+                // バッチ処理で座標変換を最適化
+                for (let i = st; i < fi; i++) {
+                    const data = gaiaData[i];
+                    const mag = data[2];
+                    if (mag >= limitingMagnitude)
+                        continue;
+                    // 座標計算を最適化（既に歳差運動補正済み）
+                    const ra = raInt + data[0];
+                    const dec = decInt + data[1];
+                    const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
+                    const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+                    if (!screenXY[0])
+                        continue;
+                    const [x, y] = screenXY[1];
+                    const starSize = this.getStarSize(mag, limitingMagnitude, zeroMagSize);
+                    // 小さな星は描画を最適化
+                    if (starSize < 0.5) {
+                        this.ctx.rect(x - 0.5, y - 0.5, 1, 1);
+                    }
+                    else {
+                        this.ctx.moveTo(x, y);
+                        this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+                    }
+                }
             }
         }
         this.ctx.fill();
@@ -583,6 +679,8 @@ export class CanvasRenderer {
     }
     // 星座線
     drawConstellationLines(constellations) {
+        if (constellations.length == 0)
+            return;
         if (!this.config.displaySettings.showConstellationLines)
             return;
         this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
@@ -615,6 +713,8 @@ export class CanvasRenderer {
         this.ctx.stroke();
     }
     writeConstellationNames(constellations) {
+        if (constellations.length == 0)
+            return;
         if (!this.config.displaySettings.showConstellationNames)
             return;
         this.ctx.font = '16px Arial';
@@ -775,50 +875,59 @@ export class CanvasRenderer {
             ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[edgeRA.length - 1] - edgeRA[0] + 360) * edgeRA[edgeRA.length - 1]);
         }
         if (np) {
-            if (ra0Dec.length !== 1) {
-                // console.log("np but ra0Dec.length !== 1", ra0Dec);
-            }
-            else {
-                // console.log("np ra0Dec.length === 1", ra0Dec);
+            if (ra0Dec.length === 1) {
                 segments.push({
                     ra1: 0, dec1: ra0Dec[0],
                     ra2: 0, dec2: 89.9
                 });
                 segments.push({
-                    ra1: 359.99, dec1: ra0Dec[0],
-                    ra2: 359.99, dec2: 89.9
+                    ra1: 359.999, dec1: ra0Dec[0],
+                    ra2: 359.999, dec2: 89.9
                 });
             }
         }
         else if (sp) {
-            if (ra0Dec.length !== 1) {
-                // console.log("sp but ra0Dec.length !== 1", ra0Dec);
-            }
-            else {
+            if (ra0Dec.length === 1) {
                 segments.push({
                     ra1: 0, dec1: -90,
                     ra2: 0, dec2: ra0Dec[0]
                 });
                 segments.push({
-                    ra1: 359.99, dec1: ra0Dec[0],
-                    ra2: 359.99, dec2: -90
+                    ra1: 359.999, dec1: ra0Dec[0],
+                    ra2: 359.999, dec2: -90
                 });
             }
         }
         else if (ra0Dec.length === 2) {
-            // console.log("ra0Dec.length === 2", ra0Dec);
             segments.push({
                 ra1: 0, dec1: ra0Dec[0],
                 ra2: 0, dec2: ra0Dec[1]
             });
             segments.push({
-                ra1: 359.99, dec1: ra0Dec[0],
-                ra2: 359.99, dec2: ra0Dec[1]
+                ra1: 359.999, dec1: ra0Dec[0],
+                ra2: 359.999, dec2: ra0Dec[1]
             });
         }
-        else {
-            // ra0Dec.length !== 0 && ra0Dec.length !== 2
-            // console.log("ra0Dec.length === 0", ra0Dec);
+        else if (ra0Dec.length === 4) {
+            segments.push({
+                ra1: 0, dec1: ra0Dec[0],
+                ra2: 0, dec2: ra0Dec[1]
+            });
+            segments.push({
+                ra1: 359.999, dec1: ra0Dec[0],
+                ra2: 359.999, dec2: ra0Dec[1]
+            });
+            segments.push({
+                ra1: 0, dec1: ra0Dec[2],
+                ra2: 0, dec2: ra0Dec[3]
+            });
+            segments.push({
+                ra1: 359.999, dec1: ra0Dec[2],
+                ra2: 359.999, dec2: ra0Dec[3]
+            });
+        }
+        else if (ra0Dec.length > 0) {
+            console.log(ra0Dec);
         }
         // 赤緯の範囲を1度ずつ処理
         for (let dec = Math.floor(Dec_min); dec <= Math.floor(Dec_max); dec++) {
@@ -872,12 +981,18 @@ export class CanvasRenderer {
         return candidates;
     }
     areaCandidates() {
+        // キャッシュをチェック（設定が変更されていない場合）
+        const currentTime = Date.now();
+        if (this.areaCandidatesCache &&
+            currentTime - this.areaCandidatesCache.timestamp < 100) { // 100ms以内ならキャッシュを使用
+            return this.areaCandidatesCache.areas;
+        }
         const edgeRA = [];
         const edgeDec = [];
         const raWidth = this.config.viewState.fieldOfViewRA * 0.5 + 1.0;
         const decWidth = this.config.viewState.fieldOfViewDec * 0.5 + 1.0;
         const siderealTime = window.config.siderealTime;
-        const jd = window.config.jd;
+        const jd = window.config.displayTime.jd;
         const currentNorthPoleJ2000 = this.coordinateConverter.precessionEquatorial({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
         const currentSouthPoleJ2000 = this.coordinateConverter.precessionEquatorial({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
         if (this.config.displaySettings.mode == 'AEP') {
@@ -922,6 +1037,11 @@ export class CanvasRenderer {
                 screenDec += dscreenDec;
             }
             const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
+            // キャッシュを更新
+            this.areaCandidatesCache = {
+                areas: areaCandidates,
+                timestamp: currentTime
+            };
             return areaCandidates;
         }
         else if (this.config.displaySettings.mode == 'view') {
@@ -968,6 +1088,11 @@ export class CanvasRenderer {
                 screenDec += dscreenDec;
             }
             const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
+            // キャッシュを更新
+            this.areaCandidatesCache = {
+                areas: areaCandidates,
+                timestamp: currentTime
+            };
             return areaCandidates;
         }
         return [];
@@ -984,6 +1109,74 @@ export class CanvasRenderer {
         edgeRA.push(equatorial.ra);
         edgeDec.push(equatorial.dec);
     }
+    // HIP星データ全体を歳差運動補正してキャッシュ
+    getCachedHipStars(hipStars, jd) {
+        if (!hipStars || hipStars.length === 0) {
+            return [];
+        }
+        // console.log("HIP cache check:", this.hipStarsCache?.jd, jd);
+        if (this.hipStarsCache && Math.abs(this.hipStarsCache.jd - jd) < 10.0) {
+            return this.hipStarsCache.stars;
+        }
+        // 新しいHIP星データを作成（歳差運動補正済み）
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', jd);
+        console.log("HIP precession angle:", precessionAngle);
+        const correctedStars = hipStars.map(star => {
+            const originalCoords = star.getCoordinates();
+            const correctedCoords = this.coordinateConverter.precessionEquatorial(originalCoords, precessionAngle);
+            return new HipStar(correctedCoords, star.getMagnitude(), star.getBv());
+        });
+        this.hipStarsCache = { stars: correctedStars, jd };
+        console.log("HIP cache created with", correctedStars.length, "stars");
+        return correctedStars;
+    }
+    // Gaiaデータ全体を歳差運動補正してキャッシュ
+    getCachedGaiaData(gaianum, gaiaData, jd) {
+        if (!gaiaData || gaiaData.length === 0) {
+            return [];
+        }
+        if (gaianum == 1) {
+            // console.log(this.gaiaDataCache1?.jd, jd);
+            if (this.gaiaDataCache1 && Math.abs(this.gaiaDataCache1.jd - jd) < 10.0) {
+                return this.gaiaDataCache1.data;
+            }
+        }
+        else if (gaianum == 2) {
+            // console.log(this.gaiaDataCache1?.jd, jd);
+            if (this.gaiaDataCache2 && Math.abs(this.gaiaDataCache2.jd - jd) < 10.0) {
+                return this.gaiaDataCache2.data;
+            }
+        }
+        else if (gaianum == 3) {
+            // console.log(this.gaiaDataCache1?.jd, jd);
+            if (this.gaiaDataCache3 && Math.abs(this.gaiaDataCache3.jd - jd) < 10.0) {
+                return this.gaiaDataCache3.data;
+            }
+        }
+        else {
+            console.error("gaianum looks strange: ", gaianum);
+            return [];
+        }
+        // 新しいGaiaデータを作成（歳差運動補正済み）
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', jd);
+        console.log("Gaia", gaianum, "precession angle:", precessionAngle);
+        const correctedData = gaiaData.map(star => {
+            const [ra, dec, mag] = star;
+            const correctedCoords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
+            return [correctedCoords.ra, correctedCoords.dec, mag];
+        });
+        if (gaianum == 1) {
+            this.gaiaDataCache1 = { data: correctedData, jd };
+        }
+        else if (gaianum == 2) {
+            this.gaiaDataCache2 = { data: correctedData, jd };
+        }
+        else if (gaianum == 3) {
+            this.gaiaDataCache3 = { data: correctedData, jd };
+        }
+        console.log("Gaia", gaianum, "cache created with", correctedData.length, "stars");
+        return correctedData;
+    }
     // 描画オプションを更新
     updateOptions(options) {
         const globalConfig = window.config;
@@ -996,6 +1189,19 @@ export class CanvasRenderer {
         // グローバルconfigも確実に更新
         if (globalConfig) {
             Object.assign(globalConfig, options);
+        }
+        // 設定が変更されたらキャッシュをクリア
+        if (options.viewState || options.displaySettings) {
+            this.areaCandidatesCache = null;
+        }
+        // 時刻が変更されたらキャッシュをクリア
+        if (options.displayTime) {
+            this.areaCandidatesCache = null;
+            this.precessionCache = null;
+            this.hipStarsCache = null;
+            this.gaiaDataCache1 = null;
+            this.gaiaDataCache2 = null;
+            this.gaiaDataCache3 = null;
         }
     }
 }
