@@ -55,7 +55,7 @@
         </ul>
     </div>
 
-    <div id="announcement" style="width: 100%; height: 100%; background-color: #000000; color: #ffffff; padding: 20px; position: fixed; top: 0; left: 0; z-index: 1000; overflow-y: scroll;">
+    <div id="announcement" style="width: 100%; height: 100%; background-color: #333333; color: #ffffff; padding: 20px; position: fixed; top: 0; left: 0; z-index: 1000; overflow-y: scroll;">
         <h3>お知らせ</h3>
         <p>
             これまでお使いいただいていた星図（JavaScript）をベースに、
@@ -69,7 +69,7 @@
             <button id="newVersion" type="button" onclick="document.getElementById('announcement').style.display='none'" style="color: #ffffff;">新バージョン</button>
         </div>
         <p><span style="color: orange;">星図を開いてからバージョンを変えたい場合は、リロードするか、画面左上にリンクがある「HOME」を経由してください。</span></p>
-        <p>旧バージョンにしかない機能（今後新バージョンにも実装予定）</p>
+        <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
         <ul>
             <li>リアルタイム更新</li>
             <li>惑星の明るさの計算</li>
@@ -79,12 +79,13 @@
             <li>ダークモード</li>
             <li>2000.0年分点による座標の表示</li>
             <li>メニューページ</li>
+            <li>URLによる状態の保存</li>
         </ul>
         <p>新バージョンにしかない機能</p>
         <ul>
             <li>星雲イラストの表示</li>
             <li>描画の高速化</li>
-            <li>今後これまで以上にできることを増やす予定</li>
+            <li>今後旧バージョン以上にできることを増やす予定</li>
         </ul>
     </div>
 
@@ -379,7 +380,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250720-1430';
+        import { main } from './dist/main.js?v=250721-0300';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

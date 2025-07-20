@@ -287,6 +287,7 @@ export async function main() {
                     for (const messier of messierData) {
                         if (messier.getOverlay() !== null && messier.getOverlay() !== undefined && messier.getName() !== null && messier.getName() !== undefined) {
                             imageCacheNames.push(messier.getName());
+                            console.log(messier.getName(), messier.getOverlay());
                         }
                     }
                 }
@@ -302,7 +303,6 @@ export async function main() {
                         const img = new Image();
                         img.src = `./chartImage/overlay/${name}.PNG`;
                         imageCache[name] = img;
-                        console.log("overlay:", name);
                     }
                     catch (error) {
                         console.error(`Error loading image for ${name}:`, error);
@@ -333,21 +333,6 @@ export async function main() {
         window.controller = controller;
         setupButtonEvents();
         setupResizeHandler();
-        // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
-        // SettingController.loadSettingsFromConfig();
-        // // 時刻コントローラーを初期化
-        // TimeController.initialize();
-        // // 観測地コントローラーを初期化
-        // ObservationSiteController.initialize();
-        // updateInfoDisplay();
-        // setupTimeUpdate();
-        // // 描画
-        // renderAll();
-        document.getElementById('loadingtext').innerHTML = 'storing...';
-        // DataStore.hipStars = hipStars;
-        // DataStore.gaia100Data = gaia100Data;
-        // DataStore.gaia101_110Data = gaia101_110Data;
-        // DataStore.gaia111_115Data = gaia111_115Data;
         document.getElementById('loadingtext').innerHTML = '';
     }
     catch (error) {
