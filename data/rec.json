@@ -369,8 +369,47 @@
         "ra": "21 1.6",
         "dec": "+68 10",
         "vmag": "6.8",
+        "class": "Nb",
         "overlay": { "width": 1.5, "opacity": 0.5 },
         "description": "アイリス星雲"
+    },
+    {
+        "name": "らせん星雲",
+        "alt_name": [
+            "NGC7293"
+        ],
+        "ra": "22 29.6",
+        "dec": "-20 50",
+        "vmag": "13.5",
+        "class": "Nb",
+        "overlay": { "width": 0.4, "opacity": 0.5 },
+        "description": "直径が15'ぐらいもある、大きさ以外はリング星雲に似た惑星状星雲。大きい分暗い。"
+    },
+    {
+        "name": "網状星雲(西側) ",
+        "alt_name": [
+            "NGC6960",
+            "あみじょうせいうんにしがわ"
+        ],
+        "ra": "311.43",
+        "dec": "+30.72",
+        "vmag": "100",
+        "class": "Nb",
+        "overlay": { "width": 1.5, "opacity": 0.5 },
+        "description": "網状星雲。NGC 6960"
+    },
+    {
+        "name": "網状星雲(東側) ",
+        "alt_name": [
+            "NGC6992",
+            "あみじょうせいうんひがし"
+        ],
+        "ra": "314.10",
+        "dec": "+31.72",
+        "vmag": "100",
+        "class": "Nb",
+        "overlay": { "width": 2.0, "opacity": 0.5 },
+        "description": "網状星雲。NGC 6992-5"
     },
     {
         "name": "アルビレオ",

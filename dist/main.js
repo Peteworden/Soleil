@@ -159,6 +159,7 @@ export function updateConfig(newConfig) {
     }
     // 時刻関連の更新があればTimeControllerも更新
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
+        window.renderer.updateOptions(newConfig);
         // TimeController.initialize();
     }
     window.renderAll();
@@ -193,25 +194,19 @@ export async function main() {
     if (!app)
         return;
     try {
-        // データの読み込み
-        const [hipStars, gaia100Data, gaia101_110Data, gaia111_115Data, gaia100HelpData, gaia101_110HelpData, gaia111_115HelpData, constellationData, messierData, recData, ngcData, starNames] = await Promise.all([
-            DataLoader.loadHIPData(),
-            DataLoader.loadGaiaData('-100'),
-            DataLoader.loadGaiaData('101-110'),
-            DataLoader.loadGaiaData('111-115'),
-            DataLoader.loadGaiaHelpData('-100'),
-            DataLoader.loadGaiaHelpData('101-110'),
-            DataLoader.loadGaiaHelpData('111-115'),
-            DataLoader.loadConstellationData(),
-            DataLoader.loadMessierData(),
-            DataLoader.loadRecData(),
-            DataLoader.loadNGCData(),
-            DataLoader.loadStarNames(),
-        ]);
-        await SolarSystemController.initialize();
-        document.getElementById('loadingtext').innerHTML = 'setting...';
-        // ★ 初回読み込み時に全太陽系天体データを更新
-        SolarSystemDataManager.updateAllData(config.displayTime.jd);
+        // データの読み込み（段階的に）
+        let hipStars = [];
+        let gaia100Data = [];
+        let gaia101_110Data = [];
+        let gaia111_115Data = [];
+        let gaia100HelpData = [];
+        let gaia101_110HelpData = [];
+        let gaia111_115HelpData = [];
+        let constellationData = [];
+        let messierData = [];
+        let recData = [];
+        let ngcData = [];
+        let starNames = [];
         // キャンバスの取得（HTMLで作成済み）
         const canvas = document.getElementById('starChartCanvas');
         if (!canvas) {
@@ -224,13 +219,7 @@ export async function main() {
         const renderer = new CanvasRenderer(canvas, config);
         // imageCacheの初期化
         const imageCache = {};
-        const imageCacheNames = ['M8', 'M42', 'M31', 'アイリス星雲', 'クレセント星雲'];
-        for (const name of imageCacheNames) {
-            const img = new Image();
-            img.src = `./chartImage/overlay/${name}.png`;
-            imageCache[name] = img;
-        }
-        renderer.setImageCache(imageCache);
+        const imageCacheNames = [];
         function renderAll() {
             renderer.clear();
             renderer.drawGrid();
@@ -248,13 +237,6 @@ export async function main() {
             renderer.drawSolarSystemObjects();
             renderer.drawReticle();
         }
-        const controller = new InteractionController(canvas, config, renderAll);
-        // renderAll関数とrenderer、controllerをグローバルに公開
-        window.renderAll = renderAll;
-        window.renderer = renderer;
-        window.controller = controller;
-        setupButtonEvents();
-        setupResizeHandler();
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
         SettingController.loadSettingsFromConfig();
         // 時刻コントローラーを初期化
@@ -263,18 +245,109 @@ export async function main() {
         ObservationSiteController.initialize();
         updateInfoDisplay();
         setupTimeUpdate();
-        // 描画
-        renderAll();
+        // 段階的なデータ読み込みとレンダリング
+        const loadDataStep = async () => {
+            try {
+                const [constellationDataResult, hipStarsResult] = await Promise.all([
+                    DataLoader.loadConstellationData(),
+                    DataLoader.loadHIPData()
+                ]);
+                constellationData = constellationDataResult;
+                hipStars = hipStarsResult;
+                // 基本的なデータが読み込まれたら即座にレンダリング
+                renderAll();
+                const [messierDataResult, recDataResult, gaia100DataResult, gaia100HelpDataResult] = await Promise.all([
+                    DataLoader.loadMessierData(),
+                    DataLoader.loadRecData(),
+                    DataLoader.loadGaiaData('-100'),
+                    DataLoader.loadGaiaHelpData('-100'),
+                ]);
+                messierData = messierDataResult;
+                recData = recDataResult;
+                gaia100Data = gaia100DataResult;
+                gaia100HelpData = gaia100HelpDataResult;
+                renderAll();
+                const [ngcDataResult, starNamesResult, gaia101_110DataResult, gaia101_110HelpDataResult, gaia111_115DataResult, gaia111_115HelpDataResult,] = await Promise.all([
+                    DataLoader.loadNGCData(),
+                    DataLoader.loadStarNames(),
+                    DataLoader.loadGaiaData('101-110'),
+                    DataLoader.loadGaiaHelpData('101-110'),
+                    DataLoader.loadGaiaData('111-115'),
+                    DataLoader.loadGaiaHelpData('111-115')
+                ]);
+                ngcData = ngcDataResult;
+                starNames = starNamesResult;
+                gaia101_110Data = gaia101_110DataResult;
+                gaia101_110HelpData = gaia101_110HelpDataResult;
+                gaia111_115Data = gaia111_115DataResult;
+                gaia111_115HelpData = gaia111_115HelpDataResult;
+                renderAll();
+                // imageCacheの更新
+                if (messierData.length > 0) {
+                    for (const messier of messierData) {
+                        if (messier.getOverlay() !== null && messier.getOverlay() !== undefined && messier.getName() !== null && messier.getName() !== undefined) {
+                            imageCacheNames.push(messier.getName());
+                        }
+                    }
+                }
+                if (recData.length > 0) {
+                    for (const rec of recData) {
+                        if (rec.getOverlay() !== null && rec.getOverlay() !== undefined && rec.getName() !== null && rec.getName() !== undefined) {
+                            imageCacheNames.push(rec.getName());
+                        }
+                    }
+                }
+                for (const name of imageCacheNames) {
+                    try {
+                        const img = new Image();
+                        img.src = `./chartImage/overlay/${name}.PNG`;
+                        imageCache[name] = img;
+                        console.log("overlay:", name);
+                    }
+                    catch (error) {
+                        console.error(`Error loading image for ${name}:`, error);
+                    }
+                }
+                renderer.setImageCache(imageCache);
+                // 最終レンダリング
+                renderAll();
+                DataStore.hipStars = hipStars;
+                DataStore.constellationData = constellationData;
+                DataStore.messierData = messierData;
+                DataStore.recData = recData;
+                DataStore.ngcData = ngcData;
+                DataStore.starNames = starNames;
+            }
+            catch (error) {
+                console.error('データの読み込みに失敗しました:', error);
+            }
+        };
+        // データ読み込みを開始
+        loadDataStep();
+        await SolarSystemController.initialize();
+        SolarSystemDataManager.updateAllData(config.displayTime.jd);
+        const controller = new InteractionController(canvas, config, renderAll);
+        // renderAll関数とrenderer、controllerをグローバルに公開
+        window.renderAll = renderAll;
+        window.renderer = renderer;
+        window.controller = controller;
+        setupButtonEvents();
+        setupResizeHandler();
+        // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
+        // SettingController.loadSettingsFromConfig();
+        // // 時刻コントローラーを初期化
+        // TimeController.initialize();
+        // // 観測地コントローラーを初期化
+        // ObservationSiteController.initialize();
+        // updateInfoDisplay();
+        // setupTimeUpdate();
+        // // 描画
+        // renderAll();
         document.getElementById('loadingtext').innerHTML = 'storing...';
-        DataStore.hipStars = hipStars;
+        // DataStore.hipStars = hipStars;
         // DataStore.gaia100Data = gaia100Data;
         // DataStore.gaia101_110Data = gaia101_110Data;
         // DataStore.gaia111_115Data = gaia111_115Data;
-        DataStore.constellationData = constellationData;
-        DataStore.messierData = messierData;
-        DataStore.recData = recData;
-        DataStore.ngcData = ngcData;
-        DataStore.starNames = starNames;
         document.getElementById('loadingtext').innerHTML = '';
     }
     catch (error) {
