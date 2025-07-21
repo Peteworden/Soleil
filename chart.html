@@ -162,6 +162,15 @@
                         <input type="datetime-local" id="dtl" name="dtl" value=""/>
                         <button id="dtlNow" type="button">現在時刻</button>
                     </div>
+
+                    <div class="setting-row">
+                        <label>リアルタイム表示:</label>
+                        <select id="realTime">
+                            <option value="off" checked>オフ</option>
+                            <option value="radec">赤経・赤緯固定</option>
+                            <option value="azalt">方位・高度固定</option>
+                        </select>
+                    </div>
                     
                     <div class="setting-row">
                         <label>視点:</label>
@@ -237,15 +246,6 @@
                             <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
                             <img src="images/キラキラ2.png" alt="" class="magLimit-image magLimit-right-image">
                         </div>
-                    </div>
-
-                    <div class="setting-row">
-                        <label>リアルタイム表示:</label>
-                        <select id="realTime">
-                            <option value="off" checked>オフ</option>
-                            <option value="radec" disabled>赤経・赤緯固定</option>
-                            <option value="azalt" disabled>方位・高度固定</option>
-                        </select>
                     </div>
 
                     <div class="setting-row">
@@ -380,7 +380,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250721-0300';
+        import { main } from './dist/main.js?v=250721-1900';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

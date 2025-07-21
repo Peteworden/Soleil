@@ -198,23 +198,107 @@ export class TimeController {
         // this.updateSliderValue();
     }
     // リアルタイムモードの切り替え
-    static toggleRealTime() {
+    static toggleRealTime(mode) {
         const config = window.config;
         if (!config)
             return;
-        const newRealTime = config.displayTime.realTime === 'on' ? 'off' : 'on';
-        const updateConfig = window.updateConfig;
-        if (updateConfig) {
-            updateConfig({
-                displayTime: {
-                    ...config.displayTime,
-                    realTime: newRealTime
-                }
-            });
+        if (mode === 'radec') {
+            if (this.intervalId !== null) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            this.intervalId = setInterval(this.realtimeRadec, 500);
+        }
+        else if (mode === 'azalt') {
+            if (this.intervalId !== null) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            this.intervalId = setInterval(this.realtimeAzalt, 500);
+        }
+        else {
+            if (this.intervalId !== null) {
+                clearInterval(this.intervalId);
+                this.intervalId = null;
+            }
+            return;
         }
         this.updateSliderValue();
+    }
+    static realtimeRadec() {
+        const config = window.config;
+        if (!config)
+            return;
+        const now = new Date();
+        if (now.getSeconds() % 1 == 0 && now.getMilliseconds() < 500) {
+            const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
+            const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
+            config.displayTime.jd = jd;
+            const coordinateConverter = new CoordinateConverter();
+            const newCenterHorizontal = coordinateConverter.equatorialToHorizontal({ ra: config.viewState.centerRA, dec: config.viewState.centerDec }, config.siderealTime);
+            config.viewState.centerAz = newCenterHorizontal.az;
+            config.viewState.centerAlt = newCenterHorizontal.alt;
+            const updateConfig = window.updateConfig;
+            if (updateConfig) {
+                updateConfig({
+                    viewState: config.viewState,
+                    displayTime: {
+                        jd: jd,
+                        year: y,
+                        month: m,
+                        day: d,
+                        hour: h,
+                        minute: mi,
+                        second: 0,
+                        realTime: 'radec'
+                    }
+                });
+            }
+            SolarSystemDataManager.updateAllData(jd);
+            const renderAll = window.renderAll;
+            if (renderAll) {
+                renderAll();
+            }
+        }
+    }
+    static realtimeAzalt() {
+        const config = window.config;
+        if (!config)
+            return;
+        const now = new Date();
+        if (now.getSeconds() % 1 == 0 && now.getMilliseconds() < 500) {
+            const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
+            const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
+            config.displayTime.jd = jd;
+            const coordinateConverter = new CoordinateConverter();
+            const newCenterEquatorial = coordinateConverter.horizontalToEquatorial({ az: config.viewState.centerAz, alt: config.viewState.centerAlt }, config.siderealTime);
+            config.viewState.centerRA = newCenterEquatorial.ra;
+            config.viewState.centerDec = newCenterEquatorial.dec;
+            const updateConfig = window.updateConfig;
+            if (updateConfig) {
+                updateConfig({
+                    viewState: config.viewState,
+                    displayTime: {
+                        jd: jd,
+                        year: y,
+                        month: m,
+                        day: d,
+                        hour: h,
+                        minute: mi,
+                        second: 0,
+                        realTime: 'azalt'
+                    }
+                });
+            }
+            SolarSystemDataManager.updateAllData(jd);
+            const renderAll = window.renderAll;
+            if (renderAll) {
+                renderAll();
+            }
+        }
     }
 }
 TimeController.timeSlider = null;
 TimeController.isDragging = false;
+TimeController.intervalId = null;
 //# sourceMappingURL=TimeController.js.map

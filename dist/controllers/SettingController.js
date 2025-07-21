@@ -159,10 +159,20 @@ export class SettingController {
                     second = currentConfig.displayTime.second;
                 }
                 jd = AstronomicalCalculator.jdTTFromYmdhmsJst(year, month, day, hour, minute, second);
+                TimeController.toggleRealTime('off');
             }
             else {
                 jd = AstronomicalCalculator.calculateCurrentJdTT();
                 [year, month, day, hour, minute, second] = AstronomicalCalculator.calculateYmdhmJstFromJdTT(jd);
+                // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
+                const localDateTime = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+                dtlInput.value = localDateTime;
+                if (realTime.value === 'radec') {
+                    TimeController.toggleRealTime('radec');
+                }
+                else if (realTime.value === 'azalt') {
+                    TimeController.toggleRealTime('azalt');
+                }
             }
             const updateConfig = window.updateConfig;
             if (updateConfig) {
@@ -287,6 +297,19 @@ export class SettingController {
             realTime.value = config.displayTime.realTime;
         }
         console.log('🔧 Settings loaded from config to UI');
+    }
+    static setCurrentTimeOnSettingDisplay() {
+        const dtlInput = document.getElementById('dtl');
+        if (dtlInput) {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            const second = String(now.getSeconds()).padStart(2, '0');
+            dtlInput.value = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+        }
     }
 }
 //# sourceMappingURL=SettingController.js.map

@@ -10,7 +10,7 @@ import { InteractionController } from "./renderer/interactionController.js";
 import { AstronomicalCalculator } from './utils/calculations.js';
 import { CoordinateConverter } from './utils/coordinates.js';
 import { DataLoader } from './utils/DataLoader.js';
-import { updateInfoDisplay, handleResize, setupTimeUpdate } from './utils/uiUtils.js';
+import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 // 初期設定を読み込む関数
 function initializeConfig() {
     const savedSettings = localStorage.getItem('config');
@@ -157,6 +157,9 @@ export function updateConfig(newConfig) {
         window.renderer.updateOptions(config.displaySettings);
         window.controller.updateOptions(config.displaySettings);
     }
+    if (newConfig.displayTime) {
+        updateInfoDisplay();
+    }
     // 時刻関連の更新があればTimeControllerも更新
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
         window.renderer.updateOptions(newConfig);
@@ -244,7 +247,6 @@ export async function main() {
         // 観測地コントローラーを初期化
         ObservationSiteController.initialize();
         updateInfoDisplay();
-        setupTimeUpdate();
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
             try {
@@ -382,6 +384,12 @@ function setupButtonEvents() {
             String(now.getHours()).padStart(2, '0') + ':' +
             String(now.getMinutes()).padStart(2, '0');
         console.log(dtl.value);
+    });
+    document.getElementById('realTime')?.addEventListener('change', function () {
+        const realTime = document.getElementById('realTime');
+        if (realTime.value !== 'off') {
+            SettingController.setCurrentTimeOnSettingDisplay();
+        }
     });
     document.getElementById('magLimitSlider')?.addEventListener('change', function () {
         const magLimitSlider = document.getElementById('magLimitSlider');

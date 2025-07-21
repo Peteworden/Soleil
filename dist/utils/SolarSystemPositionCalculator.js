@@ -178,7 +178,6 @@ export class SolarSystemPositionCalculator {
         }
         else if (isMinorObject(object)) {
             if ('orbit' in object) {
-                console.log(object.orbit.e);
                 const orbit = object.orbit;
                 if (orbit.e < 0.999) {
                     this.calculateEllipticOrbitPositions(object, jd);
@@ -377,7 +376,6 @@ export class SolarSystemPositionCalculator {
         const y = coefP * Py + coefQ * Qy;
         const z = coefP * Pz + coefQ * Qz;
         minorObject.xyz = { x: x, y: y, z: z };
-        console.log(x, y, z);
     }
     static calculatePQ(inclDec, nodeDec, periDec) {
         const incl = inclDec * DEG_TO_RAD;

@@ -45,6 +45,10 @@ export class CanvasRenderer {
         const [x, y] = screenXY[1];
         const magnitude = object.getMagnitude();
         const type = object.getType();
+        let markFlag = true;
+        if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay().width < 2.0 * 30.0 / this.canvas.width) {
+            markFlag = false;
+        }
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'orange';
@@ -93,12 +97,14 @@ export class CanvasRenderer {
             // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else if (['Nb', 'Pl', 'Kt'].includes(type || '')) { // Nebula, 正方形
-            this.ctx.moveTo(x, y - 6);
-            this.ctx.lineTo(x + 6, y);
-            this.ctx.lineTo(x, y + 6);
-            this.ctx.lineTo(x - 6, y);
-            this.ctx.lineTo(x, y - 6);
-            this.ctx.stroke();
+            if (markFlag) {
+                this.ctx.moveTo(x, y - 6);
+                this.ctx.lineTo(x + 6, y);
+                this.ctx.lineTo(x, y + 6);
+                this.ctx.lineTo(x - 6, y);
+                this.ctx.lineTo(x, y - 6);
+                this.ctx.stroke();
+            }
             // this.ctx.fillText(object.getName(), x+5, y-5);
         }
         else if (['DS', 'TS', 'SS'].includes(type || '')) { // Star, 星

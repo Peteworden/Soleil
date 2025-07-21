@@ -23,8 +23,8 @@ export function updateInfoDisplay() {
     }
     // 時刻情報を更新
     if (timeInfo) {
-        const { year, month, day, hour, minute } = config.displayTime;
-        const date = new Date(year, month - 1, day, hour, minute);
+        const { year, month, day, hour, minute, second } = config.displayTime;
+        const date = new Date(year, month - 1, day, hour, minute, second);
         const timeText = date.toLocaleString('ja-JP', {
             year: 'numeric',
             month: '2-digit',
@@ -46,7 +46,7 @@ export function updateInfoDisplay() {
         let centerDecrounded = Math.round(Math.abs(centerDec) * 60);
         const decDegrees = Math.floor(centerDecrounded / 60);
         const decMinutes = Math.floor(centerDecrounded % 60);
-        const centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${decDegrees}°${decMinutes}'<br>高度${centerAlt.toFixed(1)}°, 方位角${centerAz.toFixed(1)}°`;
+        const centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${decDegrees}°${decMinutes}'<br>高度${centerAlt.toFixed(2)}°, 方位角${centerAz.toFixed(2)}°`;
         centerInfo.innerHTML = centerText;
     }
     // 視野角情報を更新

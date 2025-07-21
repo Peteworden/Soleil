@@ -395,7 +395,7 @@
         "dec": "+30.72",
         "vmag": "100",
         "class": "Nb",
-        "overlay": { "width": 1.5, "opacity": 0.5 },
+        "overlay": { "width": 1.5, "opacity": 0.6 },
         "description": "網状星雲。NGC 6960"
     },
     {
@@ -408,7 +408,7 @@
         "dec": "+31.72",
         "vmag": "100",
         "class": "Nb",
-        "overlay": { "width": 2.0, "opacity": 0.5 },
+        "overlay": { "width": 2.0, "opacity": 0.6 },
         "description": "網状星雲。NGC 6992-5"
     },
     {
