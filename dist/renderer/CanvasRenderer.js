@@ -36,6 +36,8 @@ export class CanvasRenderer {
     }
     // 天体を描画
     drawObject(object, nameCorner) {
+        if (!object.getName() || object.getName() == '')
+            return;
         const coordsJ2000 = object.getCoordinates();
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
