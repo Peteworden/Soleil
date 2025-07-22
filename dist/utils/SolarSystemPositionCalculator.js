@@ -100,15 +100,17 @@ export class SolarSystemPositionCalculator {
     }
     /**
      * 等級を更新（距離効果を考慮）
+     * https://arxiv.org/abs/1808.01973
+     * Computing Apparent Planetary Magnitudes for The Astronomical Almanac
      */
     static updateMagnitude(obj, distance) {
         if (obj.jpnName === this.observerPlanetName) {
             obj.magnitude = 100;
             return;
         }
-        const sun_obs2 = this.calculateDistance(this.observerPlanetPosition);
-        const sun_ast2 = this.calculateDistance(obj.xyz);
-        const obs_ast2 = distance;
+        const sun_obs = this.calculateDistance(this.observerPlanetPosition);
+        const sun_pln = this.calculateDistance(obj.xyz);
+        const obs_pln = distance;
         if (obj.type === 'sun') {
             obj.magnitude = -26.74;
         }
@@ -116,28 +118,69 @@ export class SolarSystemPositionCalculator {
             obj.magnitude = -12.74;
         }
         else if (obj.type === 'planet') {
+            const i = Math.acos((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln)) * RAD_TO_DEG;
             if (obj.jpnName === '水星') {
-                obj.magnitude = 1;
+                obj.magnitude = -0.613 + 0.06328 * i - 0.0016336 * i * i + 0.000033644 * i * i * i - 3.4565e-7 * i * i * i * i + 1.6893e-9 * i * i * i * i * i - 3.0334e-12 * i * i * i * i * i * i + 5 * Math.log10(obs_pln * sun_pln);
             }
             else if (obj.jpnName === '金星') {
-                obj.magnitude = -3;
+                if (i <= 163.7) {
+                    obj.magnitude = -4.384 - 0.001044 * i + 0.0003687 * i * i - 2.814e-6 * i * i * i + 8.938e-9 * i * i * i * i + 5 * Math.log10(obs_pln * sun_pln);
+                }
+                else {
+                    obj.magnitude = -4.384 + 240.44228 - 2.81914 * i + 0.00839034 * i * i + 5 * Math.log10(obs_pln * sun_pln);
+                }
             }
             else if (obj.jpnName === '地球') {
                 obj.magnitude = 1;
             }
             else if (obj.jpnName === '火星') {
-                obj.magnitude = 2;
+                if (i <= 50) {
+                    obj.magnitude = -1.601 + 0.002267 * i - 0.0001302 * i ** 2 + 5 * Math.log10(obs_pln * sun_pln);
+                }
+                else if (50 < i && i <= 120) {
+                    obj.magnitude = -1.601 + 1.234 - 0.02573 * i + 0.0003445 * i ** 2 + 5 * Math.log10(obs_pln * sun_pln);
+                }
+                else {
+                    obj.magnitude = 1;
+                }
             }
             else if (obj.jpnName === '木星') {
-                obj.magnitude = -2;
+                if (i <= 12) {
+                    obj.magnitude = -9.395 - 0.00037 * i + 0.000616 * i ** 2 + 5 * Math.log10(obs_pln * sun_pln);
+                }
+                else {
+                    obj.magnitude = -9.395 - 0.033 - 2.5 * Math.log10(1 - 1.507 * (i / 180) - 0.363 * (i / 180) ** 2 - 0.062 * (i / 180) ** 3 + 2.809 * (i / 180) ** 4 - 1.876 * (i / 180) ** 5) + 5 * Math.log10(obs_pln * sun_pln);
+                }
             }
             else if (obj.jpnName === '土星') {
-                obj.magnitude = 5;
+                if (i <= 6.5) {
+                    obj.magnitude = -8.914 + 1.825 * Math.sin(15 * DEG_TO_RAD) + 0.026 * i - 0.378 * Math.sin(15 * DEG_TO_RAD) + Math.exp(-2.25 * i) + 5 * Math.log10(sun_pln * obs_pln); //勝手にリングの傾きβ=15°とした
+                }
+                else if (6 < i && i < 150) {
+                    obj.magnitude = -8.914 + 0.026 + 0.0002446 * i + 0.0002672 * i ** 2 - 1.505e-6 * i ** 3 + 4.767e-9 * i ** 4 + 5 * Math.log10(sun_pln * obs_pln);
+                }
+                else {
+                    obj.magnitude = 0.6;
+                }
             }
             else if (obj.jpnName === '天王星') {
-                obj.magnitude = 8;
+                if (i < 3.1) {
+                    obj.magnitude = -7.110 + 0.00009617 * i * i + 0.0001045 * i * i + 5 * Math.log10(obs_pln * sun_pln);
+                }
+                else {
+                    obj.magnitude = 5.6;
+                }
+            }
+            else if (obj.jpnName === '海王星') {
+                if (i < 133) {
+                    obj.magnitude = -7.00 + 0.007944 * Math.pow(i, 3) + 0.00009617 * i * i + 5 * Math.log10(obs_pln * sun_pln);
+                }
+                else {
+                    obj.magnitude = 7.8;
+                }
             }
             else {
+                console.warn(`${obj.jpnName}の等級計算が未実装です`);
                 obj.magnitude = 100;
             }
         }
@@ -146,11 +189,10 @@ export class SolarSystemPositionCalculator {
             const H = asteroid.orbit.H;
             const G = asteroid.orbit.G ?? 0.15;
             if (H !== undefined) {
-                const { x, y, z } = obj.xyz;
-                const a = Math.acos((sun_ast2 + obs_ast2 - sun_obs2) / (2 * distance * Math.sqrt(obs_ast2)));
+                const a = Math.acos((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
                 const phi1 = Math.exp(-3.33 * (Math.tan(a * 0.5)) ** 0.63);
                 const phi2 = Math.exp(-1.87 * (Math.tan(a * 0.5)) ** 1.22);
-                obj.magnitude = H - 2.5 * Math.log10((1 - G) * phi1 + G * phi2) + 5 * Math.log10(distance * Math.sqrt(obs_ast2));
+                obj.magnitude = H - 2.5 * Math.log10((1 - G) * phi1 + G * phi2) + 5 * Math.log10(obs_pln * sun_pln);
             }
             else {
                 obj.magnitude = 100;

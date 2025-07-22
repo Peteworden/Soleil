@@ -14,7 +14,7 @@ export class ObservationSiteController {
     static setupEventListeners() {
         const observationSiteSelect = document.getElementById('observation-site-select');
         if (observationSiteSelect) {
-            observationSiteSelect.addEventListener('click', (event) => {
+            observationSiteSelect.addEventListener('input', (event) => {
                 this.handleObservationSiteChange(event);
             });
         }
@@ -25,7 +25,7 @@ export class ObservationSiteController {
         const ewSelect = document.getElementById('EWCombo');
         if (latInput && lonInput && nsSelect && ewSelect) {
             [latInput, lonInput, nsSelect, ewSelect].forEach(element => {
-                element.addEventListener('input', () => {
+                element.addEventListener('change', () => {
                     this.handleManualCoordinateChange();
                 });
             });
@@ -117,8 +117,11 @@ export class ObservationSiteController {
      * 現在地を取得
      */
     static getCurrentLocation() {
+        // 取得中メッセージを表示
+        ObservationSiteController.showStatusMessage('現在地を取得しています...');
         if (!navigator.geolocation) {
             alert("お使いのブラウザは位置情報に対応していません");
+            ObservationSiteController.hideStatusMessage();
             return;
         }
         navigator.geolocation.getCurrentPosition((position) => {
@@ -131,11 +134,50 @@ export class ObservationSiteController {
                 longitude: lon,
                 timezone: 9
             });
+            ObservationSiteController.showStatusMessage('現在地を取得しました！', 2000);
             console.log(`🗺️ Current location obtained: ${lat}°, ${lon}°`);
         }, () => {
             alert("位置情報を取得できません");
+            ObservationSiteController.hideStatusMessage();
             console.error('🗺️ Failed to get current location');
         });
+    }
+    /**
+     * ステータスメッセージを表示
+     */
+    static showStatusMessage(message, timeoutMs) {
+        let msgDiv = document.getElementById('observation-status-message');
+        if (!msgDiv) {
+            msgDiv = document.createElement('div');
+            msgDiv.id = 'observation-status-message';
+            msgDiv.style.position = 'fixed';
+            msgDiv.style.top = '20px';
+            msgDiv.style.left = '50%';
+            msgDiv.style.transform = 'translateX(-50%)';
+            msgDiv.style.background = 'rgba(0,0,0,0.8)';
+            msgDiv.style.color = '#fff';
+            msgDiv.style.padding = '12px 24px';
+            msgDiv.style.borderRadius = '8px';
+            msgDiv.style.fontSize = '16px';
+            msgDiv.style.zIndex = '9999';
+            document.body.appendChild(msgDiv);
+        }
+        msgDiv.textContent = message;
+        msgDiv.style.display = 'block';
+        if (timeoutMs) {
+            setTimeout(() => {
+                ObservationSiteController.hideStatusMessage();
+            }, timeoutMs);
+        }
+    }
+    /**
+     * ステータスメッセージを非表示
+     */
+    static hideStatusMessage() {
+        const msgDiv = document.getElementById('observation-status-message');
+        if (msgDiv) {
+            msgDiv.style.display = 'none';
+        }
     }
     /**
      * 地図での選択を表示
@@ -149,7 +191,8 @@ export class ObservationSiteController {
         // 地図コンテナの表示
         const mapDiv = document.getElementById('observation-site-map-div');
         if (mapDiv) {
-            mapDiv.style.visibility = 'visible';
+            mapDiv.style.display = 'block';
+            console.log('🗺️ mapDiv', mapDiv);
         }
         // 既存の地図を削除
         if (this.map) {
@@ -168,13 +211,16 @@ export class ObservationSiteController {
             alert('地図ライブラリが読み込まれていません');
             return;
         }
-        const currentLat = window.lat_obs * 180 / Math.PI || 35;
-        const currentLon = window.lon_obs * 180 / Math.PI || 135;
-        this.map = window.L.map('observation-site-map').setView([currentLat, currentLon], 10);
-        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        const config = window.config;
+        if (!config)
+            return;
+        const currentLat = config.observationSite.latitude;
+        const currentLon = config.observationSite.longitude;
+        this.map = L.map('observation-site-map').setView([currentLat, currentLon], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(this.map);
-        this.currentMarker = window.L.marker([currentLat, currentLon]).addTo(this.map);
+        this.currentMarker = L.marker([currentLat, currentLon]).addTo(this.map);
         // 地図クリックイベント
         this.map.on('click', (e) => {
             this.latMap = e.latlng.lat;
@@ -182,12 +228,14 @@ export class ObservationSiteController {
             if (this.currentMarker) {
                 this.map.removeLayer(this.currentMarker);
             }
-            this.currentMarker = window.L.marker([this.latMap, this.lonMap]).addTo(this.map);
-            // 選択肢をカスタムに変更
-            const observationSiteSelect = document.getElementById('observation-site-select');
-            if (observationSiteSelect) {
-                observationSiteSelect.value = 'カスタム';
-            }
+            this.currentMarker = L.marker([this.latMap, this.lonMap]).addTo(this.map);
+            this.setObservationSite({
+                observerPlanet: '地球',
+                name: 'カスタム',
+                latitude: this.latMap,
+                longitude: this.lonMap,
+                timezone: 9
+            });
         });
     }
     /**
@@ -196,7 +244,11 @@ export class ObservationSiteController {
     static closeMap() {
         const mapDiv = document.getElementById('observation-site-map-div');
         if (mapDiv) {
-            mapDiv.style.visibility = 'hidden';
+            mapDiv.style.display = 'none';
+        }
+        const observationSiteSelect = document.getElementById('observation-site-select');
+        if (observationSiteSelect) {
+            observationSiteSelect.value = 'カスタム';
         }
         if (this.map) {
             this.map.remove();

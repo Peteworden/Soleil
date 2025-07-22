@@ -223,8 +223,8 @@ export class SettingController {
             observationSiteSelect.value = config.observationSite.name;
             const latitude = Math.abs(config.observationSite.latitude);
             const longitude = Math.abs(config.observationSite.longitude);
-            latInput.value = latitude.toString();
-            lonInput.value = longitude.toString();
+            latInput.value = latitude.toFixed(2);
+            lonInput.value = longitude.toFixed(2);
             nsSelect.value = config.observationSite.latitude >= 0 ? '北緯' : '南緯';
             ewSelect.value = config.observationSite.longitude >= 0 ? '東経' : '西経';
         }

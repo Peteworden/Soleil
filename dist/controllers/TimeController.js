@@ -230,7 +230,7 @@ export class TimeController {
         if (!config)
             return;
         const now = new Date();
-        if (now.getSeconds() % 1 == 0 && now.getMilliseconds() < 500) {
+        if (now.getSeconds() % 3 == 0 && now.getMilliseconds() < 500) {
             const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             config.displayTime.jd = jd;
@@ -266,7 +266,7 @@ export class TimeController {
         if (!config)
             return;
         const now = new Date();
-        if (now.getSeconds() % 1 == 0 && now.getMilliseconds() < 500) {
+        if (now.getSeconds() % 3 == 0 && now.getMilliseconds() < 500) {
             const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             config.displayTime.jd = jd;

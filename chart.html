@@ -6,7 +6,7 @@
     <meta name="description" content="指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。">
     <meta name="theme-color" content="#000000">
     <meta name="msapplication-TileColor" content="#000000">
-    <link rel="stylesheet" href="styles/styleChart_ts.css?v=250711-2045">
+    <link rel="stylesheet" href="styles/styleChart.css?v=250722-1900">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VG4YXL3M6E"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -71,10 +71,7 @@
         <p><span style="color: orange;">星図を開いてからバージョンを変えたい場合は、リロードするか、画面左上にリンクがある「HOME」を経由してください。</span></p>
         <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
         <ul>
-            <li>リアルタイム更新</li>
-            <li>惑星の明るさの計算</li>
             <li>スマホの向きに合わせた表示、風景と重ねる機能</li>
-            <li>地図を使って観測地を選択</li>
             <li>クリックして詳細を表示</li>
             <li>ダークモード</li>
             <li>2000.0年分点による座標の表示</li>
@@ -202,7 +199,7 @@
                             <option>東京</option>
                             <option>大阪</option>
                             <option>石垣島</option>
-                            <option disabled>地図上で選択</option>
+                            <option>地図上で選択</option>
                         </select>
                     </div>
 
@@ -326,6 +323,13 @@
             <div style="text-align: center; margin-top: 20px;">
                 <button id="showBtn" class="showBtn" type="button">OK</button>
             </div>
+        </div>
+    </div>
+
+    <div id="observation-site-map-div" class="observation-site-map-div" style="display: none;">
+        <div id="observation-site-map" class="observation-site-map"></div>
+        <div class="map-buttons">
+            <button id="closeObservationSiteMap" class="closeObservationSiteMap" type="button">OK</button>
         </div>
     </div>
 

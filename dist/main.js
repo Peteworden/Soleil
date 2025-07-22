@@ -93,6 +93,9 @@ function initializeConfig() {
         const savedObservationSite = savedSettingsObject.observationSite;
         observationSite.observerPlanet = savedObservationSite.observerPlanet !== undefined ? savedObservationSite.observerPlanet : observationSite.observerPlanet;
         observationSite.name = savedObservationSite.name !== undefined ? savedObservationSite.name : observationSite.name;
+        if (observationSite.name === '地図上で選択') {
+            observationSite.name = 'カスタム';
+        }
         observationSite.latitude = savedObservationSite.latitude !== undefined ? savedObservationSite.latitude : observationSite.latitude;
         observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : observationSite.longitude;
         observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : observationSite.timezone;
@@ -371,6 +374,7 @@ function setupButtonEvents() {
     document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
     document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
     SearchController.setupSearchInput();
+    document.getElementById('closeObservationSiteMap')?.addEventListener('click', ObservationSiteController.closeMap);
     // 検索画面の閉じるボタン
     // document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
     // 天体説明画面の閉じるボタン
