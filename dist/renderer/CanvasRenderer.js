@@ -486,6 +486,8 @@ export class CanvasRenderer {
             for (let unit = area[0]; unit < area[1] + 1; unit++) {
                 const raInt = unit % 360;
                 const decInt = Math.floor(unit / 360) - 90;
+                // const precessionCenter = this.coordinateConverter.precessionEquatorial({ra: raInt + 0.5, dec: decInt + 0.5}, precessionAngle);
+                // const precessionDiff = {ra: precessionCenter.ra - raInt - 0.5, dec: precessionCenter.dec - decInt - 0.5};
                 const st = gaiaHelpData[unit];
                 const fi = gaiaHelpData[unit + 1];
                 // バッチ処理で座標変換を最適化
@@ -494,7 +496,6 @@ export class CanvasRenderer {
                     const mag = data[2];
                     if (mag >= limitingMagnitude)
                         continue;
-                    // 座標計算を最適化（既に歳差運動補正済み）
                     const ra = raInt + data[0];
                     const dec = decInt + data[1];
                     const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
@@ -503,7 +504,6 @@ export class CanvasRenderer {
                         continue;
                     const [x, y] = screenXY[1];
                     const starSize = this.getStarSize(mag, limitingMagnitude, zeroMagSize);
-                    // 小さな星は描画を最適化
                     if (starSize < 0.5) {
                         this.ctx.rect(x - 0.5, y - 0.5, 1, 1);
                     }
@@ -863,7 +863,8 @@ export class CanvasRenderer {
         for (let i = 0; i < edgeRA.length - 1; i++) {
             segments.push({
                 ra1: edgeRA[i], dec1: edgeDec[i],
-                ra2: edgeRA[i + 1], dec2: edgeDec[i + 1]
+                ra2: edgeRA[i + 1], dec2: edgeDec[i + 1],
+                crossDecs: rangeInt(edgeDec[i], edgeDec[i + 1])
             });
             if (edgeRA[i] > 300 && edgeRA[i + 1] < 60) {
                 ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i + 1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
@@ -874,7 +875,8 @@ export class CanvasRenderer {
         }
         segments.push({
             ra1: edgeRA[edgeRA.length - 1], dec1: edgeDec[edgeDec.length - 1],
-            ra2: edgeRA[0], dec2: edgeDec[0]
+            ra2: edgeRA[0], dec2: edgeDec[0],
+            crossDecs: rangeInt(edgeDec[edgeRA.length - 1], edgeDec[0])
         });
         if (edgeRA[edgeRA.length - 1] > 300 && edgeRA[0] < 60) {
             ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[0] - edgeRA[edgeRA.length - 1] + 360) * (360 - edgeRA[edgeRA.length - 1]));
@@ -883,80 +885,134 @@ export class CanvasRenderer {
             ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[edgeRA.length - 1] - edgeRA[0] + 360) * edgeRA[edgeRA.length - 1]);
         }
         if (np) {
-            if (ra0Dec.length === 1) {
-                segments.push({
-                    ra1: 0, dec1: ra0Dec[0],
-                    ra2: 0, dec2: 89.9
-                });
-                segments.push({
-                    ra1: 359.999, dec1: ra0Dec[0],
-                    ra2: 359.999, dec2: 89.9
-                });
+            if (sp) {
+                if (ra0Dec.length % 2 === 0) {
+                    segments.push({
+                        ra1: 0, dec1: -90,
+                        ra2: 0, dec2: 89.9,
+                        crossDecs: Array.from({ length: 89 - (-90) + 1 }, (_, i) => -90 + i)
+                    });
+                    segments.push({
+                        ra1: 359.999, dec1: -90,
+                        ra2: 359.999, dec2: 89.9,
+                        crossDecs: Array.from({ length: 89 - (-90) + 1 }, (_, i) => -90 + i)
+                    });
+                }
+                else {
+                    console.log("np && sp but ra0Dec.length != 0", ra0Dec);
+                }
+            }
+            else {
+                if (ra0Dec.length === 1) {
+                    segments.push({
+                        ra1: 0, dec1: ra0Dec[0],
+                        ra2: 0, dec2: 89.9,
+                        crossDecs: rangeInt(ra0Dec[0], 89.9)
+                    });
+                    segments.push({
+                        ra1: 359.999, dec1: ra0Dec[0],
+                        ra2: 359.999, dec2: 89.9,
+                        crossDecs: rangeInt(ra0Dec[0], 89.9)
+                    });
+                }
+                else {
+                    console.log("np && !sp but ra0Dec.length != 1");
+                }
             }
         }
-        else if (sp) {
+        else if (!np && sp) {
             if (ra0Dec.length === 1) {
                 segments.push({
                     ra1: 0, dec1: -90,
-                    ra2: 0, dec2: ra0Dec[0]
+                    ra2: 0, dec2: ra0Dec[0],
+                    crossDecs: rangeInt(-90, ra0Dec[0])
                 });
                 segments.push({
                     ra1: 359.999, dec1: ra0Dec[0],
-                    ra2: 359.999, dec2: -90
+                    ra2: 359.999, dec2: -90,
+                    crossDecs: rangeInt(-90, ra0Dec[0])
                 });
+            }
+            else {
+                console.log("!np && sp but ra0Dec.length != 1");
             }
         }
         else if (ra0Dec.length === 2) {
             segments.push({
                 ra1: 0, dec1: ra0Dec[0],
-                ra2: 0, dec2: ra0Dec[1]
+                ra2: 0, dec2: ra0Dec[1],
+                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
             });
             segments.push({
                 ra1: 359.999, dec1: ra0Dec[0],
-                ra2: 359.999, dec2: ra0Dec[1]
+                ra2: 359.999, dec2: ra0Dec[1],
+                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
             });
         }
         else if (ra0Dec.length === 4) {
             segments.push({
                 ra1: 0, dec1: ra0Dec[0],
-                ra2: 0, dec2: ra0Dec[1]
+                ra2: 0, dec2: ra0Dec[1],
+                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
             });
             segments.push({
                 ra1: 359.999, dec1: ra0Dec[0],
-                ra2: 359.999, dec2: ra0Dec[1]
+                ra2: 359.999, dec2: ra0Dec[1],
+                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
             });
             segments.push({
                 ra1: 0, dec1: ra0Dec[2],
-                ra2: 0, dec2: ra0Dec[3]
+                ra2: 0, dec2: ra0Dec[3],
+                crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
             });
             segments.push({
                 ra1: 359.999, dec1: ra0Dec[2],
-                ra2: 359.999, dec2: ra0Dec[3]
+                ra2: 359.999, dec2: ra0Dec[3],
+                crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
             });
         }
         else if (ra0Dec.length > 0) {
             console.log(ra0Dec);
         }
-        // 赤緯の範囲を1度ずつ処理
-        for (let dec = Math.floor(Dec_min); dec <= Math.floor(Dec_max); dec++) {
-            const intersections = [];
-            // 赤緯線と境界線の交点を計算
-            for (const segment of segments) {
-                if ((segment.dec1 - dec) * (segment.dec2 - dec) <= 0) {
-                    // 線形補間で交点の赤経を計算
-                    const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
-                    let intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
-                    if (segment.ra1 > 300 && segment.ra2 < 60) {
-                        intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
-                    }
-                    else if (segment.ra1 < 60 && segment.ra2 > 300) {
-                        intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
-                    }
-                    intersections.push(intersectionRA);
+        const allIntersections = Array.from({ length: 180 }, () => ({ intersections: [] }));
+        for (const segment of segments) {
+            for (const dec of segment.crossDecs) {
+                const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
+                let intersectionRA;
+                if (segment.ra1 > 300 && segment.ra2 < 60) {
+                    intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
                 }
+                else if (segment.ra1 < 60 && segment.ra2 > 300) {
+                    intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
+                }
+                else {
+                    intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
+                }
+                allIntersections[dec + 90].intersections.push(intersectionRA);
             }
-            // 交点をソート
+        }
+        // 赤緯の範囲を1度ずつ処理
+        for (let dec = Math.floor(Dec_min); dec <= Math.min(Math.floor(Dec_max), 89); dec++) {
+            const intersections = allIntersections[dec + 90].intersections;
             intersections.sort((a, b) => a - b);
+            // 赤緯線と境界線の交点を計算
+            // for (const segment of segments) {
+            //     if ((segment.dec1 <= dec && segment.dec2 >= dec) || (segment.dec1 >= dec && segment.dec2 <= dec)) {
+            //         // 線形補間で交点の赤経を計算
+            //         const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
+            //         let intersectionRA;
+            //         if (segment.ra1 > 300 && segment.ra2 < 60) {
+            //             intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
+            //         } else if (segment.ra1 < 60 && segment.ra2 > 300) {
+            //             intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
+            //         } else {
+            //             intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
+            //         }
+            //         intersections.push(intersectionRA);
+            //     }
+            // }
+            // 交点をソート
+            // intersections.sort((a, b) => a - b);
             // 交点のペアで領域を決定
             const raRanges = [];
             if (intersections.length === 0) {
@@ -987,12 +1043,21 @@ export class CanvasRenderer {
             }
         }
         return candidates;
+        function rangeInt(a, b) {
+            const c = a > b ? a : b; // 大きい方
+            const d = a > b ? b : a; // 小さい方
+            const start = Math.ceil(d); // 小さい方の切り上げ
+            const end = Math.floor(c); // 大きい方の切り下げ
+            if (end < start)
+                return [];
+            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+        }
     }
     areaCandidates() {
         // キャッシュをチェック（設定が変更されていない場合）
         const currentTime = Date.now();
         if (this.areaCandidatesCache &&
-            currentTime - this.areaCandidatesCache.timestamp < 100) { // 100ms以内ならキャッシュを使用
+            currentTime - this.areaCandidatesCache.timestamp < 20) { // 20ms以内ならキャッシュを使用
             return this.areaCandidatesCache.areas;
         }
         const edgeRA = [];
@@ -1061,6 +1126,7 @@ export class CanvasRenderer {
             const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, { az: centerAz, alt: centerAlt });
             const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
             const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
+            // 高速化のしどころ
             let screenRa = -raWidth;
             let screenDec = decWidth;
             let dscreenRa = 0.0;

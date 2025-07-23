@@ -14,6 +14,7 @@ export class InteractionController {
         // 感度設定
         this.dragSensitivity = 0.2;
         this.zoomSensitivity = 0.001;
+        this.lastDragTime = 0;
         this.onPointerDown = (e) => {
             e.preventDefault();
             if (this.activePointers.size <= 2) {
@@ -46,15 +47,22 @@ export class InteractionController {
         this.onPointerMove = (e) => {
             e.preventDefault();
             // ポインターの座標を更新
-            this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
                 const deltaX = e.clientX - this.lastX;
                 const deltaY = e.clientY - this.lastY;
-                // 最小移動量チェック（タッチ操作では1ピクセルに調整）
-                const minMove = e.pointerType === 'touch' ? 1 : 2;
-                if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minMove) {
-                    return;
-                }
+                // 最小移動量チェック
+                const minMove = e.pointerType === 'touch' ? this.config.canvasSize.width / 50 : this.config.canvasSize.width / 100;
+                const now = performance.now();
+                // if ((now - this.lastDragTime < 10) || //速すぎるか
+                //     (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minMove && now - this.lastDragTime < 10)) { //動きが小さすぎるか
+                //         // console.log(now - this.lastDragTime);
+                //     return;
+                // }
+                // console.log("slow enough");
+                // ポインターの座標を更新
+                this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                this.lastDragTime = now;
                 // ピクセル数に掛けると角度になる
                 const moveScale = this.viewState.fieldOfViewRA / this.canvas.width;
                 if (this.displaySettings.mode == 'AEP') {
@@ -83,6 +91,7 @@ export class InteractionController {
                 const pointerIds = this.getActivePointerIds();
                 if (pointerIds.length < 2)
                     return;
+                this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 const x1 = this.pointerPositions.get(pointerIds[0])?.x;
                 const y1 = this.pointerPositions.get(pointerIds[0])?.y;
                 const x2 = this.pointerPositions.get(pointerIds[1])?.x;
@@ -152,6 +161,7 @@ export class InteractionController {
             if (this.activePointers.size === 1) {
                 this.isDragging = false;
                 this.isPinch = false;
+                this.lastDragTime = performance.now();
                 this.activePointers.delete(e.pointerId);
                 this.pointerPositions.delete(e.pointerId);
                 this.canvas.releasePointerCapture(e.pointerId);
@@ -171,9 +181,10 @@ export class InteractionController {
                 this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
                 SettingController.saveConfigToLocalStorage();
             }
-            else if (this.activePointers.size === 2) {
+            else {
                 this.isDragging = false;
                 this.isPinch = false;
+                this.lastDragTime = performance.now();
                 this.activePointers.delete(e.pointerId);
                 this.pointerPositions.delete(e.pointerId);
                 this.canvas.releasePointerCapture(e.pointerId);
