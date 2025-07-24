@@ -359,10 +359,9 @@ export class CoordinateConverter {
         return { ra: scrRa, dec: scrDec };
     }
     // スクリーン座標からスクリーンRaDecへの変換
-    screenRaDecToScreenXY(raDec, canvas) {
-        const fieldOfView = this.getCurrentFieldOfView();
-        const x = canvas.width * (0.5 - raDec.ra / fieldOfView.ra);
-        const y = canvas.height * (0.5 - raDec.dec / fieldOfView.dec);
+    screenRaDecToScreenXY(raDec, canvasSize, viewState) {
+        const x = canvasSize.width * (0.5 - raDec.ra / viewState.fieldOfViewRA);
+        const y = canvasSize.height * (0.5 - raDec.dec / viewState.fieldOfViewDec);
         return [x, y];
     }
     // スクリーン座標からスクリーンRaDecへの変換
@@ -373,18 +372,22 @@ export class CoordinateConverter {
         return { ra, dec };
     }
     // 赤道座標からスクリーン座標への変換、判定
-    equatorialToScreenXYifin(raDec, canvas, siderealTime, force = false) {
-        const center = this.getCurrentCenter();
-        const fieldOfView = this.getCurrentFieldOfView();
-        const mode = this.getCurrentMode();
+    equatorialToScreenXYifin(raDec, config, force = false) {
+        // const center = this.getCurrentCenter();
+        // const fieldOfView = this.getCurrentFieldOfView();
+        // const mode = this.getCurrentMode();
+        const viewState = config.viewState;
+        const mode = config.displaySettings.mode;
+        const canvas = config.canvasSize;
+        const siderealTime = config.siderealTime;
         if (mode == 'AEP') {
-            const screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: center.ra, dec: center.dec });
-            if (Math.abs(screenRaDec.ra) < fieldOfView.ra * 0.5 && Math.abs(screenRaDec.dec) < fieldOfView.dec * 0.5) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
+            const screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: viewState.centerRA, dec: viewState.centerDec });
+            if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
+                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
                 return [true, [x, y]];
             }
             else if (force) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
+                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
                 return [false, [x, y]];
             }
             else {
@@ -393,13 +396,13 @@ export class CoordinateConverter {
         }
         else if (mode == 'view') {
             const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
-            const screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: center.az, alt: center.alt });
-            if (Math.abs(screenRaDec.ra) < fieldOfView.ra * 0.5 && Math.abs(screenRaDec.dec) < fieldOfView.dec * 0.5) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
+            const screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
+            if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
+                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
                 return [true, [x, y]];
             }
             else if (force) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas);
+                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
                 return [false, [x, y]];
             }
             else {

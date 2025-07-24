@@ -54,6 +54,9 @@ export class InteractionController {
                 // 最小移動量チェック
                 const minMove = e.pointerType === 'touch' ? this.config.canvasSize.width / 50 : this.config.canvasSize.width / 100;
                 const now = performance.now();
+                if (Math.abs(deltaX) < minMove && Math.abs(deltaY) < minMove) {
+                    return;
+                }
                 // if ((now - this.lastDragTime < 10) || //速すぎるか
                 //     (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minMove && now - this.lastDragTime < 10)) { //動きが小さすぎるか
                 //         // console.log(now - this.lastDragTime);
@@ -66,7 +69,7 @@ export class InteractionController {
                 // ピクセル数に掛けると角度になる
                 const moveScale = this.viewState.fieldOfViewRA / this.canvas.width;
                 if (this.displaySettings.mode == 'AEP') {
-                    const dcenterRA = Math.max(-3, Math.min(3, deltaX * moveScale / Math.cos(this.viewState.centerDec * Math.PI / 180)));
+                    const dcenterRA = Math.max(-5, Math.min(5, deltaX * moveScale / Math.cos(this.viewState.centerDec * Math.PI / 180)));
                     const dcenterDec = deltaY * moveScale;
                     this.viewState.centerRA = ((this.viewState.centerRA + dcenterRA) % 360 + 360) % 360;
                     this.viewState.centerDec = Math.min(Math.max(this.viewState.centerDec + dcenterDec, -90), 90);
@@ -75,7 +78,7 @@ export class InteractionController {
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    const dcenterAz = -Math.max(-3, Math.min(3, deltaX * moveScale / Math.cos(this.viewState.centerAlt * Math.PI / 180)));
+                    const dcenterAz = -Math.max(-5, Math.min(5, deltaX * moveScale / Math.cos(this.viewState.centerAlt * Math.PI / 180)));
                     const dcenterAlt = deltaY * moveScale;
                     this.viewState.centerAz = ((this.viewState.centerAz + dcenterAz) % 360 + 360) % 360;
                     this.viewState.centerAlt = Math.min(Math.max(this.viewState.centerAlt + dcenterAlt, -90), 90);

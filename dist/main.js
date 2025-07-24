@@ -155,9 +155,9 @@ export function updateConfig(newConfig) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
     }
     window.config = config;
+    window.renderer.updateOptions(config);
     if (newConfig.displaySettings) {
         Object.assign(config.displaySettings, newConfig.displaySettings);
-        window.renderer.updateOptions(config.displaySettings);
         window.controller.updateOptions(config.displaySettings);
     }
     if (newConfig.displayTime) {
@@ -165,7 +165,7 @@ export function updateConfig(newConfig) {
     }
     // 時刻関連の更新があればTimeControllerも更新
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
-        window.renderer.updateOptions(newConfig);
+        // (window as any).renderer.updateOptions(newConfig);
         // TimeController.initialize();
     }
     window.renderAll();
@@ -227,24 +227,25 @@ export async function main() {
         const imageCache = {};
         const imageCacheNames = [];
         function renderAll() {
-            const start1 = performance.now();
+            console.time("renderAll");
+            // const start1 = performance.now();
             renderer.clear();
             renderer.drawGrid();
             renderer.drawCameraView();
             renderer.drawConstellationLines(constellationData);
-            const end1 = performance.now();
-            const start2 = performance.now();
-            const start21 = performance.now();
+            // const end1 = performance.now();
+            // const start2 = performance.now();
+            // const start21 = performance.now();
             renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
-            const end21 = performance.now();
-            const start22 = performance.now();
+            // const end21 = performance.now();
+            // const start22 = performance.now();
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
-            const end22 = performance.now();
-            const start23 = performance.now();
+            // const end22 = performance.now();
+            // const start23 = performance.now();
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
-            const end23 = performance.now();
-            const end2 = performance.now();
-            const start3 = performance.now();
+            // const end23 = performance.now();
+            // const end2 = performance.now();
+            // const start3 = performance.now();
             renderer.drawHipStars(hipStars);
             renderer.writeStarNames(starNames);
             renderer.drawMessier(messierData);
@@ -253,16 +254,18 @@ export async function main() {
             renderer.writeConstellationNames(constellationData);
             renderer.drawSolarSystemObjects();
             renderer.drawReticle();
-            const end3 = performance.now();
+            // const end3 = performance.now();
             // const alltime = end3 - start1;
+            // console.log(alltime.toFixed(3), 'ms');
             // const pregaia = end1 - start1;
             // const gaia = end2 - start2;
             // const postgaia = end3 - end2;
             // const gaia1 = end21 - start21;
             // const gaia2 = end22 - start22;
             // const gaia3 = end23 - start23;
-            // console.log(alltime.toFixed(3), (pregaia/alltime).toFixed(2), (gaia/alltime).toFixed(2), (postgaia/alltime).toFixed(2));
+            // console.log(alltime.toFixed(3), pregaia.toFixed(3), gaia.toFixed(3), postgaia.toFixed(3));
             // console.log(gaia1.toFixed(3), gaia2.toFixed(3), gaia3.toFixed(3));
+            console.timeEnd("renderAll");
         }
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
         SettingController.loadSettingsFromConfig();

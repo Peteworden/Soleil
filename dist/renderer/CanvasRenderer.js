@@ -39,9 +39,9 @@ export class CanvasRenderer {
         if (!object.getName() || object.getName() == '')
             return;
         const coordsJ2000 = object.getCoordinates();
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, window.config.siderealTime);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -139,7 +139,7 @@ export class CanvasRenderer {
             ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
             object.getName() in this.imageCache &&
             object.getOverlay() !== null &&
-            this.config.viewState.fieldOfViewRA < 20) {
+            window.config.viewState.fieldOfViewRA < 20) {
             const img = this.imageCache[object.getName()];
             // 画像が正常に読み込まれているかチェック
             if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -168,7 +168,7 @@ export class CanvasRenderer {
         }
         else if (mode == 'view') {
             this.ctx.translate(x, y);
-            const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.canvas, this.config.siderealTime, true);
+            const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.config, true);
             const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
             this.ctx.rotate(rotation);
             this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
@@ -227,9 +227,9 @@ export class CanvasRenderer {
         }
     }
     drawSun(sun) {
-        const siderealTime = window.config.siderealTime;
+        const siderealTime = this.config.siderealTime;
         const coords = sun.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -243,11 +243,10 @@ export class CanvasRenderer {
         this.ctx.fillText(sun.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawPlanet(planet, limitingMagnitude, zeroMagSize) {
-        const siderealTime = window.config.siderealTime;
         this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
         const coords = planet.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -262,6 +261,7 @@ export class CanvasRenderer {
     drawMoon(moon, sun) {
         if (this.config.observationSite.observerPlanet !== '地球')
             return;
+        // console.log(this.config.viewState.fieldOfViewRA == (window as any).config.viewState.fieldOfViewRA);
         const { ra: sunRaDeg, dec: sunDecDeg } = sun.getRaDec();
         const { ra: moonRaDeg, dec: moonDecDeg } = moon.getRaDec();
         const sunRaRad = sunRaDeg * Math.PI / 180;
@@ -273,7 +273,7 @@ export class CanvasRenderer {
         const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
         const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
         let p, RA1, Dec1, A1, h1, scrRA1, scrDec1, x1, y1;
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.canvas, window.config.siderealTime);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.config);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -281,7 +281,7 @@ export class CanvasRenderer {
             p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
             RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
             Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
-            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.canvas, window.config.siderealTime, true);
+            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.config, true);
             const [x1, y1] = screenXY1[1];
             p = Math.atan2(y1 - y, x1 - x);
             // console.log(p * 180/Math.PI);
@@ -294,7 +294,7 @@ export class CanvasRenderer {
             // console.log(p * 180/Math.PI);
             RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
             Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
-            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.canvas, window.config.siderealTime, true);
+            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.config, true);
             const [x1, y1] = screenXY1[1];
             p = Math.atan2(y1 - y, x1 - x);
         }
@@ -330,11 +330,10 @@ export class CanvasRenderer {
         this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawMinorObject(minorObject, limitingMagnitude, zeroMagSize) {
-        const siderealTime = window.config.siderealTime;
         this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
         const coords = minorObject.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -352,8 +351,7 @@ export class CanvasRenderer {
         if (!this.config.displaySettings.showStars)
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
-        const siderealTime = window.config.siderealTime;
-        const currentJd = window.config.displayTime.jd;
+        const currentJd = this.config.displayTime.jd;
         // 歳差運動補正をキャッシュ
         let precessionAngle;
         if (this.precessionCache && Math.abs(this.precessionCache.jd - currentJd) < 10.0) {
@@ -372,7 +370,7 @@ export class CanvasRenderer {
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
             const coords = star.getCoordinates();
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
@@ -422,7 +420,7 @@ export class CanvasRenderer {
             if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) > tier_range[starName.tier - 1])
                 continue;
             const coords = this.coordinateConverter.precessionEquatorial({ ra: starName.ra, dec: starName.dec }, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
@@ -498,8 +496,11 @@ export class CanvasRenderer {
                         continue;
                     const ra = raInt + data[0];
                     const dec = decInt + data[1];
+                    // const coords = {ra, dec};
                     const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
-                    const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+                    // const coords = {ra: ra + precessionDiff.ra, dec: dec + precessionDiff.dec};
+                    const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+                    // const screenXY = [true, [0, 0]];
                     if (!screenXY[0])
                         continue;
                     const [x, y] = screenXY[1];
@@ -677,8 +678,8 @@ export class CanvasRenderer {
                 return [screenRA1, screenDec1];
             if ((Math.abs(screenRA0) < semiWidthRA && Math.abs(screenDec0) < semiWidthDec) ||
                 (Math.abs(screenRA1) < semiWidthRA && Math.abs(screenDec1) < semiWidthDec)) {
-                const [x1, y1] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA0, dec: screenDec0 }, this.canvas);
-                const [x2, y2] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA1, dec: screenDec1 }, this.canvas);
+                const [x1, y1] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA0, dec: screenDec0 }, this.config.canvasSize, this.config.viewState);
+                const [x2, y2] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA1, dec: screenDec1 }, this.config.canvasSize, this.config.viewState);
                 this.ctx.moveTo(x1, y1);
                 this.ctx.lineTo(x2, y2);
             }
@@ -699,8 +700,7 @@ export class CanvasRenderer {
         const ymin = 0;
         const fieldSize = Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
         const maxLength = 30 * 2 * Math.max(xmax, ymax) / fieldSize;
-        const siderealTime = window.config.siderealTime;
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         this.ctx.beginPath();
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
@@ -708,8 +708,8 @@ export class CanvasRenderer {
                 const coords1 = this.coordinateConverter.precessionEquatorial(coords1J2000, precessionAngle);
                 const coords2J2000 = { ra: line[2], dec: line[3] };
                 const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
-                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.canvas, siderealTime, true);
-                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.canvas, siderealTime, true);
+                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true);
+                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true);
                 if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin)
                     continue;
                 if ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) > maxLength * maxLength)
@@ -732,7 +732,7 @@ export class CanvasRenderer {
         for (const constellation of constellations) {
             const coordsJ2000 = { ra: constellation.ra, dec: constellation.dec };
             const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.canvas, siderealTime);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
@@ -1057,7 +1057,7 @@ export class CanvasRenderer {
         // キャッシュをチェック（設定が変更されていない場合）
         const currentTime = Date.now();
         if (this.areaCandidatesCache &&
-            currentTime - this.areaCandidatesCache.timestamp < 20) { // 20ms以内ならキャッシュを使用
+            currentTime - this.areaCandidatesCache.timestamp < 10) { // 20ms以内ならキャッシュを使用
             return this.areaCandidatesCache.areas;
         }
         const edgeRA = [];
