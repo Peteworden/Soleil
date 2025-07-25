@@ -42,7 +42,7 @@ export function updateInfoDisplay() {
             centerRArounded = 0;
         const raHours = Math.floor(centerRArounded / 600);
         const raMinutes = Math.floor((centerRArounded % 600) / 10) + "." + Math.floor(centerRArounded % 10);
-        const decSign = centerDec >= 0 ? '+' : '';
+        const decSign = centerDec >= 0 ? '+' : '-';
         let centerDecrounded = Math.round(Math.abs(centerDec) * 60);
         const decDegrees = Math.floor(centerDecrounded / 60);
         const decMinutes = Math.floor(centerDecrounded % 60);

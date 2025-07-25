@@ -308,7 +308,7 @@ input[type="file"] {
 }
 
 .setting-row label {
-    min-width: 80px;
+    min-width: 20px;
     font-weight: 500;
 }
 
@@ -725,7 +725,7 @@ input[type="file"] {
 }
 
 .magLimit-left-image {
-    opacity: 0.3;
+    opacity: 0.8;
 }
 
 .magLimit-right-image {
@@ -754,6 +754,40 @@ select {
     border-radius: 4px;
     padding: 4px 8px;
     font-size: 14px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+}
+.switch input {display: none;}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #4a4a6a;
+    transition: .4s;
+    border-radius: 12px;
+}
+.slider:before {
+    position: absolute;
+    content: '';
+    height: 16px; width: 16px;
+    left: 2px; bottom: 2px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #4CAF50;
+}
+input:checked + .slider:before {
+    transform: translateX(16px);
 }
 
 .showBtn {

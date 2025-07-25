@@ -52,9 +52,12 @@ export class InteractionController {
                 const deltaX = e.clientX - this.lastX;
                 const deltaY = e.clientY - this.lastY;
                 // 最小移動量チェック
-                const minMove = e.pointerType === 'touch' ? this.config.canvasSize.width / 50 : this.config.canvasSize.width / 100;
+                const minMove = e.pointerType === 'touch' ? this.config.canvasSize.width / 200 : this.config.canvasSize.width / 400;
                 const now = performance.now();
-                if (Math.abs(deltaX) < minMove && Math.abs(deltaY) < minMove) {
+                if (Math.abs(deltaX) < minMove && Math.abs(deltaY) < minMove && now - this.lastDragTime < 30) {
+                    return;
+                }
+                if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
                     return;
                 }
                 // if ((now - this.lastDragTime < 10) || //速すぎるか
