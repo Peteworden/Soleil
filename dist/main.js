@@ -11,6 +11,7 @@ import { AstronomicalCalculator } from './utils/calculations.js';
 import { CoordinateConverter } from './utils/coordinates.js';
 import { DataLoader } from './utils/DataLoader.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
+import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 // 初期設定を読み込む関数
 function initializeConfig() {
     const savedSettings = localStorage.getItem('config');
@@ -227,7 +228,7 @@ export async function main() {
         const imageCache = {};
         const imageCacheNames = [];
         function renderAll() {
-            console.time("renderAll");
+            // console.time("renderAll");
             // const start1 = performance.now();
             renderer.clear();
             renderer.drawGrid();
@@ -265,14 +266,26 @@ export async function main() {
             // const gaia3 = end23 - start23;
             // console.log(alltime.toFixed(3), pregaia.toFixed(3), gaia.toFixed(3), postgaia.toFixed(3));
             // console.log(gaia1.toFixed(3), gaia2.toFixed(3), gaia3.toFixed(3));
-            console.timeEnd("renderAll");
+            // console.timeEnd("renderAll");
         }
+        // グローバルにrenderAll関数を設定（デバイスオリエンテーション用）
+        window.renderAll = renderAll;
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
         SettingController.loadSettingsFromConfig();
         // 時刻コントローラーを初期化
         TimeController.initialize();
         // 観測地コントローラーを初期化
         ObservationSiteController.initialize();
+        // デバイスオリエンテーション機能を初期化
+        const deviceOrientationManager = new DeviceOrientationManager();
+        window.deviceOrientationManager = deviceOrientationManager;
+        // デバイスオリエンテーションイベントリスナーを設定
+        if (deviceOrientationManager.isOrientationAvailable()) {
+            deviceOrientationManager.setupOrientationListener();
+            console.log('Device orientation listener set up');
+        }
+        // デバイスオリエンテーション許可ボタンの設定
+        setupOrientationPermissionButton(deviceOrientationManager);
         updateInfoDisplay();
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
@@ -316,7 +329,6 @@ export async function main() {
                     for (const messier of messierData) {
                         if (messier.getOverlay() !== null && messier.getOverlay() !== undefined && messier.getName() !== null && messier.getName() !== undefined) {
                             imageCacheNames.push(messier.getName());
-                            console.log(messier.getName(), messier.getOverlay());
                         }
                     }
                 }
@@ -475,6 +487,49 @@ function closeObjectInfo() {
     const objectInfo = document.getElementById('objectInfo');
     objectInfo.style.display = 'none';
 }
+// デバイスオリエンテーション許可ボタンの設定
+function setupOrientationPermissionButton(deviceOrientationManager) {
+    const deviceInfo = deviceOrientationManager.getDeviceInfo();
+    const permissionRow = document.getElementById('orientationPermissionRow');
+    const permissionBtn = document.getElementById('orientationPermissionBtn');
+    // iPhoneの場合のみボタンを表示
+    if (deviceInfo.os === 'iphone' && permissionRow && permissionBtn) {
+        permissionRow.style.display = 'block';
+        permissionBtn.addEventListener('click', async () => {
+            const granted = await deviceOrientationManager.requestOrientationPermission();
+            if (granted) {
+                permissionBtn.textContent = '許可済み';
+                permissionBtn.style.backgroundColor = '#666';
+                permissionBtn.disabled = true;
+                // コンパス情報を表示
+                // const compassInfoRow = document.getElementById('compassInfoRow');
+                // if (compassInfoRow) {
+                //     compassInfoRow.style.display = 'block';
+                // }
+                // オリエンテーション変更時のコールバックを設定
+                deviceOrientationManager.setOrientationCallback((data) => {
+                    // デバイスの向きに応じて表示を更新
+                    deviceOrientationManager.handleDeviceOrientation(data);
+                });
+            }
+        });
+    }
+}
+// デバイスオリエンテーション変更時の処理
+// function handleDeviceOrientation(data: any) {
+//     // デバイスの向きに応じて表示を更新する処理
+//     // ここでは簡単な例として、コンパス方位を情報表示に反映
+//     if (data.webkitCompassHeading !== null && data.webkitCompassHeading !== undefined) {
+//         const compassInfo = document.getElementById('compassInfo');
+//         if (compassInfo) {
+//             compassInfo.textContent = `方位: ${data.webkitCompassHeading.toFixed(1)}°`;
+//         }
+//     }
+//     // 必要に応じてレンダリングを更新
+//     if ((window as any).renderAll) {
+//         (window as any).renderAll();
+//     }
+// }
 // ページ読み込み時に実行
 window.addEventListener('DOMContentLoaded', main);
 //# sourceMappingURL=main.js.map

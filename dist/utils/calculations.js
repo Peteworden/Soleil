@@ -30,27 +30,74 @@ export class AstronomicalCalculator {
         const now = new Date();
         return this.jdTTFromYmdhmsJst(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
     }
-    static calculateYmdhmJstFromJdTT(jd_TT) {
-        const jd_JST = this.jdTTtoJST(jd_TT) + 1 / 2880;
+    static calculateYmdhmsJstFromJdTT(jd_TT) {
+        const jd_JST = this.jdTTtoJST(jd_TT);
         const A = Math.floor(jd_JST + 68569.5);
         const B = Math.floor(A / 36524.25);
         const C = A - Math.floor(36524.25 * B + 0.75);
         const E = Math.floor((C + 1) / 365.25025);
         const F = C - Math.floor(365.25 * E) + 31;
         const G = Math.floor(F / 30.59);
-        let D = F - Math.floor(30.59 * G);
+        let d = F - Math.floor(30.59 * G);
         const H = Math.floor(G / 11);
-        let M = G - 12 * H + 2;
-        let Y = 100 * (B - 49) + E + H;
-        const Hr = Math.floor((jd_JST + 0.5 - Math.floor(jd_JST + 0.5)) * 24);
-        const Mi = Math.floor((jd_JST + 0.5 - Math.floor(jd_JST + 0.5)) * 1440 - Hr * 60);
-        if (M == 12 && D == 32) {
-            Y += 1;
-            M = 1;
-            D = 1;
+        let m = G - 12 * H + 2;
+        let y = 100 * (B - 49) + E + H;
+        let hr = Math.floor(jd_JST % 1 * 24);
+        let min = Math.floor((jd_JST % 1 * 24 - hr) * 60);
+        let sec = Math.floor((jd_JST % 1 * 24 - hr) * 3600 - min * 60);
+        if (sec >= 60) {
+            min += 1;
+            sec -= 60;
         }
-        const ans = [Y, M, D, Hr, Mi];
-        return ans;
+        else if (sec < 0) {
+            min -= 1;
+            sec += 60;
+        }
+        if (min >= 60) {
+            hr += 1;
+            min -= 60;
+        }
+        else if (min < 0) {
+            hr -= 1;
+            min += 60;
+        }
+        if (hr >= 24) {
+            d += 1;
+            hr -= 24;
+        }
+        else if (hr < 0) {
+            d -= 1;
+            hr += 24;
+        }
+        if (m > 12) {
+            y += 1;
+            m -= 12;
+        }
+        else if (m < 1) {
+            y -= 1;
+            m += 12;
+        }
+        const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if (y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)) {
+            days[1] = 29;
+        }
+        if (d > days[m - 1]) {
+            m += 1;
+            d = 1;
+        }
+        else if (d < 1) {
+            m -= 1;
+            d = days[m - 1];
+        }
+        if (m > 12) {
+            y += 1;
+            m -= 12;
+        }
+        else if (m < 1) {
+            y -= 1;
+            m += 12;
+        }
+        return { year: y, month: m, day: d, hour: hr, minute: min, second: sec };
     }
     // グリニッジ恒星時を計算 経度を足せば地方恒星時
     static calculateGreenwichSiderealTime(jd_TT) {
@@ -69,7 +116,7 @@ export class AstronomicalCalculator {
     static limitingMagnitude(config) {
         const key1 = config.viewState.starSizeKey1;
         const key2 = config.viewState.starSizeKey2;
-        const lm = Math.min(11.5, Math.max(5, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
+        const lm = Math.min(11.5, Math.max(4.0, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
         return lm;
     }
 }

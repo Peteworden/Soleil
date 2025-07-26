@@ -122,11 +122,14 @@ export class SettingController {
                     showNGC: ngcCheck.checked,
                     camera: camera.value
                 };
-                console.log('🔧 About to call updateConfig with newDisplaySettings:', newDisplaySettings);
                 updateConfig({
                     displaySettings: newDisplaySettings
                 });
                 console.log('🔧 updateConfig called successfully');
+                const deviceOrientationManager = window.deviceOrientationManager;
+                if (deviceOrientationManager) {
+                    deviceOrientationManager.setupOrientationListener();
+                }
             }
             else {
                 console.log('❌ updateConfig function not found!');
@@ -163,7 +166,13 @@ export class SettingController {
             }
             else {
                 jd = AstronomicalCalculator.calculateCurrentJdTT();
-                [year, month, day, hour, minute, second] = AstronomicalCalculator.calculateYmdhmJstFromJdTT(jd);
+                const currentJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
+                year = currentJd.year;
+                month = currentJd.month;
+                day = currentJd.day;
+                hour = currentJd.hour;
+                minute = currentJd.minute;
+                second = currentJd.second;
                 // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
                 const localDateTime = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
                 dtlInput.value = localDateTime;

@@ -91,6 +91,7 @@ export class DataLoader {
     // 星座データの読み込み
     static async loadConstellationData() {
         return await this.fetchJson('data/constellation.json');
+        // return await this.fetchJson('下準備/202505星座線書き換え/constellation_new.json');
     }
     // 星名データの読み込み
     static async loadStarNames() {

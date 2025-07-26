@@ -372,42 +372,33 @@ export class CoordinateConverter {
         return { ra, dec };
     }
     // 赤道座標からスクリーン座標への変換、判定
-    equatorialToScreenXYifin(raDec, config, force = false) {
-        // const center = this.getCurrentCenter();
-        // const fieldOfView = this.getCurrentFieldOfView();
-        // const mode = this.getCurrentMode();
+    equatorialToScreenXYifin(raDec, config, force = false, orientationData) {
         const viewState = config.viewState;
         const mode = config.displaySettings.mode;
         const canvas = config.canvasSize;
         const siderealTime = config.siderealTime;
+        let screenRaDec;
         if (mode == 'AEP') {
-            const screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: viewState.centerRA, dec: viewState.centerDec });
-            if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
-                return [true, [x, y]];
-            }
-            else if (force) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
-                return [false, [x, y]];
-            }
-            else {
-                return [false, [0, 0]];
-            }
+            screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: viewState.centerRA, dec: viewState.centerDec });
         }
         else if (mode == 'view') {
             const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
-            const screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
-            if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
-                return [true, [x, y]];
-            }
-            else if (force) {
-                const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
-                return [false, [x, y]];
-            }
-            else {
-                return [false, [0, 0]];
-            }
+            screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
+        }
+        else if (mode == 'live' && orientationData) {
+            const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
+            screenRaDec = this.horizontalToScreenRaDec_Live(horizontal, orientationData);
+        }
+        else {
+            return [false, [0, 0]];
+        }
+        if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
+            const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
+            return [true, [x, y]];
+        }
+        else if (force) {
+            const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
+            return [false, [x, y]];
         }
         else {
             return [false, [0, 0]];
@@ -469,6 +460,135 @@ export class CoordinateConverter {
         const horizontal = this.screenRaDecToHorizontal_View(screenRaDec);
         return this.horizontalToEquatorial(horizontal, siderealTime, this.getLocation().latitude);
     }
+    screenRaDecToHorizontal_Live(screenRaDec, siderealTime, deviceOrientationManager) {
+        const theta = Math.atan2(screenRaDec.dec, -screenRaDec.ra); //画面上で普通に極座標
+        const r = Math.sqrt(screenRaDec.ra * screenRaDec.ra + screenRaDec.dec * screenRaDec.dec) * DEG_TO_RAD;
+        const alpha = deviceOrientationManager.getOrientationData().alpha || 0;
+        const beta = deviceOrientationManager.getOrientationData().beta || 0;
+        const gamma = deviceOrientationManager.getOrientationData().gamma || 0;
+        const { x, y, z } = this.rotateZ(this.rotateY(this.rotateX({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, gamma), beta), alpha);
+        const alt = Math.asin(z) * RAD_TO_DEG;
+        const az = ((Math.atan2(-y, x) * RAD_TO_DEG + deviceOrientationManager.getCompassHeading() + 90) % 360 + 360) % 360;
+        return { az, alt };
+    }
+    horizontalToScreenRaDec_Live(horizontal, orientationData) {
+        const alpha = orientationData.alpha || 0;
+        const beta = orientationData.beta || 0;
+        const gamma = orientationData.gamma || 0;
+        const compassHeading = orientationData.webkitCompassHeading || 0;
+        const az = (horizontal.az - compassHeading + 90) * DEG_TO_RAD;
+        const alt = horizontal.alt * DEG_TO_RAD;
+        const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: Math.cos(alt) * Math.cos(az), y: -Math.cos(alt) * Math.sin(az), z: Math.sin(alt) }, -gamma), -beta), -alpha);
+        if (-z >= 1) {
+            return { ra: 0, dec: 0 };
+        }
+        else {
+            const b = Math.acos(-z) * RAD_TO_DEG;
+            const scrRA = -b * x / Math.sqrt(x * x + y * y);
+            const scrDec = b * y / Math.sqrt(x * x + y * y);
+            return { ra: scrRA, dec: scrDec };
+        }
+    }
+    // デバイスオリエンテーションを使用した画面座標への変換
+    horizontalToScreenXY_Live(horizontal, canvasSize, deviceOrientationManager) {
+        const deviceInfo = deviceOrientationManager.getDeviceInfo();
+        const orientationData = deviceOrientationManager.getOrientationData();
+        // 基本的な座標変換
+        const center = this.getCurrentCenter();
+        const centerHorizontal = {
+            az: center.az,
+            alt: center.alt
+        };
+        // デバイスオリエンテーションが利用可能で許可されている場合
+        if (deviceInfo.os === 'iphone' && deviceOrientationManager.isOrientationPermitted()) {
+            const compassHeading = deviceOrientationManager.getCompassHeading();
+            // コンパス方位を考慮して方位角を調整
+            if (compassHeading !== 0) {
+                const adjustedAzimuth = (horizontal.az - compassHeading + 360) % 360;
+                const adjustedHorizontal = {
+                    az: adjustedAzimuth,
+                    alt: horizontal.alt
+                };
+                // 調整された座標を画面座標に変換
+                const screenRaDec = this.horizontalToScreenRaDec(adjustedHorizontal, centerHorizontal);
+                return this.screenRaDecToScreenXY(screenRaDec, canvasSize, window.config.viewState);
+            }
+        }
+        // デバイスオリエンテーションが利用できない場合は通常の変換
+        const screenRaDec = this.horizontalToScreenRaDec(horizontal, centerHorizontal);
+        return this.screenRaDecToScreenXY(screenRaDec, canvasSize, window.config.viewState);
+    }
+    // // デバイスオリエンテーションを使用した画面座標から水平座標への変換
+    // screenXYToHorizontalWithOrientation(
+    //     x: number, 
+    //     y: number, 
+    //     canvas: HTMLCanvasElement, 
+    //     deviceOrientationManager: DeviceOrientationManager
+    // ): HorizontalCoordinates {
+    //     const deviceInfo = deviceOrientationManager.getDeviceInfo();
+    //     // 画面座標を画面RA/Decに変換
+    //     const screenRaDec = this.screenXYToScreenRaDec(x, y, canvas);
+    //     // デバイスオリエンテーションが利用可能で許可されている場合
+    //     if (deviceInfo.os === 'iphone' && deviceOrientationManager.isOrientationPermitted()) {
+    //         const compassHeading = deviceOrientationManager.getCompassHeading();
+    //         // 基本的な水平座標変換
+    //         const basicHorizontal = this.screenRaDecToHorizontal_View(screenRaDec);
+    //         // コンパス方位を考慮して方位角を調整
+    //         if (compassHeading !== 0) {
+    //             const adjustedAzimuth = (basicHorizontal.az + compassHeading) % 360;
+    //             return {
+    //                 az: adjustedAzimuth,
+    //                 alt: basicHorizontal.alt
+    //             };
+    //         }
+    //         return basicHorizontal;
+    //     }
+    //     // デバイスオリエンテーションが利用できない場合は通常の変換
+    //     return this.screenRaDecToHorizontal_View(screenRaDec);
+    // }
+    // // デバイスオリエンテーションを使用したリアルタイム座標変換
+    // getRealTimeCoordinatesWithOrientation(
+    //     deviceOrientationManager: DeviceOrientationManager
+    // ): { azimuth: number, altitude: number, ra: number, dec: number } {
+    //     const deviceInfo = deviceOrientationManager.getDeviceInfo();
+    //     const orientationData = deviceOrientationManager.getOrientationData();
+    //     if (deviceInfo.os === 'iphone' && deviceOrientationManager.isOrientationPermitted()) {
+    //         const alpha = orientationData.alpha || 0;
+    //         const beta = orientationData.beta || 0;
+    //         const gamma = orientationData.gamma || 0;
+    //         const compassHeading = deviceOrientationManager.getCompassHeading();
+    //         // デバイスの向きから水平座標を計算
+    //         const {x, y, z} = this.rotateZ(
+    //             this.rotateY(
+    //                 this.rotateX({x: 0, y: 0, z: 1}, gamma * DEG_TO_RAD), 
+    //                 beta * DEG_TO_RAD
+    //             ), 
+    //             alpha * DEG_TO_RAD
+    //         );
+    //         const altitude = Math.asin(z) * RAD_TO_DEG;
+    //         const azimuth = ((Math.atan2(-y, x) * RAD_TO_DEG + compassHeading + 90) % 360 + 360) % 360;
+    //         // 水平座標から赤道座標に変換
+    //         const siderealTime = (window as any).config?.displayTime?.siderealTime || 0;
+    //         const equatorial = this.horizontalToEquatorial(
+    //             {az: azimuth, alt: altitude}, 
+    //             siderealTime, 
+    //             this.getLocation().latitude
+    //         );
+    //         return {
+    //             azimuth,
+    //             altitude,
+    //             ra: equatorial.ra,
+    //             dec: equatorial.dec
+    //         };
+    //     }
+    //     // デバイスオリエンテーションが利用できない場合はデフォルト値
+    //     return {
+    //         azimuth: 0,
+    //         altitude: 0,
+    //         ra: 0,
+    //         dec: 0
+    //     };
+    // }
     pinchNewCenterRaDec(center1, pinchRaDec, pinchScreenRaDec, scale) {
         // x, yは固定。screenRA_p, screenDec_p(pinchの座標)はscale倍になる。
         // Equ->screenRaDecの関数でthetaSH=atan2(b, a)は符号も含めて変化せず、arccos(c)はscale倍になる。

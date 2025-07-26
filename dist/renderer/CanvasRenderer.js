@@ -2,6 +2,7 @@ import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
+import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
         this.imageCache = {};
@@ -11,6 +12,7 @@ export class CanvasRenderer {
         this.gaiaDataCache1 = null;
         this.gaiaDataCache2 = null;
         this.gaiaDataCache3 = null;
+        this.orientationData = { alpha: null, beta: null, gamma: null, webkitCompassHeading: null };
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context)
@@ -25,6 +27,15 @@ export class CanvasRenderer {
             this.config = config;
         }
         this.coordinateConverter = new CoordinateConverter();
+        this.deviceOrientationManager = new DeviceOrientationManager();
+        this.deviceOrientationManager.setOrientationCallback((data) => {
+            this.orientationData = {
+                alpha: data.alpha,
+                beta: data.beta,
+                gamma: data.gamma,
+                webkitCompassHeading: data.webkitCompassHeading || null
+            };
+        });
     }
     // imageCacheを設定
     setImageCache(imageCache) {
@@ -41,7 +52,7 @@ export class CanvasRenderer {
         const coordsJ2000 = object.getCoordinates();
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -168,7 +179,7 @@ export class CanvasRenderer {
         }
         else if (mode == 'view') {
             this.ctx.translate(x, y);
-            const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.config, true);
+            const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.config, true, this.orientationData);
             const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
             this.ctx.rotate(rotation);
             this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
@@ -229,7 +240,7 @@ export class CanvasRenderer {
     drawSun(sun) {
         const siderealTime = this.config.siderealTime;
         const coords = sun.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -246,7 +257,7 @@ export class CanvasRenderer {
         this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
         const coords = planet.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -273,28 +284,19 @@ export class CanvasRenderer {
         const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
         const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
         let p, RA1, Dec1, A1, h1, scrRA1, scrDec1, x1, y1;
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.config);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.config, false, this.orientationData);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
-        if (this.config.displaySettings.mode == 'AEP') {
-            p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
-            RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
-            Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
-            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.config, true);
-            const [x1, y1] = screenXY1[1];
-            p = Math.atan2(y1 - y, x1 - x);
-            // console.log(p * 180/Math.PI);
-        }
-        else if (this.config.displaySettings.mode == 'EtP') {
+        if (this.config.displaySettings.mode == 'EtP') {
             p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
         }
-        else if (this.config.displaySettings.mode == 'view') {
+        else if (['AEP', 'view', 'live'].includes(this.config.displaySettings.mode)) {
             p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
             // console.log(p * 180/Math.PI);
             RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
             Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
-            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.config, true);
+            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.config, true, this.orientationData);
             const [x1, y1] = screenXY1[1];
             p = Math.atan2(y1 - y, x1 - x);
         }
@@ -333,7 +335,7 @@ export class CanvasRenderer {
         this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
         const coords = minorObject.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
@@ -370,13 +372,14 @@ export class CanvasRenderer {
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
             const coords = star.getCoordinates();
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
+            const starSize = this.getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
             this.ctx.beginPath();
             this.ctx.fillStyle = this.getStarColor(star.getBv());
-            this.ctx.arc(x, y, this.getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize), 0, Math.PI * 2);
+            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
             this.ctx.fill();
         }
     }
@@ -420,7 +423,7 @@ export class CanvasRenderer {
             if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) > tier_range[starName.tier - 1])
                 continue;
             const coords = this.coordinateConverter.precessionEquatorial({ ra: starName.ra, dec: starName.dec }, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
@@ -436,6 +439,8 @@ export class CanvasRenderer {
     }
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
         if (!this.config.displaySettings.showStars)
+            return;
+        if (!["AEP", "view"].includes(this.config.displaySettings.mode))
             return;
         if (!gaiaData || gaiaData.length == 0)
             return;
@@ -708,8 +713,8 @@ export class CanvasRenderer {
                 const coords1 = this.coordinateConverter.precessionEquatorial(coords1J2000, precessionAngle);
                 const coords2J2000 = { ra: line[2], dec: line[3] };
                 const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
-                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true);
-                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true);
+                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true, this.orientationData);
+                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true, this.orientationData);
                 if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin)
                     continue;
                 if ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) > maxLength * maxLength)
@@ -717,6 +722,20 @@ export class CanvasRenderer {
                 this.ctx.moveTo(x1, y1);
                 this.ctx.lineTo(x2, y2);
             }
+            // for (const longLine of constellation.lines) {
+            //     for (let i = 0; i < longLine.length - 3; i+=2) {
+            //         const coords1J2000 = { ra: longLine[i], dec: longLine[i+1] };
+            //         const coords1 = this.coordinateConverter.precessionEquatorial(coords1J2000, precessionAngle);
+            //         const coords2J2000 = { ra: longLine[i+2], dec: longLine[i+3] };
+            //         const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
+            //         const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true, this.orientationData);
+            //         const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true, this.orientationData);
+            //         if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin) continue;
+            //         if ((x1-x2) * (x1-x2) + (y1-y2) * (y1-y2) > maxLength * maxLength) continue;
+            //         this.ctx.moveTo(x1, y1);
+            //         this.ctx.lineTo(x2, y2);
+            //     }
+            // }
         }
         this.ctx.stroke();
     }
@@ -732,7 +751,7 @@ export class CanvasRenderer {
         for (const constellation of constellations) {
             const coordsJ2000 = { ra: constellation.ra, dec: constellation.dec };
             const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
@@ -815,7 +834,7 @@ export class CanvasRenderer {
         if (magnitude > limitingMagnitude)
             return 1;
         else
-            return 1.0 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.3);
+            return 1.0 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
     }
     getStarColor(bv) {
         let c;
@@ -1194,14 +1213,12 @@ export class CanvasRenderer {
         }
         // 新しいHIP星データを作成（歳差運動補正済み）
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', jd);
-        console.log("HIP precession angle:", precessionAngle);
         const correctedStars = hipStars.map(star => {
             const originalCoords = star.getCoordinates();
             const correctedCoords = this.coordinateConverter.precessionEquatorial(originalCoords, precessionAngle);
             return new HipStar(correctedCoords, star.getMagnitude(), star.getBv());
         });
         this.hipStarsCache = { stars: correctedStars, jd };
-        console.log("HIP cache created with", correctedStars.length, "stars");
         return correctedStars;
     }
     // Gaiaデータ全体を歳差運動補正してキャッシュ

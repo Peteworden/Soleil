@@ -4,6 +4,13 @@ import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 export class TimeController {
     static initialize() {
         this.setupTimeSlider();
+        const dtlInput = document.getElementById('dtl');
+        const realTime = document.getElementById('realTime');
+        if (dtlInput && realTime) {
+            dtlInput.addEventListener('input', (e) => {
+                realTime.value = 'off';
+            });
+        }
         // this.setupTimeButtons();
     }
     static setupTimeSlider() {
@@ -77,7 +84,7 @@ export class TimeController {
         const config = window.config;
         if (!config)
             return;
-        const targetJd = AstronomicalCalculator.calculateYmdhmJstFromJdTT(jd);
+        const targetJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
         const viewState = config.viewState;
         const coordinateConverter = new CoordinateConverter();
         if (config.displaySettings.mode == 'AEP') {
@@ -85,7 +92,7 @@ export class TimeController {
             viewState.centerAz = centerAzAlt.az;
             viewState.centerAlt = centerAzAlt.alt;
         }
-        else {
+        else if (config.displaySettings.mode == 'view') {
             const centerRaDec = coordinateConverter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, config.siderealTime);
             viewState.centerRA = centerRaDec.ra;
             viewState.centerDec = centerRaDec.dec;
@@ -93,12 +100,12 @@ export class TimeController {
         const newConfig = {
             viewState: viewState,
             displayTime: {
-                year: targetJd[0],
-                month: targetJd[1],
-                day: targetJd[2],
-                hour: targetJd[3],
-                minute: targetJd[4],
-                second: targetJd[5],
+                year: targetJd.year,
+                month: targetJd.month,
+                day: targetJd.day,
+                hour: targetJd.hour,
+                minute: targetJd.minute,
+                second: targetJd.second,
                 jd: jd,
                 realTime: 'off' // 手動設定時はリアルタイムをオフにする
             },
@@ -108,29 +115,29 @@ export class TimeController {
         if (updateConfig) {
             updateConfig(newConfig);
         }
+        // ★ スライダー操作時に全天体データを更新
+        SolarSystemDataManager.updateAllData(jd);
         const renderAll = window.renderAll;
         if (renderAll) {
             renderAll();
         }
-        // ★ スライダー操作時に全天体データを更新
-        SolarSystemDataManager.updateAllData(jd);
     }
     static addDays(days) {
         const config = window.config;
         if (!config)
             return;
         const jd = config.displayTime.jd + days;
-        const targetJd = AstronomicalCalculator.calculateYmdhmJstFromJdTT(jd);
+        const targetJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
         const updateConfig = window.updateConfig;
         if (updateConfig) {
             updateConfig({
                 displayTime: {
-                    year: targetJd[0],
-                    month: targetJd[1],
-                    day: targetJd[2],
-                    hour: targetJd[3],
-                    minute: targetJd[4],
-                    second: targetJd[5],
+                    year: targetJd.year,
+                    month: targetJd.month,
+                    day: targetJd.day,
+                    hour: targetJd.hour,
+                    minute: targetJd.minute,
+                    second: targetJd.second,
                     jd: jd,
                     realTime: 'off' // 手動設定時はリアルタイムをオフにする
                 }
@@ -143,17 +150,17 @@ export class TimeController {
         if (!config)
             return;
         const jd = AstronomicalCalculator.calculateCurrentJdTT();
-        const targetJd = AstronomicalCalculator.calculateYmdhmJstFromJdTT(jd);
+        const targetJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
         const updateConfig = window.updateConfig;
         if (updateConfig) {
             updateConfig({
                 displayTime: {
-                    year: targetJd[0],
-                    month: targetJd[1],
-                    day: targetJd[2],
-                    hour: targetJd[3],
-                    minute: targetJd[4],
-                    second: targetJd[5],
+                    year: targetJd.year,
+                    month: targetJd.month,
+                    day: targetJd.day,
+                    hour: targetJd.hour,
+                    minute: targetJd.minute,
+                    second: targetJd.second,
                     jd: jd,
                     realTime: 'on' // 現在時刻に設定時はリアルタイムをオンにする
                 }

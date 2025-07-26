@@ -64,9 +64,9 @@
             すでに星雲イラストの表示、描画の高速化など新バージョンの方がすぐれているところもあります。
             <span style="color: orange;">新しいバージョンを試して、不具合がないかなど確かめていただけるとうれしいです。</span>
         </p>
-        <div style="display: flex; justify-content: center;">
-            <button id="oldVersion" type="button" onclick="window.location.href='chart_js.html'" style="color: #ffffff;">旧バージョン</button>
-            <button id="newVersion" type="button" onclick="document.getElementById('announcement').style.display='none'" style="color: #ffffff;">新バージョン</button>
+        <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
+            <button id="oldVersion" type="button" onclick="window.location.href='chart_js.html'" style="color: #ffffff; background-color: #666; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em;">旧バージョン</button>
+            <button id="newVersion" type="button" onclick="document.getElementById('announcement').style.display='none'" style="color: #ffffff; background: linear-gradient(135deg, #ff6b35, #f7931e); padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3); transform: scale(1.05);">🚀 新バージョン</button>
         </div>
         <p><span style="color: orange;">星図を開いてからバージョンを変えたい場合は、リロードするか、画面左上にリンクがある「HOME」を経由してください。</span></p>
         <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
@@ -78,11 +78,12 @@
             <li>メニューページ</li>
             <li>URLによる状態の保存</li>
         </ul>
-        <p>新バージョンにしかない機能</p>
+        <p>新バージョンの強み</p>
         <ul>
             <li>星雲イラストの表示</li>
             <li>描画の高速化</li>
-            <li>今後旧バージョン以上にできることを増やす予定</li>
+            <li>デザインの改善</li>
+            <li>今後旧バージョン以上にできることを増やす予定（星雲・星団・太陽系天体をユーザーが追加・選択できるようにするなど）</li>
         </ul>
     </div>
 
@@ -108,6 +109,10 @@
             <span class="info-label">最微等級:</span>
             <span class="info-value" id="limitingMagnitudeInfo">11.5</span>
         </div>
+        <!-- <div class="info-row" id="compassInfoRow" style="display: none;">
+            <span class="info-label">方位:</span>
+            <span class="info-value" id="compassInfo">0.0°</span>
+        </div> -->
     </div>
 
     <!-- PC用ボタン配置 -->
@@ -161,7 +166,7 @@
                     </div>
 
                     <div class="setting-row">
-                        <label>リアルタイム表示:</label>
+                        <label>リアルタイム:</label>
                         <select id="realTime">
                             <option value="off" checked>オフ</option>
                             <option value="radec">赤経・赤緯固定</option>
@@ -205,20 +210,20 @@
 
                     <div class="setting-row">
                         <label>緯度:</label>
-                        <select id="NSCombo">
+                        <select id="NSCombo" class="observation-site-select">
                             <option selected>北緯</option>
                             <option>南緯</option>
                         </select>
-                        <input type="text" id="lat" size="1" value="35">°
+                        <input type="text" id="lat" class="observation-site-input" size="1" value="35">°
                     </div>
 
                     <div class="setting-row">
                         <label>経度:</label>
-                        <select id="EWCombo">
+                        <select id="EWCombo" class="observation-site-select">
                             <option selected>東経</option>
                             <option>西経</option>
                         </select>
-                        <input type="text" id="lon" size="1" value="135">°
+                        <input type="text" id="lon" class="observation-site-input" size="1" value="135">°
                     </div>
                 </div>
 
@@ -229,50 +234,95 @@
                     <div class="setting-row">
                         <label>表示モード:</label>
                         <select id="mode">
-                            <option value="AEP">赤道座標系（正距方位図法）</option>
+                            <option value="AEP">赤道座標系</option>
                             <option value="view" checked>プラネタリウム</option>
-                            <option value="live" disabled>ライブ</option>
+                            <option value="live">スマホに合わせる</option>
                             <option value="ar" disabled>風景と重ねる</option>
                         </select>
+                    </div>
+
+                    <!-- デバイスオリエンテーション許可ボタン（iPhone用） -->
+                    <div class="setting-row" id="orientationPermissionRow" style="display: none;">
+                        <label>デバイス向き:</label>
+                        <button id="orientationPermissionBtn" type="button" style="background-color: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                            デバイス向きの使用を許可
+                        </button>
                     </div>
 
                     <div class="setting-row">
                         <label>最微等級:</label>
                         <div class="set-mag-limit">
                             <img src="images/キラキラ1.png" alt="" class="magLimit-image magLimit-left-image">
-                            <input type="range" id="magLimitSlider" min="10" max="13" step="0.1" value="11.5">
+                            <input type="range" id="magLimitSlider" min="9" max="13" step="0.1" value="11">
                             <img src="images/キラキラ2.png" alt="" class="magLimit-image magLimit-right-image">
                         </div>
                     </div>
 
-                    <div class="setting-row">
-                        <label>ダークモード:</label>
+                    <div class="switch-row">
+                        <label class="switch-text">ダークモード:</label>
                         <label class="switch">
                             <input type="checkbox" id="dark">
                             <span class="slider round"></span>
                         </label>
                     </div>
 
-                    <div class="setting-row">
-                        <label>グリッド表示:</label>
+                    <div class="switch-row">
+                        <label class="switch-text">グリッド表示:</label>
                         <label class="switch">
                             <input type="checkbox" id="gridCheck" checked>
                             <span class="slider round"></span>
                         </label>
                     </div>
 
-                    <div class="setting-row">
-                        <label>中心表示:</label>
-                        <input type="checkbox" id="reticleCheck" checked>
+                    <div class="switch-row">
+                        <label class="switch-text">中心表示:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="reticleCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
 
-                    <h5>天体</h5>
-                    <div class="setting-row">
-                        <label>恒星:</label>
-                        <input type="checkbox" id="starCheck" checked>
+                    
+                    <h5>星雲・星団など</h5>
+                    <div class="switch-row">
+                        <label class="switch-text">メシエ天体:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="messierCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
-                    <div class="setting-row">
-                        <label>恒星名表示:</label>
+                    <div class="switch-row">
+                        <label class="switch-text">おすすめ天体:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="recCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="switch-row">
+                        <label class="switch-text">NGC・IC天体:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="ngcCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <h5>画角</h5>
+                    <select id="camera">
+                        <option value="none">なし</option>
+                        <option value="r200ss-cmos">R200SS-CMOS</option>
+                        <option value="fs128-cmos">FS128-CMOS</option>
+                        <option value="85-cmos">85-CMOS</option>
+                    </select>
+
+                    <h5>天体</h5>
+                    <div class="switch-row">
+                        <label class="switch-text">恒星:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="starCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="switch-row">
+                        <label class="switch-text">恒星名表示:</label>
                         <select id="starName">
                             <option value="off">なし</option>
                             <option value="to1">1等星まで</option>
@@ -282,39 +332,28 @@
                     </div>
 
                     <h5>星座</h5>
-                    <div class="setting-row">
-                        <label>星座名:</label>
-                        <input type="checkbox" id="constellationNameCheck" checked>
+                    <div class="switch-row">
+                        <label class="switch-text">星座名:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="constellationNameCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
-                    <div class="setting-row">
-                        <label>星座線:</label>
-                        <input type="checkbox" id="constellationLineCheck" checked>
+                    <div class="switch-row">
+                        <label class="switch-text">星座線:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="constellationLineCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
                     <h5>太陽系天体</h5>
-                    <div class="setting-row">
-                        <label>惑星・小惑星・彗星:</label>
-                        <input type="checkbox" id="planetCheck" checked>
+                    <div class="switch-row">
+                        <label class="switch-text">惑星・小惑星・彗星:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="planetCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
-                    <h5>その他の天体</h5>
-                    <div class="setting-row">
-                        <label>メシエ天体:</label>
-                        <input type="checkbox" id="messierCheck" checked>
-                    </div>
-                    <div class="setting-row">
-                        <label>おすすめ天体:</label>
-                        <input type="checkbox" id="recCheck" checked>
-                    </div>
-                    <div class="setting-row">
-                        <label>NGC・IC天体:</label>
-                        <input type="checkbox" id="ngcCheck" checked>
-                    </div>
-                    <h5>画角</h5>
-                    <select id="camera">
-                        <option value="none">なし</option>
-                        <option value="r200ss-cmos">R200SS-CMOS</option>
-                        <option value="fs128-cmos">FS128-CMOS</option>
-                        <option value="85-cmos">85-CMOS</option>
-                    </select>
 
                 </div>
 
