@@ -84,13 +84,22 @@ export class DeviceOrientationManager {
                 }
                 else if (this.deviceInfo.os === 'android') {
                     // Androidでは両方のイベントを試す
+                    const title = document.getElementById('title');
                     try {
                         window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this), true);
-                        console.log('deviceorientationabsolute android');
+                        if (title) {
+                            title.innerHTML = `<h6>do223 - deviceorientationabsolute added
+                            </h6>`;
+                        }
+                        console.log('deviceorientationabsolute listener added');
                     }
                     catch (e) {
-                        // window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
-                        console.log('deviceorientation android (fallback)');
+                        window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
+                        if (title) {
+                            title.innerHTML = `<h6>do223 - deviceorientation fallback added
+                            </h6>`;
+                        }
+                        console.log('deviceorientation fallback listener added');
                     }
                 }
                 else if (this.deviceInfo.os === 'pc') {
@@ -112,6 +121,27 @@ export class DeviceOrientationManager {
             g=${event.gamma?.toFixed(2) || 0}<br>
             compass=${event.webkitCompassHeading?.toFixed(2) || 'N/A'}
             </h1>`;
+            console.log('Title updated successfully');
+        }
+        else {
+            console.log('Title element not found');
+            // 代替手段：bodyに直接追加
+            const debugDiv = document.createElement('div');
+            debugDiv.style.position = 'fixed';
+            debugDiv.style.top = '10px';
+            debugDiv.style.left = '10px';
+            debugDiv.style.backgroundColor = 'rgba(0,0,0,0.8)';
+            debugDiv.style.color = 'white';
+            debugDiv.style.padding = '10px';
+            debugDiv.style.zIndex = '9999';
+            debugDiv.innerHTML = `
+                OS: ${this.deviceInfo.os}<br>
+                a=${event.alpha?.toFixed(2) || 0},
+                b=${event.beta?.toFixed(2) || 0},
+                g=${event.gamma?.toFixed(2) || 0}<br>
+                compass=${event.webkitCompassHeading?.toFixed(2) || 'N/A'}
+            `;
+            document.body.appendChild(debugDiv);
         }
         // liveモード以外の場合は処理をスキップ
         const config = window.config;
@@ -173,20 +203,29 @@ export class DeviceOrientationManager {
             const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, window.config.siderealTime);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
-                updateConfig({
-                    viewState: {
-                        ...window.config.viewState,
-                        centerRA: centerRaDec.ra,
-                        centerDec: centerRaDec.dec,
-                        centerAz: centerHorizontal.az,
-                        centerAlt: centerHorizontal.alt
-                    }
-                });
+                const title = document.getElementById('title');
+                if (title) {
+                    title.innerHTML = `<h6>do220
+                    ${window.config.viewState.centerRA.toFixed(2)},
+                    ${window.config.viewState.centerDec.toFixed(2)},
+                    ${window.config.viewState.centerAz.toFixed(2)},
+                    ${window.config.viewState.centerAlt.toFixed(2)}
+                    </h6>`;
+                }
+                // updateConfig({
+                //     viewState: {
+                //         ...(window as any).config.viewState,
+                //         centerRA: centerRaDec.ra,
+                //         centerDec: centerRaDec.dec,
+                //         centerAz: centerHorizontal.az,
+                //         centerAlt: centerHorizontal.alt
+                //     }
+                // });
             }
             // 正しく計算できている
             const title = document.getElementById('title');
             if (title) {
-                title.innerHTML = `<h6>
+                title.innerHTML = `<h6>do232
                 ${window.config.viewState.centerRA.toFixed(2)},
                 ${window.config.viewState.centerDec.toFixed(2)},
                 ${window.config.viewState.centerAz.toFixed(2)},
@@ -214,7 +253,9 @@ export class DeviceOrientationManager {
     // デバイスオリエンテーション機能が利用可能かどうかを確認
     // main.tsで呼ばれる
     isOrientationAvailable() {
-        return typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
+        const available = typeof window !== 'undefined' && 'DeviceOrientationEvent' in window;
+        console.log('DeviceOrientationEvent available:', available);
+        return available;
     }
     // デバイスオリエンテーション機能が許可されているかどうかを確認
     isOrientationPermitted() {
