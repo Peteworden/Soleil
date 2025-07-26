@@ -463,10 +463,10 @@ export class CoordinateConverter {
     screenRaDecToHorizontal_Live(screenRaDec, orientationData) {
         const theta = Math.atan2(screenRaDec.dec, -screenRaDec.ra); //画面上で普通に極座標
         const r = Math.sqrt(screenRaDec.ra * screenRaDec.ra + screenRaDec.dec * screenRaDec.dec) * DEG_TO_RAD;
-        const alpha = orientationData.alpha || 0;
-        const beta = orientationData.beta || 0;
-        const gamma = orientationData.gamma || 0;
-        const { x, y, z } = this.rotateZ(this.rotateY(this.rotateX({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, gamma), beta), alpha);
+        const alpha = orientationData.alpha;
+        const beta = orientationData.beta;
+        const gamma = orientationData.gamma;
+        const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, gamma), beta), alpha);
         const alt = Math.asin(z) * RAD_TO_DEG;
         const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
         return { az, alt };

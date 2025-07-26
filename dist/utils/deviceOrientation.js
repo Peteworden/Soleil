@@ -156,7 +156,7 @@ export class DeviceOrientationManager {
         const coordinateConverter = new CoordinateConverter();
         if (coordinateConverter) {
             const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ ra: 0, dec: 0 }, this.orientationData);
-            const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, 0, 0);
+            const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, window.config.viewState.siderealTime, window.config.viewState.latitude);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 updateConfig({
@@ -171,12 +171,17 @@ export class DeviceOrientationManager {
             }
             const title = document.getElementById('title');
             if (title) {
-                title.innerHTML = `<h1>
-                ${centerRaDec.ra.toFixed(2)},
-                ${centerRaDec.dec.toFixed(2)},
-                ${centerHorizontal.az.toFixed(2)},
-                ${centerHorizontal.alt.toFixed(2)}
-                </h1>`;
+                title.innerHTML = `<h6>radec:
+                (${centerRaDec.ra.toFixed(2)},
+                ${centerRaDec.dec.toFixed(2)}_
+                horizontal:
+                (${centerHorizontal.az.toFixed(2)},
+                ${centerHorizontal.alt.toFixed(2)})_
+                orientation:
+                (${this.orientationData.alpha.toFixed(1)},
+                ${this.orientationData.beta.toFixed(1)},
+                ${this.orientationData.gamma.toFixed(1)})
+                </h6>`;
             }
         }
         window.renderAll();
