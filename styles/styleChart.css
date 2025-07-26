@@ -308,14 +308,14 @@ input[type="file"] {
 }
 
 .setting-row label {
-    min-width: 20px;
+    min-width: 100px;
     font-weight: 500;
 }
 
 .setting-row input,
 .setting-row select {
     flex: 1;
-    max-width: 200px;
+    max-width: 150px;
 }
 
 #dtl {
@@ -426,8 +426,26 @@ input[type="file"] {
     background-color: #45a049;
 }
 
-#lon {
-    width: 3em;
+.observation-site-select {
+    flex: none !important;
+    width: 100px;
+}
+
+.observation-site-input {
+    flex: none !important;
+    width: 100px;
+}
+
+.switch-row {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    gap: 10px;
+}
+
+.switch-text {
+    min-width: 100px;
+    font-weight: 500;
 }
 
 .zuho {

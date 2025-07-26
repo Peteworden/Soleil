@@ -107,34 +107,51 @@ export class DeviceOrientationManager {
             return;
         }
         const orientationTime2 = Date.now();
-        if (orientationTime2 - this.orientationTime1 > 50) {
-            this.orientationTime1 = orientationTime2;
-            if (Math.max(Math.abs(this.orientationData.alpha - event.alpha), Math.abs(this.orientationData.beta - event.beta), Math.abs(this.orientationData.gamma - event.gamma)) < 10) { //移動が大きすぎないとき
-                // 最近のデータが3つ(以上)あるとき
-                if (this.recentOrientationData.length > 2) {
-                    // 最初のデータを削除して、新しいデータを追加
-                    this.recentOrientationData.shift();
-                    this.recentOrientationData.push(eventOrientationData);
-                    this.moving = (Math.abs(eventOrientationData.alpha - (this.recentOrientationData[1].alpha || eventOrientationData.alpha)) > 0.2);
-                    this.orientationData = {
-                        alpha: this.recentOrientationData.reduce((acc, val) => acc + (val.alpha || 0), 0) / this.recentOrientationData.length,
-                        beta: this.recentOrientationData.reduce((acc, val) => acc + (val.beta || 0), 0) / this.recentOrientationData.length,
-                        gamma: this.recentOrientationData.reduce((acc, val) => acc + (val.gamma || 0), 0) / this.recentOrientationData.length,
-                        webkitCompassHeading: this.recentOrientationData[2].webkitCompassHeading
-                    };
-                }
-                else {
-                    // 最近のデータが2つ以下のとき
-                    this.recentOrientationData.push(eventOrientationData);
-                }
+        if (orientationTime2 - this.orientationTime1 < 50)
+            return;
+        this.orientationTime1 = orientationTime2;
+        if (Math.max(Math.abs(this.orientationData.alpha - event.alpha), Math.abs(this.orientationData.beta - event.beta), Math.abs(this.orientationData.gamma - event.gamma)) < 10) { //移動が大きすぎないとき
+            // 最近のデータが3つ(以上)あるとき
+            if (this.recentOrientationData.length > 2) {
+                // 最初のデータを削除して、新しいデータを追加
+                this.recentOrientationData.shift();
+                this.recentOrientationData.push(eventOrientationData);
+                this.moving = (Math.abs(eventOrientationData.alpha - (this.recentOrientationData[1].alpha || eventOrientationData.alpha)) > 0.2);
+                this.orientationData = {
+                    alpha: this.recentOrientationData.reduce((acc, val) => acc + (val.alpha || 0), 0) / this.recentOrientationData.length,
+                    beta: this.recentOrientationData.reduce((acc, val) => acc + (val.beta || 0), 0) / this.recentOrientationData.length,
+                    gamma: this.recentOrientationData.reduce((acc, val) => acc + (val.gamma || 0), 0) / this.recentOrientationData.length,
+                    webkitCompassHeading: this.recentOrientationData[2].webkitCompassHeading
+                };
             }
             else {
-                // 移動が大きいときは作り直す
-                this.recentOrientationData = [eventOrientationData];
-                this.orientationData = eventOrientationData;
+                // 最近のデータが2つ以下のとき
+                this.recentOrientationData.push(eventOrientationData);
             }
-            window.renderAll();
         }
+        else {
+            // 移動が大きいときは作り直す
+            this.recentOrientationData = [eventOrientationData];
+            this.orientationData = eventOrientationData;
+        }
+        const coordinateConverter = window.coordinateConverter;
+        if (coordinateConverter) {
+            const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ ra: 0, dec: 0 }, this.orientationData);
+            const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, 0, 0);
+            const updateConfig = window.updateConfig;
+            if (updateConfig) {
+                updateConfig({
+                    viewState: {
+                        ...window.config.viewState,
+                        centerRA: centerRaDec.ra,
+                        centerDec: centerRaDec.dec,
+                        centerAz: centerHorizontal.az,
+                        centerAlt: centerHorizontal.alt
+                    }
+                });
+            }
+        }
+        window.renderAll();
     }
     // オリエンテーションデータを取得
     getOrientationData() {

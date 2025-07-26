@@ -46,6 +46,9 @@ export class InteractionController {
         };
         this.onPointerMove = (e) => {
             e.preventDefault();
+            if (this.displaySettings.mode == 'live') {
+                return;
+            }
             // ポインターの座標を更新
             // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
