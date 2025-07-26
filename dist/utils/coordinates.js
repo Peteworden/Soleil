@@ -476,7 +476,7 @@ export class CoordinateConverter {
         const beta = orientationData.beta;
         const gamma = orientationData.gamma;
         const compassHeading = orientationData.webkitCompassHeading;
-        const az = (horizontal.az - compassHeading + 90) * DEG_TO_RAD;
+        const az = (horizontal.az - compassHeading - 90) * DEG_TO_RAD;
         const alt = horizontal.alt * DEG_TO_RAD;
         const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: Math.cos(alt) * Math.cos(az), y: -Math.cos(alt) * Math.sin(az), z: Math.sin(alt) }, -alpha), -beta), -gamma);
         if (-z >= 1) {
