@@ -86,6 +86,14 @@ export class DeviceOrientationManager {
     }
     // オリエンテーションイベントハンドラー
     handleOrientation(event) {
+        const title = document.getElementById('title');
+        if (title) {
+            title.innerHTML = `<h1>
+            ${event.alpha?.toFixed(2) || 0},
+            ${event.beta?.toFixed(2) || 0},
+            ${event.gamma?.toFixed(2) || 0}
+            </h1>`;
+        }
         if (event.alpha === null || event.beta === null || event.gamma === null) {
             return;
         }
