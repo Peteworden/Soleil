@@ -171,21 +171,16 @@ export class DeviceOrientationManager {
                     }
                 });
             }
+            // 正しく計算できている
             const title = document.getElementById('title');
             if (title) {
-                title.innerHTML = `<h6>radec:
-                (${centerRaDec.ra.toFixed(2)},
-                ${centerRaDec.dec.toFixed(2)}_
-                horizontal:
-                (${centerHorizontal.az.toFixed(2)},
-                ${centerHorizontal.alt.toFixed(2)})_
-                orientation:
-                (${this.orientationData.alpha.toFixed(1)},
-                ${this.orientationData.beta.toFixed(1)},
-                ${this.orientationData.gamma.toFixed(1)})
+                title.innerHTML = `<h6>
+                ${window.config.viewState.centerRA.toFixed(2)},
+                ${window.config.viewState.centerDec.toFixed(2)},
+                ${window.config.viewState.centerAz.toFixed(2)},
+                ${window.config.viewState.centerAlt.toFixed(2)}
                 </h6>`;
             }
-            window.renderAll();
         }
     }
     // オリエンテーションデータを取得

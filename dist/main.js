@@ -158,19 +158,19 @@ export function updateConfig(newConfig) {
     window.config = config;
     window.renderer.updateOptions(config);
     if (newConfig.displaySettings) {
-        Object.assign(config.displaySettings, newConfig.displaySettings);
+        // Object.assign(config.displaySettings, newConfig.displaySettings);
         window.controller.updateOptions(config.displaySettings);
     }
-    if (newConfig.displayTime) {
-        updateInfoDisplay();
-    }
+    // if (newConfig.displayTime) {
+    //     updateInfoDisplay();
+    // }
     // 時刻関連の更新があればTimeControllerも更新
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
         // (window as any).renderer.updateOptions(newConfig);
         // TimeController.initialize();
     }
     window.renderAll();
-    updateInfoDisplay();
+    // updateInfoDisplay();
 }
 // ViewStateのみを更新する関数
 export function updateViewState(newViewState) {
@@ -280,24 +280,9 @@ export async function main() {
         // デバイスオリエンテーション機能を初期化
         const deviceOrientationManager = new DeviceOrientationManager();
         window.deviceOrientationManager = deviceOrientationManager;
-        const title = document.getElementById('title');
-        if (title) {
-            title.innerHTML = `<h1>
-            ${deviceOrientationManager.isOrientationAvailable()},
-            </h1>`;
-        }
         // デバイスオリエンテーションイベントリスナーを設定
         if (deviceOrientationManager.isOrientationAvailable()) {
             deviceOrientationManager.setupOrientationListener();
-            console.log('Device orientation listener set up');
-            const title = document.getElementById('title');
-            if (title) {
-                title.innerHTML = `<h3>
-                al=${deviceOrientationManager.getOrientationData().alpha.toFixed(1)},
-                be=${deviceOrientationManager.getOrientationData().beta.toFixed(1)},
-                ga=${deviceOrientationManager.getOrientationData().gamma.toFixed(1)}
-                </h3>`;
-            }
         }
         // デバイスオリエンテーション許可ボタンの設定
         setupOrientationPermissionButton(deviceOrientationManager);
