@@ -466,7 +466,7 @@ export class CoordinateConverter {
         const alpha = orientationData.alpha;
         const beta = orientationData.beta;
         const gamma = orientationData.gamma;
-        const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, -gamma), -beta), -alpha);
+        const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, gamma), beta), alpha);
         const alt = Math.asin(z) * RAD_TO_DEG;
         const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
         return { az, alt };
@@ -478,7 +478,7 @@ export class CoordinateConverter {
         const compassHeading = orientationData.webkitCompassHeading;
         const az = (horizontal.az - compassHeading + 90) * DEG_TO_RAD;
         const alt = horizontal.alt * DEG_TO_RAD;
-        const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: Math.cos(alt) * Math.cos(az), y: -Math.cos(alt) * Math.sin(az), z: Math.sin(alt) }, -gamma), -beta), -alpha);
+        const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: Math.cos(alt) * Math.cos(az), y: -Math.cos(alt) * Math.sin(az), z: Math.sin(alt) }, -alpha), -beta), -gamma);
         if (-z >= 1) {
             return { ra: 0, dec: 0 };
         }
