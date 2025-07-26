@@ -12,7 +12,7 @@ export class CanvasRenderer {
         this.gaiaDataCache1 = null;
         this.gaiaDataCache2 = null;
         this.gaiaDataCache3 = null;
-        this.orientationData = { alpha: null, beta: null, gamma: null, webkitCompassHeading: null };
+        this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context)
@@ -33,7 +33,7 @@ export class CanvasRenderer {
                 alpha: data.alpha,
                 beta: data.beta,
                 gamma: data.gamma,
-                webkitCompassHeading: data.webkitCompassHeading || null
+                webkitCompassHeading: data.webkitCompassHeading
             };
         });
     }
@@ -1303,6 +1303,9 @@ export class CanvasRenderer {
             this.gaiaDataCache2 = null;
             this.gaiaDataCache3 = null;
         }
+    }
+    setOrientationData(orientationData) {
+        this.orientationData = orientationData;
     }
 }
 //# sourceMappingURL=CanvasRenderer.js.map

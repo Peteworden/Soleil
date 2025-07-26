@@ -224,6 +224,10 @@ export class DeviceOrientationManager {
                 </h6>`;
             }
         }
+        const canvasRenderer = window.renderer;
+        if (canvasRenderer) {
+            canvasRenderer.setOrientationData(this.orientationData);
+        }
     }
     // オリエンテーションデータを取得
     getOrientationData() {

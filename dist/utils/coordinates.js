@@ -472,10 +472,10 @@ export class CoordinateConverter {
         return { az, alt };
     }
     horizontalToScreenRaDec_Live(horizontal, orientationData) {
-        const alpha = orientationData.alpha || 0;
-        const beta = orientationData.beta || 0;
-        const gamma = orientationData.gamma || 0;
-        const compassHeading = orientationData.webkitCompassHeading || 0;
+        const alpha = orientationData.alpha;
+        const beta = orientationData.beta;
+        const gamma = orientationData.gamma;
+        const compassHeading = orientationData.webkitCompassHeading;
         const az = (horizontal.az - compassHeading + 90) * DEG_TO_RAD;
         const alt = horizontal.alt * DEG_TO_RAD;
         const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: Math.cos(alt) * Math.cos(az), y: -Math.cos(alt) * Math.sin(az), z: Math.sin(alt) }, -gamma), -beta), -alpha);
