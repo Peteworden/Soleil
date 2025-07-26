@@ -52,6 +52,11 @@ export class SettingController {
         SettingController.saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
         SolarSystemDataManager.updateAllData(window.config.displayTime.jd);
+        // デバイスオリエンテーションリスナーを更新
+        const deviceOrientationManager = window.deviceOrientationManager;
+        if (deviceOrientationManager) {
+            deviceOrientationManager.setupOrientationListener();
+        }
         window.renderAll();
     }
     static updateConfigFromInputs() {

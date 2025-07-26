@@ -63,33 +63,41 @@ export class DeviceOrientationManager {
     // オリエンテーションリスナーを設定
     setupOrientationListener() {
         const config = window.config;
-        if (config && config.displaySettings.mode == 'live') {
-            if (typeof window !== 'undefined' && 'addEventListener' in window) {
-                if (this.deviceInfo.os === 'iphone') {
-                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
-                }
-                else if (this.deviceInfo.os === 'android') {
-                    window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
-                }
-                else if (this.deviceInfo.os === 'pc') {
-                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
-                    console.log('deviceorientation pc');
-                }
+        // まず既存のリスナーを削除
+        if (typeof window !== 'undefined' && 'addEventListener' in window) {
+            if (this.deviceInfo.os === 'iphone') {
+                window.removeEventListener('deviceorientation', this.handleOrientation.bind(this));
+            }
+            else if (this.deviceInfo.os === 'android') {
+                window.removeEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
+            }
+            else if (this.deviceInfo.os === 'pc') {
+                window.removeEventListener('deviceorientation', this.handleOrientation.bind(this));
             }
         }
-        else {
+        // liveモードの場合のみリスナーを追加
+        if (config && config.displaySettings.mode === 'live') {
             if (typeof window !== 'undefined' && 'addEventListener' in window) {
                 if (this.deviceInfo.os === 'iphone') {
-                    window.removeEventListener('deviceorientation', this.handleOrientation.bind(this));
+                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
                 }
                 else if (this.deviceInfo.os === 'android') {
-                    window.removeEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
+                    window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this), true);
+                }
+                else if (this.deviceInfo.os === 'pc') {
+                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
+                    console.log('deviceorientation pc');
                 }
             }
         }
     }
     // オリエンテーションイベントハンドラー
     handleOrientation(event) {
+        // liveモード以外の場合は処理をスキップ
+        const config = window.config;
+        if (!config || config.displaySettings.mode !== 'live') {
+            return;
+        }
         // const title = document.getElementById('title');
         // if (title) {
         //     title.innerHTML = `<h1>
@@ -102,20 +110,20 @@ export class DeviceOrientationManager {
             return;
         }
         const eventOrientationData = {
-            alpha: event.alpha || 0,
-            beta: event.beta || 0,
-            gamma: event.gamma || 0,
-            webkitCompassHeading: event.webkitCompassHeading || 0
+            alpha: event.alpha * this.DEG_TO_RAD || 0,
+            beta: event.beta * this.DEG_TO_RAD || 0,
+            gamma: event.gamma * this.DEG_TO_RAD || 0,
+            webkitCompassHeading: event.webkitCompassHeading * this.DEG_TO_RAD || 0
         };
         if (this.deviceInfo.os === 'iphone' && this.compassHeadingAz === 0) {
             this.compassHeadingAz = eventOrientationData.webkitCompassHeading || 0;
         }
         if (this.orientationData.alpha === null || this.orientationData.beta === null || this.orientationData.gamma === null) {
             this.orientationData = {
-                alpha: event.alpha || 0,
-                beta: event.beta || 0,
-                gamma: event.gamma || 0,
-                webkitCompassHeading: event.webkitCompassHeading || 0
+                alpha: event.alpha * this.DEG_TO_RAD || 0,
+                beta: event.beta * this.DEG_TO_RAD || 0,
+                gamma: event.gamma * this.DEG_TO_RAD || 0,
+                webkitCompassHeading: event.webkitCompassHeading * this.DEG_TO_RAD || 0
             };
             return;
         }
@@ -123,13 +131,13 @@ export class DeviceOrientationManager {
         if (orientationTime2 - this.orientationTime1 < 50)
             return;
         this.orientationTime1 = orientationTime2;
-        if (Math.max(Math.abs(this.orientationData.alpha - event.alpha), Math.abs(this.orientationData.beta - event.beta), Math.abs(this.orientationData.gamma - event.gamma)) < 10) { //移動が大きすぎないとき
+        if (Math.max(Math.abs(this.orientationData.alpha - eventOrientationData.alpha), Math.abs(this.orientationData.beta - eventOrientationData.beta), Math.abs(this.orientationData.gamma - eventOrientationData.gamma)) < 10 * this.DEG_TO_RAD) { //移動が大きすぎないとき
             // 最近のデータが3つ(以上)あるとき
             if (this.recentOrientationData.length > 2) {
                 // 最初のデータを削除して、新しいデータを追加
                 this.recentOrientationData.shift();
                 this.recentOrientationData.push(eventOrientationData);
-                this.moving = (Math.abs(eventOrientationData.alpha - (this.recentOrientationData[1].alpha || eventOrientationData.alpha)) > 0.2);
+                this.moving = (Math.abs(eventOrientationData.alpha - (this.recentOrientationData[1].alpha || eventOrientationData.alpha)) > 0.2 * this.DEG_TO_RAD);
                 this.orientationData = {
                     alpha: this.recentOrientationData.reduce((acc, val) => acc + (val.alpha || 0), 0) / this.recentOrientationData.length,
                     beta: this.recentOrientationData.reduce((acc, val) => acc + (val.beta || 0), 0) / this.recentOrientationData.length,
@@ -177,8 +185,8 @@ export class DeviceOrientationManager {
                 ${this.orientationData.gamma.toFixed(1)})
                 </h6>`;
             }
+            window.renderAll();
         }
-        window.renderAll();
     }
     // オリエンテーションデータを取得
     getOrientationData() {
