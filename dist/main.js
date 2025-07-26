@@ -280,10 +280,24 @@ export async function main() {
         // デバイスオリエンテーション機能を初期化
         const deviceOrientationManager = new DeviceOrientationManager();
         window.deviceOrientationManager = deviceOrientationManager;
+        const title = document.getElementById('title');
+        if (title) {
+            title.innerHTML = `<h1>
+            ${deviceOrientationManager.isOrientationAvailable()},
+            </h1>`;
+        }
         // デバイスオリエンテーションイベントリスナーを設定
         if (deviceOrientationManager.isOrientationAvailable()) {
             deviceOrientationManager.setupOrientationListener();
             console.log('Device orientation listener set up');
+            const title = document.getElementById('title');
+            if (title) {
+                title.innerHTML = `<h3>
+                ${deviceOrientationManager.getOrientationData().alpha.toFixed(1)},
+                ${deviceOrientationManager.getOrientationData().beta.toFixed(1)},
+                ${deviceOrientationManager.getOrientationData().gamma.toFixed(1)}
+                </h3>`;
+            }
         }
         // デバイスオリエンテーション許可ボタンの設定
         setupOrientationPermissionButton(deviceOrientationManager);

@@ -69,7 +69,17 @@ export class DeviceOrientationManager {
                     window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
                 }
                 else if (this.deviceInfo.os === 'android') {
+                    const title = document.getElementById('title');
+                    if (title) {
+                        title.innerHTML = `<h1>
+                        ${this.deviceInfo.os}
+                        </h1>`;
+                    }
                     window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
+                }
+                else if (this.deviceInfo.os === 'pc') {
+                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
+                    console.log('deviceorientation pc');
                 }
             }
         }
