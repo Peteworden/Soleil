@@ -460,15 +460,15 @@ export class CoordinateConverter {
         const horizontal = this.screenRaDecToHorizontal_View(screenRaDec);
         return this.horizontalToEquatorial(horizontal, siderealTime, this.getLocation().latitude);
     }
-    screenRaDecToHorizontal_Live(screenRaDec, siderealTime, deviceOrientationManager) {
+    screenRaDecToHorizontal_Live(screenRaDec, orientationData) {
         const theta = Math.atan2(screenRaDec.dec, -screenRaDec.ra); //画面上で普通に極座標
         const r = Math.sqrt(screenRaDec.ra * screenRaDec.ra + screenRaDec.dec * screenRaDec.dec) * DEG_TO_RAD;
-        const alpha = deviceOrientationManager.getOrientationData().alpha || 0;
-        const beta = deviceOrientationManager.getOrientationData().beta || 0;
-        const gamma = deviceOrientationManager.getOrientationData().gamma || 0;
+        const alpha = orientationData.alpha || 0;
+        const beta = orientationData.beta || 0;
+        const gamma = orientationData.gamma || 0;
         const { x, y, z } = this.rotateZ(this.rotateY(this.rotateX({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, gamma), beta), alpha);
         const alt = Math.asin(z) * RAD_TO_DEG;
-        const az = ((Math.atan2(-y, x) * RAD_TO_DEG + deviceOrientationManager.getCompassHeading() + 90) % 360 + 360) % 360;
+        const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
         return { az, alt };
     }
     horizontalToScreenRaDec_Live(horizontal, orientationData) {

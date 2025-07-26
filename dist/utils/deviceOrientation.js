@@ -1,3 +1,4 @@
+import { CoordinateConverter } from "./coordinates.js";
 export class DeviceOrientationManager {
     constructor() {
         this.orientationData = {
@@ -89,20 +90,20 @@ export class DeviceOrientationManager {
             return;
         }
         const eventOrientationData = {
-            alpha: event.alpha,
-            beta: event.beta,
-            gamma: event.gamma,
-            webkitCompassHeading: event.webkitCompassHeading
+            alpha: event.alpha || 0,
+            beta: event.beta || 0,
+            gamma: event.gamma || 0,
+            webkitCompassHeading: event.webkitCompassHeading || 0
         };
         if (this.deviceInfo.os === 'iphone' && this.compassHeadingAz === 0) {
             this.compassHeadingAz = eventOrientationData.webkitCompassHeading || 0;
         }
         if (this.orientationData.alpha === null || this.orientationData.beta === null || this.orientationData.gamma === null) {
             this.orientationData = {
-                alpha: event.alpha,
-                beta: event.beta,
-                gamma: event.gamma,
-                webkitCompassHeading: event.webkitCompassHeading
+                alpha: event.alpha || 0,
+                beta: event.beta || 0,
+                gamma: event.gamma || 0,
+                webkitCompassHeading: event.webkitCompassHeading || 0
             };
             return;
         }
@@ -134,7 +135,7 @@ export class DeviceOrientationManager {
             this.recentOrientationData = [eventOrientationData];
             this.orientationData = eventOrientationData;
         }
-        const coordinateConverter = window.coordinateConverter;
+        const coordinateConverter = new CoordinateConverter();
         if (coordinateConverter) {
             const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ ra: 0, dec: 0 }, this.orientationData);
             const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, 0, 0);
@@ -149,6 +150,15 @@ export class DeviceOrientationManager {
                         centerAlt: centerHorizontal.alt
                     }
                 });
+            }
+            const title = document.getElementById('title');
+            if (title) {
+                title.innerHTML = `<h1>
+                ${centerRaDec.ra.toFixed(2)},
+                ${centerRaDec.dec.toFixed(2)},
+                ${centerHorizontal.az.toFixed(2)},
+                ${centerHorizontal.alt.toFixed(2)}
+                </h1>`;
             }
         }
         window.renderAll();

@@ -255,6 +255,7 @@ export async function main() {
             renderer.writeConstellationNames(constellationData);
             renderer.drawSolarSystemObjects();
             renderer.drawReticle();
+            updateInfoDisplay();
             // const end3 = performance.now();
             // const alltime = end3 - start1;
             // console.log(alltime.toFixed(3), 'ms');
