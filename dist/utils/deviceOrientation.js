@@ -113,17 +113,17 @@ export class DeviceOrientationManager {
     handleOrientation(event) {
         // デバッグ情報を表示
         const title = document.getElementById('title');
+        /*
         if (title) {
             title.innerHTML = `<h6>
             OS: ${this.deviceInfo.os}<br>
             a=${event.alpha?.toFixed(2) || 0},
             b=${event.beta?.toFixed(2) || 0},
             g=${event.gamma?.toFixed(2) || 0}<br>
-            compass=${event.webkitCompassHeading?.toFixed(2) || 'N/A'}
+            compass=${(event as any).webkitCompassHeading?.toFixed(2) || 'N/A'}
             </h6>`;
             console.log('Title updated successfully');
-        }
-        else {
+        } else {
             console.log('Title element not found');
             // 代替手段：bodyに直接追加
             const debugDiv = document.createElement('div');
@@ -139,10 +139,11 @@ export class DeviceOrientationManager {
                 a=${event.alpha?.toFixed(2) || 0},
                 b=${event.beta?.toFixed(2) || 0},
                 g=${event.gamma?.toFixed(2) || 0}<br>
-                compass=${event.webkitCompassHeading?.toFixed(2) || 'N/A'}
+                compass=${(event as any).webkitCompassHeading?.toFixed(2) || 'N/A'}
             `;
             document.body.appendChild(debugDiv);
         }
+            */
         // liveモード以外の場合は処理をスキップ
         const config = window.config;
         if (!config || config.displaySettings.mode !== 'live') {
@@ -171,10 +172,6 @@ export class DeviceOrientationManager {
         }
         const orientationTime2 = Date.now();
         if (orientationTime2 - this.orientationTime1 < 50) {
-            if (title) {
-                title.innerHTML = `<h6>do224
-                </h6>`;
-            }
             return;
         }
         this.orientationTime1 = orientationTime2;
@@ -208,15 +205,6 @@ export class DeviceOrientationManager {
             const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, window.config.siderealTime);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
-                const title = document.getElementById('title');
-                if (title) {
-                    title.innerHTML = `<h6>do220
-                    ${window.config.viewState.centerRA.toFixed(2)},
-                    ${window.config.viewState.centerDec.toFixed(2)},
-                    ${window.config.viewState.centerAz.toFixed(2)},
-                    ${window.config.viewState.centerAlt.toFixed(2)}
-                    </h6>`;
-                }
                 updateConfig({
                     viewState: {
                         ...window.config.viewState,

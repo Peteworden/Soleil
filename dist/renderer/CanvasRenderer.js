@@ -352,6 +352,15 @@ export class CanvasRenderer {
             return;
         if (!this.config.displaySettings.showStars)
             return;
+        const title = document.getElementById('title');
+        if (title) {
+            title.innerHTML = `<h6>drawHipStars
+            ${this.config.viewState.centerRA.toFixed(2)},
+            ${this.config.viewState.centerDec.toFixed(2)},
+            ${this.config.viewState.centerAz.toFixed(2)},
+            ${this.config.viewState.centerAlt.toFixed(2)}
+            </h6>`;
+        }
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const currentJd = this.config.displayTime.jd;
         // 歳差運動補正をキャッシュ

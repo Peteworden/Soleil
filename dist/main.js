@@ -230,15 +230,6 @@ export async function main() {
         function renderAll() {
             // console.time("renderAll");
             // const start1 = performance.now();
-            const title = document.getElementById('title');
-            // if (title) {
-            //     title.innerHTML = `<h6>main264
-            //     ${config.viewState.centerRA.toFixed(2)},
-            //     ${config.viewState.centerDec.toFixed(2)},
-            //     ${config.viewState.centerAz.toFixed(2)},
-            //     ${config.viewState.centerAlt.toFixed(2)}
-            //     </h6>`;
-            // }
             renderer.clear();
             renderer.drawGrid();
             renderer.drawCameraView();
