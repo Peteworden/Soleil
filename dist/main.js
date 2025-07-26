@@ -293,9 +293,9 @@ export async function main() {
             const title = document.getElementById('title');
             if (title) {
                 title.innerHTML = `<h3>
-                ${deviceOrientationManager.getOrientationData().alpha.toFixed(1)},
-                ${deviceOrientationManager.getOrientationData().beta.toFixed(1)},
-                ${deviceOrientationManager.getOrientationData().gamma.toFixed(1)}
+                al=${deviceOrientationManager.getOrientationData().alpha.toFixed(1)},
+                be=${deviceOrientationManager.getOrientationData().beta.toFixed(1)},
+                ga=${deviceOrientationManager.getOrientationData().gamma.toFixed(1)}
                 </h3>`;
             }
         }

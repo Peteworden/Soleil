@@ -46,12 +46,12 @@ export class InteractionController {
         };
         this.onPointerMove = (e) => {
             e.preventDefault();
-            if (this.displaySettings.mode == 'live') {
-                return;
-            }
             // ポインターの座標を更新
             // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
+                if (e.pointerType == 'touch' && this.displaySettings.mode == 'live') {
+                    return;
+                }
                 const deltaX = e.clientX - this.lastX;
                 const deltaY = e.clientY - this.lastY;
                 // 最小移動量チェック

@@ -69,12 +69,6 @@ export class DeviceOrientationManager {
                     window.addEventListener('deviceorientation', this.handleOrientation.bind(this));
                 }
                 else if (this.deviceInfo.os === 'android') {
-                    const title = document.getElementById('title');
-                    if (title) {
-                        title.innerHTML = `<h1>
-                        ${this.deviceInfo.os}
-                        </h1>`;
-                    }
                     window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
                 }
                 else if (this.deviceInfo.os === 'pc') {
@@ -96,14 +90,14 @@ export class DeviceOrientationManager {
     }
     // オリエンテーションイベントハンドラー
     handleOrientation(event) {
-        const title = document.getElementById('title');
-        if (title) {
-            title.innerHTML = `<h1>
-            ${event.alpha?.toFixed(2) || 0},
-            ${event.beta?.toFixed(2) || 0},
-            ${event.gamma?.toFixed(2) || 0}
-            </h1>`;
-        }
+        // const title = document.getElementById('title');
+        // if (title) {
+        //     title.innerHTML = `<h1>
+        //     a=${event.alpha?.toFixed(2) || 0},
+        //     b=${event.beta?.toFixed(2) || 0},
+        //     g=${event.gamma?.toFixed(2) || 0}
+        //     </h1>`;
+        // }
         if (event.alpha === null || event.beta === null || event.gamma === null) {
             return;
         }
@@ -156,7 +150,7 @@ export class DeviceOrientationManager {
         const coordinateConverter = new CoordinateConverter();
         if (coordinateConverter) {
             const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ ra: 0, dec: 0 }, this.orientationData);
-            const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, window.config.viewState.siderealTime, window.config.viewState.latitude);
+            const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, window.config.siderealTime);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 updateConfig({
