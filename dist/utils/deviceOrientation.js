@@ -114,13 +114,13 @@ export class DeviceOrientationManager {
         // デバッグ情報を表示
         const title = document.getElementById('title');
         if (title) {
-            title.innerHTML = `<h1>
+            title.innerHTML = `<h6>
             OS: ${this.deviceInfo.os}<br>
             a=${event.alpha?.toFixed(2) || 0},
             b=${event.beta?.toFixed(2) || 0},
             g=${event.gamma?.toFixed(2) || 0}<br>
             compass=${event.webkitCompassHeading?.toFixed(2) || 'N/A'}
-            </h1>`;
+            </h6>`;
             console.log('Title updated successfully');
         }
         else {
@@ -170,8 +170,13 @@ export class DeviceOrientationManager {
             return;
         }
         const orientationTime2 = Date.now();
-        if (orientationTime2 - this.orientationTime1 < 50)
+        if (orientationTime2 - this.orientationTime1 < 50) {
+            if (title) {
+                title.innerHTML = `<h6>do224
+                </h6>`;
+            }
             return;
+        }
         this.orientationTime1 = orientationTime2;
         if (Math.max(Math.abs(this.orientationData.alpha - eventOrientationData.alpha), Math.abs(this.orientationData.beta - eventOrientationData.beta), Math.abs(this.orientationData.gamma - eventOrientationData.gamma)) < 10 * this.DEG_TO_RAD) { //移動が大きすぎないとき
             // 最近のデータが3つ(以上)あるとき
@@ -212,18 +217,16 @@ export class DeviceOrientationManager {
                     ${window.config.viewState.centerAlt.toFixed(2)}
                     </h6>`;
                 }
-                // updateConfig({
-                //     viewState: {
-                //         ...(window as any).config.viewState,
-                //         centerRA: centerRaDec.ra,
-                //         centerDec: centerRaDec.dec,
-                //         centerAz: centerHorizontal.az,
-                //         centerAlt: centerHorizontal.alt
-                //     }
-                // });
+                updateConfig({
+                    viewState: {
+                        ...window.config.viewState,
+                        centerRA: centerRaDec.ra,
+                        centerDec: centerRaDec.dec,
+                        centerAz: centerHorizontal.az,
+                        centerAlt: centerHorizontal.alt
+                    }
+                });
             }
-            // 正しく計算できている
-            const title = document.getElementById('title');
             if (title) {
                 title.innerHTML = `<h6>do232
                 ${window.config.viewState.centerRA.toFixed(2)},
