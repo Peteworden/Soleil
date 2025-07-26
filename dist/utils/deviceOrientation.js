@@ -70,6 +70,7 @@ export class DeviceOrientationManager {
             }
             else if (this.deviceInfo.os === 'android') {
                 window.removeEventListener('deviceorientationabsolute', this.handleOrientation.bind(this));
+                window.removeEventListener('deviceorientation', this.handleOrientation.bind(this));
             }
             else if (this.deviceInfo.os === 'pc') {
                 window.removeEventListener('deviceorientation', this.handleOrientation.bind(this));
@@ -82,10 +83,18 @@ export class DeviceOrientationManager {
                     window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
                 }
                 else if (this.deviceInfo.os === 'android') {
-                    window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this), true);
+                    // Androidでは両方のイベントを試す
+                    try {
+                        window.addEventListener('deviceorientationabsolute', this.handleOrientation.bind(this), true);
+                        console.log('deviceorientationabsolute android');
+                    }
+                    catch (e) {
+                        // window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
+                        console.log('deviceorientation android (fallback)');
+                    }
                 }
                 else if (this.deviceInfo.os === 'pc') {
-                    window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
+                    // window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
                     console.log('deviceorientation pc');
                 }
             }
@@ -93,19 +102,22 @@ export class DeviceOrientationManager {
     }
     // オリエンテーションイベントハンドラー
     handleOrientation(event) {
+        // デバッグ情報を表示
+        const title = document.getElementById('title');
+        if (title) {
+            title.innerHTML = `<h1>
+            OS: ${this.deviceInfo.os}<br>
+            a=${event.alpha?.toFixed(2) || 0},
+            b=${event.beta?.toFixed(2) || 0},
+            g=${event.gamma?.toFixed(2) || 0}<br>
+            compass=${event.webkitCompassHeading?.toFixed(2) || 'N/A'}
+            </h1>`;
+        }
         // liveモード以外の場合は処理をスキップ
         const config = window.config;
         if (!config || config.displaySettings.mode !== 'live') {
             return;
         }
-        // const title = document.getElementById('title');
-        // if (title) {
-        //     title.innerHTML = `<h1>
-        //     a=${event.alpha?.toFixed(2) || 0},
-        //     b=${event.beta?.toFixed(2) || 0},
-        //     g=${event.gamma?.toFixed(2) || 0}
-        //     </h1>`;
-        // }
         if (event.alpha === null || event.beta === null || event.gamma === null) {
             return;
         }
