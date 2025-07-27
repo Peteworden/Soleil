@@ -168,24 +168,15 @@ export class CoordinateConverter {
     }
     decdeg2dm(dec_deg) {
         let d, m;
-        if (dec_deg >= 0) {
-            d = Math.floor(dec_deg);
-            m = Math.round((dec_deg - d) * 60);
-            if (m == 60) {
-                m = 0;
-                d += 1;
-            }
+        const sign = dec_deg >= 0 ? '+' : '-';
+        const decAbs = Math.abs(dec_deg);
+        d = Math.floor(decAbs);
+        m = Math.round((decAbs - d) * 60);
+        if (m == 60) {
+            m = 0;
+            d += 1;
         }
-        else {
-            d = Math.floor(-dec_deg);
-            m = Math.round((-dec_deg - d) * 60);
-            d *= -1;
-            if (m == 60) {
-                m = 0;
-                d -= 1;
-            }
-        }
-        return [d, m];
+        return [sign, d, m];
     }
     // 赤道座標から直交座標への変換
     equatorialToCartesian(coords, distance = 1) {

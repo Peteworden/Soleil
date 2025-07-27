@@ -71,11 +71,9 @@ export class InteractionController {
                 if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
                     return;
                 }
-                // if ((now - this.lastDragTime < 10) || //速すぎるか
-                //     (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < minMove && now - this.lastDragTime < 10)) { //動きが小さすぎるか
-                //         // console.log(now - this.lastDragTime);
-                //     return;
-                // }
+                if ((now - this.lastDragTime < 10)) {
+                    return;
+                }
                 // console.log("slow enough");
                 // ポインターの座標を更新
                 this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });

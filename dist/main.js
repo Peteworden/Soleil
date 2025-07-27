@@ -231,26 +231,17 @@ export async function main() {
         const imageCache = {};
         const imageCacheNames = [];
         function renderAll() {
-            // console.time("renderAll");
-            // const start1 = performance.now();
+            const time000 = performance.now();
             renderer.clearObjectInfomation();
             renderer.clear();
             renderer.drawGrid();
             renderer.drawCameraView();
             renderer.drawConstellationLines(constellationData);
-            // const end1 = performance.now();
-            // const start2 = performance.now();
-            // const start21 = performance.now();
+            const time100 = performance.now();
             renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
-            // const end21 = performance.now();
-            // const start22 = performance.now();
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
-            // const end22 = performance.now();
-            // const start23 = performance.now();
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
-            // const end23 = performance.now();
-            // const end2 = performance.now();
-            // const start3 = performance.now();
+            const time200 = performance.now();
             renderer.drawHipStars(hipStars);
             renderer.writeStarNames(starNames);
             renderer.drawMessier(messierData);
@@ -260,18 +251,10 @@ export async function main() {
             renderer.drawSolarSystemObjects();
             renderer.drawReticle();
             updateInfoDisplay();
-            // const end3 = performance.now();
-            // const alltime = end3 - start1;
-            // console.log(alltime.toFixed(3), 'ms');
-            // const pregaia = end1 - start1;
-            // const gaia = end2 - start2;
-            // const postgaia = end3 - end2;
-            // const gaia1 = end21 - start21;
-            // const gaia2 = end22 - start22;
-            // const gaia3 = end23 - start23;
-            // console.log(alltime.toFixed(3), pregaia.toFixed(3), gaia.toFixed(3), postgaia.toFixed(3));
-            // console.log(gaia1.toFixed(3), gaia2.toFixed(3), gaia3.toFixed(3));
-            // console.timeEnd("renderAll");
+            const time300 = performance.now();
+            // if (1 || time300 - time000 > 10) {
+            //     console.log((time300 - time000).toFixed(1), 'ms (', (time100 - time000).toFixed(1), 'ms, ', (time200 - time100).toFixed(1), 'ms, ', (time300 - time200).toFixed(1), 'ms)');
+            // }
         }
         // グローバルにrenderAll関数を設定（デバイスオリエンテーション用）
         window.renderAll = renderAll;
@@ -480,7 +463,6 @@ function setupButtonEvents() {
     console.log("setupButtonEvents called");
     // 設定ボタン
     const settingBtn = document.getElementById('settingBtn');
-    console.log('settingBtn element:', settingBtn);
     if (settingBtn) {
         settingBtn.addEventListener('click', () => {
             showSetting();
@@ -507,7 +489,6 @@ function setupButtonEvents() {
     document.getElementById('searchBtnMobile')?.addEventListener('click', SearchController.toggleSearch);
     // 説明ボタン
     const descriptionBtn = document.getElementById('descriptionBtn');
-    console.log('descriptionBtn element:', descriptionBtn);
     if (descriptionBtn) {
         descriptionBtn.addEventListener('click', () => {
             descriptionFunc();

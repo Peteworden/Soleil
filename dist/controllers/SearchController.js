@@ -1,5 +1,6 @@
 import { DataStore } from '../models/DataStore.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
+import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 export class SearchController {
     static openSearch() {
         const searchDiv = document.getElementById('search');
@@ -66,6 +67,30 @@ export class SearchController {
         console.log("displaySearchResults", query);
         // 検索結果をクリア
         container.innerHTML = '';
+        const matchPlanetsStart = [];
+        const matchPlanetsInclude = [];
+        if (SolarSystemDataManager.getAllObjects()) {
+            for (const planet of SolarSystemDataManager.getAllObjects()) {
+                if (this.normalizeText(planet.jpnName).includes(query)) {
+                    matchPlanetsInclude.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                }
+                else if (this.normalizeText(planet.jpnName).startsWith(query)) {
+                    matchPlanetsStart.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                }
+                if (this.normalizeText(planet.hiraganaName).startsWith(query)) {
+                    matchPlanetsStart.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                }
+                else if (this.normalizeText(planet.hiraganaName).includes(query)) {
+                    matchPlanetsInclude.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                }
+                if (this.normalizeText(planet.engName).startsWith(query)) {
+                    matchPlanetsStart.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                }
+                else if (this.normalizeText(planet.engName).includes(query)) {
+                    matchPlanetsInclude.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                }
+            }
+        }
         // queryで始まるものと始まらないが含むものを分ける
         const matchConstellationsStart = [];
         const matchConstellationsInclude = [];
@@ -169,11 +194,13 @@ export class SearchController {
         }
         // クエリにマッチする結果をフィルタリング
         const allResults = [
+            ...matchPlanetsStart,
             ...matchConstellationsStart,
             ...matchMessierStart,
             ...matchRecStart,
             ...matchNgc,
             ...matchStarNamesStart,
+            ...matchPlanetsInclude,
             ...matchConstellationsInclude,
             ...matchMessierInclude,
             ...matchRecInclude,
@@ -183,8 +210,9 @@ export class SearchController {
             const button = document.createElement('button');
             button.className = 'suggestionButton';
             button.textContent = result.title;
+            const epoch = (matchPlanetsStart.some(planet => planet.title === result.title) || matchPlanetsInclude.some(planet => planet.title === result.title)) ? 'current' : 'j2000';
             button.addEventListener('click', () => {
-                this.selectSearchResult(result.position);
+                this.selectSearchResult(result.position, epoch);
             });
             button.classList.add('suggestionButton');
             container.appendChild(button);
@@ -208,15 +236,17 @@ export class SearchController {
             }
         }
     }
-    static selectSearchResult(position0) {
+    static selectSearchResult(position0, epoch = 'j2000') {
         // 検索結果が選択された時の処理
-        console.log('選択された天体:', position0);
         const config = window.config;
         if (!config) {
             return;
         }
         const coordinateConverter = new CoordinateConverter();
-        const position = coordinateConverter.precessionEquatorial(position0, undefined, 'j2000', config.displayTime.jd);
+        let position = position0;
+        if (epoch === 'j2000') {
+            position = coordinateConverter.precessionEquatorial(position0, undefined, 'j2000', config.displayTime.jd);
+        }
         config.viewState.centerRA = position.ra;
         config.viewState.centerDec = position.dec;
         const horizontal = coordinateConverter.equatorialToHorizontal(position, config.siderealTime);

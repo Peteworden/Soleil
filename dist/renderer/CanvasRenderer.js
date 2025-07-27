@@ -49,7 +49,7 @@ export class CanvasRenderer {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
     // 天体を描画
-    drawObject(object, nameCorner) {
+    drawObject(object, category, nameCorner) {
         if (!object.getName() || object.getName() == '')
             return;
         const coordsJ2000 = object.getCoordinates();
@@ -63,7 +63,7 @@ export class CanvasRenderer {
         const type = object.getType();
         this.objectInfomation.push({
             name: object.getName(),
-            type: object.getType() || 'unknown',
+            type: category,
             x: x,
             y: y,
             data: object
@@ -196,27 +196,27 @@ export class CanvasRenderer {
         }
         this.ctx.restore();
     }
-    drawJsonObject(objects, nameCorner) {
+    drawJsonObject(objects, category, nameCorner) {
         if (objects.length == 0)
             return;
         for (const object of objects) {
-            this.drawObject(object, nameCorner);
+            this.drawObject(object, category, nameCorner);
         }
     }
     drawMessier(messierObjects) {
         if (!this.config.displaySettings.showMessiers)
             return;
-        this.drawJsonObject(messierObjects);
+        this.drawJsonObject(messierObjects, 'messier');
     }
     drawRec(recObjects) {
         if (!this.config.displaySettings.showRecs)
             return;
-        this.drawJsonObject(recObjects);
+        this.drawJsonObject(recObjects, 'rec');
     }
     drawNGC(ngcObjects) {
         if (!this.config.displaySettings.showNGC)
             return;
-        this.drawJsonObject(ngcObjects, 'bottom-right');
+        this.drawJsonObject(ngcObjects, 'ngc', 'bottom-right');
     }
     drawSolarSystemObjects() {
         if (!this.config.displaySettings.showPlanets)
@@ -254,6 +254,13 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
+        this.objectInfomation.push({
+            name: sun.getJapaneseName(),
+            type: 'sun',
+            x: x,
+            y: y,
+            data: sun
+        });
         const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fieldOfViewRA, 13);
         this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
@@ -271,7 +278,6 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
-        // objectInfomationに惑星の情報を追加
         this.objectInfomation.push({
             name: planet.getJapaneseName(),
             type: 'planet',
@@ -306,10 +312,9 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
-        // objectInfomationに月の情報を追加
         this.objectInfomation.push({
             name: moon.getJapaneseName(),
-            type: 'planet',
+            type: 'moon',
             x: x,
             y: y,
             data: moon
@@ -365,6 +370,13 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
+        this.objectInfomation.push({
+            name: minorObject.getJapaneseName(),
+            type: 'asteroidComet',
+            x: x,
+            y: y,
+            data: minorObject
+        });
         const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude);
         const radius = Math.max(this.getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
@@ -417,8 +429,6 @@ export class CanvasRenderer {
             return;
         if (starNames.length == 0)
             return;
-        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
-        const siderealTime = window.config.siderealTime;
         const currentJd = window.config.displayTime.jd;
         // 歳差運動補正をキャッシュ
         let precessionAngle;
@@ -429,7 +439,6 @@ export class CanvasRenderer {
             precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
         }
-        const zeroMagSize = this.starSize_0mag(this.config);
         const tier_range = [180, 90, 60, 40, 30, 30];
         let tierLimit = 3;
         if (showStarNames == 'to1') {
@@ -783,6 +792,13 @@ export class CanvasRenderer {
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
+            this.objectInfomation.push({
+                name: constellation.JPNname + '座',
+                type: 'constellation',
+                x: x,
+                y: y,
+                data: constellation
+            });
             this.ctx.fillStyle = 'white';
             this.ctx.fillText(constellation.JPNname, x, y);
         }
@@ -1279,9 +1295,9 @@ export class CanvasRenderer {
         return correctedData;
     }
     // 描画オプションを更新
-    // 呼ばれない
+    // timeSliderが動いたときに呼び出される
+    // this.configはコンストラクタの宣言により自動で更新されるので、この関数はなくせるかも
     updateOptions(options) {
-        console.log("updateOptions", options);
         const globalConfig = window.config;
         if (globalConfig) {
             if (this.config !== globalConfig) {
@@ -1297,7 +1313,6 @@ export class CanvasRenderer {
         if (options.viewState || options.displaySettings) {
             this.areaCandidatesCache = null;
             this.objectInfomation = [];
-            console.log("reset objectInfomation");
         }
         // 時刻が変更されたらキャッシュをクリア
         if (options.displayTime) {

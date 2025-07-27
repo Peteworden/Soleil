@@ -28,7 +28,7 @@ export class HipStar extends CelestialObject {
     }
 }
 export class MessierObject extends CelestialObject {
-    constructor(name, alt_name, coordinates, magnitude, type, image_url, image_credit, overlay, description) {
+    constructor(name, alt_name, coordinates, magnitude, type, image_url, image_credit, overlay, description, wiki) {
         super(name, coordinates, magnitude, type);
         this.alt_name = alt_name;
         this.image_url = image_url;
@@ -43,6 +43,7 @@ export class MessierObject extends CelestialObject {
             this.overlay = null;
         }
         this.description = description || '';
+        this.wiki = wiki || null;
     }
     getNumber() {
         return parseInt(this.name.replace('M', ''));
@@ -72,6 +73,9 @@ export class MessierObject extends CelestialObject {
     }
     getDescription() {
         return this.description;
+    }
+    getWiki() {
+        return this.wiki;
     }
 }
 export class NGCObject extends CelestialObject {

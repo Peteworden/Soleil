@@ -32,6 +32,7 @@ export class AstronomicalCalculator {
     }
     static calculateYmdhmsJstFromJdTT(jd_TT) {
         const jd_JST = this.jdTTtoJST(jd_TT);
+        /*
         const A = Math.floor(jd_JST + 68569.5);
         const B = Math.floor(A / 36524.25);
         const C = A - Math.floor(36524.25 * B + 0.75);
@@ -43,8 +44,23 @@ export class AstronomicalCalculator {
         let m = G - 12 * H + 2;
         let y = 100 * (B - 49) + E + H;
         let hr = Math.floor(jd_JST % 1 * 24);
-        let min = Math.floor((jd_JST % 1 * 24 - hr) * 60);
-        let sec = Math.floor((jd_JST % 1 * 24 - hr) * 3600 - min * 60);
+        */
+        // https://eco.mtk.nao.ac.jp/koyomi/topics/html/topics2023_1.html
+        const jdn = Math.floor(jd_JST + 0.5);
+        let L = jdn + 68569;
+        const N = Math.floor(4 * L / 146097);
+        L -= Math.floor(36524.25 * N + 0.75);
+        const I = Math.floor(4000 * (L + 1) / 1461001);
+        L -= Math.floor(1461 * I / 4) - 31;
+        const J = Math.floor(80 * L / 2447);
+        let d = L - Math.floor(2447 * J / 80);
+        L = Math.floor(J / 11);
+        let m = J - 12 * L + 2;
+        let y = 100 * (N - 49) + I + L;
+        const hms_second = ((jd_JST + 0.5) % 1) * 86400;
+        let hr = Math.floor(hms_second / 3600);
+        let min = Math.floor((hms_second % 3600) / 60);
+        let sec = Math.round(hms_second % 60);
         if (sec >= 60) {
             min += 1;
             sec -= 60;

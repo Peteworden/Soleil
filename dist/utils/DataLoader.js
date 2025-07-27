@@ -114,7 +114,7 @@ export class DataLoader {
         const data = await this.fetchJson('data/messier.json');
         const messier = [];
         for (const object of data) {
-            messier.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description));
+            messier.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
         return messier;
     }
@@ -133,7 +133,7 @@ export class DataLoader {
                 ra = +object.ra;
                 dec = +object.dec;
             }
-            rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay, object.description));
+            rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
         return rec;
     }

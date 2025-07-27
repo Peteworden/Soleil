@@ -168,6 +168,9 @@ export class SolarSystemDataManager {
         SolarSystemPositionCalculator.updateAllData(this.solarObjects, jd);
     }
     // 天体の取得メソッド
+    static getObjects() {
+        return this.solarObjects;
+    }
     static getObjectsByType(type) {
         return this.solarObjects.filter(obj => obj.type === type);
     }
