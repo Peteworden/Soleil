@@ -272,6 +272,7 @@ export class CoordinateConverter {
         };
         return this.cartesianToEquatorial(xyz2);
     }
+    // ------------------------------赤道座標からの変換------------------------------
     // 赤道座標から地平座標への変換
     equatorialToHorizontal(coords, siderealTime, latitude) {
         if (latitude == undefined) {
@@ -294,6 +295,61 @@ export class CoordinateConverter {
         const alt = Math.asin(z) * RAD_TO_DEG;
         return { az, alt };
     }
+    // 赤道座標からスクリーン座標への変換、判定
+    // すべてのモードに対応
+    equatorialToScreenXYifin(raDec, config, force = false, orientationData) {
+        const viewState = config.viewState;
+        const mode = config.displaySettings.mode;
+        const canvas = config.canvasSize;
+        const siderealTime = config.siderealTime;
+        let screenRaDec;
+        if (mode == 'AEP') {
+            screenRaDec = this.equatorialToScreenRaDec_AEP(raDec, { ra: viewState.centerRA, dec: viewState.centerDec });
+        }
+        else if (mode == 'view') {
+            const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
+            screenRaDec = this.horizontalToScreenRaDec_View(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
+        }
+        else if (mode == 'live' && orientationData) {
+            const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
+            screenRaDec = this.horizontalToScreenRaDec_Live(horizontal, orientationData);
+        }
+        else {
+            return [false, [0, 0]];
+        }
+        if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
+            const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
+            return [true, [x, y]];
+        }
+        else if (force) {
+            const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
+            return [false, [x, y]];
+        }
+        else {
+            return [false, [0, 0]];
+        }
+    }
+    // 赤道座標からある方向を中心とした正距方位図法への変換
+    equatorialToScreenRaDec_AEP(coords, center) {
+        const ra = coords.ra * DEG_TO_RAD;
+        const dec = coords.dec * DEG_TO_RAD;
+        const centerRARad = center.ra * DEG_TO_RAD;
+        const centerDecRad = center.dec * DEG_TO_RAD;
+        const ra_diff = ra - centerRARad;
+        const sinDec = Math.sin(dec);
+        const cosDec = Math.cos(dec);
+        const sinCenterDec = Math.sin(centerDecRad);
+        const cosCenterDec = Math.cos(centerDecRad);
+        const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
+        const b = cosDec * Math.sin(ra_diff);
+        const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
+        const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
+        const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
+        const scrRA = r * Math.sin(thetaSH);
+        const scrDec = -r * Math.cos(thetaSH);
+        return { ra: scrRA, dec: scrDec };
+    }
+    // ------------------------------地平座標からの変換------------------------------
     // 地平座標から赤道座標への変換
     horizontalToEquatorial(coords, siderealTime, latitude) {
         if (latitude == undefined) {
@@ -315,28 +371,19 @@ export class CoordinateConverter {
         const dec = Math.asin(z) * RAD_TO_DEG;
         return { ra, dec };
     }
-    // 赤道座標からある方向を中心とした正距方位図法への変換
-    equatorialToScreenRaDec(coords, center) {
-        const ra = coords.ra * DEG_TO_RAD;
-        const dec = coords.dec * DEG_TO_RAD;
-        const centerRARad = center.ra * DEG_TO_RAD;
-        const centerDecRad = center.dec * DEG_TO_RAD;
-        const ra_diff = ra - centerRARad;
-        const sinDec = Math.sin(dec);
-        const cosDec = Math.cos(dec);
-        const sinCenterDec = Math.sin(centerDecRad);
-        const cosCenterDec = Math.cos(centerDecRad);
-        const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
-        const b = cosDec * Math.sin(ra_diff);
-        const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
-        const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
-        const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
-        const scrRA = r * Math.sin(thetaSH);
-        const scrDec = -r * Math.cos(thetaSH);
-        return { ra: scrRA, dec: scrDec };
+    horizontalToScreenRaDec(coords, mode, center, orientationData) {
+        if (mode == 'view') {
+            return this.horizontalToScreenRaDec_View(coords, center);
+        }
+        else if (mode == 'live' && orientationData) {
+            return this.horizontalToScreenRaDec_Live(coords, orientationData);
+        }
+        else {
+            return { ra: 0, dec: 0 };
+        }
     }
     // 地平座標からある方向を中心とした正距方位図法への変換
-    horizontalToScreenRaDec(coords, center) {
+    horizontalToScreenRaDec_View(coords, center) {
         const az = coords.az * DEG_TO_RAD;
         const alt = coords.alt * DEG_TO_RAD;
         const centerAzRad = center.az * DEG_TO_RAD;
@@ -358,51 +405,33 @@ export class CoordinateConverter {
         const scrDec = -r * Math.cos(thetaSH);
         return { ra: scrRa, dec: scrDec };
     }
+    horizontalToScreenRaDec_Live(horizontal, orientationData) {
+        const alpha = orientationData.alpha;
+        const beta = orientationData.beta;
+        const gamma = orientationData.gamma;
+        const compassHeading = orientationData.webkitCompassHeading;
+        const az = (horizontal.az - compassHeading - 90) * DEG_TO_RAD;
+        const alt = horizontal.alt * DEG_TO_RAD;
+        const x0 = Math.cos(alt) * Math.cos(az);
+        const y0 = -Math.cos(alt) * Math.sin(az);
+        const z0 = Math.sin(alt);
+        const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: x0, y: y0, z: z0 }, -alpha), -beta), -gamma);
+        if (-z >= 1) {
+            return { ra: 0, dec: 0 };
+        }
+        else {
+            const b = Math.acos(-z) * RAD_TO_DEG;
+            const scrRA = -b * x / Math.sqrt(x * x + y * y);
+            const scrDec = b * y / Math.sqrt(x * x + y * y);
+            return { ra: scrRA, dec: scrDec };
+        }
+    }
+    // ------------------------------スクリーンRaDecからの変換------------------------------
     // スクリーン座標からスクリーンRaDecへの変換
     screenRaDecToScreenXY(raDec, canvasSize, viewState) {
         const x = canvasSize.width * (0.5 - raDec.ra / viewState.fieldOfViewRA);
         const y = canvasSize.height * (0.5 - raDec.dec / viewState.fieldOfViewDec);
         return [x, y];
-    }
-    // スクリーン座標からスクリーンRaDecへの変換
-    screenXYToScreenRaDec(x, y, canvas) {
-        const fieldOfView = this.getCurrentFieldOfView();
-        const ra = (0.5 - x / canvas.width) * fieldOfView.ra;
-        const dec = (0.5 - y / canvas.height) * fieldOfView.dec;
-        return { ra, dec };
-    }
-    // 赤道座標からスクリーン座標への変換、判定
-    equatorialToScreenXYifin(raDec, config, force = false, orientationData) {
-        const viewState = config.viewState;
-        const mode = config.displaySettings.mode;
-        const canvas = config.canvasSize;
-        const siderealTime = config.siderealTime;
-        let screenRaDec;
-        if (mode == 'AEP') {
-            screenRaDec = this.equatorialToScreenRaDec(raDec, { ra: viewState.centerRA, dec: viewState.centerDec });
-        }
-        else if (mode == 'view') {
-            const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
-            screenRaDec = this.horizontalToScreenRaDec(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
-        }
-        else if (mode == 'live' && orientationData) {
-            const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
-            screenRaDec = this.horizontalToScreenRaDec_Live(horizontal, orientationData);
-        }
-        else {
-            return [false, [0, 0]];
-        }
-        if (Math.abs(screenRaDec.ra) < viewState.fieldOfViewRA * 0.5 && Math.abs(screenRaDec.dec) < viewState.fieldOfViewDec * 0.5) {
-            const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
-            return [true, [x, y]];
-        }
-        else if (force) {
-            const [x, y] = this.screenRaDecToScreenXY(screenRaDec, canvas, viewState);
-            return [false, [x, y]];
-        }
-        else {
-            return [false, [0, 0]];
-        }
     }
     // AEPモードでスクリーンRaDecから赤道座標への変換
     screenRaDecToEquatorial_AEP(screenRaDec) {
@@ -427,6 +456,17 @@ export class CoordinateConverter {
             const dec = Math.asin(c) * RAD_TO_DEG;
             const ra = ((Math.atan2(b, a) * RAD_TO_DEG + center.ra) % 360 + 360) % 360;
             return { ra, dec };
+        }
+    }
+    screenRaDecToHorizontal(screenRaDec, mode, orientationData) {
+        if (mode == 'view') {
+            return this.screenRaDecToHorizontal_View(screenRaDec);
+        }
+        else if (mode == 'live' && orientationData) {
+            return this.screenRaDecToHorizontal_Live(screenRaDec, orientationData);
+        }
+        else {
+            return { az: 0, alt: 0 };
         }
     }
     // ViewモードでスクリーンRaDecから地平座標への変換
@@ -456,38 +496,32 @@ export class CoordinateConverter {
             return { az, alt };
         }
     }
-    screenRaDecToEquatorial_View(screenRaDec, siderealTime) {
-        const horizontal = this.screenRaDecToHorizontal_View(screenRaDec);
-        return this.horizontalToEquatorial(horizontal, siderealTime, this.getLocation().latitude);
-    }
+    // LiveモードでスクリーンRaDecから地平座標への変換
     screenRaDecToHorizontal_Live(screenRaDec, orientationData) {
         const theta = Math.atan2(screenRaDec.dec, -screenRaDec.ra); //画面上で普通に極座標
         const r = Math.sqrt(screenRaDec.ra * screenRaDec.ra + screenRaDec.dec * screenRaDec.dec) * DEG_TO_RAD;
         const alpha = orientationData.alpha;
         const beta = orientationData.beta;
         const gamma = orientationData.gamma;
-        const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) }, gamma), beta), alpha);
+        const x0 = Math.sin(r) * Math.cos(theta);
+        const y0 = Math.sin(r) * Math.sin(theta);
+        const z0 = -Math.cos(r);
+        const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: x0, y: y0, z: z0 }, gamma), beta), alpha);
         const alt = Math.asin(z) * RAD_TO_DEG;
         const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
         return { az, alt };
     }
-    horizontalToScreenRaDec_Live(horizontal, orientationData) {
-        const alpha = orientationData.alpha;
-        const beta = orientationData.beta;
-        const gamma = orientationData.gamma;
-        const compassHeading = orientationData.webkitCompassHeading;
-        const az = (horizontal.az - compassHeading - 90) * DEG_TO_RAD;
-        const alt = horizontal.alt * DEG_TO_RAD;
-        const { x, y, z } = this.rotateY(this.rotateX(this.rotateZ({ x: Math.cos(alt) * Math.cos(az), y: -Math.cos(alt) * Math.sin(az), z: Math.sin(alt) }, -alpha), -beta), -gamma);
-        if (-z >= 1) {
-            return { ra: 0, dec: 0 };
-        }
-        else {
-            const b = Math.acos(-z) * RAD_TO_DEG;
-            const scrRA = -b * x / Math.sqrt(x * x + y * y);
-            const scrDec = b * y / Math.sqrt(x * x + y * y);
-            return { ra: scrRA, dec: scrDec };
-        }
+    // ------------------------------スクリーンXYからの変換------------------------------
+    // スクリーン座標からスクリーンRaDecへの変換
+    screenXYToScreenRaDec(x, y, canvas) {
+        const fieldOfView = this.getCurrentFieldOfView();
+        const ra = (0.5 - x / canvas.width) * fieldOfView.ra;
+        const dec = (0.5 - y / canvas.height) * fieldOfView.dec;
+        return { ra, dec };
+    }
+    screenRaDecToEquatorial_View(screenRaDec, siderealTime) {
+        const horizontal = this.screenRaDecToHorizontal_View(screenRaDec);
+        return this.horizontalToEquatorial(horizontal, siderealTime, this.getLocation().latitude);
     }
     // デバイスオリエンテーションを使用した画面座標への変換
     horizontalToScreenXY_Live(horizontal, canvasSize, deviceOrientationManager) {
@@ -510,12 +544,12 @@ export class CoordinateConverter {
                     alt: horizontal.alt
                 };
                 // 調整された座標を画面座標に変換
-                const screenRaDec = this.horizontalToScreenRaDec(adjustedHorizontal, centerHorizontal);
+                const screenRaDec = this.horizontalToScreenRaDec_View(adjustedHorizontal, centerHorizontal);
                 return this.screenRaDecToScreenXY(screenRaDec, canvasSize, window.config.viewState);
             }
         }
         // デバイスオリエンテーションが利用できない場合は通常の変換
-        const screenRaDec = this.horizontalToScreenRaDec(horizontal, centerHorizontal);
+        const screenRaDec = this.horizontalToScreenRaDec_View(horizontal, centerHorizontal);
         return this.screenRaDecToScreenXY(screenRaDec, canvasSize, window.config.viewState);
     }
     // // デバイスオリエンテーションを使用した画面座標から水平座標への変換

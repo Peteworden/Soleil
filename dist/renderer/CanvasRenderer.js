@@ -12,6 +12,7 @@ export class CanvasRenderer {
         this.gaiaDataCache1 = null;
         this.gaiaDataCache2 = null;
         this.gaiaDataCache3 = null;
+        this.objectInfomation = [];
         this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
         this.canvas = canvas;
         const context = canvas.getContext('2d');
@@ -26,6 +27,8 @@ export class CanvasRenderer {
         else {
             this.config = config;
         }
+        this.objectInfomation = [];
+        console.log("CanvasRenderer constructor");
         this.coordinateConverter = new CoordinateConverter();
         this.deviceOrientationManager = new DeviceOrientationManager();
         this.deviceOrientationManager.setOrientationCallback((data) => {
@@ -58,6 +61,13 @@ export class CanvasRenderer {
         const [x, y] = screenXY[1];
         const magnitude = object.getMagnitude();
         const type = object.getType();
+        this.objectInfomation.push({
+            name: object.getName(),
+            type: object.getType() || 'unknown',
+            x: x,
+            y: y,
+            data: object
+        });
         let markFlag = true;
         if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay().width < 2.0 * 30.0 / this.canvas.width) {
             markFlag = false;
@@ -261,6 +271,14 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
+        // objectInfomationに惑星の情報を追加
+        this.objectInfomation.push({
+            name: planet.getJapaneseName(),
+            type: 'planet',
+            x: x,
+            y: y,
+            data: planet
+        });
         const radius = Math.max(this.getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = 'rgb(255, 219, 88)';
@@ -288,6 +306,14 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
+        // objectInfomationに月の情報を追加
+        this.objectInfomation.push({
+            name: moon.getJapaneseName(),
+            type: 'planet',
+            x: x,
+            y: y,
+            data: moon
+        });
         if (this.config.displaySettings.mode == 'EtP') {
             p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
         }
@@ -675,7 +701,9 @@ export class CanvasRenderer {
         }
     }
     drawHorizontalLine(j, az, alt, screenRA0, screenDec0) {
-        const { ra: screenRA1, dec: screenDec1 } = this.coordinateConverter.horizontalToScreenRaDec({ az: az, alt: alt }, { az: this.config.viewState.centerAz, alt: this.config.viewState.centerAlt });
+        const mode = this.config.displaySettings.mode;
+        const centerHorizontal = { az: this.config.viewState.centerAz, alt: this.config.viewState.centerAlt };
+        const { ra: screenRA1, dec: screenDec1 } = this.coordinateConverter.horizontalToScreenRaDec({ az: az, alt: alt }, mode, centerHorizontal, this.orientationData);
         const semiWidthRA = this.config.viewState.fieldOfViewRA / 2;
         const semiWidthDec = this.config.viewState.fieldOfViewDec / 2;
         if (j > 0) {
@@ -1014,24 +1042,6 @@ export class CanvasRenderer {
         for (let dec = Math.floor(Dec_min); dec <= Math.min(Math.floor(Dec_max), 89); dec++) {
             const intersections = allIntersections[dec + 90].intersections;
             intersections.sort((a, b) => a - b);
-            // 赤緯線と境界線の交点を計算
-            // for (const segment of segments) {
-            //     if ((segment.dec1 <= dec && segment.dec2 >= dec) || (segment.dec1 >= dec && segment.dec2 <= dec)) {
-            //         // 線形補間で交点の赤経を計算
-            //         const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
-            //         let intersectionRA;
-            //         if (segment.ra1 > 300 && segment.ra2 < 60) {
-            //             intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
-            //         } else if (segment.ra1 < 60 && segment.ra2 > 300) {
-            //             intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
-            //         } else {
-            //             intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
-            //         }
-            //         intersections.push(intersectionRA);
-            //     }
-            // }
-            // 交点をソート
-            // intersections.sort((a, b) => a - b);
             // 交点のペアで領域を決定
             const raRanges = [];
             if (intersections.length === 0) {
@@ -1090,8 +1100,8 @@ export class CanvasRenderer {
         if (this.config.displaySettings.mode == 'AEP') {
             const centerRA = this.config.viewState.centerRA;
             const centerDec = this.config.viewState.centerDec;
-            const northPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec(currentNorthPoleJ2000, { ra: centerRA, dec: centerDec });
-            const southPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec(currentSouthPoleJ2000, { ra: centerRA, dec: centerDec });
+            const northPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec_AEP(currentNorthPoleJ2000, { ra: centerRA, dec: centerDec });
+            const southPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec_AEP(currentSouthPoleJ2000, { ra: centerRA, dec: centerDec });
             const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
             const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
             let screenRa = -raWidth;
@@ -1141,8 +1151,8 @@ export class CanvasRenderer {
             const centerAlt = this.config.viewState.centerAlt;
             const northPoleHorizontal = this.coordinateConverter.equatorialToHorizontal(currentNorthPoleJ2000, siderealTime);
             const southPoleHorizontal = this.coordinateConverter.equatorialToHorizontal(currentSouthPoleJ2000, siderealTime);
-            const northPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(northPoleHorizontal, { az: centerAz, alt: centerAlt });
-            const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, { az: centerAz, alt: centerAlt });
+            const northPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(northPoleHorizontal, 'view', { az: centerAz, alt: centerAlt });
+            const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, 'view', { az: centerAz, alt: centerAlt });
             const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
             const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
             // 高速化のしどころ
@@ -1269,7 +1279,9 @@ export class CanvasRenderer {
         return correctedData;
     }
     // 描画オプションを更新
+    // 呼ばれない
     updateOptions(options) {
+        console.log("updateOptions", options);
         const globalConfig = window.config;
         if (globalConfig) {
             if (this.config !== globalConfig) {
@@ -1284,6 +1296,8 @@ export class CanvasRenderer {
         // 設定が変更されたらキャッシュをクリア
         if (options.viewState || options.displaySettings) {
             this.areaCandidatesCache = null;
+            this.objectInfomation = [];
+            console.log("reset objectInfomation");
         }
         // 時刻が変更されたらキャッシュをクリア
         if (options.displayTime) {
@@ -1293,10 +1307,20 @@ export class CanvasRenderer {
             this.gaiaDataCache1 = null;
             this.gaiaDataCache2 = null;
             this.gaiaDataCache3 = null;
+            this.objectInfomation = [];
         }
     }
     setOrientationData(orientationData) {
         this.orientationData = orientationData;
+    }
+    clearObjectInfomation() {
+        this.objectInfomation = [];
+    }
+    /**
+     * 画面内に表示されている天体のリストを取得
+     */
+    getVisibleObjects() {
+        return this.objectInfomation;
     }
 }
 //# sourceMappingURL=CanvasRenderer.js.map

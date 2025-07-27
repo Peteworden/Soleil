@@ -48,6 +48,11 @@ export class SettingController {
                 cameraTiltSliderDiv.style.display = 'none';
             }
         }
+        // controlPanelの可視性を更新
+        const timeController = window.TimeController;
+        if (timeController && timeController.updateControlPanelVisibility) {
+            timeController.updateControlPanelVisibility();
+        }
         // 設定値をローカルストレージに保存
         SettingController.saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
@@ -97,6 +102,7 @@ export class SettingController {
         const darkMode = document.getElementById('dark');
         const gridCheck = document.getElementById('gridCheck');
         const reticleCheck = document.getElementById('reticleCheck');
+        const objectInfoCheck = document.getElementById('objectInfoCheck');
         const starCheck = document.getElementById('starCheck');
         const starNameSelect = document.getElementById('starName');
         const constellationNameCheck = document.getElementById('constellationNameCheck');
@@ -107,7 +113,7 @@ export class SettingController {
         const ngcCheck = document.getElementById('ngcCheck');
         const camera = document.getElementById('camera');
         if (modeSelect && gridCheck && darkMode && magLimitSlider &&
-            reticleCheck && starCheck && starNameSelect &&
+            reticleCheck && objectInfoCheck && starCheck && starNameSelect &&
             planetCheck && messierCheck && recCheck && ngcCheck && camera) {
             const updateConfig = window.updateConfig;
             if (updateConfig) {
@@ -117,6 +123,7 @@ export class SettingController {
                     mode: modeSelect.value,
                     showGrid: gridCheck.checked,
                     showReticle: reticleCheck.checked,
+                    showObjectInfo: objectInfoCheck.checked,
                     showStars: starCheck.checked,
                     showStarNames: starNameSelect.value,
                     showPlanets: planetCheck.checked,
@@ -248,6 +255,7 @@ export class SettingController {
         const darkMode = document.getElementById('dark');
         const gridCheck = document.getElementById('gridCheck');
         const reticleCheck = document.getElementById('reticleCheck');
+        const objectInfoCheck = document.getElementById('objectInfoCheck');
         const starCheck = document.getElementById('starCheck');
         const starNameSelect = document.getElementById('starName');
         const constellationNameCheck = document.getElementById('constellationNameCheck');
@@ -267,6 +275,8 @@ export class SettingController {
             gridCheck.checked = config.displaySettings.showGrid;
         if (reticleCheck)
             reticleCheck.checked = config.displaySettings.showReticle;
+        if (objectInfoCheck)
+            objectInfoCheck.checked = config.displaySettings.showObjectInfo;
         if (starCheck)
             starCheck.checked = config.displaySettings.showStars;
         if (starNameSelect)

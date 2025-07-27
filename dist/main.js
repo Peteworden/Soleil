@@ -12,17 +12,18 @@ import { CoordinateConverter } from './utils/coordinates.js';
 import { DataLoader } from './utils/DataLoader.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
+import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 // 初期設定を読み込む関数
 function initializeConfig() {
     const savedSettings = localStorage.getItem('config');
     const savedSettingsObject = savedSettings ? JSON.parse(savedSettings) : null;
     const now = new Date();
-    // console.log('🔧 savedSettingsObject:', savedSettingsObject);
     const displaySettings = {
         darkMode: false,
         mode: 'view',
         showGrid: true,
         showReticle: true,
+        showObjectInfo: true,
         showStars: true,
         showStarNames: 'to2',
         showPlanets: true,
@@ -67,6 +68,7 @@ function initializeConfig() {
         displaySettings.darkMode = savedDisplaySettings.darkMode !== undefined ? savedDisplaySettings.darkMode : displaySettings.darkMode;
         displaySettings.mode = savedDisplaySettings.mode !== undefined ? savedDisplaySettings.mode : displaySettings.mode;
         displaySettings.showReticle = savedDisplaySettings.showReticle !== undefined ? savedDisplaySettings.showReticle : displaySettings.showReticle;
+        displaySettings.showObjectInfo = savedDisplaySettings.showObjectInfo !== undefined ? savedDisplaySettings.showObjectInfo : displaySettings.showObjectInfo;
         displaySettings.showGrid = savedDisplaySettings.showGrid !== undefined ? savedDisplaySettings.showGrid : displaySettings.showGrid;
         displaySettings.showStars = savedDisplaySettings.showStars !== undefined ? savedDisplaySettings.showStars : displaySettings.showStars;
         displaySettings.showStarNames = savedDisplaySettings.showStarNames !== undefined ? savedDisplaySettings.showStarNames : displaySettings.showStarNames;
@@ -142,7 +144,6 @@ export const config = initializeConfig();
 // resetConfig();
 // 設定をリセットする関数
 export function resetConfig() {
-    console.log('🔄 Resetting config to default values');
     localStorage.removeItem('config');
     const defaultConfig = initializeConfig();
     Object.assign(config, defaultConfig);
@@ -193,8 +194,10 @@ window.updateInfoDisplay = updateInfoDisplay;
 window.resetConfig = resetConfig;
 window.saveConfig = SettingController.saveConfigToLocalStorage;
 window.loadSettingsFromConfig = SettingController.loadSettingsFromConfig;
+window.TimeController = TimeController;
 window.updateTimeSlider = TimeController.updateSlider;
 window.toggleRealTime = TimeController.toggleRealTime;
+window.ObjectInfoController = ObjectInfoController;
 // メイン関数
 export async function main() {
     const app = document.getElementById('app');
@@ -230,6 +233,7 @@ export async function main() {
         function renderAll() {
             // console.time("renderAll");
             // const start1 = performance.now();
+            renderer.clearObjectInfomation();
             renderer.clear();
             renderer.drawGrid();
             renderer.drawCameraView();
@@ -384,82 +388,22 @@ export async function main() {
         app.appendChild(errorDiv);
     }
 }
-function setupButtonEvents() {
-    // 設定ボタン
-    document.getElementById('settingBtn')?.addEventListener('click', showSetting);
-    document.getElementById('settingBtnMobile')?.addEventListener('click', showSetting);
-    // 検索ボタン
-    document.getElementById('searchBtn')?.addEventListener('click', SearchController.toggleSearch);
-    document.getElementById('searchBtnMobile')?.addEventListener('click', SearchController.toggleSearch);
-    // 説明ボタン
-    document.getElementById('descriptionBtn')?.addEventListener('click', descriptionFunc);
-    document.getElementById('descriptionBtnMobile')?.addEventListener('click', descriptionFunc);
-    // 全画面ボタン
-    document.getElementById('fullScreenBtn')?.addEventListener('click', fullScreenFunc);
-    document.getElementById('fullScreenBtnMobile')?.addEventListener('click', fullScreenFunc);
-    // 設定画面のタブ切り替え
-    document.querySelectorAll('.setting-tab').forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            const tabName = e.target.getAttribute('data-tab');
-            if (tabName) {
-                SettingController.switchSettingTab(tabName);
-            }
-        });
-    });
-    // 設定画面のOKボタン
-    document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
-    document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
-    SearchController.setupSearchInput();
-    document.getElementById('closeObservationSiteMap')?.addEventListener('click', ObservationSiteController.closeMap);
-    // 検索画面の閉じるボタン
-    // document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
-    // 天体説明画面の閉じるボタン
-    document.getElementById('closeObjectInfo')?.addEventListener('click', closeObjectInfo);
-    document.getElementById('dtlNow')?.addEventListener('click', function () {
-        const dtl = document.getElementById('dtl');
-        const now = new Date();
-        dtl.value = now.getFullYear() + '-' +
-            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-            String(now.getDate()).padStart(2, '0') + 'T' +
-            String(now.getHours()).padStart(2, '0') + ':' +
-            String(now.getMinutes()).padStart(2, '0');
-        console.log(dtl.value);
-    });
-    document.getElementById('realTime')?.addEventListener('change', function () {
-        const realTime = document.getElementById('realTime');
-        if (realTime.value !== 'off') {
-            SettingController.setCurrentTimeOnSettingDisplay();
-        }
-    });
-    document.getElementById('magLimitSlider')?.addEventListener('change', function () {
-        const magLimitSlider = document.getElementById('magLimitSlider');
-        const magLimitSliderValue = parseFloat(magLimitSlider.value);
-        updateViewState({
-            starSizeKey1: magLimitSliderValue,
-            starSizeKey2: 1.8
-        });
-    });
-    document.getElementById('cameraTiltSlider')?.addEventListener('input', function () {
-        window.renderAll();
-    });
-}
-function setupResizeHandler() {
-    window.addEventListener('resize', handleResize);
-    handleResize(); // 初期実行
-}
-// 基本的なUI制御関数
 function showSetting() {
+    const descriptionBtn = document.getElementById("descriptionBtn");
+    if (descriptionBtn) {
+        descriptionBtn.setAttribute("disabled", "true");
+    }
     const setting = document.getElementById('setting');
-    if (window.innerWidth <= 768) {
-        if (setting.style.display === 'none') {
+    if (setting) {
+        if (window.innerWidth <= 768) {
+            setting.style.display = 'block';
+            setting.classList.add('show');
+        }
+        else {
             setting.style.display = 'block';
         }
-        setting.classList.add('show');
     }
-    else {
-        setting.style.display = 'block';
-    }
-    // 設定画面を開く際に、現在のconfigからUIに値を反映
+    // 設定をUIに反映
     SettingController.loadSettingsFromConfig();
 }
 function descriptionFunc() {
@@ -532,4 +476,99 @@ function setupOrientationPermissionButton(deviceOrientationManager) {
 // }
 // ページ読み込み時に実行
 window.addEventListener('DOMContentLoaded', main);
+function setupButtonEvents() {
+    console.log("setupButtonEvents called");
+    // 設定ボタン
+    const settingBtn = document.getElementById('settingBtn');
+    console.log('settingBtn element:', settingBtn);
+    if (settingBtn) {
+        settingBtn.addEventListener('click', () => {
+            showSetting();
+        });
+    }
+    // 設定ボタン（モバイル）
+    const settingBtnMobile = document.getElementById('settingBtnMobile');
+    if (settingBtnMobile) {
+        settingBtnMobile.addEventListener('click', () => {
+            showSetting();
+        });
+    }
+    else {
+    }
+    // 天体情報を閉じるボタン
+    const closeObjectInfoBtn = document.getElementById('closeObjectInfo');
+    if (closeObjectInfoBtn) {
+        closeObjectInfoBtn.addEventListener('click', () => {
+            ObjectInfoController.closeObjectInfo();
+        });
+    }
+    // 検索ボタン
+    document.getElementById('searchBtn')?.addEventListener('click', SearchController.toggleSearch);
+    document.getElementById('searchBtnMobile')?.addEventListener('click', SearchController.toggleSearch);
+    // 説明ボタン
+    const descriptionBtn = document.getElementById('descriptionBtn');
+    console.log('descriptionBtn element:', descriptionBtn);
+    if (descriptionBtn) {
+        descriptionBtn.addEventListener('click', () => {
+            descriptionFunc();
+        });
+    }
+    const descriptionBtnMobile = document.getElementById('descriptionBtnMobile');
+    if (descriptionBtnMobile) {
+        descriptionBtnMobile.addEventListener('click', () => {
+            descriptionFunc();
+        });
+    }
+    // 全画面ボタン
+    document.getElementById('fullScreenBtn')?.addEventListener('click', fullScreenFunc);
+    document.getElementById('fullScreenBtnMobile')?.addEventListener('click', fullScreenFunc);
+    // 設定画面のタブ切り替え
+    document.querySelectorAll('.setting-tab').forEach(tab => {
+        tab.addEventListener('click', (e) => {
+            const tabName = e.target.getAttribute('data-tab');
+            if (tabName) {
+                SettingController.switchSettingTab(tabName);
+            }
+        });
+    });
+    // 設定画面のOKボタン
+    document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
+    document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
+    SearchController.setupSearchInput();
+    document.getElementById('closeObservationSiteMap')?.addEventListener('click', ObservationSiteController.closeMap);
+    // 検索画面の閉じるボタン
+    // document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
+    // 天体説明画面の閉じるボタン
+    // document.getElementById('closeObjectInfo')?.addEventListener('click', closeObjectInfo);
+    document.getElementById('dtlNow')?.addEventListener('click', function () {
+        const dtl = document.getElementById('dtl');
+        const now = new Date();
+        dtl.value = now.getFullYear() + '-' +
+            String(now.getMonth() + 1).padStart(2, '0') + '-' +
+            String(now.getDate()).padStart(2, '0') + 'T' +
+            String(now.getHours()).padStart(2, '0') + ':' +
+            String(now.getMinutes()).padStart(2, '0');
+    });
+    document.getElementById('realTime')?.addEventListener('change', function () {
+        const realTime = document.getElementById('realTime');
+        if (realTime.value !== 'off') {
+            SettingController.setCurrentTimeOnSettingDisplay();
+        }
+    });
+    document.getElementById('magLimitSlider')?.addEventListener('change', function () {
+        const magLimitSlider = document.getElementById('magLimitSlider');
+        const magLimitSliderValue = parseFloat(magLimitSlider.value);
+        updateViewState({
+            starSizeKey1: magLimitSliderValue,
+            starSizeKey2: 1.8
+        });
+    });
+    document.getElementById('cameraTiltSlider')?.addEventListener('input', function () {
+        window.renderAll();
+    });
+}
+function setupResizeHandler() {
+    window.addEventListener('resize', handleResize);
+    handleResize(); // 初期実行
+}
 //# sourceMappingURL=main.js.map

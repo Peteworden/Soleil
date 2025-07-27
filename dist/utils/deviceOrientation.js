@@ -10,7 +10,6 @@ export class DeviceOrientationManager {
         this.orientationTime1 = Date.now();
         this.recentOrientationData = [];
         this.moving = false;
-        this.compassHeadingAz = 0;
         this.DEG_TO_RAD = Math.PI / 180;
         this.deviceInfo = this.detectOS();
         this.orientationData = {
@@ -115,20 +114,12 @@ export class DeviceOrientationManager {
             gamma: event.gamma * this.DEG_TO_RAD || 0,
             webkitCompassHeading: event.webkitCompassHeading * this.DEG_TO_RAD || 0
         };
-        if (this.deviceInfo.os === 'iphone' && this.compassHeadingAz === 0) {
-            this.compassHeadingAz = eventOrientationData.webkitCompassHeading || 0;
-        }
         if (this.orientationData.alpha === null || this.orientationData.beta === null || this.orientationData.gamma === null) {
-            this.orientationData = {
-                alpha: event.alpha * this.DEG_TO_RAD || 0,
-                beta: event.beta * this.DEG_TO_RAD || 0,
-                gamma: event.gamma * this.DEG_TO_RAD || 0,
-                webkitCompassHeading: event.webkitCompassHeading * this.DEG_TO_RAD || 0
-            };
+            this.orientationData = eventOrientationData;
             return;
         }
         const orientationTime2 = Date.now();
-        if (orientationTime2 - this.orientationTime1 < 50) {
+        if (orientationTime2 - this.orientationTime1 < 30) {
             return;
         }
         this.orientationTime1 = orientationTime2;

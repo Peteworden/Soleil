@@ -14,15 +14,17 @@ export class TimeController {
         // this.setupTimeButtons();
     }
     static setupTimeSlider() {
-        this.timeSlider = document.getElementById('timeSlider');
-        if (!this.timeSlider) {
-            console.warn('Time slider not found');
+        this.timeSliderDiv = document.getElementById('timeSliderDiv');
+        if (!this.timeSliderDiv)
             return;
-        }
+        this.timeSlider = document.getElementById('timeSlider');
+        if (!this.timeSlider)
+            return;
         // スライダーの初期値を設定
         const config = window.config;
         if (config && config.displayTime.realTime === 'off') {
-            this.timeSlider.style.display = 'block';
+            this.timeSliderDiv.style.display = 'block';
+            // this.timeSlider.style.display = 'block';
             // 現在のJDから前後1時間の範囲を設定
             const currentJd = config.displayTime.jd;
             const minJd = currentJd - 1.0 / 24.0; // 1時間前
@@ -38,12 +40,15 @@ export class TimeController {
             this.timeSlider.value = String(adjustedJd);
         }
         else {
-            this.timeSlider.style.display = 'none';
+            this.timeSliderDiv.style.display = 'none';
+            // this.timeSlider.style.display = 'none';
         }
         // イベントリスナーを設定
         this.timeSlider.addEventListener('input', (e) => {
             this.handleSliderInput(e);
         });
+        // controlPanelの可視性を初期化
+        this.updateControlPanelVisibility();
         // this.timeSlider.addEventListener('mousedown', () => {
         //     this.isDragging = true;
         // });
@@ -169,6 +174,8 @@ export class TimeController {
         this.updateSliderValue();
     }
     static updateSliderValue() {
+        if (!this.timeSliderDiv)
+            return;
         if (!this.timeSlider)
             return;
         const config = window.config;
@@ -176,11 +183,12 @@ export class TimeController {
             return;
         // リアルタイムモードの場合はスライダーを非表示
         if (config.displayTime.realTime != 'off') {
-            this.timeSlider.style.display = 'none';
+            this.timeSliderDiv.style.display = 'none';
+            this.updateControlPanelVisibility();
             return;
         }
         // 手動モードの場合はスライダーを表示して値を更新
-        this.timeSlider.style.display = 'block';
+        this.timeSliderDiv.style.display = 'block';
         const currentJd = config.displayTime.jd;
         const minJd = currentJd - 1.0 / 24.0; // 1時間前
         const maxJd = currentJd + 1.0 / 24.0; // 1時間後
@@ -190,11 +198,24 @@ export class TimeController {
         this.timeSlider.min = String(minJd);
         this.timeSlider.max = String(maxJd);
         this.timeSlider.value = String(adjustedJd);
-        console.log('updateSliderValue:', {
-            currentJd: currentJd,
-            sliderValue: this.timeSlider.value,
-            directElementValue: document.getElementById('timeSlider')?.value
-        });
+        this.updateControlPanelVisibility();
+    }
+    // controlPanelの可視性を更新するメソッド
+    static updateControlPanelVisibility() {
+        const controlPanel = document.getElementById('controlPanel');
+        if (!controlPanel)
+            return;
+        const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
+        // すべてのスライダーが非表示かチェック
+        const allSlidersHidden = (!this.timeSliderDiv || this.timeSliderDiv.style.display === 'none') &&
+            (!cameraTiltSliderDiv || cameraTiltSliderDiv.style.display === 'none');
+        // すべてのスライダーが非表示の場合はcontrolPanelも非表示にする
+        if (allSlidersHidden) {
+            controlPanel.style.display = 'none';
+        }
+        else {
+            controlPanel.style.display = 'block';
+        }
     }
     // 外部から呼び出せるメソッド
     static updateSlider() {
@@ -305,6 +326,7 @@ export class TimeController {
         }
     }
 }
+TimeController.timeSliderDiv = null;
 TimeController.timeSlider = null;
 TimeController.isDragging = false;
 TimeController.intervalId = null;

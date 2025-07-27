@@ -58,11 +58,10 @@
     <div id="announcement" style="width: 100%; height: 100%; background-color: #333333; color: #ffffff; padding: 20px; position: fixed; top: 0; left: 0; z-index: 1000; overflow-y: scroll;">
         <h3>お知らせ</h3>
         <p>
-            これまでお使いいただいていた星図（JavaScript）をベースに、
+            これまでの赤い星座線の星図（JavaScript）をベースに、
             <span style="color: orange;">現在新しいバージョンの星図（TypeScript）を作成しています。</span>
-            現時点ではまだ以前のバージョンにしかない機能もありますが、
-            すでに星雲イラストの表示、描画の高速化など新バージョンの方がすぐれているところもあります。
-            <span style="color: orange;">新しいバージョンを試して、不具合がないかなど確かめていただけるとうれしいです。</span>
+            すでに旧バージョンでできることのほとんどができる上、星雲イラストの表示など新しい機能もあります。
+            <span style="color: orange;">新しいバージョンを試していただけるとうれしいです。</span>
         </p>
         <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
             <button id="oldVersion" type="button" onclick="window.location.href='chart_js.html'" style="color: #ffffff; background-color: #666; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em;">旧バージョン</button>
@@ -71,9 +70,10 @@
         <p><span style="color: orange;">星図を開いてからバージョンを変えたい場合は、リロードするか、画面左上にリンクがある「HOME」を経由してください。</span></p>
         <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
         <ul>
-            <li>スマホの向きに合わせた表示、風景と重ねる機能</li>
+            <li>風景と重ねる機能</li>
             <li>クリックして詳細を表示</li>
             <li>ダークモード</li>
+            <li>地形を描画</li>
             <li>2000.0年分点による座標の表示</li>
             <li>メニューページ</li>
             <li>URLによる状態の保存</li>
@@ -83,7 +83,7 @@
             <li>星雲イラストの表示</li>
             <li>描画の高速化</li>
             <li>デザインの改善</li>
-            <li>今後旧バージョン以上にできることを増やす予定（星雲・星団・太陽系天体をユーザーが追加・選択できるようにするなど）</li>
+            <li>今後旧バージョン以上にできることを増やす予定（星雲・星団・太陽系天体をユーザーが追加・選択できるようにするなど）。ほしいのがあったら言ってください</li>
         </ul>
     </div>
 
@@ -123,7 +123,7 @@
         <button id="settingBtn" class="main-screen-button" type="button">
             <img src="images/settingBtn.png" alt="設定">
         </button>
-        <button id="descriptionBtn" class="main-screen-button" type="button">
+        <button id="descriptionBtn" class="main-screen-button" type="button" disabled>
             <img src="images/menu.png" alt="説明">
         </button>
     </div>
@@ -282,6 +282,14 @@
                         </label>
                     </div>
 
+                    <div class="switch-row">
+                        <label class="switch-text">クリックで天体情報:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="objectInfoCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
                     
                     <h5>星雲・星団など</h5>
                     <div class="switch-row">
@@ -409,8 +417,7 @@
     </div>
 
     <!-- スライダー -->
-    <div class="control-panel">
-        <div id="showingData" class="showingData"></div>
+    <div id="controlPanel" class="control-panel">
         <div id="cameraTiltSliderDiv" class="cameraTiltSliderDiv" style="display: none;">
             <input type="range" id="cameraTiltSlider" class="cameraTiltSlider" min="-120" max="120" step="1">
         </div>

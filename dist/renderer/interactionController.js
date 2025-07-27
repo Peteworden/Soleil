@@ -1,5 +1,6 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
 import { SettingController } from "../controllers/SettingController.js";
+import { ObjectInfoController } from "../controllers/ObjectInfoController.js";
 export class InteractionController {
     constructor(canvas, config, renderCallback) {
         // 状態管理
@@ -8,6 +9,9 @@ export class InteractionController {
         this.lastX = 0;
         this.lastY = 0;
         this.baseDistance = 0;
+        this.clickStartTime = 0;
+        this.clickStartX = 0;
+        this.clickStartY = 0;
         // タッチ追跡
         this.activePointers = new Set();
         this.pointerPositions = new Map();
@@ -17,6 +21,10 @@ export class InteractionController {
         this.lastDragTime = 0;
         this.onPointerDown = (e) => {
             e.preventDefault();
+            // クリック開始位置と時間を記録
+            this.clickStartTime = Date.now();
+            this.clickStartX = e.clientX;
+            this.clickStartY = e.clientY;
             if (this.activePointers.size <= 2) {
                 // ポインターIDを追跡
                 this.activePointers.add(e.pointerId);
@@ -168,6 +176,21 @@ export class InteractionController {
         };
         this.onPointerUp = (e) => {
             if (this.activePointers.size === 1) {
+                // クリック判定
+                const clickDuration = Date.now() - this.clickStartTime;
+                const moveDistance = Math.sqrt((e.clientX - this.clickStartX) ** 2 +
+                    (e.clientY - this.clickStartY) ** 2);
+                if (this.displaySettings.showObjectInfo) {
+                    //短時間（300ms以下）で移動量が少ない（10px以下）場合はクリックとして扱う
+                    if (clickDuration < 300 && moveDistance < 10) {
+                        // キャンバス座標に変換
+                        const rect = this.canvas.getBoundingClientRect();
+                        const canvasX = e.clientX - rect.left;
+                        const canvasY = e.clientY - rect.top;
+                        // 天体情報を表示
+                        ObjectInfoController.showObjectInfo(canvasX, canvasY);
+                    }
+                }
                 this.isDragging = false;
                 this.isPinch = false;
                 this.lastDragTime = performance.now();

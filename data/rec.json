@@ -344,6 +344,8 @@
         "dec": "-2 27",
         "vmag": "100",
         "class": "Nb",
+        "image_url": "馬頭星雲.jpg",
+        "image_credit": "me",
         "description" :"散光星雲IC434の手前にある暗黒星雲。撮影は比較的簡単らしい"
     },
     {
@@ -459,12 +461,14 @@
     {
         "name": "3C 273",
         "alt_name": [
-            "クエーサー"
+            "3C273"
         ],
         "ra": "12 29.1",
         "dec": "2 3",
         "vmag": "12.9",
         "class": "Gx",
+        "image_url": "3C273.png",
+        "image_credit": "me",
         "description": "24.4億光年かなたにある、12.9等級と可視光では全天一明るいクエーサー。画像の一辺は0.5°",
         "wiki": "3C_273"
     },
