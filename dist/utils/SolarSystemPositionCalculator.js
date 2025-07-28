@@ -14,23 +14,30 @@ export class SolarSystemPositionCalculator {
     /**
      * 観測地の天体を設定
      */
-    static setObserverPlanetName(planetName) {
-        this.observerPlanetName = planetName;
+    static setObserverPlanetName() {
+        const config = window.config;
+        if (config && config.observationSite) {
+            this.observationSite = config.observationSite;
+        }
+        else {
+            this.observationSite.observerPlanet = '地球';
+        }
     }
     /**
      * 観測地の天体を取得
      */
     static getObserverPlanetName() {
-        return this.observerPlanetName;
+        return this.observationSite.observerPlanet;
     }
-    static updateAllData(objects, jd) {
+    static updateAllData(objects, jd, observationSite) {
+        this.observationSite = observationSite;
         if (objects.length === 0) {
             console.warn('天体データがありません');
             return;
         }
-        const observerPlanetObject = objects.find(obj => obj.jpnName === this.observerPlanetName);
+        const observerPlanetObject = objects.find(obj => obj.jpnName === this.observationSite.observerPlanet);
         if (!observerPlanetObject) {
-            console.warn(`観測地の惑星「${this.observerPlanetName}」が見つかりません`);
+            console.warn(`観測地の惑星「${this.observationSite.observerPlanet}」が見つかりません`);
             return;
         }
         // すべての太陽系天体の日心直交座標を計算
@@ -65,7 +72,7 @@ export class SolarSystemPositionCalculator {
      * 個別天体の位置を更新
      */
     static updateObjectData(obj, jd) {
-        if (isMoon(obj) && this.observerPlanetName === "地球") {
+        if (isMoon(obj) && this.observationSite.observerPlanet === "地球") {
             //すでに地球基準の座標が設定されている
             return;
         }
@@ -104,7 +111,7 @@ export class SolarSystemPositionCalculator {
      * Computing Apparent Planetary Magnitudes for The Astronomical Almanac
      */
     static updateMagnitude(obj, distance) {
-        if (obj.jpnName === this.observerPlanetName) {
+        if (obj.jpnName === this.observationSite.observerPlanet) {
             obj.magnitude = 100;
             return;
         }
@@ -438,7 +445,13 @@ export class SolarSystemPositionCalculator {
         return { Px: Px, Qx: Qx, Py: Py, Qy: Qy, Pz: Pz, Qz: Qz };
     }
 }
-SolarSystemPositionCalculator.observerPlanetName = '地球';
+SolarSystemPositionCalculator.observationSite = {
+    observerPlanet: '地球',
+    name: 'カスタム',
+    latitude: 0,
+    longitude: 0,
+    timezone: 0
+};
 SolarSystemPositionCalculator.observerPlanetPosition = { x: 0, y: 0, z: 0 };
 SolarSystemPositionCalculator.coordinateConverter = new CoordinateConverter();
 //# sourceMappingURL=SolarSystemPositionCalculator.js.map

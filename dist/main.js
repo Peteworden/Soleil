@@ -353,7 +353,7 @@ export async function main() {
         // データ読み込みを開始
         loadDataStep();
         await SolarSystemController.initialize();
-        SolarSystemDataManager.updateAllData(config.displayTime.jd);
+        SolarSystemDataManager.updateAllData(config.displayTime.jd, config.observationSite);
         const controller = new InteractionController(canvas, config, renderAll);
         // renderAll関数とrenderer、controllerをグローバルに公開
         window.renderAll = renderAll;

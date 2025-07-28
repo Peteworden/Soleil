@@ -121,7 +121,7 @@ export class TimeController {
             updateConfig(newConfig);
         }
         // ★ スライダー操作時に全天体データを更新
-        SolarSystemDataManager.updateAllData(jd);
+        SolarSystemDataManager.updateAllData(jd, config.observationSite);
         const renderAll = window.renderAll;
         if (renderAll) {
             renderAll();
@@ -282,7 +282,7 @@ export class TimeController {
                     }
                 });
             }
-            SolarSystemDataManager.updateAllData(jd);
+            SolarSystemDataManager.updateAllData(jd, config.observationSite);
             const renderAll = window.renderAll;
             if (renderAll) {
                 renderAll();
@@ -318,7 +318,7 @@ export class TimeController {
                     }
                 });
             }
-            SolarSystemDataManager.updateAllData(jd);
+            SolarSystemDataManager.updateAllData(jd, config.observationSite);
             const renderAll = window.renderAll;
             if (renderAll) {
                 renderAll();

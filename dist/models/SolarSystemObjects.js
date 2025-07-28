@@ -164,8 +164,8 @@ export class SolarSystemDataManager {
             console.error('太陽系天体データの読み込みに失敗:', error);
         }
     }
-    static updateAllData(jd) {
-        SolarSystemPositionCalculator.updateAllData(this.solarObjects, jd);
+    static updateAllData(jd, observationSite) {
+        SolarSystemPositionCalculator.updateAllData(this.solarObjects, jd, observationSite);
     }
     // 天体の取得メソッド
     static getObjects() {

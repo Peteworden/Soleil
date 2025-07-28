@@ -1,5 +1,6 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
 import { MessierObject } from "../models/CelestialObject.js";
+import { Asteroid, Planet } from "../models/SolarSystemObjects.js";
 export class ObjectInfoController {
     /**
      * クリックされた位置から最寄りの天体を見つけて情報を表示
@@ -138,8 +139,8 @@ export class ObjectInfoController {
         const coords = data.getCoordinates();
         const raHM = this.coordinateConverter.radeg2hm(coords.ra);
         const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
-        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}'<br>`;
-        if (config && config.displaySettings.mode !== 'AEP') {
+        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (J2000.0)<br>`;
+        if (config && config.observationSite.observerPlanet == '地球') {
             const horizontal = this.coordinateConverter.equatorialToHorizontal(coords, config.siderealTime);
             infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
         }
@@ -171,78 +172,15 @@ export class ObjectInfoController {
         return infoText;
     }
     /**
-     * おすすめ天体の情報を生成
-     */
-    static generateRecInfo(rec) {
-        const config = window.config;
-        let infoText = '';
-        // 座標情報
-        const coords = rec.getCoordinates();
-        const raHM = this.coordinateConverter.radeg2hm(coords.ra);
-        const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
-        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed(0)}'<br>`;
-        if (config && config.displaySettings.mode !== 'AEP') {
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(coords, config.siderealTime);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
-        }
-        // 等級
-        const magnitude = rec.getMagnitude();
-        if (magnitude !== undefined) {
-            infoText += `等級: ${magnitude}<br>`;
-        }
-        // 分類
-        const type = rec.getType();
-        if (type) {
-            infoText += `分類: ${this.getObjectClassDescription(type)}<br>`;
-        }
-        // 説明
-        const description = rec.getDescription();
-        if (description) {
-            infoText += `<br>${description}<br>`;
-        }
-        // Wikipediaリンク
-        const name = rec.getName();
-        if (name.startsWith('NGC') || name.startsWith('IC')) {
-            infoText += `<br><a href="https://ja.wikipedia.org/wiki/${name}" target="_blank">Wikipedia</a>`;
-        }
-        return infoText;
-    }
-    /**
-     * NGC天体の情報を生成
-     */
-    static generateNGCInfo(ngc) {
-        const config = window.config;
-        let infoText = '';
-        // 座標情報
-        const coords = ngc.getCoordinates();
-        const raHM = this.coordinateConverter.radeg2hm(coords.ra);
-        const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
-        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}'<br>`;
-        if (config && config.displaySettings.mode !== 'AEP') {
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(coords, config.siderealTime);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
-        }
-        // 等級
-        const magnitude = ngc.getMagnitude();
-        if (magnitude !== undefined) {
-            infoText += `等級: ${magnitude}<br>`;
-        }
-        // 分類
-        const type = ngc.getType();
-        if (type) {
-            infoText += `分類: ${this.getObjectClassDescription(type)}<br>`;
-        }
-        // Wikipediaリンク
-        const name = ngc.getName();
-        infoText += `<br><a href="https://ja.wikipedia.org/wiki/${name}" target="_blank">Wikipedia</a>`;
-        return infoText;
-    }
-    /**
      * 惑星の情報を生成
      */
     static generatePlanetInfo(planetData) {
         const config = window.config;
         let infoText = '';
+        const jpnName = planetData.jpnName;
+        const engName = planetData.engName;
+        const type = (planetData instanceof Planet) ? '惑星' : (planetData instanceof Asteroid) ? '準惑星・小惑星' : '彗星';
+        infoText += `${jpnName} (${engName})<br>分類: ${type}<br>`;
         // 座標情報
         const raHM = this.coordinateConverter.radeg2hm(planetData.raDec.ra);
         const decDM = this.coordinateConverter.decdeg2dm(planetData.raDec.dec);
@@ -252,13 +190,15 @@ export class ObjectInfoController {
             const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
             const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(planetData.raDec, config.siderealTime);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            if (config.observationSite.observerPlanet == '地球') {
+                const horizontal = this.coordinateConverter.equatorialToHorizontal(planetData.raDec, config.siderealTime);
+                infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            }
         }
         // 等級
         const magnitude = planetData.getMagnitude();
         if (magnitude !== undefined && magnitude != 100 && planetData.jpnName != '地球') {
-            infoText += `等級: ${magnitude.toFixed(1)}<br>`;
+            infoText += `およその等級: ${magnitude.toFixed(1)}<br>`;
         }
         // 距離情報
         infoText += `距離: ${planetData.distance.toFixed(2)}au<br>`;
@@ -276,37 +216,13 @@ export class ObjectInfoController {
         if (planetData.jpnName === '木星') {
             // infoText += '<br>ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。<br>';
             // infoText += '<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館のサイト</a>がより正確でしょう。';
-            infoText += '<br>衛星の位置は<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館のサイト</a>へ（星図へも実装予定）<br>';
+            infoText += '<br>ガリレオ衛星の位置は<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館のサイト</a>へ（星図へも実装予定）';
         }
-        return infoText;
-    }
-    static generateAsteroidCometInfo(data) {
-        const config = window.config;
-        let infoText = '';
-        // 座標情報
-        const raHM = this.coordinateConverter.radeg2hm(data.raDec.ra);
-        const decDM = this.coordinateConverter.decdeg2dm(data.raDec.dec);
-        console.log(raHM, decDM);
-        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (視位置)<br>`;
-        if (config) {
-            const radecJ2000 = this.coordinateConverter.precessionEquatorial(data.raDec, undefined, config.displayTime.jd, 'j2000');
-            const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
-            const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
-            infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+        else if (planetData.jpnName === '土星') {
+            infoText += '<br>土星の衛星の位置は<a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPEのサイト</a>へ';
         }
-        // 距離情報
-        infoText += `距離: ${data.distance.toFixed(2)}au<br>`;
-        const lightMinutes = data.distance * 149597870700 / 299792458 / 60;
-        if (lightMinutes < 60) {
-            infoText += `（光の速さで${lightMinutes.toFixed(1)}分）<br>`;
-        }
-        else if (lightMinutes < 1440) {
-            infoText += `（光の速さで${(lightMinutes / 60).toFixed(1)}時間）<br>`;
-        }
-        else {
-            infoText += `（光の速さで${(lightMinutes / 1440).toFixed(1)}日）<br>`;
+        if ((!(planetData instanceof Planet) && !['太陽', '月'].includes(planetData.jpnName)) || ['天王星', '海王星'].includes(planetData.jpnName)) {
+            infoText += '<br>詳しい位置の確認は<a href="gaiaChart.html" target="_blank">こちらのPythonスクリプト</a>で！<br>';
         }
         return infoText;
     }
@@ -322,12 +238,14 @@ export class ObjectInfoController {
             const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
             const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            if (config.observationSite.observerPlanet == '地球') {
+                const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
+                infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            }
         }
         // 等級
         const magnitude = data.getMagnitude();
-        if (magnitude !== undefined) {
+        if (magnitude !== undefined && config && config.observationSite.observerPlanet == '地球') {
             infoText += `等級: ${magnitude}<br>`;
         }
         return infoText;
@@ -338,19 +256,21 @@ export class ObjectInfoController {
         // 座標情報
         const raHM = this.coordinateConverter.radeg2hm(data.raDec.ra);
         const decDM = this.coordinateConverter.decdeg2dm(data.raDec.dec);
-        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}'<br>`;
+        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (視位置)<br>`;
         if (config) {
             const radecJ2000 = this.coordinateConverter.precessionEquatorial(data.raDec, undefined, config.displayTime.jd, 'j2000');
             const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
             const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            if (config.observationSite.observerPlanet == '地球') {
+                const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
+                infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            }
         }
         return infoText;
     }
     /**
-     * 恒星の情報を生成
+     * 恒星の情報を生成(今は使っていない)
      */
     static generateStarInfo(star) {
         const config = window.config;
@@ -360,7 +280,7 @@ export class ObjectInfoController {
         const raHM = this.coordinateConverter.radeg2hm(coords.ra);
         const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed(0)}'<br>`;
-        if (config && config.displaySettings.mode !== 'AEP') {
+        if (config && config.observationSite.observerPlanet == '地球') {
             const horizontal = this.coordinateConverter.equatorialToHorizontal(coords, config.siderealTime);
             infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
         }

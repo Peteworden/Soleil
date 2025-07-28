@@ -13,13 +13,25 @@ export function updateInfoDisplay() {
     }
     // 観測地情報を更新
     if (locationInfo) {
-        const { latitude, longitude } = config.observationSite;
-        const ns = latitude >= 0 ? 'N' : 'S';
-        const ew = longitude >= 0 ? 'E' : 'W';
-        const latAbs = Math.abs(latitude);
-        const lonAbs = Math.abs(longitude);
-        const locationText = `${latAbs.toFixed(2)}° ${ns} ${lonAbs.toFixed(2)}° ${ew}`;
-        locationInfo.textContent = locationText;
+        const observationSite = config.observationSite;
+        if (observationSite.observerPlanet == '地球') {
+            const ns = observationSite.latitude >= 0 ? 'N' : 'S';
+            const ew = observationSite.longitude >= 0 ? 'E' : 'W';
+            const latAbs = Math.abs(observationSite.latitude);
+            const lonAbs = Math.abs(observationSite.longitude);
+            if (observationSite.name == 'カスタム') {
+                const locationText = `${latAbs.toFixed(2)}° ${ns} ${lonAbs.toFixed(2)}° ${ew}`;
+                locationInfo.textContent = locationText;
+            }
+            else {
+                const locationText = `${observationSite.name} (${latAbs.toFixed(2)}° ${ns} ${lonAbs.toFixed(2)}° ${ew})`;
+                locationInfo.textContent = locationText;
+            }
+        }
+        else {
+            const locationText = `${observationSite.observerPlanet}`;
+            locationInfo.textContent = locationText;
+        }
     }
     // 時刻情報を更新
     if (timeInfo) {
@@ -46,7 +58,10 @@ export function updateInfoDisplay() {
         let centerDecrounded = Math.round(Math.abs(centerDec) * 60);
         const decDegrees = Math.floor(centerDecrounded / 60);
         const decMinutes = Math.floor(centerDecrounded % 60);
-        const centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${decDegrees}°${decMinutes}'<br>高度${centerAlt.toFixed(2)}°, 方位角${centerAz.toFixed(2)}°`;
+        let centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${decDegrees}°${decMinutes}'`;
+        if (config.observationSite.observerPlanet == '地球') {
+            centerText += `<br>方位角${centerAz.toFixed(2)}°, 高度${centerAlt.toFixed(2)}°`;
+        }
         centerInfo.innerHTML = centerText;
     }
     // 視野角情報を更新
