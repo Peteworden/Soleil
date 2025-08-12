@@ -35,6 +35,9 @@ function initializeConfig() {
         showCameraView: false,
         camera: 'none',
         showTopography: false // 読み込み時は常にfalse
+        // showSatellites: false,
+        // showSatelliteLabels: false,
+        // showSatelliteOrbits: false
     };
     const viewState = {
         centerRA: 90,
@@ -61,59 +64,69 @@ function initializeConfig() {
         minute: now.getMinutes(),
         second: now.getSeconds(),
         jd: AstronomicalCalculator.calculateCurrentJdTT(),
-        realTime: 'off'
+        realTime: 'off',
+        loadOnCurrentTime: true
     };
+    // const canvasSize: CanvasSize = getCanvasSize();
+    const canvasSize = {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
+    console.log('canvasSize:', canvasSize);
     if (savedSettingsObject && savedSettingsObject.displaySettings) {
         const savedDisplaySettings = savedSettingsObject.displaySettings;
-        displaySettings.darkMode = savedDisplaySettings.darkMode !== undefined ? savedDisplaySettings.darkMode : displaySettings.darkMode;
-        displaySettings.mode = savedDisplaySettings.mode !== undefined ? savedDisplaySettings.mode : displaySettings.mode;
-        displaySettings.showReticle = savedDisplaySettings.showReticle !== undefined ? savedDisplaySettings.showReticle : displaySettings.showReticle;
-        displaySettings.showObjectInfo = savedDisplaySettings.showObjectInfo !== undefined ? savedDisplaySettings.showObjectInfo : displaySettings.showObjectInfo;
-        displaySettings.showGrid = savedDisplaySettings.showGrid !== undefined ? savedDisplaySettings.showGrid : displaySettings.showGrid;
-        displaySettings.showStars = savedDisplaySettings.showStars !== undefined ? savedDisplaySettings.showStars : displaySettings.showStars;
-        displaySettings.showStarNames = savedDisplaySettings.showStarNames !== undefined ? savedDisplaySettings.showStarNames : displaySettings.showStarNames;
-        displaySettings.showPlanets = savedDisplaySettings.showPlanets !== undefined ? savedDisplaySettings.showPlanets : displaySettings.showPlanets;
-        displaySettings.showConstellationNames = savedDisplaySettings.showConstellationNames !== undefined ? savedDisplaySettings.showConstellationNames : displaySettings.showConstellationNames;
-        displaySettings.showConstellationLines = savedDisplaySettings.showConstellationLines !== undefined ? savedDisplaySettings.showConstellationLines : displaySettings.showConstellationLines;
-        displaySettings.showMessiers = savedDisplaySettings.showMessiers !== undefined ? savedDisplaySettings.showMessiers : displaySettings.showMessiers;
-        displaySettings.showRecs = savedDisplaySettings.showRecs !== undefined ? savedDisplaySettings.showRecs : displaySettings.showRecs;
-        displaySettings.showNGC = savedDisplaySettings.showNGC !== undefined ? savedDisplaySettings.showNGC : displaySettings.showNGC;
-        displaySettings.camera = savedDisplaySettings.camera !== undefined ? savedDisplaySettings.camera : displaySettings.camera;
+        Object.keys(displaySettings).forEach(key => {
+            const savedValue = savedDisplaySettings[key];
+            if (savedValue !== undefined) {
+                displaySettings[key] = savedValue;
+            }
+        });
     }
     if (savedSettingsObject && savedSettingsObject.viewState) {
         const savedViewState = savedSettingsObject.viewState;
-        viewState.centerRA = savedViewState.centerRA !== undefined ? savedViewState.centerRA : viewState.centerRA;
-        viewState.centerDec = savedViewState.centerDec !== undefined ? savedViewState.centerDec : viewState.centerDec;
-        viewState.centerAz = savedViewState.centerAz !== undefined ? savedViewState.centerAz : viewState.centerAz;
-        viewState.centerAlt = savedViewState.centerAlt !== undefined ? savedViewState.centerAlt : viewState.centerAlt;
-        viewState.fieldOfViewRA = savedViewState.fieldOfViewRA !== undefined ? savedViewState.fieldOfViewRA : viewState.fieldOfViewRA;
-        viewState.fieldOfViewDec = savedViewState.fieldOfViewDec !== undefined ? savedViewState.fieldOfViewDec : viewState.fieldOfViewDec;
-        viewState.starSizeKey1 = savedViewState.starSizeKey1 !== undefined ? savedViewState.starSizeKey1 : viewState.starSizeKey1;
-        viewState.starSizeKey2 = savedViewState.starSizeKey2 !== undefined ? savedViewState.starSizeKey2 : viewState.starSizeKey2;
+        Object.keys(viewState).forEach(key => {
+            const savedValue = savedViewState[key];
+            if (savedValue !== undefined) {
+                viewState[key] = savedValue;
+            }
+        });
     }
-    viewState.fieldOfViewDec = viewState.fieldOfViewRA * window.innerHeight / window.innerWidth;
+    viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
     if (savedSettingsObject && savedSettingsObject.observationSite) {
         const savedObservationSite = savedSettingsObject.observationSite;
-        observationSite.observerPlanet = savedObservationSite.observerPlanet !== undefined ? savedObservationSite.observerPlanet : observationSite.observerPlanet;
-        observationSite.name = savedObservationSite.name !== undefined ? savedObservationSite.name : observationSite.name;
+        Object.keys(observationSite).forEach(key => {
+            const savedValue = savedObservationSite[key];
+            if (savedValue !== undefined) {
+                observationSite[key] = savedValue;
+            }
+        });
         if (observationSite.name === '地図上で選択') {
             observationSite.name = 'カスタム';
         }
-        observationSite.latitude = savedObservationSite.latitude !== undefined ? savedObservationSite.latitude : observationSite.latitude;
-        observationSite.longitude = savedObservationSite.longitude !== undefined ? savedObservationSite.longitude : observationSite.longitude;
-        observationSite.timezone = savedObservationSite.timezone !== undefined ? savedObservationSite.timezone : observationSite.timezone;
     }
-    if (savedSettingsObject && savedSettingsObject.displayTime &&
-        savedSettingsObject.displayTime.realTime &&
-        savedSettingsObject.displayTime.realTime === 'off') {
-        displayTime.year = savedSettingsObject.displayTime.year !== undefined ? savedSettingsObject.displayTime.year : displayTime.year;
-        displayTime.month = savedSettingsObject.displayTime.month !== undefined ? savedSettingsObject.displayTime.month : displayTime.month;
-        displayTime.day = savedSettingsObject.displayTime.day !== undefined ? savedSettingsObject.displayTime.day : displayTime.day;
-        displayTime.hour = savedSettingsObject.displayTime.hour !== undefined ? savedSettingsObject.displayTime.hour : displayTime.hour;
-        displayTime.minute = savedSettingsObject.displayTime.minute !== undefined ? savedSettingsObject.displayTime.minute : displayTime.minute;
-        displayTime.second = savedSettingsObject.displayTime.second !== undefined ? savedSettingsObject.displayTime.second : displayTime.second;
-        displayTime.jd = savedSettingsObject.displayTime.jd !== undefined ? savedSettingsObject.displayTime.jd : displayTime.jd;
-        displayTime.realTime = savedSettingsObject.displayTime.realTime !== undefined ? savedSettingsObject.displayTime.realTime : displayTime.realTime;
+    if (savedSettingsObject && savedSettingsObject.displayTime) {
+        const savedDisplayTime = savedSettingsObject.displayTime;
+        displayTime.loadOnCurrentTime = savedDisplayTime.loadOnCurrentTime !== undefined ? savedDisplayTime.loadOnCurrentTime : displayTime.loadOnCurrentTime;
+        displayTime.realTime = savedDisplayTime.realTime !== undefined ? savedDisplayTime.realTime : displayTime.realTime;
+        if (displayTime.loadOnCurrentTime || displayTime.realTime != 'off' ||
+            savedDisplayTime.year === undefined || savedDisplayTime.month === undefined || savedDisplayTime.day === undefined ||
+            savedDisplayTime.hour === undefined || savedDisplayTime.minute === undefined || savedDisplayTime.second === undefined) {
+            displayTime.year = now.getFullYear();
+            displayTime.month = now.getMonth() + 1;
+            displayTime.day = now.getDate();
+            displayTime.hour = now.getHours();
+            displayTime.minute = now.getMinutes();
+            displayTime.second = now.getSeconds();
+        }
+        else {
+            displayTime.year = savedDisplayTime.year;
+            displayTime.month = savedDisplayTime.month;
+            displayTime.day = savedDisplayTime.day;
+            displayTime.hour = savedDisplayTime.hour;
+            displayTime.minute = savedDisplayTime.minute;
+            displayTime.second = savedDisplayTime.second;
+        }
+        displayTime.jd = AstronomicalCalculator.jdTTFromYmdhmsJst(displayTime.year, displayTime.month, displayTime.day, displayTime.hour, displayTime.minute, displayTime.second);
     }
     const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
     const converter = new CoordinateConverter();
@@ -132,10 +145,7 @@ function initializeConfig() {
         viewState: viewState,
         observationSite: observationSite,
         displayTime: displayTime,
-        canvasSize: {
-            width: window.innerWidth,
-            height: window.innerHeight
-        },
+        canvasSize: canvasSize,
         siderealTime: siderealTime
     };
 }
@@ -204,6 +214,9 @@ export async function main() {
     if (!app)
         return;
     try {
+        // 設定を初期化（DOM要素が読み込まれた後に実行）
+        const config = initializeConfig();
+        window.config = config;
         // データの読み込み（段階的に）
         let hipStars = [];
         let gaia100Data = [];
@@ -273,6 +286,21 @@ export async function main() {
         }
         // デバイスオリエンテーション許可ボタンの設定
         setupOrientationPermissionButton(deviceOrientationManager);
+        // フルスクリーン状態変更の監視
+        document.addEventListener('fullscreenchange', () => {
+            const fullScreenBtn = document.getElementById('fullScreenBtn');
+            const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
+            if (document.fullscreenElement) {
+                // フルスクリーンになった時
+                fullScreenBtn.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+                fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+            }
+            else {
+                // フルスクリーンが解除された時
+                fullScreenBtn.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+                fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+            }
+        });
         updateInfoDisplay();
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
@@ -371,44 +399,106 @@ export async function main() {
         app.appendChild(errorDiv);
     }
 }
-function showSetting() {
-    const descriptionBtn = document.getElementById("descriptionBtn");
-    if (descriptionBtn) {
-        descriptionBtn.setAttribute("disabled", "true");
-    }
-    const setting = document.getElementById('setting');
-    if (setting) {
-        if (window.innerWidth <= 768) {
-            setting.style.display = 'block';
-            setting.classList.add('show');
-        }
-        else {
-            setting.style.display = 'block';
-        }
-    }
-    // 設定をUIに反映
-    SettingController.loadSettingsFromConfig();
-}
 function descriptionFunc() {
     const description = document.getElementById('description');
     if (description.style.display === 'none') {
         description.style.display = 'block';
+        document.body.classList.add('subwindow-open');
     }
     else {
         description.style.display = 'none';
+        document.body.classList.remove('subwindow-open');
     }
 }
-function fullScreenFunc() {
-    if (document.documentElement.requestFullscreen) {
-        console.log('fullScreenFunc: make full screen');
-        document.documentElement.requestFullscreen();
-        document.getElementById('fullScreenBtn').innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+function togglefullScreen() {
+    console.log('togglefullScreen called');
+    console.log('document.fullscreenElement:', document.fullscreenElement);
+    // 現在のフルスクリーン状態をチェック
+    if (!document.fullscreenElement) {
+        // フルスクリーンでない場合、フルスクリーンにする
+        console.log('togglefullScreen: entering full screen');
+        if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().then(() => {
+                window.renderAll();
+                console.log('Successfully entered fullscreen');
+            }).catch((err) => {
+                console.error('Failed to enter fullscreen:', err);
+            });
+        }
+        else {
+            console.log('requestFullscreen not supported');
+        }
     }
     else {
-        console.log('fullScreenFunc: make normal screen');
-        document.exitFullscreen();
-        document.getElementById('fullScreenBtn').innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+        // フルスクリーンの場合、通常表示に戻す
+        console.log('togglefullScreen: exiting full screen');
+        if (document.exitFullscreen) {
+            document.exitFullscreen().then(() => {
+                window.renderAll();
+                console.log('Successfully exited fullscreen');
+            }).catch((err) => {
+                console.error('Failed to exit fullscreen:', err);
+            });
+        }
+        else {
+            console.log('exitFullscreen not supported');
+        }
     }
+}
+function setupFullScreenButton() {
+    console.log('setupFullScreenButton called');
+    const fullScreenBtn = document.getElementById('fullScreenBtn');
+    const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
+    console.log('fullScreenBtn:', fullScreenBtn);
+    console.log('fullScreenBtnMobile:', fullScreenBtnMobile);
+    if (fullScreenBtn) {
+        console.log('fullScreenBtn found, adding event listener');
+        fullScreenBtn.addEventListener('click', () => {
+            console.log('fullScreenBtn clicked');
+            togglefullScreen();
+        });
+    }
+    else {
+        console.log('fullScreenBtn not found');
+    }
+    if (fullScreenBtnMobile) {
+        console.log('fullScreenBtnMobile found, adding event listener');
+        fullScreenBtnMobile.addEventListener('click', () => {
+            console.log('fullScreenBtnMobile clicked');
+            togglefullScreen();
+        });
+    }
+    else {
+        console.log('fullScreenBtnMobile not found');
+    }
+    // フルスクリーン状態変更の監視
+    document.addEventListener('fullscreenchange', () => {
+        console.log('fullscreenchange event fired');
+        const fullScreenBtn = document.getElementById('fullScreenBtn');
+        const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
+        if (document.fullscreenElement) {
+            // フルスクリーンになった時
+            console.log('Entering fullscreen');
+            window.renderAll();
+            if (fullScreenBtn) {
+                fullScreenBtn.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+            }
+            if (fullScreenBtnMobile) {
+                fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+            }
+        }
+        else {
+            // フルスクリーンが解除された時
+            console.log('Exiting fullscreen');
+            window.renderAll();
+            if (fullScreenBtn) {
+                fullScreenBtn.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+            }
+            if (fullScreenBtnMobile) {
+                fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+            }
+        }
+    });
 }
 function closeObjectInfo() {
     const objectInfo = document.getElementById('objectInfo');
@@ -465,14 +555,14 @@ function setupButtonEvents() {
     const settingBtn = document.getElementById('settingBtn');
     if (settingBtn) {
         settingBtn.addEventListener('click', () => {
-            showSetting();
+            SettingController.initialize();
         });
     }
     // 設定ボタン（モバイル）
     const settingBtnMobile = document.getElementById('settingBtnMobile');
     if (settingBtnMobile) {
         settingBtnMobile.addEventListener('click', () => {
-            showSetting();
+            SettingController.initialize();
         });
     }
     else {
@@ -500,9 +590,14 @@ function setupButtonEvents() {
             descriptionFunc();
         });
     }
+    const closeDescriptionBtn = document.getElementById('closeDescription');
+    if (closeDescriptionBtn) {
+        closeDescriptionBtn.addEventListener('click', () => {
+            descriptionFunc();
+        });
+    }
     // 全画面ボタン
-    document.getElementById('fullScreenBtn')?.addEventListener('click', fullScreenFunc);
-    document.getElementById('fullScreenBtnMobile')?.addEventListener('click', fullScreenFunc);
+    setupFullScreenButton();
     // 設定画面のタブ切り替え
     document.querySelectorAll('.setting-tab').forEach(tab => {
         tab.addEventListener('click', (e) => {

@@ -96,6 +96,149 @@ export function handleResize() {
             bottomButtons.style.display = 'flex';
     }
 }
+/**
+ * ブラウザのUIを除いた描画可能領域のサイズを取得
+ * @returns {width: number, height: number} 描画可能領域の幅と高さ
+ * 推定ベース: 一般的なブラウザUIのサイズを固定値で推定
+ * 用途: 簡単な用途、概算が必要な場合
+ */
+export function getAvailableScreenSize() {
+    // フルスクリーン時は画面全体を使用
+    if (document.fullscreenElement) {
+        return {
+            width: window.screen.width,
+            height: window.screen.height
+        };
+    }
+    // 通常時はブラウザのUIを除いた領域を使用
+    // 一般的なブラウザUIの高さを推定（ツールバー、ブックマークバー、タブなど）
+    const estimatedBrowserUI = {
+        top: 80, // タブバー + ツールバー
+        bottom: 0, // 通常は下部にUIはない
+        left: 0, // 通常は左側にUIはない
+        right: 0 // 通常は右側にUIはない
+    };
+    // 実際の利用可能な領域を計算
+    const availableWidth = window.screen.width - estimatedBrowserUI.left - estimatedBrowserUI.right;
+    const availableHeight = window.screen.height - estimatedBrowserUI.top - estimatedBrowserUI.bottom;
+    // window.innerWidth/innerHeightと比較して、より小さい方を採用
+    // （実際のブラウザウィンドウサイズが画面より小さい場合）
+    const actualWidth = Math.min(availableWidth, window.innerWidth);
+    const actualHeight = Math.min(availableHeight, window.innerHeight);
+    return {
+        width: actualWidth,
+        height: actualHeight
+    };
+}
+/**
+ * 現在のウィンドウサイズに基づいて描画可能領域を取得
+ * @returns {width: number, height: number} 描画可能領域の幅と高さ
+ */
+export function getCurrentWindowSize() {
+    return {
+        width: window.innerWidth,
+        height: window.innerHeight
+    };
+}
+/**
+ * ブラウザのUIサイズを動的に測定
+ * @returns {top: number, bottom: number, left: number, right: number} ブラウザUIのサイズ
+ * UIサイズ測定: ブラウザのUIサイズを動的に計算
+ * 用途: デバッグや詳細な分析が必要な場合
+ */
+export function measureBrowserUI() {
+    // フルスクリーン時はUIはない
+    if (document.fullscreenElement) {
+        return { top: 0, bottom: 0, left: 0, right: 0 };
+    }
+    // 画面サイズとウィンドウサイズの差からUIサイズを推定
+    const screenWidth = window.screen.width;
+    const screenHeight = window.screen.height;
+    const windowWidth = window.outerWidth;
+    const windowHeight = window.outerHeight;
+    // ウィンドウの位置を取得（可能な場合）
+    const windowLeft = window.screenX || 0;
+    const windowTop = window.screenY || 0;
+    // UIサイズを計算
+    const left = windowLeft;
+    const top = windowTop;
+    const right = screenWidth - (windowLeft + windowWidth);
+    const bottom = screenHeight - (windowTop + windowHeight);
+    return { top, bottom, left, right };
+}
+/**
+ * より正確な描画可能領域を取得（動的測定版）
+ * @returns {width: number, height: number} 描画可能領域の幅と高さ
+ * 動的測定: 実際のウィンドウ位置とサイズからUIサイズを計算
+ * 用途: より正確な描画可能領域が必要な場合
+ */
+export function getAvailableSize() {
+    if (document.fullscreenElement) {
+        return {
+            width: window.screen.width,
+            height: window.screen.height
+        };
+    }
+    const ui = measureBrowserUI();
+    const availableWidth = window.screen.width - ui.left - ui.right;
+    const availableHeight = window.screen.height - ui.top - ui.bottom;
+    // 実際のウィンドウサイズと比較して、より小さい方を採用
+    const actualWidth = Math.min(availableWidth, window.innerWidth);
+    const actualHeight = Math.min(availableHeight, window.innerHeight);
+    return {
+        width: actualWidth,
+        height: actualHeight
+    };
+}
+export function getCanvasSize() {
+    const availableSize = getAvailableSize();
+    let heightDiff = 0;
+    // タイトルバーの高さを取得
+    const title = document.getElementById('title');
+    if (title) {
+        const titleHeight = title.offsetHeight || 0;
+        console.log('title height:', titleHeight);
+        heightDiff += titleHeight;
+    }
+    // モバイルボタンドックの高さを取得（表示されている場合のみ）
+    const mobileDock = document.getElementById('mobileButtonDock');
+    if (mobileDock) {
+        const computedStyle = window.getComputedStyle(mobileDock);
+        const isVisible = computedStyle.display !== 'none';
+        console.log('mobileDock display:', computedStyle.display);
+        if (isVisible) {
+            const dockHeight = mobileDock.offsetHeight || 0;
+            console.log('mobileDock height:', dockHeight);
+            heightDiff += dockHeight;
+        }
+    }
+    const canvasSize = {
+        width: availableSize.width,
+        height: availableSize.height - heightDiff
+    };
+    console.log('Available size:', availableSize);
+    console.log('Height difference:', heightDiff);
+    console.log('Final canvas size:', canvasSize);
+    return canvasSize;
+}
+/**
+ * 描画可能領域の情報をコンソールに出力（デバッグ用）
+ */
+export function logAvailableScreenInfo() {
+    console.log('=== 描画可能領域の情報 ===');
+    console.log('window.screen:', window.screen.width, 'x', window.screen.height);
+    console.log('window.outerWidth/Height:', window.outerWidth, 'x', window.outerHeight);
+    console.log('window.innerWidth/Height:', window.innerWidth, 'x', window.innerHeight);
+    console.log('window.screenX/Y:', window.screenX, window.screenY);
+    const ui = measureBrowserUI();
+    console.log('ブラウザUIサイズ:', ui);
+    const available = getAvailableSize();
+    console.log('描画可能領域:', available);
+    const current = getCurrentWindowSize();
+    console.log('現在のウィンドウサイズ:', current);
+    console.log('フルスクリーン状態:', !!document.fullscreenElement);
+    console.log('========================');
+}
 export function updateTimeDisplay() {
     // 時刻表示を定期的に更新
     const timeInfo = document.getElementById('timeInfo');
@@ -164,6 +307,23 @@ export function showError(message) {
             errorDiv.parentNode.removeChild(errorDiv);
         }
     }, 3000);
+}
+/**
+ * CSS適用後にキャンバスサイズを再計算
+ * @param canvas HTMLCanvasElement
+ */
+export function recalculateCanvasSize(canvas) {
+    // 少し遅延を入れてCSSの適用を待つ
+    setTimeout(() => {
+        const newSize = getCanvasSize();
+        console.log('Recalculating canvas size:', newSize);
+        canvas.width = newSize.width;
+        canvas.height = newSize.height;
+        // レンダリングを再実行
+        if (window.renderAll) {
+            window.renderAll();
+        }
+    }, 100);
 }
 export function showSuccess(message) {
     // 成功メッセージを表示

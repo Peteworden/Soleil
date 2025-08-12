@@ -35,9 +35,11 @@ export class SearchController {
         const searchDiv = document.getElementById('search');
         if (searchDiv) {
             if (searchDiv.style.display === 'block') {
+                document.body.classList.remove('search-open');
                 SearchController.closeSearch();
             }
             else {
+                document.body.classList.add('search-open');
                 SearchController.openSearch();
             }
         }

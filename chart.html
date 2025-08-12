@@ -73,7 +73,7 @@
         <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
         <ul>
             <li>風景と重ねる機能</li>
-            <li>クリックして詳細を表示</li>
+            <li>惑星の移動を描画</li>
             <li>ダークモード</li>
             <li>地形を描画</li>
             <li>2000.0年分点による座標の表示</li>
@@ -112,31 +112,27 @@
             <span class="info-label">最微等級:</span>
             <span class="info-value" id="limitingMagnitudeInfo">11.5</span>
         </div>
-        <!-- <div class="info-row" id="compassInfoRow" style="display: none;">
-            <span class="info-label">方位:</span>
-            <span class="info-value" id="compassInfo">0.0°</span>
-        </div> -->
     </div>
 
     <!-- PC用ボタン配置 -->
     <div class="top-right-buttons">
-        <button id="searchBtn" class="main-screen-button" type="button">
+        <button id="searchBtn" class="main-screen-button search-button" type="button">
             <img src="images/search.png" alt="検索">
         </button>
-        <button id="settingBtn" class="main-screen-button" type="button">
+        <button id="settingBtn" class="main-screen-button setting-button" type="button">
             <img src="images/settingBtn.png" alt="設定">
         </button>
-        <button id="descriptionBtn" class="main-screen-button" type="button" disabled>
+        <button id="descriptionBtn" class="main-screen-button" type="button">
             <img src="images/menu.png" alt="説明">
         </button>
     </div>
 
     <!-- スマホ用ボタンドック -->
     <div class="mobile-button-dock" id="mobileButtonDock">
-        <button id="searchBtnMobile" class="main-screen-button" type="button">
+        <button id="searchBtnMobile" class="main-screen-button search-button" type="button">
             <img src="images/search.png" alt="検索">
         </button>
-        <button id="settingBtnMobile" class="main-screen-button" type="button">
+        <button id="settingBtnMobile" class="main-screen-button setting-button" type="button">
             <img src="images/settingBtn.png" alt="設定">
         </button>
         <button id="descriptionBtnMobile" class="main-screen-button" type="button">
@@ -166,6 +162,14 @@
                         <label>時刻:</label>
                         <input type="datetime-local" id="dtl" name="dtl" value=""/>
                         <button id="dtlNow" type="button">現在時刻</button>
+                    </div>
+
+                    <div class="switch-row">
+                        <label class="switch-text">読み込み時に現在時刻にする:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="loadOnCurrentTime" checked>
+                            <span class="slider round"></span>
+                        </label>
                     </div>
 
                     <div class="setting-row">
@@ -406,9 +410,135 @@
 
     <!-- 説明画面 -->
     <div id="description" class="description" style="display: none;">
-        <h3>メニュー</h3>
-        <p>これを開いたボタンで閉じます</p>
-        <!-- 説明内容は省略 -->
+        <div class="description-header">
+            <h3>星図の使い方・天体観測ガイド</h3>
+            <button id="closeDescription" type="button">閉じる</button>
+        </div>
+        
+        <div class="description-content">
+            <!-- 基本操作 -->
+            <!-- <div class="description-section">
+                <h4>📱 基本操作</h4>
+                <ul>
+                    <li><strong>ドラッグ:</strong> 星図を移動</li>
+                    <li><strong>ピンチ:</strong> ズームイン・アウト</li>
+                    <li><strong>天体タップ:</strong> 詳細情報表示</li>
+                    <li><strong>検索ボタン:</strong> 天体を検索</li>
+                    <li><strong>設定ボタン:</strong> 表示設定変更</li>
+                </ul>
+            </div> -->
+
+            <!-- 表示設定 -->
+            <div class="description-section">
+                <h4>⚙️ 表示設定のポイント</h4>
+                <ul>
+                    <li><strong>リアルタイム:</strong> 現在時刻で自動更新</li>
+                    <li><strong>観測地:</strong> 「現在地」や「地図上で選択」もできます</li>
+                    <li><strong>表示モード:</strong> 赤道座標系（北が上）/プラネタリウム（上が上）/スマホに合わせる（スマホの向きや傾きに応じた表示）</li>
+                    <li><strong>最微等級:</strong> 見える星の数を調整</li>
+                </ul>
+            </div>
+            
+            <!-- 記号の説明 -->
+            <div class="description-section">
+                <h4>⭐ 記号の説明</h4>
+                <ul>
+                    <li>楕円: 銀河</li>
+                    <li>◇: 星雲</li>
+                    <li>△: 散開星団</li>
+                    <li>○: 球状星団</li>
+                    <li>☆: 1~数個の星</li>
+                </ul>
+            </div>
+
+            <!-- 天体観測のコツ -->
+            <!-- <div class="description-section">
+                <h4>🔭 天体観測のコツ</h4>
+                <ul>
+                    <li><strong>暗順応:</strong> 目が暗さに慣れるまで15-30分待つ</li>
+                    <li><strong>光害対策:</strong> 街灯から離れた場所を選ぶ</li>
+                    <li><strong>月の影響:</strong> 満月時は星が見えにくい</li>
+                    <li><strong>天候チェック:</strong> 晴れた夜を選ぶ</li>
+                    <li><strong>防寒対策:</strong> 夜は冷えるので暖かい服装で</li>
+                </ul>
+            </div> -->
+
+            <!-- 季節の天体 -->
+            <div class="description-section">
+                <h4>🌌 AIが考える 季節の星座</h4>
+                <ul>
+                    <li><strong>春:</strong> しし座、おとめ座、うしかい座</li>
+                    <li><strong>夏:</strong> さそり座、いて座、わし座</li>
+                    <li><strong>秋:</strong> ペガスス座、アンドロメダ座、カシオペヤ座</li>
+                    <li><strong>冬:</strong> オリオン座、おおいぬ座、こいぬ座</li>
+                </ul>
+            </div>
+
+            <!-- 関連リンク -->
+            <div class="description-section">
+                <h4>🔗 関連リンク</h4>
+                <ul>
+                    <li><strong>木星の衛星:</strong> <a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館</a></li>
+                    <li><strong>土星の衛星:</strong> <a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPE</a></li>
+                    <li><strong>Heavens-Above:</strong> <a href="https://www.heavens-above.com/" target="_blank">Heavens-Above</a></li>
+                    <li><strong>トップ:</strong> <a href="https://peteworden.github.io/Soleil/PeteHOME.html" target="_blank">トップ</a></li>
+                    <li><strong>もっと細かい星図を作成:</strong> <a href="https://peteworden.github.io/Soleil/gaiaChart.html" target="_blank">Gaia Archiveのデータから星図を作る</a></li>
+                    <li><strong>簡易水準器:</strong> <a href="https://peteworden.github.io/Soleil/level.html" target="_blank">簡易水準器</a></li>
+                    <li><strong>ソースコード・データソース:</strong> <a href="https://github.com/Peteworden/Soleil" target="_blank">GitHub</a></li>
+                    <!-- <li><strong>:</strong> <a href="" target="_blank"></a></li>
+                    <li><strong>:</strong> <a href="" target="_blank"></a></li> -->
+                </ul>
+            </div>
+
+            <!-- 初心者向け天体 -->
+            <!-- <div class="description-section">
+                <h4>⭐ 初心者におすすめの天体</h4>
+                <ul>
+                    <li><strong>明るい星:</strong> シリウス、ベガ、アルタイル</li>
+                    <li><strong>惑星:</strong> 金星、木星、土星</li>
+                    <li><strong>星団:</strong> プレアデス星団（すばる）</li>
+                    <li><strong>星雲:</strong> オリオン大星雲（M42）</li>
+                    <li><strong>銀河:</strong> アンドロメダ銀河（M31）</li>
+                </ul>
+            </div> -->
+
+            <!-- 観測地の選び方 -->
+            <!-- <div class="description-section">
+                <h4>📍 観測地の選び方</h4>
+                <ul>
+                    <li><strong>光害の少ない場所:</strong> 街から離れた山や海辺</li>
+                    <li><strong>視界の開けた場所:</strong> 建物や木に遮られない場所</li>
+                    <li><strong>安全な場所:</strong> 夜間でも安全に過ごせる場所</li>
+                    <li><strong>アクセス:</strong> 帰り道も考慮した場所選び</li>
+                </ul>
+            </div> -->
+
+            <!-- 道具と準備 -->
+            <!-- <div class="description-section">
+                <h4>🎒 観測に必要なもの</h4>
+                <ul>
+                    <li><strong>双眼鏡:</strong> 7×50や10×50がおすすめ</li>
+                    <li><strong>懐中電灯:</strong> 赤い光のものが良い</li>
+                    <li><strong>防寒具:</strong> 帽子、手袋、厚手の靴下</li>
+                    <li><strong>飲み物:</strong> 温かい飲み物</li>
+                    <li><strong>星図アプリ:</strong> このアプリを活用</li>
+                </ul>
+            </div> -->
+
+            <div class="description-section">
+                <h4>🔭 自分用 観望会・出撃の持ち物リスト</h4>
+                <ul>
+                    <li><strong>望遠鏡:</strong> 経緯台とアイピースの袋も忘れずに</li>
+                    <li><strong>カメラ:</strong> バッテリー入れた？</li>
+                    <li><strong>三脚</strong></li>
+                    <li><strong>コンタクトの用意とメガネ:</strong>ケース、洗浄液</li>
+                    <li><strong>パソコン:</strong> 撮影で使うかも</li>
+                    <li><strong>防寒着:</strong> 夏以外はしっかりと</li>
+                    <li><strong>財布:</strong> 免許証も</li>
+                    <li><strong>その他:</strong> 暗い天体を見るときは詳しい星図を作っておく</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- 天体情報画面 -->
@@ -439,7 +569,7 @@
         <canvas id="starChartCanvas"></canvas>
     </div>
     <script type="module">
-        import { main } from './dist/main.js?v=250726-1700';
+        import { main } from './dist/main.js?v=250812-1000';
         window.addEventListener('DOMContentLoaded', main);
     </script>
     </body>

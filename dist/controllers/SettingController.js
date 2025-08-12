@@ -22,6 +22,29 @@ export class SettingController {
             activeTab.classList.add('active');
         }
     }
+    static initialize() {
+        const setting = document.getElementById('setting');
+        if (setting) {
+            if (window.innerWidth <= 768) {
+                setting.style.display = 'block';
+                setting.classList.add('show');
+            }
+            else {
+                setting.style.display = 'block';
+            }
+            // 設定画面が開いていることを示すクラスをbodyに追加
+            document.body.classList.add('subwindow-open');
+        }
+        const modeSelect = document.getElementById('mode');
+        if (modeSelect) {
+            modeSelect.addEventListener('change', () => {
+                SettingController.setObservationSiteOnMode(modeSelect.value);
+            });
+        }
+        // 設定をUIに反映
+        SettingController.loadSettingsFromConfig();
+        SettingController.setObservationSiteOnMode(modeSelect.value);
+    }
     // OKボタンが押されたら
     static async finishSetting() {
         console.log('🔧 finishSetting called');
@@ -38,6 +61,8 @@ export class SettingController {
                 setting.style.display = 'none';
             }
         }
+        // 設定画面が閉じられたことを示すクラスをbodyから削除
+        document.body.classList.remove('subwindow-open');
         const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
         const cameraSelect = document.getElementById('camera');
         if (cameraTiltSliderDiv && cameraSelect) {
@@ -85,14 +110,15 @@ export class SettingController {
             const longitude = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
+                const observationSite = {
+                    observerPlanet: observerPlanet,
+                    name: observationSiteSelect.value,
+                    latitude: latitude,
+                    longitude: longitude,
+                    timezone: 9
+                };
                 updateConfig({
-                    observationSite: {
-                        observerPlanet: observerPlanet,
-                        name: observationSiteSelect.value,
-                        latitude: latitude,
-                        longitude: longitude,
-                        timezone: 9
-                    }
+                    observationSite: observationSite
                 });
             }
         }
@@ -149,8 +175,9 @@ export class SettingController {
         }
         // 時刻設定を読み取り
         const dtlInput = document.getElementById('dtl');
+        const loadOnCurrentTimeCheck = document.getElementById('loadOnCurrentTime');
         const realTime = document.getElementById('realTime');
-        if (dtlInput && realTime) {
+        if (dtlInput && realTime && loadOnCurrentTimeCheck) {
             let year, month, day, hour, minute, second, jd;
             const currentConfig = window.config;
             if (realTime.value === 'off') {
@@ -197,17 +224,19 @@ export class SettingController {
             }
             const updateConfig = window.updateConfig;
             if (updateConfig) {
+                const displayTime = {
+                    year: year,
+                    month: month,
+                    day: day,
+                    hour: hour,
+                    minute: minute,
+                    second: second,
+                    jd: jd,
+                    realTime: realTime.value || 'off',
+                    loadOnCurrentTime: loadOnCurrentTimeCheck.checked
+                };
                 updateConfig({
-                    displayTime: {
-                        year: year,
-                        month: month,
-                        day: day,
-                        hour: hour,
-                        minute: minute,
-                        second: second,
-                        jd: jd,
-                        realTime: realTime.value || 'off'
-                    }
+                    displayTime: displayTime
                 });
                 TimeController.initialize();
             }
@@ -307,8 +336,9 @@ export class SettingController {
         }
         // 時刻設定
         const dtlInput = document.getElementById('dtl');
+        const loadOnCurrentTimeCheck = document.getElementById('loadOnCurrentTime');
         const realTime = document.getElementById('realTime');
-        if (dtlInput && realTime) {
+        if (dtlInput && realTime && loadOnCurrentTimeCheck) {
             // ローカル時間で日時を作成（世界時変換を避ける）
             const year = config.displayTime.year;
             const month = String(config.displayTime.month).padStart(2, '0');
@@ -318,6 +348,7 @@ export class SettingController {
             // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
             const localDateTime = `${year}-${month}-${day}T${hour}:${minute}`;
             dtlInput.value = localDateTime;
+            loadOnCurrentTimeCheck.checked = config.displayTime.loadOnCurrentTime;
             realTime.value = config.displayTime.realTime;
         }
         console.log('🔧 Settings loaded from config to UI');
@@ -334,6 +365,32 @@ export class SettingController {
             const second = String(now.getSeconds()).padStart(2, '0');
             dtlInput.value = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
         }
+    }
+    // viewモード、liveモードのときはobservationPlanetを地球しか選択できないようにし、緯度経度もいじれないようにする
+    // それ以外のモードのときはobservationPlanetを選択できるようにする
+    static setObservationSiteOnMode(mode) {
+        const observerPlanetSelect = document.getElementById('observer_planet');
+        const latInput = document.getElementById('lat');
+        const lonInput = document.getElementById('lon');
+        const nsSelect = document.getElementById('NSCombo');
+        const ewSelect = document.getElementById('EWCombo');
+        const modeType = ['view', 'live'].includes(mode) ? 'view' : 'AEP';
+        if (observerPlanetSelect) {
+            observerPlanetSelect.disabled = modeType === 'view';
+            observerPlanetSelect.value = (modeType === 'view') ? '地球' : observerPlanetSelect.value;
+        }
+        // if (latInput) {
+        //     latInput.disabled = modeType === 'disabled';
+        // }
+        // if (lonInput) {
+        //     lonInput.disabled = modeType === 'disabled';
+        // }
+        // if (nsSelect) {
+        //     nsSelect.disabled = modeType === 'disabled';
+        // }
+        // if (ewSelect) {
+        //     ewSelect.disabled = modeType === 'disabled';
+        // }
     }
 }
 //# sourceMappingURL=SettingController.js.map
