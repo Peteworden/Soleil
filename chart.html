@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="指やマウスで直感的に操作できる、11等級までのモバイル星図です。惑星、11等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。">
+    <meta name="description" content="指やマウスで直感的に操作できる、11.5等級までのモバイル星図です。惑星、11.5等級までの恒星、メシエ天体、NGC天体など天体を豊富に収録しており、検索機能もあります。ネット環境があればURLにアクセスするだけで使用可能。">
     <meta name="theme-color" content="#000000">
     <meta name="msapplication-TileColor" content="#000000">
     <link rel="stylesheet" href="styles/styleChart.css?v=250726-1700">
@@ -250,13 +250,34 @@
                             <option value="live">スマホに合わせる</option>
                             <option value="ar" disabled>風景と重ねる</option>
                         </select>
+                        <button id="modeHelpBtn" class="help-button" type="button" title="表示モードの説明">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- 表示モード説明ポップアップ -->
+                    <div id="modeHelpPopup" class="help-popup" style="display: none;">
+                        <div class="help-popup-content">
+                            <div class="help-popup-header">
+                                <h4>表示モードの説明</h4>
+                                <button id="closeModeHelp" class="help-popup-close" type="button">&times;</button>
+                            </div>
+                            <div class="help-popup-body">
+                                <ul>
+                                    <li><strong>赤道座標系:</strong> 一般的な星図や天体写真と同じく、天の北極が上になった表示。赤道儀での導入にも便利。</li>
+                                    <li><strong>プラネタリウム:</strong> 観測地や時刻に合わせ、実際の空と同じ向きで表示します。地球上の視点にのみ対応しています。</li>
+                                    <li><strong>スマホに合わせる:</strong> スマートフォンの向きや傾きに応じて表示します。iPhoneやiPadではデバイスの向きの使用許可が必要です。</li>
+                                    <li><strong>風景と重ねる:</strong> カメラの映像と星図を重ねて表示します（現在は無効）。</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- デバイスオリエンテーション許可ボタン（iPhone用） -->
                     <div class="setting-row" id="orientationPermissionRow" style="display: none;">
-                        <label>デバイス向き:</label>
+                        <label>デバイスの向き:</label>
                         <button id="orientationPermissionBtn" type="button" style="background-color: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
-                            デバイス向きの使用を許可
+                            デバイスの向きの使用を許可
                         </button>
                     </div>
 

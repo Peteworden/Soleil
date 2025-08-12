@@ -286,22 +286,24 @@ export async function main() {
         }
         // デバイスオリエンテーション許可ボタンの設定
         setupOrientationPermissionButton(deviceOrientationManager);
-        // フルスクリーン状態変更の監視
-        document.addEventListener('fullscreenchange', () => {
-            const fullScreenBtn = document.getElementById('fullScreenBtn');
-            const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
-            if (document.fullscreenElement) {
-                // フルスクリーンになった時
-                fullScreenBtn.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
-                fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
-            }
-            else {
-                // フルスクリーンが解除された時
-                fullScreenBtn.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
-                fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
-            }
+        // フルスクリーン状態変更の監視（複数のイベントに対応）
+        const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+        fullscreenEvents.forEach(eventName => {
+            document.addEventListener(eventName, () => {
+                const isFullscreen = !!(document.fullscreenElement ||
+                    document.webkitFullscreenElement ||
+                    document.mozFullScreenElement ||
+                    document.msFullscreenElement);
+                updateFullScreenButtonState(isFullscreen);
+            });
         });
         updateInfoDisplay();
+        // 初期状態でフルスクリーンボタンの状態を設定
+        const isFullscreen = !!(document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement);
+        updateFullScreenButtonState(isFullscreen);
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
             try {
@@ -417,9 +419,16 @@ function togglefullScreen() {
     if (!document.fullscreenElement) {
         // フルスクリーンでない場合、フルスクリーンにする
         console.log('togglefullScreen: entering full screen');
-        if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().then(() => {
+        // 各ブラウザのフルスクリーンAPIを試行
+        const element = document.documentElement;
+        const requestFullscreen = element.requestFullscreen ||
+            element.webkitRequestFullscreen ||
+            element.mozRequestFullScreen ||
+            element.msRequestFullscreen;
+        if (requestFullscreen) {
+            requestFullscreen.call(element).then(() => {
                 window.renderAll();
+                updateFullScreenButtonState(true);
                 console.log('Successfully entered fullscreen');
             }).catch((err) => {
                 console.error('Failed to enter fullscreen:', err);
@@ -432,9 +441,14 @@ function togglefullScreen() {
     else {
         // フルスクリーンの場合、通常表示に戻す
         console.log('togglefullScreen: exiting full screen');
-        if (document.exitFullscreen) {
-            document.exitFullscreen().then(() => {
+        const exitFullscreen = document.exitFullscreen ||
+            document.webkitExitFullscreen ||
+            document.mozCancelFullScreen ||
+            document.msExitFullscreen;
+        if (exitFullscreen) {
+            exitFullscreen.call(document).then(() => {
                 window.renderAll();
+                updateFullScreenButtonState(false);
                 console.log('Successfully exited fullscreen');
             }).catch((err) => {
                 console.error('Failed to exit fullscreen:', err);
@@ -442,6 +456,31 @@ function togglefullScreen() {
         }
         else {
             console.log('exitFullscreen not supported');
+        }
+    }
+}
+// フルスクリーンボタンの状態を更新する関数
+function updateFullScreenButtonState(isFullscreen) {
+    const fullScreenBtn = document.getElementById('fullScreenBtn');
+    const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
+    if (isFullscreen) {
+        // フルスクリーンになった時
+        console.log('Updating buttons to exit fullscreen state');
+        if (fullScreenBtn) {
+            fullScreenBtn.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+        }
+        if (fullScreenBtnMobile) {
+            fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+        }
+    }
+    else {
+        // フルスクリーンが解除された時
+        console.log('Updating buttons to enter fullscreen state');
+        if (fullScreenBtn) {
+            fullScreenBtn.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+        }
+        if (fullScreenBtnMobile) {
+            fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
         }
     }
 }
@@ -471,33 +510,19 @@ function setupFullScreenButton() {
     else {
         console.log('fullScreenBtnMobile not found');
     }
-    // フルスクリーン状態変更の監視
-    document.addEventListener('fullscreenchange', () => {
-        console.log('fullscreenchange event fired');
-        const fullScreenBtn = document.getElementById('fullScreenBtn');
-        const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
-        if (document.fullscreenElement) {
-            // フルスクリーンになった時
-            console.log('Entering fullscreen');
+    // フルスクリーン状態変更の監視（複数のイベントに対応）
+    const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
+    fullscreenEvents.forEach(eventName => {
+        document.addEventListener(eventName, () => {
+            console.log(`${eventName} event fired`);
+            const isFullscreen = !!(document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement);
+            console.log('Fullscreen state:', isFullscreen);
             window.renderAll();
-            if (fullScreenBtn) {
-                fullScreenBtn.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
-            }
-            if (fullScreenBtnMobile) {
-                fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
-            }
-        }
-        else {
-            // フルスクリーンが解除された時
-            console.log('Exiting fullscreen');
-            window.renderAll();
-            if (fullScreenBtn) {
-                fullScreenBtn.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
-            }
-            if (fullScreenBtnMobile) {
-                fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
-            }
-        }
+            updateFullScreenButtonState(isFullscreen);
+        });
     });
 }
 function closeObjectInfo() {
@@ -518,11 +543,6 @@ function setupOrientationPermissionButton(deviceOrientationManager) {
                 permissionBtn.textContent = '許可済み';
                 permissionBtn.style.backgroundColor = '#666';
                 permissionBtn.disabled = true;
-                // コンパス情報を表示
-                // const compassInfoRow = document.getElementById('compassInfoRow');
-                // if (compassInfoRow) {
-                //     compassInfoRow.style.display = 'block';
-                // }
                 // オリエンテーション変更時のコールバックを設定
                 deviceOrientationManager.setOrientationCallback((data) => {
                     // デバイスの向きに応じて表示を更新
@@ -532,21 +552,6 @@ function setupOrientationPermissionButton(deviceOrientationManager) {
         });
     }
 }
-// デバイスオリエンテーション変更時の処理
-// function handleDeviceOrientation(data: any) {
-//     // デバイスの向きに応じて表示を更新する処理
-//     // ここでは簡単な例として、コンパス方位を情報表示に反映
-//     if (data.webkitCompassHeading !== null && data.webkitCompassHeading !== undefined) {
-//         const compassInfo = document.getElementById('compassInfo');
-//         if (compassInfo) {
-//             compassInfo.textContent = `方位: ${data.webkitCompassHeading.toFixed(1)}°`;
-//         }
-//     }
-//     // 必要に応じてレンダリングを更新
-//     if ((window as any).renderAll) {
-//         (window as any).renderAll();
-//     }
-// }
 // ページ読み込み時に実行
 window.addEventListener('DOMContentLoaded', main);
 function setupButtonEvents() {
@@ -611,11 +616,27 @@ function setupButtonEvents() {
     document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
     document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
     SearchController.setupSearchInput();
+    // 表示モードヘルプボタン
+    document.getElementById('modeHelpBtn')?.addEventListener('click', () => {
+        const popup = document.getElementById('modeHelpPopup');
+        if (popup) {
+            popup.style.display = 'flex';
+        }
+    });
+    // 表示モードヘルプポップアップを閉じる
+    document.getElementById('closeModeHelp')?.addEventListener('click', () => {
+        const popup = document.getElementById('modeHelpPopup');
+        if (popup) {
+            popup.style.display = 'none';
+        }
+    });
+    // ポップアップ外をクリックして閉じる
+    document.getElementById('modeHelpPopup')?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            e.target.style.display = 'none';
+        }
+    });
     document.getElementById('closeObservationSiteMap')?.addEventListener('click', ObservationSiteController.closeMap);
-    // 検索画面の閉じるボタン
-    // document.getElementById('closeSearch')?.addEventListener('click', SearchController.closeSearch);
-    // 天体説明画面の閉じるボタン
-    // document.getElementById('closeObjectInfo')?.addEventListener('click', closeObjectInfo);
     document.getElementById('dtlNow')?.addEventListener('click', function () {
         const dtl = document.getElementById('dtl');
         const now = new Date();
