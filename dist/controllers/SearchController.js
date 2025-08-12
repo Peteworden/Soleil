@@ -10,6 +10,14 @@ export class SearchController {
             if (searchInput) {
                 searchInput.focus();
             }
+            // 検索画面でのズーム防止イベントハンドラーを追加
+            const preventZoom = (e) => {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            };
+            searchDiv.addEventListener('touchstart', preventZoom, { passive: false });
+            searchDiv.addEventListener('touchmove', preventZoom, { passive: false });
         }
     }
     static closeSearch() {

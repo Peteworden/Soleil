@@ -642,6 +642,45 @@ function setupButtonEvents() {
     document.getElementById('cameraTiltSlider')?.addEventListener('input', function () {
         window.renderAll();
     });
+    // ピンチズームを防ぐためのグローバルタッチイベントハンドラー
+    document.addEventListener('touchstart', function (e) {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    document.addEventListener('touchmove', function (e) {
+        if (e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    document.addEventListener('gesturestart', function (e) {
+        e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('gesturechange', function (e) {
+        e.preventDefault();
+    }, { passive: false });
+    document.addEventListener('gestureend', function (e) {
+        e.preventDefault();
+    }, { passive: false });
+    // より強力なviewport設定を動的に適用
+    const setViewport = () => {
+        const viewport = document.querySelector('meta[name="viewport"]');
+        if (viewport) {
+            viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
+        }
+    };
+    // ページ読み込み時とリサイズ時にviewportを再設定
+    setViewport();
+    window.addEventListener('resize', setViewport);
+    // iOS Safariでのズーム防止
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+        const now = (new Date()).getTime();
+        if (now - lastTouchEnd <= 300) {
+            event.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, false);
 }
 function setupResizeHandler() {
     window.addEventListener('resize', handleResize);
