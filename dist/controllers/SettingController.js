@@ -127,7 +127,7 @@ export class SettingController {
         // 表示設定を読み取り
         const modeSelect = document.getElementById('mode');
         const magLimitSlider = document.getElementById('magLimitSlider');
-        const darkMode = document.getElementById('dark');
+        // const darkMode = document.getElementById('dark') as HTMLInputElement;
         const gridCheck = document.getElementById('gridCheck');
         const reticleCheck = document.getElementById('reticleCheck');
         const objectInfoCheck = document.getElementById('objectInfoCheck');
@@ -140,7 +140,7 @@ export class SettingController {
         const recCheck = document.getElementById('recCheck');
         const ngcCheck = document.getElementById('ngcCheck');
         const camera = document.getElementById('camera');
-        if (modeSelect && gridCheck && darkMode && magLimitSlider &&
+        if (modeSelect && gridCheck && magLimitSlider &&
             reticleCheck && objectInfoCheck && starCheck && starNameSelect &&
             planetCheck && messierCheck && recCheck && ngcCheck && camera) {
             const updateConfig = window.updateConfig;
@@ -278,7 +278,7 @@ export class SettingController {
         // 表示設定
         const modeSelect = document.getElementById('mode');
         const magLimitSlider = document.getElementById('magLimitSlider');
-        const darkMode = document.getElementById('dark');
+        // const darkMode = document.getElementById('dark') as HTMLInputElement;
         const gridCheck = document.getElementById('gridCheck');
         const reticleCheck = document.getElementById('reticleCheck');
         const objectInfoCheck = document.getElementById('objectInfoCheck');
@@ -295,8 +295,7 @@ export class SettingController {
             modeSelect.value = config.displaySettings.mode || 'AEP';
         if (magLimitSlider)
             magLimitSlider.value = config.viewState.starSizeKey1.toString();
-        if (darkMode)
-            darkMode.checked = config.displaySettings.darkMode;
+        // if (darkMode) darkMode.checked = config.displaySettings.darkMode;
         if (gridCheck)
             gridCheck.checked = config.displaySettings.showGrid;
         if (reticleCheck)
@@ -366,24 +365,13 @@ export class SettingController {
             });
             // 'sv-SE'形式（YYYY-MM-DD HH:mm:ss）からdatetime-local形式に変換
             dtlInput.value = jstString.replace(' ', 'T');
-            // const year = now.getFullYear();
-            // const month = String(now.getMonth() + 1).padStart(2, '0');
-            // const day = String(now.getDate()).padStart(2, '0');
-            // const hour = String(now.getHours()).padStart(2, '0');
-            // const minute = String(now.getMinutes()).padStart(2, '0');
-            // const second = String(now.getSeconds()).padStart(2, '0');
-            // dtlInput.value = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
         }
     }
-    // viewモード、liveモードのときはobservationPlanetを地球しか選択できないようにし、緯度経度もいじれないようにする
+    // viewモード、liveモード、arモードのときはobservationPlanetを地球しか選択できないようにし、緯度経度もいじれないようにする
     // それ以外のモードのときはobservationPlanetを選択できるようにする
     static setObservationSiteOnMode(mode) {
         const observerPlanetSelect = document.getElementById('observer_planet');
-        const latInput = document.getElementById('lat');
-        const lonInput = document.getElementById('lon');
-        const nsSelect = document.getElementById('NSCombo');
-        const ewSelect = document.getElementById('EWCombo');
-        const modeType = ['view', 'live'].includes(mode) ? 'view' : 'AEP';
+        const modeType = ['view', 'live', 'ar'].includes(mode) ? 'view' : 'AEP';
         if (observerPlanetSelect) {
             observerPlanetSelect.disabled = modeType === 'view';
             observerPlanetSelect.value = (modeType === 'view') ? '地球' : observerPlanetSelect.value;
