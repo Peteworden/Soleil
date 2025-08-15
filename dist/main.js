@@ -14,6 +14,7 @@ import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 const news = [
+    { time: '2030-08-15T12:19:30', title: 'ごめんね', text: '毎回表示されますがバグではありません' },
     { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
 ];
 // 初期設定を読み込む関数
