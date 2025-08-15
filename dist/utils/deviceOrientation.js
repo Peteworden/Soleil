@@ -100,11 +100,14 @@ export class DeviceOrientationManager {
                 }
             }
         }
-        // if (config && config.displaySettings.mode === 'ar') {
-        //     this.setVideoOn();
-        // } else if (config.displaySettings.mode != 'ar' && this.videoOn == true) {
-        //     this.setVideoOff();
-        // }
+        if (config) {
+            if (config.displaySettings.mode === 'ar' && this.videoOn == false) {
+                this.setVideoOn();
+            }
+            else if (config.displaySettings.mode != 'ar' && this.videoOn == true) {
+                this.setVideoOff();
+            }
+        }
     }
     // オリエンテーションイベントハンドラー
     handleOrientation(event) {
@@ -178,43 +181,32 @@ export class DeviceOrientationManager {
     }
     setVideoOn() {
         const arOpacity = document.getElementById('arOpacitySlider').valueAsNumber;
-        if (!this.videoOn) {
-            let constraints = { audio: false, video: { facingMode: "environment" } };
-            navigator.mediaDevices.getUserMedia(constraints)
-                .then(function (stream) {
-                const video = document.getElementById('arVideo');
-                if (video) {
-                    video.srcObject = stream;
-                    video.onloadedmetadata = function (e) {
-                        video.play();
-                    };
-                    video.style.opacity = arOpacity.toString();
-                    video.style.display = 'block';
-                }
-            });
-            this.videoOn = true;
-        }
-    }
-    setVideoOff() {
-        if (this.videoOn) {
+        const constraints = { audio: false, video: { facingMode: "environment" } };
+        navigator.mediaDevices.getUserMedia(constraints)
+            .then(function (stream) {
             const video = document.getElementById('arVideo');
             if (video) {
-                video.style.display = 'none';
-                // Videoストリームを停止
-                if (video.srcObject) {
-                    const stream = video.srcObject;
-                    stream.getTracks().forEach(track => track.stop());
-                    video.srcObject = null;
-                }
+                video.srcObject = stream;
+                video.onloadedmetadata = function (e) {
+                    video.play();
+                };
+                video.style.opacity = arOpacity.toString();
+                video.style.display = 'block';
             }
-            // Canvasの背景は変更しない（黒のまま）
-            // 再描画をトリガー
-            const renderAll = window.renderAll;
-            if (renderAll) {
-                renderAll();
+        });
+        this.videoOn = true;
+    }
+    setVideoOff() {
+        const video = document.getElementById('arVideo');
+        if (video) {
+            video.style.display = 'none';
+            if (video.srcObject) {
+                const stream = video.srcObject;
+                stream.getTracks().forEach(track => track.stop());
+                video.srcObject = null;
             }
-            this.videoOn = false;
         }
+        this.videoOn = false;
     }
     // オリエンテーションデータを取得
     getOrientationData() {
