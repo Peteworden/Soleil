@@ -11,6 +11,7 @@ export class DeviceOrientationManager {
         this.recentOrientationData = [];
         this.moving = false;
         this.DEG_TO_RAD = Math.PI / 180;
+        this.videoOn = false;
         this.deviceInfo = this.detectOS();
         this.orientationData = {
             alpha: 180 * this.DEG_TO_RAD,
@@ -18,6 +19,7 @@ export class DeviceOrientationManager {
             gamma: 0,
             webkitCompassHeading: 0
         };
+        this.videoOn = false;
     }
     // OS検出
     detectOS() {
@@ -76,7 +78,7 @@ export class DeviceOrientationManager {
             }
         }
         // liveモードの場合のみリスナーを追加
-        if (config && config.displaySettings.mode === 'live') {
+        if (config && ['live', 'ar'].includes(config.displaySettings.mode)) {
             if (typeof window !== 'undefined' && 'addEventListener' in window) {
                 if (this.deviceInfo.os === 'iphone') {
                     window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
@@ -98,11 +100,16 @@ export class DeviceOrientationManager {
                 }
             }
         }
+        // if (config && config.displaySettings.mode === 'ar') {
+        //     this.setVideoOn();
+        // } else if (config.displaySettings.mode != 'ar' && this.videoOn == true) {
+        //     this.setVideoOff();
+        // }
     }
     // オリエンテーションイベントハンドラー
     handleOrientation(event) {
         const config = window.config;
-        if (!config || config.displaySettings.mode !== 'live') {
+        if (!config || !['live', 'ar'].includes(config.displaySettings.mode)) {
             return;
         }
         if (event.alpha === null || event.beta === null || event.gamma === null) {
@@ -167,6 +174,46 @@ export class DeviceOrientationManager {
         const canvasRenderer = window.renderer;
         if (canvasRenderer) {
             canvasRenderer.setOrientationData(this.orientationData);
+        }
+    }
+    setVideoOn() {
+        const arOpacity = document.getElementById('arOpacitySlider').valueAsNumber;
+        if (!this.videoOn) {
+            let constraints = { audio: false, video: { facingMode: "environment" } };
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(function (stream) {
+                const video = document.getElementById('arVideo');
+                if (video) {
+                    video.srcObject = stream;
+                    video.onloadedmetadata = function (e) {
+                        video.play();
+                    };
+                    video.style.opacity = arOpacity.toString();
+                    video.style.display = 'block';
+                }
+            });
+            this.videoOn = true;
+        }
+    }
+    setVideoOff() {
+        if (this.videoOn) {
+            const video = document.getElementById('arVideo');
+            if (video) {
+                video.style.display = 'none';
+                // Videoストリームを停止
+                if (video.srcObject) {
+                    const stream = video.srcObject;
+                    stream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+            }
+            // Canvasの背景は変更しない（黒のまま）
+            // 再描画をトリガー
+            const renderAll = window.renderAll;
+            if (renderAll) {
+                renderAll();
+            }
+            this.videoOn = false;
         }
     }
     // オリエンテーションデータを取得

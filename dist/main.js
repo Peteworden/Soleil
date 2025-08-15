@@ -13,8 +13,11 @@ import { DataLoader } from './utils/DataLoader.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
+const news = [
+    { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
+];
 // 初期設定を読み込む関数
-function initializeConfig() {
+function initializeConfig(noLoad = false) {
     const savedSettings = localStorage.getItem('config');
     const savedSettingsObject = savedSettings ? JSON.parse(savedSettings) : null;
     const now = new Date();
@@ -67,12 +70,39 @@ function initializeConfig() {
         realTime: 'off',
         loadOnCurrentTime: true
     };
+    const newsPopup = {
+        lastShownTime: '',
+        dontShow: false
+    };
     // const canvasSize: CanvasSize = getCanvasSize();
     const canvasSize = {
         width: window.innerWidth,
         height: window.innerHeight
     };
-    console.log('canvasSize:', canvasSize);
+    if (noLoad) {
+        const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
+        const converter = new CoordinateConverter();
+        if (displaySettings.mode === 'AEP') {
+            const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
+            viewState.centerAz = centerHorizontal.az;
+            viewState.centerAlt = centerHorizontal.alt;
+        }
+        else if (displaySettings.mode === 'view') {
+            const centerEquatorial = converter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, siderealTime, observationSite.latitude);
+            viewState.centerRA = centerEquatorial.ra;
+            viewState.centerDec = centerEquatorial.dec;
+        }
+        viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
+        return {
+            displaySettings: displaySettings,
+            viewState: viewState,
+            observationSite: observationSite,
+            displayTime: displayTime,
+            canvasSize: canvasSize,
+            siderealTime: siderealTime,
+            newsPopup: newsPopup
+        };
+    }
     if (savedSettingsObject && savedSettingsObject.displaySettings) {
         const savedDisplaySettings = savedSettingsObject.displaySettings;
         Object.keys(displaySettings).forEach(key => {
@@ -129,6 +159,15 @@ function initializeConfig() {
         displayTime.jd = AstronomicalCalculator.jdTTFromYmdhmsJst(displayTime.year, displayTime.month, displayTime.day, displayTime.hour, displayTime.minute, displayTime.second);
     }
     const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
+    if (savedSettingsObject && savedSettingsObject.newsPopup) {
+        const savedNewsPopup = savedSettingsObject.newsPopup;
+        Object.keys(newsPopup).forEach(key => {
+            const savedValue = savedNewsPopup[key];
+            if (savedValue !== undefined) {
+                newsPopup[key] = savedValue;
+            }
+        });
+    }
     const converter = new CoordinateConverter();
     if (displaySettings.mode === 'AEP') {
         const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
@@ -146,7 +185,8 @@ function initializeConfig() {
         observationSite: observationSite,
         displayTime: displayTime,
         canvasSize: canvasSize,
-        siderealTime: siderealTime
+        siderealTime: siderealTime,
+        newsPopup: newsPopup
     };
 }
 // 星空表示の設定
@@ -172,16 +212,12 @@ export function updateConfig(newConfig) {
         // Object.assign(config.displaySettings, newConfig.displaySettings);
         window.controller.updateOptions(config.displaySettings);
     }
-    // if (newConfig.displayTime) {
-    //     updateInfoDisplay();
-    // }
     // 時刻関連の更新があればTimeControllerも更新
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
         // (window as any).renderer.updateOptions(newConfig);
         // TimeController.initialize();
     }
     window.renderAll();
-    // updateInfoDisplay();
 }
 // ViewStateのみを更新する関数
 export function updateViewState(newViewState) {
@@ -392,6 +428,8 @@ export async function main() {
         setupButtonEvents();
         setupResizeHandler();
         document.getElementById('loadingtext').innerHTML = '';
+        // お知らせポップアップの表示チェック
+        showNewsPopupIfNeeded();
     }
     catch (error) {
         console.error('データの読み込みに失敗しました:', error);
@@ -485,11 +523,8 @@ function updateFullScreenButtonState(isFullscreen) {
     }
 }
 function setupFullScreenButton() {
-    console.log('setupFullScreenButton called');
     const fullScreenBtn = document.getElementById('fullScreenBtn');
     const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
-    console.log('fullScreenBtn:', fullScreenBtn);
-    console.log('fullScreenBtnMobile:', fullScreenBtnMobile);
     if (fullScreenBtn) {
         console.log('fullScreenBtn found, adding event listener');
         fullScreenBtn.addEventListener('click', () => {
@@ -615,12 +650,84 @@ function setupButtonEvents() {
     // 設定画面のOKボタン
     document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
     document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
+    document.getElementById('checkDefaultConfig')?.addEventListener('click', () => {
+        const defaultConfigPopup = document.getElementById('defaultConfigPopup');
+        if (defaultConfigPopup) {
+            defaultConfigPopup.style.display = 'block';
+            const defaultConfigElement = document.getElementById('defaultConfig');
+            const defaultConfig = JSON.stringify(initializeConfig(true), null, 2)
+                .replace(/\\n/g, '<br>')
+                .replace(/\\"/g, '"')
+                .replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;')
+                .replace(/\\r/g, '')
+                .replace(/,/g, ',<br>')
+                .replace(/: {/g, ':<br>{');
+            if (defaultConfigElement) {
+                defaultConfigElement.innerHTML = `<p>${defaultConfig}</p>`;
+            }
+        }
+    });
+    document.getElementById('closeDefaultConfigPopup')?.addEventListener('click', () => {
+        const defaultConfigPopup = document.getElementById('defaultConfigPopup');
+        if (defaultConfigPopup) {
+            defaultConfigPopup.style.display = 'none';
+        }
+    });
     SearchController.setupSearchInput();
+    // const popupOpenBtns = document.querySelectorAll('.help-button');
+    // const popupCloseBtns = document.querySelectorAll('.help-popup-close');
+    // const popups = document.querySelectorAll('.help-popup');
+    const popupIds = [
+        {
+            openBtn: 'modeHelpBtn',
+            closeBtn: 'closeModeHelp',
+            popup: 'modeHelpPopup'
+        },
+        {
+            openBtn: 'observerPlanetHelpBtn',
+            closeBtn: 'closeObserverPlanetHelp',
+            popup: 'observerPlanetHelpPopup'
+        }
+    ];
+    const openPopup = (popup) => {
+        if (popup) {
+            popup.style.display = 'flex';
+        }
+    };
+    const closePopup = (popup) => {
+        if (popup) {
+            popup.style.display = 'none';
+        }
+    };
+    for (let i = 0; i < popupIds.length; i++) {
+        const popupId = popupIds[i];
+        const openBtn = document.getElementById(popupId.openBtn);
+        const closeBtn = document.getElementById(popupId.closeBtn);
+        const popup = document.getElementById(popupId.popup);
+        // 各配列の要素が存在するかチェック
+        if (openBtn) {
+            openBtn.addEventListener('click', () => {
+                openPopup(popup);
+            });
+        }
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                closePopup(popup);
+            });
+        }
+        if (popup) {
+            popup.addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closePopup(popup);
+                }
+            });
+        }
+    }
     // 表示モードヘルプボタン
     document.getElementById('modeHelpBtn')?.addEventListener('click', () => {
         const popup = document.getElementById('modeHelpPopup');
         if (popup) {
-            popup.style.display = 'flex';
+            openPopup(popup);
         }
     });
     // 表示モードヘルプポップアップを閉じる
@@ -639,12 +746,20 @@ function setupButtonEvents() {
     document.getElementById('closeObservationSiteMap')?.addEventListener('click', ObservationSiteController.closeMap);
     document.getElementById('dtlNow')?.addEventListener('click', function () {
         const dtl = document.getElementById('dtl');
+        // 日本標準時（JST）で現在時刻を取得
         const now = new Date();
-        dtl.value = now.getFullYear() + '-' +
-            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-            String(now.getDate()).padStart(2, '0') + 'T' +
-            String(now.getHours()).padStart(2, '0') + ':' +
-            String(now.getMinutes()).padStart(2, '0');
+        const jstString = now.toLocaleString('sv-SE', {
+            timeZone: 'Asia/Tokyo',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        // 'sv-SE'形式（YYYY-MM-DD HH:mm:ss）からdatetime-local形式に変換
+        dtl.value = jstString.replace(' ', 'T').slice(0, 16);
     });
     document.getElementById('realTime')?.addEventListener('change', function () {
         const realTime = document.getElementById('realTime');
@@ -702,9 +817,111 @@ function setupButtonEvents() {
         }
         lastTouchEnd = now;
     }, false);
+    // お知らせポップアップのイベントリスナー
+    document.getElementById('closeNewsPopup')?.addEventListener('click', () => {
+        const popup = document.getElementById('newsPopup');
+        if (popup) {
+            popup.style.display = 'none';
+        }
+    });
+    document.getElementById('closeNewsBtn')?.addEventListener('click', () => {
+        const popup = document.getElementById('newsPopup');
+        if (popup) {
+            popup.style.display = 'none';
+        }
+    });
+    document.getElementById('dontShowAgainBtn')?.addEventListener('click', () => {
+        config.newsPopup.dontShow = true;
+        localStorage.setItem('config', JSON.stringify(config));
+        const popup = document.getElementById('newsPopup');
+        if (popup) {
+            popup.style.display = 'none';
+        }
+    });
+    // ポップアップ外をクリックして閉じる
+    document.getElementById('newsPopup')?.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) {
+            e.target.style.display = 'none';
+        }
+    });
 }
 function setupResizeHandler() {
     window.addEventListener('resize', handleResize);
     handleResize(); // 初期実行
+}
+function showNewsPopupIfNeeded() {
+    const now = new Date();
+    const currentTime = now.toString();
+    const lastShownTimeString = config.newsPopup.lastShownTime;
+    const dontShow = config.newsPopup.dontShow;
+    // 今後表示しないフラグをチェック
+    if (dontShow) {
+        console.log('お知らせポップアップ: ユーザーが「今後表示しない」を選択済み');
+        return;
+    }
+    // 最後にアクセスした日時をチェック
+    let lastAccess = new Date("2000-01-01T00:00:00");
+    if (lastShownTimeString) {
+        lastAccess = new Date(lastShownTimeString);
+        console.log('最後にアクセスした日時:', lastAccess);
+    }
+    else {
+        console.log('お知らせポップアップ: 初回アクセス');
+    }
+    const popup = document.getElementById('newsPopup');
+    if (popup) {
+        let newsCount = 0;
+        let newsIndex = 0;
+        let newsTimes = [];
+        const newsItemElement = document.getElementById('newsItem');
+        let text = '';
+        let lastItemDate = '';
+        while (true) {
+            const newsItem = news[newsIndex];
+            const newsTime = new Date(newsItem.time);
+            // 最後のアクセスより新しく、1か月前より新しいnewsを表示
+            const oneMonthAgo = new Date(new Date().setMonth(new Date().getMonth() - 1));
+            if (newsTime > lastAccess && newsTime >= oneMonthAgo) {
+                const itemDate = newsItem.time.split('T')[0];
+                if (newsCount == 0 || itemDate != lastItemDate) {
+                    if (newsCount > 0) {
+                        text += "</ul>";
+                    }
+                    text += `<h4>${itemDate}</h4><ul>`;
+                    lastItemDate = itemDate;
+                }
+                text += `<li><strong>${newsItem.title}</strong>: ${newsItem.text}</li>`;
+                newsTimes.push(newsItem.time);
+                newsCount++;
+                newsIndex++;
+                if (newsIndex >= news.length) {
+                    text += "</ul>";
+                    break;
+                }
+            }
+            else {
+                if (newsCount > 0) {
+                    text += "</ul>";
+                }
+                break;
+            }
+        }
+        if (newsCount == 0) {
+            popup.style.display = 'none';
+            return;
+        }
+        console.log('お知らせポップアップ: 表示します');
+        // 少し遅延させて表示（ページ読み込み完了後）
+        setTimeout(() => {
+            popup.style.display = 'flex';
+            newsItemElement.innerHTML = text;
+            config.newsPopup.lastShownTime = currentTime;
+            updateConfig({
+                newsPopup: config.newsPopup
+            });
+            localStorage.setItem('config', JSON.stringify(config));
+            console.log(`お知らせポップアップ: 表示完了 (${currentTime})`);
+        }, 500);
+    }
 }
 //# sourceMappingURL=main.js.map

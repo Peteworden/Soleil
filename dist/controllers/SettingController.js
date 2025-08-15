@@ -44,6 +44,8 @@ export class SettingController {
         // 設定をUIに反映
         SettingController.loadSettingsFromConfig();
         SettingController.setObservationSiteOnMode(modeSelect.value);
+        // デバイスに応じてモードの有効/無効を制御
+        SettingController.updateModeSelectAvailability();
     }
     // OKボタンが押されたら
     static async finishSetting() {
@@ -249,12 +251,7 @@ export class SettingController {
             console.warn('💾 No config found, cannot save');
             return;
         }
-        localStorage.setItem('config', JSON.stringify({
-            displaySettings: config.displaySettings,
-            viewState: config.viewState,
-            observationSite: config.observationSite,
-            displayTime: config.displayTime
-        }));
+        localStorage.setItem('config', JSON.stringify(config));
     }
     // main.tsのconfigから設定をUIに反映するメソッド
     static loadSettingsFromConfig() {
@@ -357,13 +354,25 @@ export class SettingController {
         const dtlInput = document.getElementById('dtl');
         if (dtlInput) {
             const now = new Date();
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hour = String(now.getHours()).padStart(2, '0');
-            const minute = String(now.getMinutes()).padStart(2, '0');
-            const second = String(now.getSeconds()).padStart(2, '0');
-            dtlInput.value = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+            const jstString = now.toLocaleString('sv-SE', {
+                timeZone: 'Asia/Tokyo',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            // 'sv-SE'形式（YYYY-MM-DD HH:mm:ss）からdatetime-local形式に変換
+            dtlInput.value = jstString.replace(' ', 'T');
+            // const year = now.getFullYear();
+            // const month = String(now.getMonth() + 1).padStart(2, '0');
+            // const day = String(now.getDate()).padStart(2, '0');
+            // const hour = String(now.getHours()).padStart(2, '0');
+            // const minute = String(now.getMinutes()).padStart(2, '0');
+            // const second = String(now.getSeconds()).padStart(2, '0');
+            // dtlInput.value = `${year}-${month}-${day}T${hour}:${minute}:${second}`;
         }
     }
     // viewモード、liveモードのときはobservationPlanetを地球しか選択できないようにし、緯度経度もいじれないようにする
@@ -379,18 +388,53 @@ export class SettingController {
             observerPlanetSelect.disabled = modeType === 'view';
             observerPlanetSelect.value = (modeType === 'view') ? '地球' : observerPlanetSelect.value;
         }
-        // if (latInput) {
-        //     latInput.disabled = modeType === 'disabled';
-        // }
-        // if (lonInput) {
-        //     lonInput.disabled = modeType === 'disabled';
-        // }
-        // if (nsSelect) {
-        //     nsSelect.disabled = modeType === 'disabled';
-        // }
-        // if (ewSelect) {
-        //     ewSelect.disabled = modeType === 'disabled';
-        // }
+    }
+    // デバイスに応じてモードの有効/無効を制御
+    static updateModeSelectAvailability() {
+        const modeSelect = document.getElementById('mode');
+        if (!modeSelect)
+            return;
+        const deviceOrientationManager = window.deviceOrientationManager;
+        if (!deviceOrientationManager)
+            return;
+        const deviceInfo = deviceOrientationManager.getDeviceInfo();
+        // すべてのオプションを有効にする
+        Array.from(modeSelect.options).forEach(option => {
+            option.disabled = false;
+        });
+        // デバイスに応じて特定のモードを無効化
+        if (deviceInfo.os === 'pc') {
+            // PCの場合はliveとarモードを無効化
+            Array.from(modeSelect.options).forEach(option => {
+                if (['live', 'ar'].includes(option.value)) {
+                    option.disabled = true;
+                }
+            });
+            // 現在選択されているモードが無効の場合はviewに変更
+            if (['live', 'ar'].includes(modeSelect.value)) {
+                modeSelect.value = 'view';
+            }
+        }
+        else if (deviceInfo.os === 'iphone' || deviceInfo.os === 'android') {
+            // モバイルデバイスの場合はすべて有効
+            // 必要に応じて特定のモードを無効化可能
+            // 例: ARモードがサポートされていない場合
+            // Array.from(modeSelect.options).forEach(option => {
+            //     if (option.value === 'ar') {
+            //         option.disabled = true;
+            //     }
+            // });
+        }
+        // AR透明度スライダーの表示/非表示を制御
+        const arOpacitySliderDiv = document.getElementById('arOpacitySliderDiv');
+        if (arOpacitySliderDiv) {
+            if (deviceInfo.os === 'pc' || modeSelect.value !== 'ar') {
+                arOpacitySliderDiv.style.display = 'none';
+            }
+            else {
+                arOpacitySliderDiv.style.display = 'block';
+            }
+        }
     }
 }
 //# sourceMappingURL=SettingController.js.map

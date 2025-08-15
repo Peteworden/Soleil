@@ -301,7 +301,7 @@ export class CoordinateConverter {
             const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
             screenRaDec = this.horizontalToScreenRaDec_View(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
         }
-        else if (mode == 'live' && orientationData) {
+        else if (['live', 'ar'].includes(mode) && orientationData) {
             const horizontal = this.equatorialToHorizontal(raDec, siderealTime);
             screenRaDec = this.horizontalToScreenRaDec_Live(horizontal, orientationData);
         }
@@ -366,7 +366,7 @@ export class CoordinateConverter {
         if (mode == 'view') {
             return this.horizontalToScreenRaDec_View(coords, center);
         }
-        else if (mode == 'live' && orientationData) {
+        else if (['live', 'ar'].includes(mode) && orientationData) {
             return this.horizontalToScreenRaDec_Live(coords, orientationData);
         }
         else {
@@ -453,7 +453,7 @@ export class CoordinateConverter {
         if (mode == 'view') {
             return this.screenRaDecToHorizontal_View(screenRaDec);
         }
-        else if (mode == 'live' && orientationData) {
+        else if (['live', 'ar'].includes(mode) && orientationData) {
             return this.screenRaDecToHorizontal_Live(screenRaDec, orientationData);
         }
         else {

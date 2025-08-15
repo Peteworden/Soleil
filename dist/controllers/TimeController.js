@@ -49,40 +49,7 @@ export class TimeController {
         });
         // controlPanelの可視性を初期化
         this.updateControlPanelVisibility();
-        // this.timeSlider.addEventListener('mousedown', () => {
-        //     this.isDragging = true;
-        // });
-        // this.timeSlider.addEventListener('mouseup', () => {
-        //     this.isDragging = false;
-        // });
-        // this.timeSlider.addEventListener('touchstart', () => {
-        //     this.isDragging = true;
-        // });
-        // this.timeSlider.addEventListener('touchend', () => {
-        //     this.isDragging = false;
-        // });
     }
-    // private static setupTimeButtons() {
-    //     // 時刻ボタンのイベントリスナー
-    //     const plus1Button = document.getElementById('plus1');
-    //     const minus1Button = document.getElementById('minus1');
-    //     const nowButton = document.getElementById('now');
-    //     if (plus1Button) {
-    //         plus1Button.addEventListener('click', () => {
-    //             this.addDays(1);
-    //         });
-    //     }
-    //     if (minus1Button) {
-    //         minus1Button.addEventListener('click', () => {
-    //             this.addDays(-1);
-    //         });
-    //     }
-    //     if (nowButton) {
-    //         nowButton.addEventListener('click', () => {
-    //             this.setToCurrentTime();
-    //         });
-    //     }
-    // }
     static async handleSliderInput(event) {
         const target = event.target;
         const jd = parseFloat(target.value); // JDの値を直接取得

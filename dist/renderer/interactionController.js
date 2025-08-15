@@ -25,6 +25,7 @@ export class InteractionController {
             this.clickStartTime = Date.now();
             this.clickStartX = e.clientX;
             this.clickStartY = e.clientY;
+            console.log('onPointerDown', e.pointerType, e.pointerId);
             if (this.activePointers.size <= 2) {
                 // ポインターIDを追跡
                 this.activePointers.add(e.pointerId);
@@ -57,7 +58,7 @@ export class InteractionController {
             // ポインターの座標を更新
             // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
-                if (e.pointerType == 'touch' && this.displaySettings.mode == 'live') {
+                if (e.pointerType == 'touch' && ['live', 'ar'].includes(this.displaySettings.mode)) {
                     return;
                 }
                 const deltaX = e.clientX - this.lastX;

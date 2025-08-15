@@ -48,6 +48,23 @@
     </script>
 </head>
 <body>
+    <!-- 新機能お知らせポップアップ -->
+    <div id="newsPopup" class="news-popup" style="display: none;">
+        <div class="news-popup-content">
+            <div class="news-popup-header">
+                <h3>news</h3>
+                <button id="closeNewsPopup" class="news-popup-close" type="button">&times;</button>
+            </div>
+            <div class="news-popup-body">
+                <div id="newsItem" class="news-item"></div>
+            </div>
+            <div class="news-popup-footer">
+                <button id="dontShowAgainBtn" class="dont-show-again-btn" type="button">今後newsを表示しない</button>
+                <button id="closeNewsBtn" class="close-news-btn" type="button">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <!-- <img id="welcomeImage" class="welcomeImage" src="images/welcome0928.jpg"> -->
     
     <!-- タイトルバー -->
@@ -61,35 +78,16 @@
     </div>
 
 <!--
-    <div id="announcement" style="width: 100%; height: 100%; background-color: #333333; color: #ffffff; padding: 20px; position: fixed; top: 0; left: 0; z-index: 1000; overflow-y: scroll;">
-        <h3>お知らせ</h3>
-        <p>
-            これまでの赤い星座線の星図（JavaScript）をベースに、
-            <span style="color: orange;">現在新しいバージョンの星図（TypeScript）を作成しています。</span>
-            すでに旧バージョンでできることのほとんどができる上、星雲イラストの表示など新しい機能もあります。
-            <span style="color: orange;">新しいバージョンを試していただけるとうれしいです。</span>
-        </p>
-        <div style="display: flex; justify-content: center; gap: 20px; margin: 20px 0;">
-            <button id="oldVersion" type="button" onclick="window.location.href='chart_js.html'" style="color: #ffffff; background-color: #666; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 1em;">旧バージョン</button>
-            <button id="newVersion" type="button" onclick="document.getElementById('announcement').style.display='none'" style="color: #ffffff; background: linear-gradient(135deg, #ff6b35, #f7931e); padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: bold; box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3); transform: scale(1.05);">🚀 新バージョン</button>
-        </div>
         <p><span style="color: orange;">星図を開いてからバージョンを変えたい場合は、リロードするか、画面左上にリンクがある「HOME」を経由してください。</span></p>
         <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
         <ul>
             <li>風景と重ねる機能</li>
             <li>惑星の移動を描画</li>
+            <li>ガリレオ衛星</li>
             <li>ダークモード</li>
             <li>地形を描画</li>
             <li>2000.0年分点による座標の表示</li>
-            <li>メニューページ</li>
-            <li>URLによる状態の保存</li>
-        </ul>
-        <p>新バージョンの強み</p>
-        <ul>
-            <li>星雲イラストの表示</li>
-            <li>描画の高速化</li>
-            <li>デザインの改善</li>
-            <li>今後旧バージョン以上にできることを増やす予定（星雲・星団・太陽系天体をユーザーが追加・選択できるようにするなど）。ほしいのがあったら言ってください</li>
+            <li>(URLによる状態の保存)</li>
         </ul>
     </div>
 -->
@@ -201,6 +199,21 @@
                             <option>Ceres</option>
                             <option>Vesta</option>
                         </select>
+                        <button id="observerPlanetHelpBtn" class="help-button" type="button" title="視点の説明">
+                            <i class="fas fa-question-circle"></i>
+                        </button>
+                    </div>
+
+                    <div id="observerPlanetHelpPopup" class="help-popup" style="display: none;">
+                        <div class="help-popup-content">
+                            <div class="help-popup-header">
+                                <h4>視点</h4>
+                                <button id="closeObserverPlanetHelp" class="help-popup-close" type="button">&times;</button>
+                            </div>
+                            <div class="help-popup-body">
+                                <p>観測者がいる天体を選びます。地球以外の視点は、「表示設定」->「表示モード」を「赤道座標系」にしているときに選択できます。</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="setting-row">
@@ -248,14 +261,13 @@
                             <option value="AEP">赤道座標系</option>
                             <option value="view" checked>プラネタリウム</option>
                             <option value="live">スマホに合わせる</option>
-                            <option value="ar" disabled>風景と重ねる</option>
+                            <option value="ar">風景と重ねる（β版）</option>
                         </select>
                         <button id="modeHelpBtn" class="help-button" type="button" title="表示モードの説明">
                             <i class="fas fa-question-circle"></i>
                         </button>
                     </div>
-                    
-                    <!-- 表示モード説明ポップアップ -->
+
                     <div id="modeHelpPopup" class="help-popup" style="display: none;">
                         <div class="help-popup-content">
                             <div class="help-popup-header">
@@ -266,8 +278,8 @@
                                 <ul>
                                     <li><strong>赤道座標系:</strong> 一般的な星図や天体写真と同じく、天の北極が上になった表示。赤道儀での導入にも便利。</li>
                                     <li><strong>プラネタリウム:</strong> 観測地や時刻に合わせ、実際の空と同じ向きで表示します。地球上の視点にのみ対応しています。</li>
-                                    <li><strong>スマホに合わせる:</strong> スマートフォンの向きや傾きに応じて表示します。iPhoneやiPadではデバイスの向きの使用許可が必要です。</li>
-                                    <li><strong>風景と重ねる:</strong> カメラの映像と星図を重ねて表示します（現在は無効）。</li>
+                                    <li><strong>スマホに合わせる:</strong> スマートフォンの向きや傾きに応じて表示します。iPhoneやiPadではデバイスの向きの使用許可が必要です。デバイスを8の字に動かすと精度が上がります。画面の回転はオフにしてください。パソコンでは使用できません。</li>
+                                    <li><strong>風景と重ねる:</strong> カメラの映像と星図を重ねて表示します。注意点は「スマホに合わせる」と同じです。</li>
                                 </ul>
                             </div>
                         </div>
@@ -279,6 +291,15 @@
                         <button id="orientationPermissionBtn" type="button" style="background-color: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
                             デバイスの向きの使用を許可
                         </button>
+                    </div>
+
+                    <div id="arOpacitySliderDiv" class="setting-row">
+                        <label>風景の透明度:</label>
+                        <div class="set-ar-opacity-limit">
+                            <label>0</label>
+                            <input type="range" id="arOpacitySlider" min="0" max="1" step="0.1" value="1">
+                            <label>1</label>
+                        </div>
                     </div>
 
                     <div class="setting-row">
@@ -401,7 +422,18 @@
                 <div id="objects-tab" class="setting-section" style="display: none;">
                     <h3>高度な設定</h3>
                     <button id="clearLocalStorage" type="button">設定を初期化</button>
-
+                    <button id="checkDefaultConfig" type="button">初期設定を確認</button>
+                    <div id="defaultConfigPopup" class="help-popup" style="display: none;">
+                        <div class="help-popup-content">
+                            <div class="help-popup-header">
+                                <h4>初期設定</h4>
+                                <button id="closeDefaultConfigPopup" class="help-popup-close" type="button">&times;</button>
+                            </div>
+                            <div class="help-popup-body">
+                                <div id="defaultConfig"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -586,7 +618,7 @@
     
     <!-- AR用ビデオ -->
     <div>
-        <video id="arVideo"></video>
+        <video id="arVideo" class="ar-video" style="display: none;"></video>
     </div>
 
     <!-- キャンバス -->
