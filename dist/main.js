@@ -13,7 +13,9 @@ import { DataLoader } from './utils/DataLoader.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
+import { UserObjectController } from './controllers/UserObjectController.js';
 const news = [
+    { time: '2025-08-15T20:19:30', title: '天の北極・南極', text: '印をつけました' },
     { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
 ];
 // 初期設定を読み込む関数
@@ -253,6 +255,17 @@ export async function main() {
         // 設定を初期化（DOM要素が読み込まれた後に実行）
         const config = initializeConfig();
         window.config = config;
+        // キャンバスの取得（HTMLで作成済み）
+        const canvas = document.getElementById('starChartCanvas');
+        if (!canvas) {
+            throw new Error('Canvas element not found');
+        }
+        canvas.width = config.canvasSize.width;
+        canvas.height = config.canvasSize.height;
+        ;
+        // レンダラーの作成
+        const renderer = new CanvasRenderer(canvas, config);
+        window.renderer = renderer;
         // データの読み込み（段階的に）
         let hipStars = [];
         let gaia100Data = [];
@@ -266,16 +279,6 @@ export async function main() {
         let recData = [];
         let ngcData = [];
         let starNames = [];
-        // キャンバスの取得（HTMLで作成済み）
-        const canvas = document.getElementById('starChartCanvas');
-        if (!canvas) {
-            throw new Error('Canvas element not found');
-        }
-        // キャンバスのサイズを設定
-        canvas.width = config.canvasSize.width;
-        canvas.height = config.canvasSize.height;
-        // レンダラーの作成
-        const renderer = new CanvasRenderer(canvas, config);
         // imageCacheの初期化
         const imageCache = {};
         const imageCacheNames = [];
@@ -284,6 +287,7 @@ export async function main() {
             renderer.clearObjectInfomation();
             renderer.clear();
             renderer.drawGrid();
+            renderer.drawPoleMark();
             renderer.drawCameraView();
             renderer.drawConstellationLines(constellationData);
             const time100 = performance.now();
@@ -305,22 +309,16 @@ export async function main() {
             //     console.log((time300 - time000).toFixed(1), 'ms (', (time100 - time000).toFixed(1), 'ms, ', (time200 - time100).toFixed(1), 'ms, ', (time300 - time200).toFixed(1), 'ms)');
             // }
         }
-        // グローバルにrenderAll関数を設定（デバイスオリエンテーション用）
         window.renderAll = renderAll;
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
         SettingController.loadSettingsFromConfig();
-        // 時刻コントローラーを初期化
         TimeController.initialize();
-        // 観測地コントローラーを初期化
         ObservationSiteController.initialize();
-        // デバイスオリエンテーション機能を初期化
         const deviceOrientationManager = new DeviceOrientationManager();
         window.deviceOrientationManager = deviceOrientationManager;
-        // デバイスオリエンテーションイベントリスナーを設定
         if (deviceOrientationManager.isOrientationAvailable()) {
             deviceOrientationManager.setupOrientationListener();
         }
-        // デバイスオリエンテーション許可ボタンの設定
         setupOrientationPermissionButton(deviceOrientationManager);
         // フルスクリーン状態変更の監視（複数のイベントに対応）
         const fullscreenEvents = ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange'];
@@ -330,16 +328,10 @@ export async function main() {
                     document.webkitFullscreenElement ||
                     document.mozFullScreenElement ||
                     document.msFullscreenElement);
-                updateFullScreenButtonState(isFullscreen);
+                updateFullScreenState(isFullscreen);
             });
         });
         updateInfoDisplay();
-        // 初期状態でフルスクリーンボタンの状態を設定
-        const isFullscreen = !!(document.fullscreenElement ||
-            document.webkitFullscreenElement ||
-            document.mozFullScreenElement ||
-            document.msFullscreenElement);
-        updateFullScreenButtonState(isFullscreen);
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
             try {
@@ -416,15 +408,12 @@ export async function main() {
                 console.error('データの読み込みに失敗しました:', error);
             }
         };
-        // データ読み込みを開始
         loadDataStep();
         await SolarSystemController.initialize();
         SolarSystemDataManager.updateAllData(config.displayTime.jd, config.observationSite);
         const controller = new InteractionController(canvas, config, renderAll);
-        // renderAll関数とrenderer、controllerをグローバルに公開
-        window.renderAll = renderAll;
-        window.renderer = renderer;
         window.controller = controller;
+        UserObjectController.init();
         setupButtonEvents();
         setupResizeHandler();
         document.getElementById('loadingtext').innerHTML = '';
@@ -466,7 +455,7 @@ function togglefullScreen() {
         if (requestFullscreen) {
             requestFullscreen.call(element).then(() => {
                 window.renderAll();
-                updateFullScreenButtonState(true);
+                updateFullScreenState(true);
                 console.log('Successfully entered fullscreen');
             }).catch((err) => {
                 console.error('Failed to enter fullscreen:', err);
@@ -486,7 +475,7 @@ function togglefullScreen() {
         if (exitFullscreen) {
             exitFullscreen.call(document).then(() => {
                 window.renderAll();
-                updateFullScreenButtonState(false);
+                updateFullScreenState(false);
                 console.log('Successfully exited fullscreen');
             }).catch((err) => {
                 console.error('Failed to exit fullscreen:', err);
@@ -498,7 +487,7 @@ function togglefullScreen() {
     }
 }
 // フルスクリーンボタンの状態を更新する関数
-function updateFullScreenButtonState(isFullscreen) {
+function updateFullScreenState(isFullscreen) {
     const fullScreenBtn = document.getElementById('fullScreenBtn');
     const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
     if (isFullscreen) {
@@ -510,6 +499,12 @@ function updateFullScreenButtonState(isFullscreen) {
         if (fullScreenBtnMobile) {
             fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
         }
+        const config = window.config;
+        // config.canvasSize.width = window.outerWidth;
+        config.canvasSize.height = window.outerHeight;
+        config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * config.canvasSize.height / config.canvasSize.width;
+        console.log(config.canvasSize, config.viewState.fieldOfViewDec);
+        updateConfig(config);
     }
     else {
         // フルスクリーンが解除された時
@@ -520,6 +515,11 @@ function updateFullScreenButtonState(isFullscreen) {
         if (fullScreenBtnMobile) {
             fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
         }
+        const config = window.config;
+        // config.canvasSize.width = window.innerWidth;
+        config.canvasSize.height = window.innerHeight;
+        config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * config.canvasSize.height / config.canvasSize.width;
+        updateConfig(config);
     }
 }
 function setupFullScreenButton() {
@@ -556,13 +556,9 @@ function setupFullScreenButton() {
                 document.msFullscreenElement);
             console.log('Fullscreen state:', isFullscreen);
             window.renderAll();
-            updateFullScreenButtonState(isFullscreen);
+            updateFullScreenState(isFullscreen);
         });
     });
-}
-function closeObjectInfo() {
-    const objectInfo = document.getElementById('objectInfo');
-    objectInfo.style.display = 'none';
 }
 // デバイスオリエンテーション許可ボタンの設定
 function setupOrientationPermissionButton(deviceOrientationManager) {
@@ -674,9 +670,6 @@ function setupButtonEvents() {
         }
     });
     SearchController.setupSearchInput();
-    // const popupOpenBtns = document.querySelectorAll('.help-button');
-    // const popupCloseBtns = document.querySelectorAll('.help-popup-close');
-    // const popups = document.querySelectorAll('.help-popup');
     const popupIds = [
         {
             openBtn: 'modeHelpBtn',
@@ -723,26 +716,6 @@ function setupButtonEvents() {
             });
         }
     }
-    // 表示モードヘルプボタン
-    document.getElementById('modeHelpBtn')?.addEventListener('click', () => {
-        const popup = document.getElementById('modeHelpPopup');
-        if (popup) {
-            openPopup(popup);
-        }
-    });
-    // 表示モードヘルプポップアップを閉じる
-    document.getElementById('closeModeHelp')?.addEventListener('click', () => {
-        const popup = document.getElementById('modeHelpPopup');
-        if (popup) {
-            popup.style.display = 'none';
-        }
-    });
-    // ポップアップ外をクリックして閉じる
-    document.getElementById('modeHelpPopup')?.addEventListener('click', (e) => {
-        if (e.target === e.currentTarget) {
-            e.target.style.display = 'none';
-        }
-    });
     document.getElementById('closeObservationSiteMap')?.addEventListener('click', ObservationSiteController.closeMap);
     document.getElementById('dtlNow')?.addEventListener('click', function () {
         const dtl = document.getElementById('dtl');

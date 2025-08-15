@@ -302,6 +302,11 @@
                         </div>
                     </div>
 
+                    <div id="arFovDiv" class="setting-row" style="display: block;">
+                        <label>長辺の視野角:</label>
+                        <input type="text" id="arFov" class="ar-fov-input" size="1" value="50">°
+                    </div>
+
                     <div class="setting-row">
                         <label>最微等級:</label>
                         <div class="set-mag-limit">
@@ -421,19 +426,25 @@
                 <!-- 色などの設定タブ -->
                 <div id="objects-tab" class="setting-section" style="display: none;">
                     <h3>高度な設定</h3>
-                    <button id="clearLocalStorage" type="button">設定を初期化</button>
-                    <button id="checkDefaultConfig" type="button">初期設定を確認</button>
-                    <div id="defaultConfigPopup" class="help-popup" style="display: none;">
-                        <div class="help-popup-content">
-                            <div class="help-popup-header">
-                                <h4>初期設定</h4>
-                                <button id="closeDefaultConfigPopup" class="help-popup-close" type="button">&times;</button>
-                            </div>
-                            <div class="help-popup-body">
-                                <div id="defaultConfig"></div>
+                    <div class="setting-row">
+                        <button id="clearLocalStorage" type="button">設定を初期化</button>
+                        <button id="checkDefaultConfig" type="button">初期設定を確認</button>
+                        <div id="defaultConfigPopup" class="help-popup" style="display: none;">
+                            <div class="help-popup-content">
+                                <div class="help-popup-header">
+                                    <h4>初期設定</h4>
+                                    <button id="closeDefaultConfigPopup" class="help-popup-close" type="button">&times;</button>
+                                </div>
+                                <div class="help-popup-body">
+                                    <div id="defaultConfig"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- <div class="setting-row">
+                        <button id="addObjectButton" type="button">天体を追加</button>
+                    </div> -->
                 </div>
             </div>
 
@@ -473,18 +484,6 @@
         </div>
         
         <div class="description-content">
-            <!-- 基本操作 -->
-            <!-- <div class="description-section">
-                <h4>📱 基本操作</h4>
-                <ul>
-                    <li><strong>ドラッグ:</strong> 星図を移動</li>
-                    <li><strong>ピンチ:</strong> ズームイン・アウト</li>
-                    <li><strong>天体タップ:</strong> 詳細情報表示</li>
-                    <li><strong>検索ボタン:</strong> 天体を検索</li>
-                    <li><strong>設定ボタン:</strong> 表示設定変更</li>
-                </ul>
-            </div> -->
-
             <!-- 表示設定 -->
             <div class="description-section">
                 <h4>⚙️ 表示設定のポイント</h4>
@@ -508,18 +507,6 @@
                 </ul>
             </div>
 
-            <!-- 天体観測のコツ -->
-            <!-- <div class="description-section">
-                <h4>🔭 天体観測のコツ</h4>
-                <ul>
-                    <li><strong>暗順応:</strong> 目が暗さに慣れるまで15-30分待つ</li>
-                    <li><strong>光害対策:</strong> 街灯から離れた場所を選ぶ</li>
-                    <li><strong>月の影響:</strong> 満月時は星が見えにくい</li>
-                    <li><strong>天候チェック:</strong> 晴れた夜を選ぶ</li>
-                    <li><strong>防寒対策:</strong> 夜は冷えるので暖かい服装で</li>
-                </ul>
-            </div> -->
-
             <!-- 季節の天体 -->
             <div class="description-section">
                 <h4>🌌 AIが考える 季節の星座</h4>
@@ -542,45 +529,8 @@
                     <li><strong>もっと細かい星図を作成:</strong> <a href="https://peteworden.github.io/Soleil/gaiaChart.html" target="_blank">Gaia Archiveのデータから星図を作る</a></li>
                     <li><strong>簡易水準器:</strong> <a href="https://peteworden.github.io/Soleil/level.html" target="_blank">簡易水準器</a></li>
                     <li><strong>ソースコード・データソース:</strong> <a href="https://github.com/Peteworden/Soleil" target="_blank">GitHub</a></li>
-                    <!-- <li><strong>:</strong> <a href="" target="_blank"></a></li>
-                    <li><strong>:</strong> <a href="" target="_blank"></a></li> -->
                 </ul>
             </div>
-
-            <!-- 初心者向け天体 -->
-            <!-- <div class="description-section">
-                <h4>⭐ 初心者におすすめの天体</h4>
-                <ul>
-                    <li><strong>明るい星:</strong> シリウス、ベガ、アルタイル</li>
-                    <li><strong>惑星:</strong> 金星、木星、土星</li>
-                    <li><strong>星団:</strong> プレアデス星団（すばる）</li>
-                    <li><strong>星雲:</strong> オリオン大星雲（M42）</li>
-                    <li><strong>銀河:</strong> アンドロメダ銀河（M31）</li>
-                </ul>
-            </div> -->
-
-            <!-- 観測地の選び方 -->
-            <!-- <div class="description-section">
-                <h4>📍 観測地の選び方</h4>
-                <ul>
-                    <li><strong>光害の少ない場所:</strong> 街から離れた山や海辺</li>
-                    <li><strong>視界の開けた場所:</strong> 建物や木に遮られない場所</li>
-                    <li><strong>安全な場所:</strong> 夜間でも安全に過ごせる場所</li>
-                    <li><strong>アクセス:</strong> 帰り道も考慮した場所選び</li>
-                </ul>
-            </div> -->
-
-            <!-- 道具と準備 -->
-            <!-- <div class="description-section">
-                <h4>🎒 観測に必要なもの</h4>
-                <ul>
-                    <li><strong>双眼鏡:</strong> 7×50や10×50がおすすめ</li>
-                    <li><strong>懐中電灯:</strong> 赤い光のものが良い</li>
-                    <li><strong>防寒具:</strong> 帽子、手袋、厚手の靴下</li>
-                    <li><strong>飲み物:</strong> 温かい飲み物</li>
-                    <li><strong>星図アプリ:</strong> このアプリを活用</li>
-                </ul>
-            </div> -->
 
             <div class="description-section">
                 <h4>🔭 自分用 観望会・出撃の持ち物リスト</h4>
@@ -600,7 +550,7 @@
 
     <!-- 天体情報画面 -->
     <div id="objectInfo" class="objectInfo" style="display: none;">
-        <button id="closeObjectInfo" type="button">閉</button>
+        <button id="closeObjectInfo" type="button">&times;</button>
         <div id="objectInfoName"></div>
         <div id="objectInfoImage"></div>
         <div id="objectInfoText"></div>
@@ -614,6 +564,63 @@
         <div id="timeSliderDiv" class="timeSliderDiv">
             <input type="range" id="timeSlider" class="timeSlider" min="0" max="10" step="0.00964"">
         </div>
+    </div>
+
+    <!-- 天体追加画面1 -->
+    <div id="addObject-typeSelect" class="add-object" style="display: none;">
+        <button id="close-addObject-typeSelect" class="close-add-object" type="button">&times;</button>
+        <h3 class="add-object-title">天体の種類を選んでください</h3>
+        <div class="add-object-typeSelect-button-div">
+            <button id="userObject-rec-button" class="add-object-typeSelect-button" type="button">星雲・星団など</button>
+            <button id="userObject-elliptic-button" class="add-object-typeSelect-button" type="button">太陽系天体（楕円軌道）</button>
+            <button id="userObject-parabolic-button" class="add-object-typeSelect-button" type="button">太陽系天体（放物線軌道）</button>
+            <button id="userObject-hyperbolic-button" class="add-object-typeSelect-button" type="button">太陽系天体（双曲線軌道）</button>
+        </div>
+    </div>
+
+    <!-- 天体追加画面 星雲・星団 -->
+    <div id="userObject-elliptic" class="add-object" style="display: none;">
+        <button id="back-to-addObject-typeSelect" class="back-to-select-add-object-type" type="button">&leftarrow;</button>
+        <button class="close-add-object" type="button">&times;</button>
+        <h3 class="add-object-title">星雲・星団を追加する</h3>
+        <ul class="userObject-elements">
+            <li><label>名前</label><input type="text" class="short-text" placeholder="イトカワ"></li>
+            <li><label>読み・別名（検索用）</label><textarea class="long-text" placeholder="25143"></textarea></li>
+            <li><label>元期の形式</label>
+                <select id="userObject-elliptic-type">
+                    <option value="ymd">年月日</option>
+                    <option value="jd">ユリウス日</option>
+                </select>
+            </li>
+            <li><label>元期（年月日）</label><input type="text" class="short-text" placeholder="2025-08-15.0"></li>
+            <li><label>元期（ユリウス日）</label><input type="text" class="short-text" placeholder="2451545.0"></li>
+            <li><label>軌道長半径 a [au]</label><input type="text" class="short-text" placeholder="2.3"></li>
+            <li><label>離心率 e</label><input type="text" class="short-text" placeholder="0.8"></li>
+            <li><label>軌道傾斜角 i [°]</label><input type="text" class="short-text" placeholder="12.1"></li>
+            <li><label>近日点因数 ω, peri [°]</label><input type="text" class="short-text" placeholder="12.1"></li>
+            <li><label>昇交点黄経 Ω, node [°]</label><input type="text" class="short-text" placeholder="1.2"></li>
+            <li><label>元期の平均近点角 M0 [°]</label><input type="text" class="short-text" placeholder="1.2"></li>
+            <li><label>説明</label><textarea class="long-text" placeholder="説明を追加"></textarea></li>
+        </ul>
+        <button id="userObject-rec-add-button" class="userObject-add-button" type="button">追加</button>
+    </div>
+
+    <!-- 天体追加画面 太陽系天体（楕円軌道） -->
+    <div id="userObject-elliptic" class="add-object" style="display: none;">
+        <button id="back-to-addObject-typeSelect" class="back-to-select-add-object-type" type="button">&leftarrow;</button>
+        <button class="close-add-object" type="button">&times;</button>
+        <h3 class="add-object-title">太陽系天体（楕円軌道）を追加する</h3>
+        <ul class="userObject-elements">
+            <li><label>名前</label><input type="text" class="short-text" placeholder="かに星雲"></li>
+            <li><label>読み・別名（検索用）</label><textarea class="long-text" placeholder="かに星雲, Crab Nebula"></textarea></li>
+            <li><label>種類</label>
+                <select id="userObject-elliptic-type">
+            </li>
+            <li><label>赤経</label><input type="text" class="short-text" placeholder="31 41.6, 3.14"></li>
+            <li><label>赤緯</label><input type="text" class="short-text" placeholder="-27 18, 27.18"></li>
+            <li><label>等級</label><input type="text" class="short-text" placeholder="6.0"></li>
+            <li><label>説明</label><textarea class="long-text" placeholder="説明を追加"></textarea></li>
+        </ul>
     </div>
     
     <!-- AR用ビデオ -->

@@ -1,8 +1,5 @@
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
-const epsilon = 23.4392911 * DEG_TO_RAD;
-const cosEpsl = Math.cos(epsilon);
-const sinEpsl = Math.sin(epsilon);
 export class AstronomicalCalculator {
     static jdJSTtoJdTT(jdJST) {
         return jdJST - 0.375 + 0.0008;

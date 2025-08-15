@@ -17,16 +17,6 @@ export class DataLoader {
         const data = await response.json();
         return Object.values(data);
     }
-    static async fetchCsvData(url) {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to load ${url}: ${response.statusText}`);
-        }
-        const text = await response.text();
-        const lines = text.trim().split('\n');
-        const data = lines.map(line => line.split(',').map(Number));
-        return data;
-    }
     static async fetchGaiaBinaryData(url) {
         const response = await fetch(url);
         if (!response.ok) {
@@ -134,6 +124,26 @@ export class DataLoader {
                 dec = +object.dec;
             }
             rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
+        }
+        const userRecs = localStorage.getItem('recs');
+        if (userRecs) {
+            const userRecsArray = JSON.parse(userRecs);
+            for (const object of userRecsArray) {
+                let ra, dec;
+                if (object.ra.includes(' ')) {
+                    ra = converter.rahmToDeg(object.ra);
+                    dec = converter.decdmToDeg(object.dec);
+                }
+                else {
+                    ra = +object.ra;
+                    dec = +object.dec;
+                }
+                rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, null, //object.image_url || null,
+                null, //object.image_credit || null,
+                null, //object.overlay || undefined,
+                object.description, null //object.wiki || null
+                ));
+            }
         }
         return rec;
     }

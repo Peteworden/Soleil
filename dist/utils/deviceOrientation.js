@@ -180,7 +180,6 @@ export class DeviceOrientationManager {
         }
     }
     setVideoOn() {
-        const arOpacity = document.getElementById('arOpacitySlider').valueAsNumber;
         const constraints = { audio: false, video: { facingMode: "environment" } };
         navigator.mediaDevices.getUserMedia(constraints)
             .then(function (stream) {
@@ -190,7 +189,6 @@ export class DeviceOrientationManager {
                 video.onloadedmetadata = function (e) {
                     video.play();
                 };
-                video.style.opacity = arOpacity.toString();
                 video.style.display = 'block';
             }
         });

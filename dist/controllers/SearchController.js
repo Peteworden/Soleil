@@ -37,6 +37,7 @@ export class SearchController {
                 suggestionButtonContainer.innerHTML = '';
             }
             searchDiv.style.display = 'none';
+            document.body.classList.remove('search-open');
         }
     }
     static toggleSearch() {

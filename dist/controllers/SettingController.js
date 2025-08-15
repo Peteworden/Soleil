@@ -421,6 +421,28 @@ export class SettingController {
             }
             else {
                 arOpacitySliderDiv.style.display = 'block';
+                const arOpacitySlider = document.getElementById('arOpacitySlider');
+                const video = document.getElementById('arVideo');
+                if (video && arOpacitySlider) {
+                    video.style.opacity = arOpacitySlider.value;
+                }
+            }
+        }
+        const arFovDiv = document.getElementById('arFovDiv');
+        if (arFovDiv) {
+            if (deviceInfo.os === 'pc' || modeSelect.value !== 'ar') {
+                arFovDiv.style.display = 'none';
+            }
+            else {
+                arFovDiv.style.display = 'block';
+                const config = window.config;
+                const arfovEl = document.getElementById('arFov');
+                const video = document.getElementById('arVideo');
+                if (config && video && arfovEl) {
+                    const fovDeg = config.viewState.fieldOfViewRA;
+                    const fovVideo = parseFloat(arfovEl.value);
+                    video.style.height = `${Math.round(100 * fovVideo / fovDeg)}%`;
+                }
             }
         }
     }

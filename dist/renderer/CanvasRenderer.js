@@ -728,6 +728,56 @@ export class CanvasRenderer {
         }
         return [screenRA1, screenDec1];
     }
+    drawPoleMark() {
+        const minFov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        if (minFov > 20)
+            return;
+        const npScreenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.config, true, this.orientationData);
+        if (npScreenXY[0]) {
+            if (minFov > 8) {
+                this.poleMark(npScreenXY[1], '天の北極', false);
+            }
+            else {
+                this.poleMark(npScreenXY[1], '天の北極', true);
+            }
+        }
+        const spScreenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.config, true, this.orientationData);
+        if (spScreenXY[0]) {
+            this.poleMark(spScreenXY[1], '天の南極', false);
+        }
+    }
+    poleMark(screenXY, text, ring = false) {
+        if (this.config.displaySettings.mode === 'AEP')
+            return;
+        const [x, y] = screenXY;
+        const a = 0.626; // 2025年始の天の北極とポラリスの離角
+        const a_canvas = a * this.config.canvasSize.height / this.config.viewState.fieldOfViewDec;
+        this.ctx.font = '14px Arial';
+        this.ctx.textAlign = 'left';
+        this.ctx.fillStyle = 'orange';
+        this.ctx.lineWidth = 1;
+        this.ctx.strokeStyle = 'orange';
+        this.ctx.beginPath();
+        this.ctx.moveTo(x - 4, y - 4);
+        this.ctx.lineTo(x + 4, y + 4);
+        this.ctx.moveTo(x + 4, y - 4);
+        this.ctx.lineTo(x - 4, y + 4);
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.fillText(text, x, y);
+        if (ring) {
+            this.ctx.arc(x, y, a_canvas, 0, 2 * Math.PI);
+            for (let i = 0; i < 360; i += 15) {
+                const ang = i * Math.PI / 180;
+                const cos = Math.cos(ang);
+                const sin = Math.sin(ang);
+                this.ctx.moveTo(x + 0.96 * a_canvas * cos, y + 0.96 * a_canvas * sin);
+                this.ctx.lineTo(x + a_canvas * cos, y + a_canvas * sin);
+            }
+            this.ctx.stroke();
+            this.ctx.fillText('2025', x - 15, y - a_canvas - 2);
+        }
+    }
     // 星座線
     drawConstellationLines(constellations) {
         if (constellations.length == 0)
@@ -1298,6 +1348,7 @@ export class CanvasRenderer {
     // timeSliderが動いたときに呼び出される
     // this.configはコンストラクタの宣言により自動で更新されるので、この関数はなくせるかも
     updateOptions(options) {
+        ;
         const globalConfig = window.config;
         if (globalConfig) {
             if (this.config !== globalConfig) {
@@ -1305,6 +1356,8 @@ export class CanvasRenderer {
             }
         }
         Object.assign(this.config, options);
+        this.canvas.width = this.config.canvasSize.width;
+        this.canvas.height = this.config.canvasSize.height;
         // グローバルconfigも確実に更新
         if (globalConfig) {
             Object.assign(globalConfig, options);
