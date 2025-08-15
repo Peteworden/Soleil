@@ -4,6 +4,12 @@
 
 html {
     overflow: hidden;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 body {
@@ -12,6 +18,12 @@ body {
     margin: 0px;
     position: relative;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 input {
@@ -182,7 +194,7 @@ input[type="file"] {
     display: flex;
     gap: 5px;
     padding: 5px;
-    z-index: 1;
+    z-index: 11;
 }
 
 .main-screen-button {
@@ -193,13 +205,36 @@ input[type="file"] {
     padding: 0;
     margin: 0;
     text-align: center;
-    z-index: 1;
+    z-index: 5;
     cursor: pointer;
     border-radius: 8px;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* 設定画面が開いているときのボタン無効化 */
+.subwindow-open .main-screen-button {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.subwindow-open .main-screen-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: none;
+}
+
+.search-open .main-screen-button:not(.search-button) {
+    opacity: 0.3;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.search-open .main-screen-button:not(.search-button):hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: none;
 }
 
 .main-screen-button:hover {
@@ -212,6 +247,21 @@ input[type="file"] {
     width: 24px;
     height: 24px;
     filter: brightness(0) invert(1);
+    aspect-ratio: 1;
+}
+
+/* 画像の事前サイズ指定 */
+img {
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: attr(width) / attr(height);
+}
+
+/* 特定の画像サイズを事前に指定 */
+.magLimit-image {
+    width: 24px;
+    height: 24px;
+    aspect-ratio: 1;
 }
 
 #fullScreenBtn, #exitFullScreenBtn {
@@ -225,7 +275,7 @@ input[type="file"] {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1;
+    z-index: 5;
     cursor: pointer;
 }
 
@@ -249,6 +299,13 @@ input[type="file"] {
     overflow: hidden;
     z-index: 20;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .settingBlock {
@@ -592,59 +649,6 @@ input[type="file"] {
     }
 }
 
-/* 既存のスタイルを継承 */
-.big-window {
-    position: fixed;
-    color: #C0C0C0;
-    background-color: #2C0B0B;
-    padding: 10px;
-    margin: auto;
-    top: 50%;
-    left: 50%;
-    -webkit-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
-    border-radius: 1rem;
-    border: 2px solid #5A1E1E;
-    width: 80%;
-    height: 80%;
-    text-align: center;
-    overflow: scroll;
-    z-index: 2;
-}
-
-.close-big-window {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: transparent;
-    border: 0;
-    color: #C0C0C0;
-    font-size: 20px;
-    cursor: pointer;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: background-color 0.2s ease;
-}
-
-.close-big-window:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-}
-
-.big-window-textinput {
-    background-color: #F5F5DC;
-    width: 200px;
-    color: #333;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    padding: 8px;
-    font-size: 14px;
-    margin: 10px 0;
-}
-
 .setPicsFor360Div input {
     background-color: #F5F5DC;
     width: 200px;
@@ -711,6 +715,30 @@ input[type="file"] {
     margin: 10px 0;
     border-radius: 8px;
     border: 1px solid #666;
+}
+
+.set-ar-opacity-limit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+}
+
+#arOpacitySlider {
+    flex: 1;
+    max-width: 200px;
+}
+
+#arOpacitySlider::-webkit-slider-thumb {
+    background: #FFD700;
+}
+
+#arOpacitySlider::-moz-range-thumb {
+    background: #FFD700;
 }
 
 .set-mag-limit {
@@ -827,22 +855,162 @@ input:checked + .slider:before {
 
 .description {
     position: fixed;
-    color: #C0C0C0;
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    padding: 20px;
-    margin: auto;
     top: 50%;
     left: 50%;
-    -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
-    border-radius: 12px;
-    border: 2px solid #4a4a6a;
+    background-color: rgba(0, 0, 0, 0.95);
+    border: 2px solid #444;
+    border-radius: 15px;
+    padding: 0;
     width: 90%;
-    max-width: 800px;
-    height: 85%;
-    text-align: center;
-    overflow: scroll;
-    z-index: 20;
+    max-width: 1200px;
+    max-height: 85%;
+    overflow-y: auto;
+    z-index: 1000;
+    backdrop-filter: blur(15px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.description-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 25px 15px 25px;
+    border-bottom: 1px solid #333;
+    background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+    border-radius: 15px 15px 0 0;
+}
+
+.description-header h3 {
+    margin: 0;
+    color: #ffdddd;
+    font-size: 1.4em;
+    font-weight: 700;
+}
+
+#closeDescription {
+    background: #444;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: background-color 0.2s;
+}
+
+#closeDescription:hover {
+    background: #555;
+}
+
+.description-content {
+    padding: 20px 25px 25px 25px;
+    max-height: calc(85vh - 80px);
+    overflow-y: auto;
+}
+
+.description-section {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    border-left: 4px solid #ff9999;
+}
+
+.description-section:last-child {
+    margin-bottom: 0;
+}
+
+.description-section h4 {
+    margin: 0 0 12px 0;
+    color: #ffdddd;
+    font-size: 1.1em;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.description-section ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style: none;
+}
+
+.description-section li {
+    margin: 8px 0;
+    color: #ffcccc;
+    line-height: 1.6;
+    position: relative;
+}
+
+.description-section li:before {
+    content: "•";
+    color: #ff9999;
+    font-weight: bold;
+    position: absolute;
+    left: -15px;
+}
+
+.description-section strong {
+    color: #ffdddd;
+    font-weight: 700;
+}
+
+/* スクロールバーのスタイル */
+.description-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.description-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+.description-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+}
+
+.description-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .description {
+        width: 95%;
+        max-width: none;
+        max-height: 90%;
+        border-radius: 10px;
+    }
+    
+    .description-header {
+        padding: 15px 20px 10px 20px;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .description-header h3 {
+        font-size: 1.2em;
+    }
+    
+    .description-content {
+        padding: 15px 20px 20px 20px;
+        max-height: calc(90vh - 70px);
+    }
+    
+    .description-section {
+        padding: 12px;
+        margin-bottom: 20px;
+    }
+    
+    .description-section h4 {
+        font-size: 1em;
+    }
+    
+    .description-section li {
+        font-size: 0.9em;
+    }
 }
 
 #qrwin {
@@ -970,7 +1138,7 @@ input:checked + .slider:before {
     display: flex;
     gap: 5px;
     padding: 5px;
-    z-index: 1;
+    z-index: 5;
 }
 
 #closeSearch {
@@ -1003,6 +1171,12 @@ input:checked + .slider:before {
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     z-index: 10;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .search-input {
@@ -1019,6 +1193,13 @@ input:checked + .slider:before {
     background: rgba(0, 0, 0, 0.8);
     color: white;
     font-size: 14px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 #numberOfResults {
@@ -1054,6 +1235,13 @@ input:checked + .slider:before {
     cursor: pointer;
     border-bottom: 1px solid #333;
     transition: background-color 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .suggestionButton:hover {
@@ -1228,14 +1416,15 @@ h1, p {
     border-top: 1px solid #666;
 }
 
-video {
+.ar-video {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-    z-index: -1;
+    pointer-events: none;
+    z-index: 2;
 }
 
 canvas {
@@ -1249,6 +1438,9 @@ canvas {
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    /* レイアウトシフト防止 */
+    min-height: 100vh;
+    min-width: 100vw;
 }
 
 .coordtext {
@@ -1405,3 +1597,308 @@ canvas {
     margin: 10px 0;
     font-size: 16px;
 } 
+
+/* ヘルプボタンとポップアップのスタイル */
+.help-button {
+    background: none;
+    border: none;
+    color: #90caf9;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+}
+
+.help-button:hover {
+    background-color: rgba(144, 202, 249, 0.2);
+    color: #64b5f6;
+}
+
+.help-button:active {
+    transform: scale(0.95);
+}
+
+.help-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(3px);
+}
+
+.help-popup-content {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    max-width: 90vw;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    animation: popupFadeIn 0.3s ease-out;
+}
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.help-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #333;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+}
+
+.help-popup-header h4 {
+    margin: 0;
+    color: #ecf0f1;
+    font-size: 18px;
+}
+
+.help-popup-close {
+    background: none;
+    border: none;
+    color: #bdc3c7;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.help-popup-close:hover {
+    background-color: rgba(189, 195, 199, 0.2);
+    color: #ecf0f1;
+}
+
+.help-popup-body {
+    padding: 20px;
+    color: #ecf0f1;
+    line-height: 1.6;
+}
+
+.help-popup-body ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.help-popup-body li {
+    margin-bottom: 12px;
+}
+
+.help-popup-body strong {
+    color: #3498db;
+}
+
+/* 新機能お知らせポップアップ */
+.news-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.news-popup-content {
+    background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+    border: 2px solid #3498db;
+    border-radius: 16px;
+    max-width: 90vw;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 12px 40px rgba(52, 152, 219, 0.3);
+    animation: newsPopupFadeIn 0.4s ease-out;
+    position: relative;
+}
+
+@keyframes newsPopupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8) translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.news-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #3498db;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border-radius: 14px 14px 0 0;
+}
+
+.news-popup-header h3 {
+    margin: 0;
+    color: #ecf0f1;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.news-popup-close {
+    background: none;
+    border: none;
+    color: #bdc3c7;
+    font-size: 28px;
+    cursor: pointer;
+    padding: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.news-popup-close:hover {
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.news-popup-body {
+    padding: 24px;
+    color: #ecf0f1;
+    line-height: 1.7;
+}
+
+.news-item {
+    margin-bottom: 24px;
+}
+
+.news-item:last-child {
+    margin-bottom: 0;
+}
+
+.news-item h4 {
+    color: #3498db;
+    font-size: 16px;
+    margin: 0 0 12px 0;
+    font-weight: 600;
+}
+
+.news-item ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.news-item li {
+    margin-bottom: 8px;
+    color: #bdc3c7;
+}
+
+.news-item strong {
+    color: #f39c12;
+}
+
+.news-popup-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-top: 1px solid #333;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 0 0 14px 14px;
+}
+
+.dont-show-again-btn {
+    background: #95a5a6;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.dont-show-again-btn:hover {
+    background: #7f8c8d;
+}
+
+.close-news-btn {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.close-news-btn:hover {
+    background: #2980b9;
+}
+
+/* モバイル対応 */
+/*
+@media (max-width: 768px) {
+    .news-popup-content {
+        max-width: 95vw;
+        max-height: 90vh;
+        margin: 10px;
+    }
+    
+    .news-popup-header {
+        padding: 16px 20px;
+    }
+    
+    .news-popup-header h3 {
+        font-size: 18px;
+    }
+    
+    .news-popup-body {
+        padding: 20px;
+    }
+    
+    .news-popup-footer {
+        padding: 12px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .dont-show-again-btn,
+    .close-news-btn {
+        width: 100%;
+        padding: 12px;
+    }
+}
+*/
