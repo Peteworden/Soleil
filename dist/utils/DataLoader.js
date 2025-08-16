@@ -128,18 +128,9 @@ export class DataLoader {
         const userRecs = localStorage.getItem('userObject');
         if (userRecs) {
             const userRecsData = JSON.parse(userRecs);
-            if (userRecsData.userRecs) {
+            if (userRecsData && userRecsData.userRecs) {
                 for (const object of userRecsData.userRecs) {
-                    let ra, dec;
-                    if (object.ra.includes(' ')) {
-                        ra = converter.rahmToDeg(object.ra);
-                        dec = converter.decdmToDeg(object.dec);
-                    }
-                    else {
-                        ra = +object.ra;
-                        dec = +object.dec;
-                    }
-                    rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, null, //object.image_url || null,
+                    rec.push(new MessierObject(object.name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
                     null, //object.image_credit || null,
                     null, //object.overlay || undefined,
                     object.description, null //object.wiki || null

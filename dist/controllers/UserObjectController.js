@@ -38,6 +38,7 @@ export class UserObjectController {
             userObjectManageButton.addEventListener('click', () => {
                 userObjectManage.style.display = 'block';
                 typeSelect.style.display = 'none';
+                this.setManagement();
             });
         }
         //追加ページへ移動
@@ -97,6 +98,49 @@ export class UserObjectController {
             addObjectHyperbolicButton.addEventListener('click', () => {
                 this.addHyperbolicObject();
             });
+        }
+    }
+    static setManagement() {
+        const userObjectManage = document.getElementById('userObject-manage');
+        if (!userObjectManage)
+            return;
+        const localUserObjectData = localStorage.getItem('userObject');
+        if (!localUserObjectData)
+            return;
+        const userObjectData = JSON.parse(localUserObjectData);
+        if (!userObjectData)
+            return;
+        const userRecs = userObjectData.userRecs;
+        if (!userRecs)
+            return;
+        for (const userRec of userRecs) {
+            const userRecElement = document.createElement('div');
+            userRecElement.className = 'userObject-rec-item';
+            userRecElement.innerHTML = `
+                <div class="userObject-rec-item-name">${userRec.name}</div>
+                <div class="userObject-rec-item-type">${userRec.type}</div>
+                <div class="userObject-rec-item-ra">${this.coordinateConverter.rahmToDeg(userRec.coordinates.ra.toString())}</div>
+                <div class="userObject-rec-item-dec">${this.coordinateConverter.decdmToDeg(userRec.coordinates.dec.toString())}</div>
+                <button class="userObject-rec-item-edit" type="button">edit</button>
+                <button class="userObject-rec-item-delete" type="button">&times;</button>
+            `;
+            userObjectManage.appendChild(userRecElement);
+        }
+        const userSolarSystem = userObjectData.userSolarSystem;
+        if (!userSolarSystem)
+            return;
+        for (const userSolarSystemObject of userSolarSystem) {
+            const userSolarSystemElement = document.createElement('div');
+            userSolarSystemElement.className = 'userObject-solarSystem-item';
+            userSolarSystemElement.innerHTML = `
+                <div class="userObject-solarSystem-item-name">${userSolarSystemObject.jpnName}</div>
+                <div class="userObject-solarSystem-item-type">${userSolarSystemObject.type}</div>
+                <div class="userObject-solarSystem-item-a">${userSolarSystemObject.orbit.a}</div>
+                <div class="userObject-solarSystem-item-e">${userSolarSystemObject.orbit.e}</div>
+                <button class="userObject-solarSystem-item-edit" type="button">edit</button>
+                <button class="userObject-solarSystem-item-delete" type="button">&times;</button>
+            `;
+            userObjectManage.appendChild(userSolarSystemElement);
         }
     }
     static addRecObject() {
@@ -429,6 +473,7 @@ export class UserObjectController {
                 localStorage.setItem('userObject', JSON.stringify(savedUserObjects));
             }
         }
+        console.log("savedUserObjectData", localStorage.getItem('userObject'));
     }
 }
 UserObjectController.coordinateConverter = new CoordinateConverter();
