@@ -236,6 +236,7 @@ function resetAll() {
 }
 // グローバルにconfigを公開（SettingControllerからアクセス可能）
 window.config = config;
+window.DataStore = DataStore;
 window.updateConfig = updateConfig;
 window.updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
@@ -276,7 +277,7 @@ export async function main() {
         let gaia111_115HelpData = [];
         let constellationData = [];
         let messierData = [];
-        let recData = [];
+        // let recData: any[] = [];
         let ngcData = [];
         let starNames = [];
         // imageCacheの初期化
@@ -298,7 +299,7 @@ export async function main() {
             renderer.drawHipStars(hipStars);
             renderer.writeStarNames(starNames);
             renderer.drawMessier(messierData);
-            renderer.drawRec(recData);
+            renderer.drawRec(DataStore.getRecData());
             renderer.drawNGC(ngcData);
             renderer.writeConstellationNames(constellationData);
             renderer.drawSolarSystemObjects();
@@ -350,7 +351,7 @@ export async function main() {
                     DataLoader.loadGaiaHelpData('-100'),
                 ]);
                 messierData = messierDataResult;
-                recData = recDataResult;
+                DataStore.setRecData(recDataResult);
                 gaia100Data = gaia100DataResult;
                 gaia100HelpData = gaia100HelpDataResult;
                 renderAll();
@@ -377,8 +378,8 @@ export async function main() {
                         }
                     }
                 }
-                if (recData.length > 0) {
-                    for (const rec of recData) {
+                if (DataStore.getRecData().length > 0) {
+                    for (const rec of DataStore.getRecData()) {
                         if (rec.getOverlay() !== null && rec.getOverlay() !== undefined && rec.getName() !== null && rec.getName() !== undefined) {
                             imageCacheNames.push(rec.getName());
                         }
@@ -399,8 +400,7 @@ export async function main() {
                 renderAll();
                 DataStore.hipStars = hipStars;
                 DataStore.constellationData = constellationData;
-                DataStore.messierData = messierData;
-                DataStore.recData = recData;
+                // DataStore.recData = recData;
                 DataStore.ngcData = ngcData;
                 DataStore.starNames = starNames;
             }

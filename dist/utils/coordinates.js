@@ -141,7 +141,12 @@ export class CoordinateConverter {
     }
     rahmToDeg(rahmtext) {
         const rahm = rahmtext.split(' ').map(Number);
-        return rahm[0] * 15 + rahm[1] * 0.25;
+        if (rahm.length == 2) {
+            return rahm[0] * 15 + rahm[1] * 0.25;
+        }
+        else {
+            return rahm[0] * 15 + rahm[1] * 0.25 + rahm[2] / 240;
+        }
     }
     decdmToDeg(decdmtext) {
         const decdm = decdmtext.split(' ').map(Number);

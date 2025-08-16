@@ -1,4 +1,5 @@
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
+import { DataStore } from './DataStore.js';
 // 共通プロパティ
 export class SolarSystemObjectBase {
     constructor(data) {
@@ -167,6 +168,19 @@ export class SolarSystemDataManager {
     static updateAllData(jd, observationSite) {
         SolarSystemPositionCalculator.updateAllData(this.solarObjects, jd, observationSite);
     }
+    static addObjectAndRender(object) {
+        this.solarObjects.push(object);
+        DataStore.triggerRenderUpdate();
+    }
+    static removeObject(object) {
+        this.solarObjects = this.solarObjects.filter(obj => obj !== object);
+    }
+    static updateObject(object) {
+        const index = this.solarObjects.findIndex(obj => obj === object);
+        if (index !== -1) {
+            this.solarObjects[index] = object;
+        }
+    }
     // 天体の取得メソッド
     static getObjects() {
         return this.solarObjects;
@@ -258,6 +272,7 @@ export class SolarSystemDataManager {
     }
     /**
      * 全ての天体を取得
+     * SearchController, CanvasRendererで使用
      */
     static getAllObjects() {
         return [...this.solarObjects];

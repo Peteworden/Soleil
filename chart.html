@@ -152,7 +152,7 @@
             <div class="setting-tabs">
                 <button class="setting-tab active" data-tab="basic">基本設定</button>
                 <button class="setting-tab" data-tab="display">表示設定</button>
-                <button class="setting-tab" data-tab="objects">高度な設定</button>
+                <button class="setting-tab" data-tab="objects">その他の設定</button>
             </div>
 
             <div class="setting-content">
@@ -425,7 +425,7 @@
 
                 <!-- 色などの設定タブ -->
                 <div id="objects-tab" class="setting-section" style="display: none;">
-                    <h3>高度な設定</h3>
+                    <h3>その他の設定</h3>
                     <div class="setting-row">
                         <button id="clearLocalStorage" type="button">設定を初期化</button>
                         <button id="checkDefaultConfig" type="button">初期設定を確認</button>
@@ -442,9 +442,9 @@
                         </div>
                     </div>
 
-                    <!-- <div class="setting-row">
-                        <button id="addObjectButton" type="button">天体を追加</button>
-                    </div> -->
+                    <div class="setting-row">
+                        <button id="addObjectButton" type="button">【作成中】天体を追加・編集</button>
+                    </div>
                 </div>
             </div>
 
@@ -571,6 +571,7 @@
         <button id="close-addObject-typeSelect" class="close-add-object" type="button">&times;</button>
         <h3 class="add-object-title">天体の種類を選んでください</h3>
         <div class="add-object-typeSelect-button-div">
+            <button id="userObject-manage-button" class="add-object-manage-button" type="button">お気に入り天体を編集</button>
             <button id="userObject-rec-button" class="add-object-typeSelect-button" type="button">星雲・星団など</button>
             <button id="userObject-elliptic-button" class="add-object-typeSelect-button" type="button">太陽系天体（楕円軌道）</button>
             <button id="userObject-parabolic-button" class="add-object-typeSelect-button" type="button">太陽系天体（放物線軌道）</button>
@@ -578,49 +579,136 @@
         </div>
     </div>
 
+    <!-- お気に入り天体編集画面 -->
+    <div id="userObject-manage" class="add-object" style="display: none;">
+        <button class="close-add-object" type="button">&times;</button>
+        <h3 class="add-object-title">お気に入り天体を編集する</h3>
+        <div id="userObject-manage-typebox">
+            <div id="userObject-manage-type">星雲・星団</div>
+            <div id="userObject-manage-items"></div>
+        </div>
+        <div id="userObject-manage-typebox">
+            <div id="userObject-manage-type">太陽系天体</div>
+            <div id="userObject-manage-items"></div>
+        </div>
+        <div id="userObject-manage-finish-button">完了</div>
+    </div>
+
     <!-- 天体追加画面 星雲・星団 -->
-    <div id="userObject-elliptic" class="add-object" style="display: none;">
-        <button id="back-to-addObject-typeSelect" class="back-to-select-add-object-type" type="button">&leftarrow;</button>
+    <div id="userObject-rec" class="add-object" style="display: none;">
+        <button class="back-to-select-add-object-type" type="button">&leftarrow;</button>
         <button class="close-add-object" type="button">&times;</button>
         <h3 class="add-object-title">星雲・星団を追加する</h3>
         <ul class="userObject-elements">
-            <li><label>名前</label><input type="text" class="short-text" placeholder="イトカワ"></li>
-            <li><label>読み・別名（検索用）</label><textarea class="long-text" placeholder="25143"></textarea></li>
-            <li><label>元期の形式</label>
-                <select id="userObject-elliptic-type">
-                    <option value="ymd">年月日</option>
-                    <option value="jd">ユリウス日</option>
+            <li><label>名前*</label><input type="text" id="userObject-rec-name" class="short-text" placeholder="触角銀河"></li>
+            <li><label>読み・別名（検索用）</label><textarea id="userObject-rec-altname" class="long-text" placeholder="しょっかくぎんが,アンテナぎんが,NGC4038"></textarea></li>
+            <li><label>種類</label>
+                <select id="userObject-rec-type">
+                    <option value="Gx">銀河</option>
+                    <option value="OC">散開星団</option>
+                    <option value="Gb">球状星団</option>
+                    <option value="Nb">星雲・超新星残骸</option>
+                    <option value="Pl">惑星状星雲</option>
+                    <option value="C+N">星雲+星団</option>
+                    <option value="Ast">星の集まり</option>
+                    <option value="Kt">ほかの銀河内の星雲</option>
+                    <option value="TS">三重星</option>
+                    <option value="DS">二重星</option>
+                    <option value="SS">単星</option>
+                    <option value="?">その他</option>
                 </select>
             </li>
-            <li><label>元期（年月日）</label><input type="text" class="short-text" placeholder="2025-08-15.0"></li>
-            <li><label>元期（ユリウス日）</label><input type="text" class="short-text" placeholder="2451545.0"></li>
-            <li><label>軌道長半径 a [au]</label><input type="text" class="short-text" placeholder="2.3"></li>
-            <li><label>離心率 e</label><input type="text" class="short-text" placeholder="0.8"></li>
-            <li><label>軌道傾斜角 i [°]</label><input type="text" class="short-text" placeholder="12.1"></li>
-            <li><label>近日点因数 ω, peri [°]</label><input type="text" class="short-text" placeholder="12.1"></li>
-            <li><label>昇交点黄経 Ω, node [°]</label><input type="text" class="short-text" placeholder="1.2"></li>
-            <li><label>元期の平均近点角 M0 [°]</label><input type="text" class="short-text" placeholder="1.2"></li>
-            <li><label>説明</label><textarea class="long-text" placeholder="説明を追加"></textarea></li>
+            <li><label>赤経(J2000.0)*</label><input type="text" id="userObject-rec-ra" class="short-text" placeholder="12 01.9 or 180.475"></li>
+            <li><label>赤緯(J2000.0)*</label><input type="text" id="userObject-rec-dec" class="short-text" placeholder="-18 52 or -18.867"></li>
+            <li><label>等級</label><input type="text" id="userObject-rec-mag" class="short-text" placeholder="11"></li>
+            <li><label>説明</label><textarea id="userObject-rec-description" class="long-text" placeholder="アンテナ銀河とも呼ばれる。触角は南北に0.4°ぐらい伸びてるけどけっこう暗そう"></textarea></li>
         </ul>
         <button id="userObject-rec-add-button" class="userObject-add-button" type="button">追加</button>
     </div>
 
     <!-- 天体追加画面 太陽系天体（楕円軌道） -->
     <div id="userObject-elliptic" class="add-object" style="display: none;">
-        <button id="back-to-addObject-typeSelect" class="back-to-select-add-object-type" type="button">&leftarrow;</button>
+        <button class="back-to-select-add-object-type" type="button">&leftarrow;</button>
         <button class="close-add-object" type="button">&times;</button>
         <h3 class="add-object-title">太陽系天体（楕円軌道）を追加する</h3>
         <ul class="userObject-elements">
-            <li><label>名前</label><input type="text" class="short-text" placeholder="かに星雲"></li>
-            <li><label>読み・別名（検索用）</label><textarea class="long-text" placeholder="かに星雲, Crab Nebula"></textarea></li>
             <li><label>種類</label>
                 <select id="userObject-elliptic-type">
+                    <option value="asteroid">小惑星</option>
+                    <option value="comet">彗星</option>
+                </select>
             </li>
-            <li><label>赤経</label><input type="text" class="short-text" placeholder="31 41.6, 3.14"></li>
-            <li><label>赤緯</label><input type="text" class="short-text" placeholder="-27 18, 27.18"></li>
-            <li><label>等級</label><input type="text" class="short-text" placeholder="6.0"></li>
+            <li><label>日本語名*</label><input type="text" id="userObject-elliptic-jpnName" class="short-text" placeholder="リュウグウ"></li>
+            <li><label>ふりがな</label><input type="text" id="userObject-elliptic-hiraganaName" class="short-text" placeholder="りゅうぐう"></li>
+            <li><label>英語名</label><input type="text" id="userObject-elliptic-engName" class="short-text" placeholder="Ryugu"></li>
+            <li><label>元期の形式</label>
+                <select id="userObject-elliptic-type">
+                    <option value="ymd">年月日</option>
+                    <option value="jd">ユリウス日</option>
+                </select>
+            </li>
+            <li><label>元期（年月日）</label><input type="text" id="userObject-elliptic-ymd" class="short-text" placeholder="2025-05-05.0"></li>
+            <li><label>元期（ユリウス日）</label><input type="text" id="userObject-elliptic-jd" class="short-text" placeholder="2460800.5"></li>
+            <li><label>軌道長半径 a [au]*</label><input type="text" id="userObject-elliptic-a" class="short-text" placeholder="1.19096"></li>
+            <li><label>離心率 e*</label><input type="text" id="userObject-elliptic-e" class="short-text" placeholder="0.19105"></li>
+            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-elliptic-i" class="short-text" placeholder="5.8667"></li>
+            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-elliptic-node" class="short-text" placeholder="251.2939"></li>
+            <li><label>近日点因数 ω, peri [°]*</label><input type="text" id="userObject-elliptic-peri" class="short-text" placeholder="211.6098"></li>
+            <li><label>元期の平均近点角 M0 [°]*</label><input type="text" id="userObject-elliptic-m0" class="short-text" placeholder="118.9955"></li>
+            <li><label>絶対等級 H </label><input type="text" id="userObject-elliptic-h" class="short-text" placeholder="19.55"></li>
+            <li><label>G</label><input type="text" id="userObject-elliptic-g" class="short-text" placeholder="0.15" value="0.15"></li>
+        </ul>
+        <button id="userObject-elliptic-add-button" class="userObject-add-button" type="button">追加</button>
+    </div>
+
+    <!-- 天体追加画面 太陽系天体（放物線軌道） -->
+    <div id="userObject-parabolic" class="add-object" style="display: none;">
+        <button class="back-to-select-add-object-type" type="button">&leftarrow;</button>
+        <button class="close-add-object" type="button">&times;</button>
+        <h3 class="add-object-title">太陽系天体（放物線軌道）を追加する</h3>
+        <ul class="userObject-elements">
+            <li><label>名前*</label><input type="text" class="short-text" placeholder="ヘール・ボップ彗星"></li>
+            <li><label>読み・別名（検索用）</label><textarea class="long-text" placeholder="C/1995 O1 (Hale-Bopp),Hale-Bopp"></textarea></li>
+            <li><label>近日点通過日時の形式</label>
+                <select id="userObject-elliptic-type">
+                    <option value="ymd">年月日</option>
+                    <option value="jd">ユリウス日</option>
+                </select>
+            </li>
+            <li><label>近日点通過日時（年月日）</label><input type="text" class="short-text" placeholder="1997-03-29.6"></li>
+            <li><label>近日点通過日時（ユリウス日）</label><input type="text" class="short-text" placeholder="	2450537.1"></li>
+            <li><label>近日点距離 q [au]*</label><input type="text" class="short-text" placeholder="0.89054"></li>
+            <li><label>軌道傾斜角 i [°]*</label><input type="text" class="short-text" placeholder="89.2876"></li>
+            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" class="short-text" placeholder="282.7334"></li>
+            <li><label>近日点因数 ω, peri [°]*</label><input type="text" class="short-text" placeholder="130.4147"></li>
             <li><label>説明</label><textarea class="long-text" placeholder="説明を追加"></textarea></li>
         </ul>
+        <button id="userObject-parabolic-add-button" class="userObject-add-button" type="button">追加</button>
+    </div>
+
+    <!-- 天体追加画面 太陽系天体（双曲線軌道） -->
+    <div id="userObject-hyperbolic" class="add-object" style="display: none;">
+        <button class="back-to-select-add-object-type" type="button">&leftarrow;</button>
+        <button class="close-add-object" type="button">&times;</button>
+        <h3 class="add-object-title">太陽系天体（双曲線軌道）を追加する</h3>
+        <ul class="userObject-elements">
+            <li><label>名前*</label><input type="text" class="short-text" placeholder="'Oumuamua"></li>
+            <li><label>読み・別名（検索用）</label><textarea class="long-text" placeholder="A/2017 U1"></textarea></li>
+            <li><label>近日点通過日時の形式</label>
+                <select id="userObject-elliptic-type">
+                    <option value="ymd">年月日</option>
+                    <option value="jd">ユリウス日</option>
+                </select>
+            </li>
+            <li><label>近日点通過日時（年月日）</label><input type="text" class="short-text" placeholder="2017-09-09.5"></li>
+            <li><label>近日点通過日時（ユリウス日）</label><input type="text" class="short-text" placeholder="2458006.0"></li>
+            <li><label>近日点距離 q [au]*</label><input type="text" class="short-text" placeholder="0.25591"></li>
+            <li><label>軌道傾斜角 i [°]*</label><input type="text" class="short-text" placeholder="122.7417"></li>
+            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" class="short-text" placeholder="24.5969"></li>
+            <li><label>近日点因数 ω, peri [°]*</label><input type="text" class="short-text" placeholder="241.8105"></li>
+            <li><label>説明</label><textarea class="long-text" placeholder="説明を追加"></textarea></li>
+        </ul>
+        <button id="userObject-hyperbolic-add-button" class="userObject-add-button" type="button">追加</button>
     </div>
     
     <!-- AR用ビデオ -->

@@ -125,24 +125,26 @@ export class DataLoader {
             }
             rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
-        const userRecs = localStorage.getItem('recs');
+        const userRecs = localStorage.getItem('userObject');
         if (userRecs) {
-            const userRecsArray = JSON.parse(userRecs);
-            for (const object of userRecsArray) {
-                let ra, dec;
-                if (object.ra.includes(' ')) {
-                    ra = converter.rahmToDeg(object.ra);
-                    dec = converter.decdmToDeg(object.dec);
+            const userRecsData = JSON.parse(userRecs);
+            if (userRecsData.userRecs) {
+                for (const object of userRecsData.userRecs) {
+                    let ra, dec;
+                    if (object.ra.includes(' ')) {
+                        ra = converter.rahmToDeg(object.ra);
+                        dec = converter.decdmToDeg(object.dec);
+                    }
+                    else {
+                        ra = +object.ra;
+                        dec = +object.dec;
+                    }
+                    rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, null, //object.image_url || null,
+                    null, //object.image_credit || null,
+                    null, //object.overlay || undefined,
+                    object.description, null //object.wiki || null
+                    ));
                 }
-                else {
-                    ra = +object.ra;
-                    dec = +object.dec;
-                }
-                rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, null, //object.image_url || null,
-                null, //object.image_credit || null,
-                null, //object.overlay || undefined,
-                object.description, null //object.wiki || null
-                ));
             }
         }
         return rec;
