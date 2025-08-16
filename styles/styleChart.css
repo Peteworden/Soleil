@@ -1868,37 +1868,195 @@ canvas {
     background: #2980b9;
 }
 
-/* モバイル対応 */
-/*
-@media (max-width: 768px) {
-    .news-popup-content {
-        max-width: 95vw;
-        max-height: 90vh;
-        margin: 10px;
-    }
-    
-    .news-popup-header {
-        padding: 16px 20px;
-    }
-    
-    .news-popup-header h3 {
-        font-size: 18px;
-    }
-    
-    .news-popup-body {
-        padding: 20px;
-    }
-    
-    .news-popup-footer {
-        padding: 12px 20px;
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .dont-show-again-btn,
-    .close-news-btn {
-        width: 100%;
-        padding: 12px;
-    }
+.add-object {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 25, 45, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    backdrop-filter: blur(5px);
+    overflow-x: auto;
+    overflow-y: auto;
 }
-*/
+
+.close-add-object {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: transparent;
+    border: 0;
+    color: #C0C0C0;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.add-object-title {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    height: 50px;
+    line-height: 50px;
+    font-size: 22px;
+    font-weight: 600;
+    color: #e2e8f0;
+    text-align: center;
+    margin-bottom: 20px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.add-object-typeSelect-button-div {
+    display: flex;
+    flex-direction: column;
+}
+
+.add-object-typeSelect-button {
+    position: relative;
+    width: 80%;
+    height: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+}
+
+.add-object-typeSelect-button:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.userObject-elements {
+    display: flex;
+    flex-direction: column;
+}
+
+.userObject-elements {
+    list-style: none;
+}
+
+.userObject-elements li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.userObject-elements label {
+    width: 150px;
+    text-align: right;
+    color: #e2e8f0;
+    font-weight: 500;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.userObject-elements .short-text {
+    width: 200px;
+    height: 35px;
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border: 2px solid #3b82f6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.userObject-elements .short-text:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    background-color: #0f172a;
+}
+
+.userObject-elements .long-text {
+    width: 60%;
+    height: 100px;
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border: 2px solid #3b82f6;
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    resize: vertical;
+}
+
+.userObject-elements .long-text:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    background-color: #0f172a;
+}
+
+.userObject-elements select {
+    width: 200px;
+    height: 35px;
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border: 2px solid #3b82f6;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    margin: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+    cursor: pointer;
+}
+
+.userObject-elements select:focus {
+    outline: none;
+    border-color: #60a5fa;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+    background-color: #0f172a;
+}
+
+.userObject-add-button {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 45px;
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 15px 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.userObject-add-button:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.userObject-add-button:active {
+    transform: translateX(-50%) translateY(0);
+    box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
