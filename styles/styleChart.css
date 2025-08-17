@@ -1906,13 +1906,51 @@ canvas {
     font-weight: 600;
     color: #e2e8f0;
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 5px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.userObject-note {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80%;
+    min-height: 30px;
+    line-height: 1.4;
+    font-size: 12px;
+    font-weight: 400;
+    color: #e2e8f0;
+    text-align: center;
+    margin: 5px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    padding: 5px 0;
 }
 
 .add-object-typeSelect-button-div {
     display: flex;
     flex-direction: column;
+}
+
+.add-object-manage-button {
+    position: relative;
+    width: 80%;
+    height: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, #276712, #2fa91a);
+    color: white;
+    border: none;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
 }
 
 .add-object-typeSelect-button {
@@ -1940,6 +1978,173 @@ canvas {
     box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
 }
 
+.userObject-manage-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.userObject-manage-table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 2px solid #b3c9ed;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    margin-bottom: 20px;
+}
+
+.userObject-manage-type {
+    width: 80%;
+    height: 30px;
+    color: #e2e8f0;
+    font-size: 20px;
+    margin: 10px;
+    margin-top: 20px;
+}
+
+.userObject-manage-items {
+    width: 100%;
+    min-width: 1200px;
+    background-color: #1e293b;
+    border-collapse: collapse;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.userObject-manage-items th {
+    background-color: #0f172a;
+    color: #e2e8f0;
+    padding: 15px 10px;
+    text-align: center;
+    font-weight: 600;
+    border-bottom: 2px solid #b3c9ed;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.userObject-manage-items td {
+    height: 50px;
+    padding: 12px 10px;
+    text-align: center;
+    vertical-align: middle;
+    background-color: #1e293b;
+    color: #e2e8f0;
+    border-bottom: none;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.userObject-manage-items tr:last-child td {
+    border-bottom: none;
+}
+
+.userObject-manage-items tr:hover {
+    background-color: #334155;
+}
+
+.userObject-manage-items tr:hover td {
+    background-color: #334155;
+}
+
+.userObject-item-edit,
+.userObject-item-delete {
+    padding: 8px 16px;
+    margin: 0 4px;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.userObject-item-edit {
+    background-color: #3b82f6;
+    color: white;
+}
+
+.userObject-item-edit:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+.userObject-item-delete {
+    background-color: #902a2a;
+    color: white;
+}
+
+.userObject-item-delete:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+}
+
+.userObject-close-manage {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background-color: transparent;
+    border: 0;
+    color: #C0C0C0;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.userObject-close-manage:hover {
+    background-color: #334155;
+}
+
+.userObject-finish-manage {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 40px;
+    background: linear-gradient(135deg, #1e40af, #2563eb);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 15px 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    text-align: center;
+    line-height: 1.2;
+}
+
+.userObject-finish-manage:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.userObject-finish-manage:hover {
+    background-color: #334155;
+}
+
+.userObject-close-elements {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background-color: transparent;
+    border: 0;
+    color: #C0C0C0;
+    font-size: 20px;
+    cursor: pointer;
+}
+
 .userObject-elements {
     display: flex;
     flex-direction: column;
@@ -1953,15 +2158,18 @@ canvas {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 15px;
 }
 
 .userObject-elements label {
-    width: 150px;
+    width: 100px;
+    min-width: 100px;
     text-align: right;
     color: #e2e8f0;
     font-weight: 500;
     font-size: 14px;
     margin-right: 10px;
+    flex-shrink: 0;
 }
 
 .userObject-elements .short-text {
@@ -1986,7 +2194,7 @@ canvas {
 }
 
 .userObject-elements .long-text {
-    width: 60%;
+    min-width: 300px;
     height: 100px;
     background-color: #1e293b;
     color: #e2e8f0;
@@ -1998,6 +2206,7 @@ canvas {
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
     resize: vertical;
+    flex-shrink: 0;
 }
 
 .userObject-elements .long-text:focus {
@@ -2059,4 +2268,29 @@ canvas {
 .userObject-add-button:active {
     transform: translateX(-50%) translateY(0);
     box-shadow: 0 2px 10px rgba(59, 130, 246, 0.3);
+}
+
+.error-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    overflow: auto;
+    z-index: 1000;
+}
+
+.error-message-title {
+    font-size: 24px;
+    color: #e2e8f0;
+    text-align: center;
+    margin: 10px;
+}
+
+.error-message-text {
+    font-size: 16px;
+    color: #e2e8f0;
+    text-align: center;
 }
