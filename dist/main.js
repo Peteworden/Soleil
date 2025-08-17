@@ -14,6 +14,7 @@ import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 import { UserObjectController } from './controllers/UserObjectController.js';
+import { CacheInfoController } from './controllers/CacheInfoController.js';
 const news = [
     { time: '2025-08-15T20:19:30', title: '天の北極・南極', text: '印をつけました' },
     { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
@@ -797,6 +798,8 @@ function setupButtonEvents() {
         }
         lastTouchEnd = now;
     }, false);
+    // キャッシュ情報コントローラーを初期化
+    CacheInfoController.initialize();
     // お知らせポップアップのイベントリスナー
     document.getElementById('closeNewsPopup')?.addEventListener('click', () => {
         const popup = document.getElementById('newsPopup');
