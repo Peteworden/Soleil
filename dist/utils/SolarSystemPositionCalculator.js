@@ -356,6 +356,10 @@ export class SolarSystemPositionCalculator {
             return;
         const e = orbit.e;
         const m0 = orbit.m0 * DEG_TO_RAD;
+        if (orbit.t0 == undefined) {
+            // (window as any).showErrorMessage(`${minorObject.jpnName}の元期が未設定です`);
+            return;
+        }
         // ケプラー方程式を解く
         const n = 0.01720209895 * Math.pow(a, -1.5); //平均日日運動(rad)
         const ma = (m0 + n * (jd - orbit.t0)) % (2 * Math.PI); // mean anomaly

@@ -821,6 +821,8 @@ function setupButtonEvents() {
     }, false);
     // キャッシュ情報コントローラーを初期化
     CacheInfoController.initialize();
+    // グローバル関数として公開
+    window.safeParseFloat = safeParseFloat;
     // お知らせポップアップのイベントリスナー
     document.getElementById('closeNewsPopup')?.addEventListener('click', () => {
         const popup = document.getElementById('newsPopup');
@@ -927,5 +929,29 @@ function showNewsPopupIfNeeded() {
             console.log(`お知らせポップアップ: 表示完了 (${currentTime})`);
         }, 500);
     }
+}
+// より実用的な数値変換関数
+function safeParseFloat(value, defaultValue = 0) {
+    try {
+        const parsed = parseFloat(value);
+        if (isNaN(parsed)) {
+            console.warn(`parseFloatでNaNが発生しました: "${value}"、デフォルト値${defaultValue}を使用します`);
+            return defaultValue;
+        }
+        return parsed;
+    }
+    catch (error) {
+        console.error("parseFloatで予期しないエラーが発生:", error);
+        return defaultValue;
+    }
+}
+// 使用例
+function exampleUsage() {
+    const validNumber = safeParseFloat("123.45"); // 123.45
+    const invalidNumber = safeParseFloat("abc"); // 0 (デフォルト値)
+    const customDefault = safeParseFloat("xyz", 999); // 999
+    console.log("有効な数値:", validNumber);
+    console.log("無効な数値:", invalidNumber);
+    console.log("カスタムデフォルト:", customDefault);
 }
 //# sourceMappingURL=main.js.map

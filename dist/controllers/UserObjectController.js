@@ -363,9 +363,11 @@ export class UserObjectController {
                     const year = parseInt(epochYmdArray[0]);
                     const month = parseInt(epochYmdArray[1]);
                     const day = parseFloat(epochYmdArray[2]);
-                    console.log(year, month, day);
                     epoch = AstronomicalCalculator.calculateJdFromYmdhms(year, month, day);
-                    console.log(epoch);
+                    if (isNaN(epoch)) {
+                        this.showError('epoch', epochYmdInput, '元期はYYYY-MM-DD(.dd)の形式で入力してください');
+                        return;
+                    }
                     this.clearError('epoch', epochYmdInput);
                 }
                 catch (error) {
@@ -376,6 +378,10 @@ export class UserObjectController {
             else {
                 try {
                     epoch = parseFloat(epochJdInput.value);
+                    if (isNaN(epoch)) {
+                        this.showError('epoch', epochJdInput, '元期を入力または修正してください');
+                        return;
+                    }
                     this.clearError('epoch', epochJdInput);
                 }
                 catch (error) {
@@ -437,7 +443,9 @@ export class UserObjectController {
                 return;
             }
             else {
-                h = 100.0;
+                if (hInput.value.length === 0) {
+                    h = 100.0;
+                }
                 this.clearError('h', hInput);
             }
             let g = parseFloat(gInput.value);
@@ -446,7 +454,9 @@ export class UserObjectController {
                 return;
             }
             else {
-                g = 0.15;
+                if (gInput.value.length === 0) {
+                    g = 0.15;
+                }
                 this.clearError('g', gInput);
             }
             const ellipticObjectJson = {
