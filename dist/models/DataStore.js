@@ -17,42 +17,26 @@ export class DataStore {
         }
         return false;
     }
-    static updateRecObject(name, updatedObject) {
-        const index = this.recData.findIndex(obj => obj.getName() === name);
-        if (index !== -1) {
-            this.recData[index] = updatedObject;
-            return true;
+    static addRecObjectAndRender(object) {
+        this.addRecObject(object);
+        this.triggerRenderUpdate();
+    }
+    // nameには変更前の名前が入ることを想定している
+    static updateRecObjectAndRender(name, object) {
+        const index = this.recData.findIndex(obj => obj.getName() == name);
+        if (name.length === 0 || index === -1) {
+            this.recData.push(object);
         }
-        return false;
+        else {
+            this.recData[index] = object;
+        }
+        this.triggerRenderUpdate();
     }
     // レンダリング更新をトリガーするメソッド
     static triggerRenderUpdate() {
         if (window.renderAll) {
             window.renderAll();
         }
-    }
-    // メシエデータを更新してレンダリングをトリガーする
-    static updateRecDataAndRender(data) {
-        this.setRecData(data);
-        this.triggerRenderUpdate();
-    }
-    static addRecObjectAndRender(object) {
-        this.addRecObject(object);
-        this.triggerRenderUpdate();
-    }
-    static removeRecObjectAndRender(name) {
-        const result = this.removeRecObject(name);
-        if (result) {
-            this.triggerRenderUpdate();
-        }
-        return result;
-    }
-    static updateRecObjectAndRender(name, updatedObject) {
-        const result = this.updateRecObject(name, updatedObject);
-        if (result) {
-            this.triggerRenderUpdate();
-        }
-        return result;
     }
 }
 DataStore.hipStars = [];

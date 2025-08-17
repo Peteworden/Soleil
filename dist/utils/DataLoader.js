@@ -125,11 +125,12 @@ export class DataLoader {
             }
             rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
-        const userRecs = localStorage.getItem('userObject');
-        if (userRecs) {
-            const userRecsData = JSON.parse(userRecs);
-            if (userRecsData && userRecsData.userRecs) {
-                for (const object of userRecsData.userRecs) {
+        const userObjects = localStorage.getItem('userObject');
+        if (userObjects) {
+            const userObjectsData = JSON.parse(userObjects);
+            if (userObjectsData && userObjectsData.userRecs) {
+                for (const item of userObjectsData.userRecs) {
+                    const object = item.content;
                     rec.push(new MessierObject(object.name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
                     null, //object.image_credit || null,
                     null, //object.overlay || undefined,

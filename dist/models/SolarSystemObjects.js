@@ -159,6 +159,22 @@ export class SolarSystemDataManager {
             }
             const data = await response.json();
             this.solarObjects = SolarSystemObjectFactory.createFromArray(data);
+            const userObjects = localStorage.getItem('userObject');
+            if (userObjects) {
+                const userObjectsData = JSON.parse(userObjects);
+                if (userObjectsData && userObjectsData.userSolarSystem) {
+                    for (const item of userObjectsData.userSolarSystem) {
+                        const object = item.content;
+                        if (object.orbit !== undefined) {
+                            this.solarObjects.push(SolarSystemObjectFactory.create(object));
+                        }
+                        else {
+                            localStorage.removeItem('userObject');
+                            break;
+                        }
+                    }
+                }
+            }
             this.isLoaded = true;
         }
         catch (error) {
@@ -175,11 +191,15 @@ export class SolarSystemDataManager {
     static removeObject(object) {
         this.solarObjects = this.solarObjects.filter(obj => obj !== object);
     }
-    static updateObject(object) {
-        const index = this.solarObjects.findIndex(obj => obj === object);
-        if (index !== -1) {
+    static updateObjectAndRender(name, object) {
+        const index = this.solarObjects.findIndex(obj => obj.jpnName === name);
+        if (name.length === 0 || index === -1) {
+            this.solarObjects.push(object);
+        }
+        else {
             this.solarObjects[index] = object;
         }
+        DataStore.triggerRenderUpdate();
     }
     // 天体の取得メソッド
     static getObjects() {
