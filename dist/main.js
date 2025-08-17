@@ -344,17 +344,24 @@ export async function main() {
                 hipStars = hipStarsResult;
                 // 基本的なデータが読み込まれたら即座にレンダリング
                 renderAll();
-                const [messierDataResult, recDataResult, gaia100DataResult, gaia100HelpDataResult] = await Promise.all([
-                    DataLoader.loadMessierData(),
-                    DataLoader.loadRecData(),
-                    DataLoader.loadGaiaData('-100'),
-                    DataLoader.loadGaiaHelpData('-100'),
-                ]);
-                messierData = messierDataResult;
-                DataStore.setRecData(recDataResult);
-                gaia100Data = gaia100DataResult;
-                gaia100HelpData = gaia100HelpDataResult;
-                renderAll();
+                try {
+                    const [messierDataResult, recDataResult, gaia100DataResult, gaia100HelpDataResult] = await Promise.all([
+                        DataLoader.loadMessierData(),
+                        DataLoader.loadRecData(),
+                        DataLoader.loadGaiaData('-100'),
+                        DataLoader.loadGaiaHelpData('-100'),
+                    ]);
+                    messierData = messierDataResult;
+                    DataStore.setRecData(recDataResult);
+                    gaia100Data = gaia100DataResult;
+                    gaia100HelpData = gaia100HelpDataResult;
+                    renderAll();
+                }
+                catch (error) {
+                    console.error('データの読み込みに失敗しました:', error);
+                    window.showErrorMessage(error);
+                    return;
+                }
                 const [ngcDataResult, starNamesResult, gaia101_110DataResult, gaia101_110HelpDataResult, gaia111_115DataResult, gaia111_115HelpDataResult,] = await Promise.all([
                     DataLoader.loadNGCData(),
                     DataLoader.loadStarNames(),
@@ -896,5 +903,25 @@ function showNewsPopupIfNeeded() {
             console.log(`お知らせポップアップ: 表示完了 (${currentTime})`);
         }, 500);
     }
+    function showErrorMessage(text) {
+        const errorMessage = document.getElementById('errorMessage');
+        if (errorMessage) {
+            errorMessage.style.display = 'block';
+            const errorMessageText = document.getElementById('errorMessage-text');
+            if (errorMessageText) {
+                errorMessageText.innerHTML = text;
+            }
+            const errorConfig = document.getElementById('error-config');
+            if (errorConfig) {
+                errorConfig.innerHTML = JSON.stringify(config).replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\\r/g, '').replace(/,/g, ',<br>').replace(/: {/g, ':<br>{');
+            }
+            const errorUserObject = document.getElementById('error-userObject');
+            const userObject = localStorage.getItem('userObject');
+            if (errorUserObject && userObject) {
+                errorUserObject.innerHTML = JSON.stringify(JSON.parse(userObject)).replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\\r/g, '').replace(/,/g, ',<br>').replace(/: {/g, ':<br>{');
+            }
+        }
+    }
+    window.showErrorMessage = showErrorMessage;
 }
 //# sourceMappingURL=main.js.map
