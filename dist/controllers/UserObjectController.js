@@ -1010,6 +1010,9 @@ export class UserObjectController {
         errorDiv.style.color = 'red';
         errorDiv.style.fontSize = '12px';
         errorDiv.style.marginTop = '5px';
+        errorDiv.style.width = '100px';
+        errorDiv.style.minWidth = '100px';
+        errorDiv.style.flexShrink = '0';
         errorDiv.textContent = message;
         input.parentNode?.insertBefore(errorDiv, input.nextSibling);
         return errorDiv;
