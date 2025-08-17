@@ -195,7 +195,7 @@ export class SolarSystemPositionCalculator {
             const asteroid = obj;
             const H = asteroid.orbit.H;
             const G = asteroid.orbit.G ?? 0.15;
-            if (H !== undefined) {
+            if (H != null) {
                 const a = Math.acos((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
                 const phi1 = Math.exp(-3.33 * (Math.tan(a * 0.5)) ** 0.63);
                 const phi2 = Math.exp(-1.87 * (Math.tan(a * 0.5)) ** 1.22);

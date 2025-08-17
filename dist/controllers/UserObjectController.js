@@ -782,7 +782,7 @@ export class UserObjectController {
         };
         for (const [id, value] of Object.entries(fieldMappings)) {
             const element = document.getElementById(id);
-            if (element && value !== undefined) {
+            if (element && value != null) {
                 element.value = String(value);
             }
         }
@@ -843,7 +843,7 @@ export class UserObjectController {
         }
         for (const [id, value] of Object.entries(fieldMappings)) {
             const element = document.getElementById(id);
-            if (element && value !== undefined) {
+            if (element && value != null) {
                 element.value = String(value);
             }
         }

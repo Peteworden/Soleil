@@ -110,7 +110,7 @@ function initializeConfig(noLoad = false) {
         const savedDisplaySettings = savedSettingsObject.displaySettings;
         Object.keys(displaySettings).forEach(key => {
             const savedValue = savedDisplaySettings[key];
-            if (savedValue !== undefined) {
+            if (savedValue != null) {
                 displaySettings[key] = savedValue;
             }
         });
@@ -119,7 +119,7 @@ function initializeConfig(noLoad = false) {
         const savedViewState = savedSettingsObject.viewState;
         Object.keys(viewState).forEach(key => {
             const savedValue = savedViewState[key];
-            if (savedValue !== undefined) {
+            if (savedValue != null) {
                 viewState[key] = savedValue;
             }
         });
@@ -129,7 +129,7 @@ function initializeConfig(noLoad = false) {
         const savedObservationSite = savedSettingsObject.observationSite;
         Object.keys(observationSite).forEach(key => {
             const savedValue = savedObservationSite[key];
-            if (savedValue !== undefined) {
+            if (savedValue != null) {
                 observationSite[key] = savedValue;
             }
         });
@@ -142,7 +142,8 @@ function initializeConfig(noLoad = false) {
         displayTime.loadOnCurrentTime = savedDisplayTime.loadOnCurrentTime !== undefined ? savedDisplayTime.loadOnCurrentTime : displayTime.loadOnCurrentTime;
         displayTime.realTime = savedDisplayTime.realTime !== undefined ? savedDisplayTime.realTime : displayTime.realTime;
         if (displayTime.loadOnCurrentTime || displayTime.realTime != 'off' ||
-            savedDisplayTime.year === undefined || savedDisplayTime.month === undefined || savedDisplayTime.day === undefined ||
+            savedDisplayTime.year === undefined ||
+            savedDisplayTime.month === undefined || savedDisplayTime.day === undefined ||
             savedDisplayTime.hour === undefined || savedDisplayTime.minute === undefined || savedDisplayTime.second === undefined) {
             displayTime.year = now.getFullYear();
             displayTime.month = now.getMonth() + 1;
@@ -166,7 +167,7 @@ function initializeConfig(noLoad = false) {
         const savedNewsPopup = savedSettingsObject.newsPopup;
         Object.keys(newsPopup).forEach(key => {
             const savedValue = savedNewsPopup[key];
-            if (savedValue !== undefined) {
+            if (savedValue != null) {
                 newsPopup[key] = savedValue;
             }
         });
@@ -821,8 +822,6 @@ function setupButtonEvents() {
     }, false);
     // キャッシュ情報コントローラーを初期化
     CacheInfoController.initialize();
-    // グローバル関数として公開
-    window.safeParseFloat = safeParseFloat;
     // お知らせポップアップのイベントリスナー
     document.getElementById('closeNewsPopup')?.addEventListener('click', () => {
         const popup = document.getElementById('newsPopup');
@@ -929,29 +928,5 @@ function showNewsPopupIfNeeded() {
             console.log(`お知らせポップアップ: 表示完了 (${currentTime})`);
         }, 500);
     }
-}
-// より実用的な数値変換関数
-function safeParseFloat(value, defaultValue = 0) {
-    try {
-        const parsed = parseFloat(value);
-        if (isNaN(parsed)) {
-            console.warn(`parseFloatでNaNが発生しました: "${value}"、デフォルト値${defaultValue}を使用します`);
-            return defaultValue;
-        }
-        return parsed;
-    }
-    catch (error) {
-        console.error("parseFloatで予期しないエラーが発生:", error);
-        return defaultValue;
-    }
-}
-// 使用例
-function exampleUsage() {
-    const validNumber = safeParseFloat("123.45"); // 123.45
-    const invalidNumber = safeParseFloat("abc"); // 0 (デフォルト値)
-    const customDefault = safeParseFloat("xyz", 999); // 999
-    console.log("有効な数値:", validNumber);
-    console.log("無効な数値:", invalidNumber);
-    console.log("カスタムデフォルト:", customDefault);
 }
 //# sourceMappingURL=main.js.map

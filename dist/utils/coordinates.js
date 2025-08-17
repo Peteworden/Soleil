@@ -52,7 +52,7 @@ export class CoordinateConverter {
     // configから緯度経度を再読み込みするメソッドを追加
     reloadFromConfig() {
         const globalConfig = window.config;
-        if (globalConfig && globalConfig.latitude !== undefined && globalConfig.longitude !== undefined) {
+        if (globalConfig && globalConfig.latitude != null && globalConfig.longitude != null) {
             this.latitude = globalConfig.latitude;
             this.longitude = globalConfig.longitude;
             console.log('CoordinateConverter: location updated from config', this.latitude, this.longitude);

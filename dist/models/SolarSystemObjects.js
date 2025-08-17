@@ -165,7 +165,7 @@ export class SolarSystemDataManager {
                 if (userObjectsData && userObjectsData.userSolarSystem) {
                     for (const item of userObjectsData.userSolarSystem) {
                         const object = item.content;
-                        if (object.orbit !== undefined) {
+                        if (object.orbit != null) {
                             this.solarObjects.push(SolarSystemObjectFactory.create(object));
                         }
                         else {
