@@ -169,11 +169,11 @@ export class SolarSystemDataManager {
                             this.solarObjects.push(SolarSystemObjectFactory.create(object));
                         }
                         else {
-                            localStorage.removeItem('userObject');
-                            break;
+                            userObjectsData.userSolarSystem.splice(userObjectsData.userSolarSystem.indexOf(item), 1);
                         }
                     }
                 }
+                localStorage.setItem('userObject', JSON.stringify(userObjectsData));
             }
             this.isLoaded = true;
         }

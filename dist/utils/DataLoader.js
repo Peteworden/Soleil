@@ -131,13 +131,19 @@ export class DataLoader {
             if (userObjectsData && userObjectsData.userRecs) {
                 for (const item of userObjectsData.userRecs) {
                     const object = item.content;
-                    rec.push(new MessierObject(object.name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
-                    null, //object.image_credit || null,
-                    null, //object.overlay || undefined,
-                    object.description, null //object.wiki || null
-                    ));
+                    if (object) {
+                        rec.push(new MessierObject(object.name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
+                        null, //object.image_credit || null,
+                        null, //object.overlay || undefined,
+                        object.description, null //object.wiki || null
+                        ));
+                    }
+                    else {
+                        userObjectsData.userRecs.splice(userObjectsData.userRecs.indexOf(item), 1);
+                    }
                 }
             }
+            localStorage.setItem('userObject', JSON.stringify(userObjectsData));
         }
         return rec;
     }
