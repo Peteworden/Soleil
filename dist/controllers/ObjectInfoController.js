@@ -146,7 +146,7 @@ export class ObjectInfoController {
         }
         // 等級
         const magnitude = data.getMagnitude();
-        if (magnitude !== undefined && magnitude != 100) {
+        if (magnitude != null && magnitude != 100) {
             infoText += `等級: ${magnitude}<br>`;
         }
         // 分類
@@ -197,7 +197,7 @@ export class ObjectInfoController {
         }
         // 等級
         const magnitude = planetData.getMagnitude();
-        if (magnitude !== undefined && magnitude != 100 && planetData.jpnName != '地球') {
+        if (magnitude != null && magnitude != 100 && planetData.jpnName != '地球') {
             infoText += `およその等級: ${magnitude.toFixed(1)}<br>`;
         }
         // 距離情報
@@ -245,7 +245,7 @@ export class ObjectInfoController {
         }
         // 等級
         const magnitude = data.getMagnitude();
-        if (magnitude !== undefined && config && config.observationSite.observerPlanet == '地球') {
+        if (magnitude != null && config && config.observationSite.observerPlanet == '地球') {
             infoText += `等級: ${magnitude}<br>`;
         }
         return infoText;
@@ -286,7 +286,7 @@ export class ObjectInfoController {
         }
         // 等級
         const magnitude = star.getMagnitude();
-        if (magnitude !== undefined) {
+        if (magnitude != null) {
             infoText += `等級: ${magnitude}<br>`;
         }
         return infoText;

@@ -124,8 +124,11 @@ export class UserObjectController {
         userObjectRecItems.innerHTML = '';
         userObjectSolarSystemItems.innerHTML = '';
         const localUserObjectData = localStorage.getItem('userObject');
-        if (!localUserObjectData)
+        if (!localUserObjectData) {
+            userObjectRecItems.innerHTML = '<tr><td>お気に入り天体がありません</td></tr>';
+            userObjectSolarSystemItems.innerHTML = '<tr><td>お気に入り天体がありません</td></tr>';
             return;
+        }
         const userObjectData = JSON.parse(localUserObjectData);
         if (!userObjectData)
             return;
@@ -135,13 +138,12 @@ export class UserObjectController {
         const decWidth = 80;
         const editButtonWidth = 100;
         const deleteButtonWidth = 60;
-        const userObjectManageItems = document.getElementsByClassName("userObject-manage-items");
-        for (const item of userObjectManageItems) {
-            item.style.minWidth = `${nameWidth + typeWidth + raWidth + decWidth + editButtonWidth + deleteButtonWidth}px`;
-        }
+        userObjectRecItems.style.minWidth = `${nameWidth + typeWidth + raWidth + decWidth + editButtonWidth + deleteButtonWidth}px`;
+        userObjectSolarSystemItems.style.minWidth = `${nameWidth + typeWidth + editButtonWidth + deleteButtonWidth}px`;
         // 星雲・星団
         const userRecs = userObjectData.userRecs;
         if (userRecs && userRecs.length > 0) {
+            userObjectRecItems.innerHTML = '';
             // ヘッダー行を追加
             const headerRow = document.createElement('tr');
             headerRow.innerHTML = `
@@ -187,14 +189,12 @@ export class UserObjectController {
             }
         }
         else {
-            // データがない場合
-            const noDataRow = document.createElement('tr');
-            noDataRow.innerHTML = '<td colspan="5">お気に入り天体がありません</td>';
-            userObjectRecItems.appendChild(noDataRow);
+            userObjectRecItems.innerHTML = '<tr><td>お気に入り天体がありません</td></tr>';
         }
         // 太陽系天体の処理
         const userSolarSystem = userObjectData.userSolarSystem;
         if (userSolarSystem && userSolarSystem.length > 0) {
+            userObjectSolarSystemItems.innerHTML = '';
             // ヘッダー行を追加
             const solarSystemHeaderRow = document.createElement('tr');
             solarSystemHeaderRow.innerHTML = `
@@ -233,10 +233,7 @@ export class UserObjectController {
             }
         }
         else {
-            // データがない場合
-            const noDataRow = document.createElement('tr');
-            noDataRow.innerHTML = '<td colspan="5">お気に入り天体がありません</td>';
-            userObjectSolarSystemItems.appendChild(noDataRow);
+            userObjectSolarSystemItems.innerHTML = '<tr><td>お気に入り天体がありません</td></tr>';
         }
     }
     static saveRecObject() {

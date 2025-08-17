@@ -16,6 +16,7 @@ import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 import { UserObjectController } from './controllers/UserObjectController.js';
 import { CacheInfoController } from './controllers/CacheInfoController.js';
 const news = [
+    { time: '2025-08-18T00:00:00', title: 'お気に入り天体', text: '自分の好きな天体を星図に表示できるようになりました。設定>その他の設定>お気に入り天体の編集 から設定できます。' },
     { time: '2025-08-15T20:19:30', title: '天の北極・南極', text: '印をつけました' },
     { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
 ];
@@ -139,12 +140,12 @@ function initializeConfig(noLoad = false) {
     }
     if (savedSettingsObject && savedSettingsObject.displayTime) {
         const savedDisplayTime = savedSettingsObject.displayTime;
-        displayTime.loadOnCurrentTime = savedDisplayTime.loadOnCurrentTime !== undefined ? savedDisplayTime.loadOnCurrentTime : displayTime.loadOnCurrentTime;
-        displayTime.realTime = savedDisplayTime.realTime !== undefined ? savedDisplayTime.realTime : displayTime.realTime;
+        displayTime.loadOnCurrentTime = savedDisplayTime.loadOnCurrentTime != null ? savedDisplayTime.loadOnCurrentTime : displayTime.loadOnCurrentTime;
+        displayTime.realTime = savedDisplayTime.realTime != null ? savedDisplayTime.realTime : displayTime.realTime;
         if (displayTime.loadOnCurrentTime || displayTime.realTime != 'off' ||
-            savedDisplayTime.year === undefined ||
-            savedDisplayTime.month === undefined || savedDisplayTime.day === undefined ||
-            savedDisplayTime.hour === undefined || savedDisplayTime.minute === undefined || savedDisplayTime.second === undefined) {
+            savedDisplayTime.year == null ||
+            savedDisplayTime.month == null || savedDisplayTime.day == null ||
+            savedDisplayTime.hour == null || savedDisplayTime.minute == null || savedDisplayTime.second == null) {
             displayTime.year = now.getFullYear();
             displayTime.month = now.getMonth() + 1;
             displayTime.day = now.getDate();
@@ -403,14 +404,14 @@ export async function main() {
                 // imageCacheの更新
                 if (messierData.length > 0) {
                     for (const messier of messierData) {
-                        if (messier.getOverlay() !== null && messier.getOverlay() !== undefined && messier.getName() !== null && messier.getName() !== undefined) {
+                        if (messier.getOverlay() != null && messier.getName() != null) {
                             imageCacheNames.push(messier.getName());
                         }
                     }
                 }
                 if (DataStore.getRecData().length > 0) {
                     for (const rec of DataStore.getRecData()) {
-                        if (rec.getOverlay() !== null && rec.getOverlay() !== undefined && rec.getName() !== null && rec.getName() !== undefined) {
+                        if (rec.getOverlay() != null && rec.getName() != null) {
                             imageCacheNames.push(rec.getName());
                         }
                     }
