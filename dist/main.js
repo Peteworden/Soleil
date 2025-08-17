@@ -235,6 +235,29 @@ function resetAll() {
     resetConfig();
     SettingController.loadSettingsFromConfig();
 }
+function showErrorMessage(text) {
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        errorMessage.style.display = 'block';
+        const errorMessageText = document.getElementById('errorMessage-text');
+        if (errorMessageText) {
+            errorMessageText.innerHTML = text;
+        }
+        const errorConfig = document.getElementById('error-config');
+        if (errorConfig) {
+            errorConfig.innerHTML = JSON.stringify(config).replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\\r/g, '');
+        }
+        const errorUserObject = document.getElementById('error-userObject');
+        const userObject = localStorage.getItem('userObject');
+        if (errorUserObject && userObject) {
+            errorUserObject.innerHTML = JSON.stringify(JSON.parse(userObject)).replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\\r/g, '');
+        }
+        else if (errorUserObject) {
+            errorUserObject.innerHTML = 'userObjectはLocalStorageにありません';
+        }
+    }
+    console.log(errorMessage);
+}
 // グローバルにconfigを公開（SettingControllerからアクセス可能）
 window.config = config;
 window.DataStore = DataStore;
@@ -248,6 +271,7 @@ window.TimeController = TimeController;
 window.updateTimeSlider = TimeController.updateSlider;
 window.toggleRealTime = TimeController.toggleRealTime;
 window.ObjectInfoController = ObjectInfoController;
+window.showErrorMessage = showErrorMessage;
 // メイン関数
 export async function main() {
     const app = document.getElementById('app');
@@ -257,6 +281,10 @@ export async function main() {
         // 設定を初期化（DOM要素が読み込まれた後に実行）
         const config = initializeConfig();
         window.config = config;
+        // const userObject = localStorage.getItem('userObject');
+        // if (userObject) {
+        //     localStorage.removeItem('userObject');
+        // }
         // キャンバスの取得（HTMLで作成済み）
         const canvas = document.getElementById('starChartCanvas');
         if (!canvas) {
@@ -345,24 +373,17 @@ export async function main() {
                 hipStars = hipStarsResult;
                 // 基本的なデータが読み込まれたら即座にレンダリング
                 renderAll();
-                try {
-                    const [messierDataResult, recDataResult, gaia100DataResult, gaia100HelpDataResult] = await Promise.all([
-                        DataLoader.loadMessierData(),
-                        DataLoader.loadRecData(),
-                        DataLoader.loadGaiaData('-100'),
-                        DataLoader.loadGaiaHelpData('-100'),
-                    ]);
-                    messierData = messierDataResult;
-                    DataStore.setRecData(recDataResult);
-                    gaia100Data = gaia100DataResult;
-                    gaia100HelpData = gaia100HelpDataResult;
-                    renderAll();
-                }
-                catch (error) {
-                    console.error('データの読み込みに失敗しました:', error);
-                    window.showErrorMessage(error);
-                    return;
-                }
+                const [messierDataResult, recDataResult, gaia100DataResult, gaia100HelpDataResult] = await Promise.all([
+                    DataLoader.loadMessierData(),
+                    DataLoader.loadRecData(),
+                    DataLoader.loadGaiaData('-100'),
+                    DataLoader.loadGaiaHelpData('-100'),
+                ]);
+                messierData = messierDataResult;
+                DataStore.setRecData(recDataResult);
+                gaia100Data = gaia100DataResult;
+                gaia100HelpData = gaia100HelpDataResult;
+                renderAll();
                 const [ngcDataResult, starNamesResult, gaia101_110DataResult, gaia101_110HelpDataResult, gaia111_115DataResult, gaia111_115HelpDataResult,] = await Promise.all([
                     DataLoader.loadNGCData(),
                     DataLoader.loadStarNames(),
@@ -414,6 +435,8 @@ export async function main() {
             }
             catch (error) {
                 console.error('データの読み込みに失敗しました:', error);
+                window.showErrorMessage(`loadDataStep() in main() in main.ts: ${error}`);
+                return;
             }
         };
         loadDataStep();
@@ -430,10 +453,8 @@ export async function main() {
     }
     catch (error) {
         console.error('データの読み込みに失敗しました:', error);
-        const errorDiv = document.createElement('div');
-        errorDiv.style.color = 'red';
-        errorDiv.textContent = `エラー: ${error instanceof Error ? error.message : '不明なエラーが発生しました'}`;
-        app.appendChild(errorDiv);
+        window.showErrorMessage(`main() in main.ts: ${error}`);
+        return;
     }
 }
 function descriptionFunc() {
@@ -906,25 +927,5 @@ function showNewsPopupIfNeeded() {
             console.log(`お知らせポップアップ: 表示完了 (${currentTime})`);
         }, 500);
     }
-    function showErrorMessage(text) {
-        const errorMessage = document.getElementById('errorMessage');
-        if (errorMessage) {
-            errorMessage.style.display = 'block';
-            const errorMessageText = document.getElementById('errorMessage-text');
-            if (errorMessageText) {
-                errorMessageText.innerHTML = text;
-            }
-            const errorConfig = document.getElementById('error-config');
-            if (errorConfig) {
-                errorConfig.innerHTML = JSON.stringify(config).replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\\r/g, '').replace(/,/g, ',<br>').replace(/: {/g, ':<br>{');
-            }
-            const errorUserObject = document.getElementById('error-userObject');
-            const userObject = localStorage.getItem('userObject');
-            if (errorUserObject && userObject) {
-                errorUserObject.innerHTML = JSON.stringify(JSON.parse(userObject)).replace(/\\n/g, '<br>').replace(/\\"/g, '"').replace(/\\t/g, '&nbsp;&nbsp;&nbsp;&nbsp;').replace(/\\r/g, '').replace(/,/g, ',<br>').replace(/: {/g, ':<br>{');
-            }
-        }
-    }
-    window.showErrorMessage = showErrorMessage;
 }
 //# sourceMappingURL=main.js.map
