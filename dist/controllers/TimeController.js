@@ -1,5 +1,5 @@
-import { CoordinateConverter } from "../utils/coordinates.js";
 import { AstronomicalCalculator } from "../utils/calculations.js";
+import { CoordinateConverter } from "../utils/coordinates.js";
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 export class TimeController {
     static initialize() {
@@ -295,6 +295,5 @@ export class TimeController {
 }
 TimeController.timeSliderDiv = null;
 TimeController.timeSlider = null;
-TimeController.isDragging = false;
 TimeController.intervalId = null;
 //# sourceMappingURL=TimeController.js.map

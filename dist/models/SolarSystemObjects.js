@@ -110,9 +110,6 @@ export function isSun(obj) {
 export function isMoon(obj) {
     return obj.type === 'moon';
 }
-export function isOrbitalObject(obj) {
-    return 'orbit' in obj;
-}
 // // ファクトリー関数
 export class SolarSystemObjectFactory {
     static create(data) {
@@ -200,95 +197,6 @@ export class SolarSystemDataManager {
             this.solarObjects[index] = object;
         }
         DataStore.triggerRenderUpdate();
-    }
-    // 天体の取得メソッド
-    static getObjects() {
-        return this.solarObjects;
-    }
-    static getObjectsByType(type) {
-        return this.solarObjects.filter(obj => obj.type === type);
-    }
-    static getPlanets() {
-        return this.getObjectsByType('planet');
-    }
-    static getAsteroids() {
-        return this.getObjectsByType('asteroid');
-    }
-    static getComets() {
-        return this.getObjectsByType('comet');
-    }
-    static getSun() {
-        return this.solarObjects.find(obj => obj.type === 'sun');
-    }
-    static getMoon() {
-        return this.solarObjects.find(obj => obj.type === 'moon');
-    }
-    static getEarth() {
-        return this.solarObjects.find(obj => obj.engName === 'Earth');
-    }
-    // 検索メソッド
-    static findByName(japaneseName) {
-        return this.solarObjects.find(obj => obj.jpnName.includes(japaneseName));
-    }
-    static findByEnglishName(englishName) {
-        return this.solarObjects.find(obj => obj.engName.includes(englishName));
-    }
-    static findByHiraganaName(hiraganaName) {
-        return this.solarObjects.find(obj => obj.hiraganaName.includes(hiraganaName));
-    }
-    // 統合検索メソッド
-    static findObject(name) {
-        return this.findByName(name) ||
-            this.findByEnglishName(name) ||
-            this.findByHiraganaName(name);
-    }
-    /**
-     * 惑星名から惑星データを取得
-     * @param planetName 惑星名（日本語、英語、ひらがなのいずれか）
-     * @returns 惑星データ、見つからない場合はundefined
-     */
-    static getPlanetByName(planetName) {
-        const planets = this.getPlanets();
-        return planets.find(planet => planet.jpnName === planetName ||
-            planet.engName === planetName ||
-            planet.hiraganaName === planetName ||
-            planet.jpnName.includes(planetName) ||
-            planet.engName.includes(planetName) ||
-            planet.hiraganaName.includes(planetName));
-    }
-    /**
-     * 惑星名から惑星データを取得（完全一致のみ）
-     * @param planetName 惑星名（日本語、英語、ひらがなのいずれか）
-     * @returns 惑星データ、見つからない場合はundefined
-     */
-    static getPlanetByExactName(planetName) {
-        const planets = this.getPlanets();
-        return planets.find(planet => planet.jpnName === planetName ||
-            planet.engName === planetName ||
-            planet.hiraganaName === planetName);
-    }
-    /**
-     * 惑星名の一覧を取得
-     * @returns 惑星名の配列（日本語名、英語名、ひらがな名を含む）
-     */
-    static getPlanetNames() {
-        const planets = this.getPlanets();
-        return planets.map(planet => ({
-            japanese: planet.jpnName,
-            english: planet.engName,
-            hiragana: planet.hiraganaName
-        }));
-    }
-    // ユーティリティメソッド
-    static reset() {
-        this.solarObjects = [];
-        this.isLoaded = false;
-    }
-    static getObjectCount() {
-        return this.solarObjects.length;
-    }
-    static isDataLoaded() {
-        return this.isLoaded;
     }
     /**
      * 全ての天体を取得

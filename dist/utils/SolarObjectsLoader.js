@@ -27,55 +27,6 @@ export class SolarObjectsLoader {
             return [];
         }
     }
-    // 天体の取得メソッド
-    static getObjectsByType(type) {
-        return this.solarObjects.filter(obj => obj.type === type);
-    }
-    static getPlanets() {
-        return this.getObjectsByType('planet');
-    }
-    static getAsteroids() {
-        return this.getObjectsByType('asteroid');
-    }
-    static getComets() {
-        return this.getObjectsByType('comet');
-    }
-    static getSun() {
-        return this.solarObjects.find(obj => obj.type === 'sun');
-    }
-    static getMoon() {
-        return this.solarObjects.find(obj => obj.type === 'moon');
-    }
-    static getEarth() {
-        return this.solarObjects.find(obj => obj.engName === 'Earth');
-    }
-    // 検索メソッド
-    static findByName(japaneseName) {
-        return this.solarObjects.find(obj => obj.jpnName.includes(japaneseName));
-    }
-    static findByEnglishName(englishName) {
-        return this.solarObjects.find(obj => obj.engName.includes(englishName));
-    }
-    static findByHiraganaName(hiraganaName) {
-        return this.solarObjects.find(obj => obj.hiraganaName.includes(hiraganaName));
-    }
-    // ユーティリティメソッド
-    static reset() {
-        this.solarObjects = [];
-        this.isLoaded = false;
-    }
-    static getObjectCount() {
-        return this.solarObjects.length;
-    }
-    static isDataLoaded() {
-        return this.isLoaded;
-    }
-    /**
-     * 全ての天体を取得
-     */
-    static getAllObjects() {
-        return [...this.solarObjects];
-    }
 }
 SolarObjectsLoader.solarObjects = [];
 SolarObjectsLoader.isLoaded = false;

@@ -11,6 +11,22 @@ const sinEpsl = Math.sin(epsilon);
  * 位置計算、座標変換、等級計算に特化
  */
 export class SolarSystemPositionCalculator {
+    static acosdeg(a) {
+        if (a > 1)
+            return 0;
+        else if (a < -1)
+            return 180;
+        else
+            return Math.acos(a) * RAD_TO_DEG;
+    }
+    static acosrad(a) {
+        if (a > 1)
+            return 0;
+        else if (a < -1)
+            return Math.PI;
+        else
+            return Math.acos(a);
+    }
     /**
      * 観測地の天体を設定
      */
@@ -95,7 +111,16 @@ export class SolarSystemPositionCalculator {
      */
     static calculateEquatorialCoordinates(position, distance) {
         const ra = Math.atan2(position.y, position.x) * 180 / Math.PI;
-        const dec = Math.asin(position.z / distance) * 180 / Math.PI;
+        let dec = 0.0;
+        if (position.z / distance > 1) {
+            dec = 90;
+        }
+        else if (position.z / distance < -1) {
+            dec = -90;
+        }
+        else {
+            dec = Math.asin(position.z / distance) * RAD_TO_DEG;
+        }
         return { ra, dec };
     }
     /**
@@ -125,7 +150,7 @@ export class SolarSystemPositionCalculator {
             obj.magnitude = -12.74;
         }
         else if (obj.type === 'planet') {
-            const i = Math.acos((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln)) * RAD_TO_DEG;
+            const i = this.acosdeg((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
             if (obj.jpnName === '水星') {
                 obj.magnitude = -0.613 + 0.06328 * i - 0.0016336 * i * i + 0.000033644 * i * i * i - 3.4565e-7 * i * i * i * i + 1.6893e-9 * i * i * i * i * i - 3.0334e-12 * i * i * i * i * i * i + 5 * Math.log10(obs_pln * sun_pln);
             }
@@ -196,7 +221,7 @@ export class SolarSystemPositionCalculator {
             const H = asteroid.orbit.H;
             const G = asteroid.orbit.G ?? 0.15;
             if (H != null) {
-                const a = Math.acos((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
+                const a = this.acosrad((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
                 const phi1 = Math.exp(-3.33 * (Math.tan(a * 0.5)) ** 0.63);
                 const phi2 = Math.exp(-1.87 * (Math.tan(a * 0.5)) ** 1.22);
                 obj.magnitude = H - 2.5 * Math.log10((1 - G) * phi1 + G * phi2) + 5 * Math.log10(obs_pln * sun_pln);

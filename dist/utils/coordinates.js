@@ -100,14 +100,37 @@ export class CoordinateConverter {
             dec: this.fieldOfViewDec
         };
     }
-    // 現在のモードを動的に取得
-    getCurrentMode() {
-        const config = this.getCurrentConfig();
-        if (config) {
-            return config.displaySettings.mode;
-        }
-        // フォールバック: キャッシュされた値を使用
-        return this.mode;
+    asinrad(a) {
+        if (a > 1)
+            return Math.PI / 2;
+        else if (a < -1)
+            return -Math.PI / 2;
+        else
+            return Math.asin(a);
+    }
+    acosrad(a) {
+        if (a > 1)
+            return 0;
+        else if (a < -1)
+            return Math.PI;
+        else
+            return Math.acos(a);
+    }
+    asindeg(a) {
+        if (a > 1)
+            return 90;
+        else if (a < -1)
+            return -90;
+        else
+            return Math.asin(a) * RAD_TO_DEG;
+    }
+    acosdeg(a) {
+        if (a > 1)
+            return 0;
+        else if (a < -1)
+            return 180;
+        else
+            return Math.acos(a) * RAD_TO_DEG;
     }
     rotateX(coords, angle) {
         const sin = Math.sin(angle);
@@ -150,10 +173,7 @@ export class CoordinateConverter {
     }
     decdmToDeg(decdmtext) {
         const decdm = decdmtext.split(' ').map(Number);
-        let dec = Math.abs(decdm[0]) + decdm[1] / 60;
-        if (decdmtext[0] == '-') {
-            dec *= -1;
-        }
+        const dec = (Math.abs(decdm[0]) + decdm[1] / 60) * (decdmtext[0] == '-' ? -1 : 1);
         return dec;
     }
     radeg2hm(ra_deg) {
@@ -196,18 +216,9 @@ export class CoordinateConverter {
     // 直交座標から赤道座標への変換
     cartesianToEquatorial(coords) {
         const distance = Math.sqrt(coords.x * coords.x + coords.y * coords.y + coords.z * coords.z);
-        let dec;
-        if (Math.abs(coords.z / distance) > 0.99999999999999) {
-            dec = 90 * Math.sign(coords.z);
-        }
-        else {
-            dec = Math.asin(coords.z / distance) * RAD_TO_DEG;
-        }
+        const dec = this.asindeg(coords.z / distance);
         const ra = Math.atan2(coords.y, coords.x) * RAD_TO_DEG;
-        return {
-            ra: (ra + 360) % 360,
-            dec: dec
-        };
+        return { ra: (ra + 360) % 360, dec: dec };
     }
     precessionAngle(time1, time2) {
         if (typeof time1 == 'string') {
@@ -288,7 +299,7 @@ export class CoordinateConverter {
         const y = -cosDec * sinHourAngle;
         const z = sinLat * sinDec + cosLat * cosDec * cosHourAngle;
         const az = (Math.atan2(y, x) * RAD_TO_DEG + 360) % 360;
-        const alt = Math.asin(z) * RAD_TO_DEG;
+        const alt = this.asindeg(z);
         return { az, alt };
     }
     // 赤道座標からスクリーン座標への変換、判定
@@ -339,7 +350,7 @@ export class CoordinateConverter {
         const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
         const b = cosDec * Math.sin(ra_diff);
         const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
-        const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
+        const r = this.acosdeg(c); //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRA = r * Math.sin(thetaSH);
         const scrDec = -r * Math.cos(thetaSH);
@@ -364,7 +375,7 @@ export class CoordinateConverter {
         const y = -cosAlt * sinAz;
         const z = cosLat * cosAlt * cosAz + sinLat * sinAlt;
         const ra = ((siderealTime + Math.atan2(-y, -x)) * RAD_TO_DEG + 360) % 360;
-        const dec = Math.asin(z) * RAD_TO_DEG;
+        const dec = this.asindeg(z);
         return { ra, dec };
     }
     horizontalToScreenRaDec(coords, mode, center, orientationData) {
@@ -395,7 +406,7 @@ export class CoordinateConverter {
         // const b =                cosAlt * Math.sin(az_diff);
         // const c = cosCenterAlt * cosAlt * Math.cos(az_diff) + sinCenterAlt * sinAlt;
         const { x: a, y: b, z: c } = this.rotateY({ x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt }, -Math.PI / 2 + centerAltRad);
-        const r = Math.acos(c) * RAD_TO_DEG; //中心からの角距離, deg
+        const r = this.acosdeg(c); //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRa = r * Math.sin(thetaSH);
         const scrDec = -r * Math.cos(thetaSH);
@@ -416,7 +427,7 @@ export class CoordinateConverter {
             return { ra: 0, dec: 0 };
         }
         else {
-            const b = Math.acos(-z) * RAD_TO_DEG;
+            const b = this.acosdeg(-z);
             const scrRA = -b * x / Math.sqrt(x * x + y * y);
             const scrDec = b * y / Math.sqrt(x * x + y * y);
             return { ra: scrRA, dec: scrDec };
@@ -449,7 +460,7 @@ export class CoordinateConverter {
             const a = sinDec * sinR * cosThetaSH + cosDec * cosR;
             const b = sinR * sinThetaSH;
             const c = -cosDec * sinR * cosThetaSH + sinDec * cosR;
-            const dec = Math.asin(c) * RAD_TO_DEG;
+            const dec = this.asindeg(c);
             const ra = ((Math.atan2(b, a) * RAD_TO_DEG + center.ra) % 360 + 360) % 360;
             return { ra, dec };
         }
@@ -487,7 +498,7 @@ export class CoordinateConverter {
             const abc1 = this.rotateY({ x: sinR * cosThetaSH, y: sinR * sinThetaSH, z: cosR }, Math.PI / 2 - centerAlt_rad);
             const abc2 = this.rotateZ(abc1, -center.az * DEG_TO_RAD);
             const { x: a, y: b, z: c } = abc2;
-            const alt = Math.asin(c) * RAD_TO_DEG;
+            const alt = this.asindeg(c);
             const az = ((Math.atan2(-b, a) * RAD_TO_DEG) % 360 + 360) % 360;
             return { az, alt };
         }
@@ -503,7 +514,7 @@ export class CoordinateConverter {
         const y0 = Math.sin(r) * Math.sin(theta);
         const z0 = -Math.cos(r);
         const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: x0, y: y0, z: z0 }, gamma), beta), alpha);
-        const alt = Math.asin(z) * RAD_TO_DEG;
+        const alt = this.asindeg(z);
         const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
         return { az, alt };
     }
@@ -548,77 +559,6 @@ export class CoordinateConverter {
         const screenRaDec = this.horizontalToScreenRaDec_View(horizontal, centerHorizontal);
         return this.screenRaDecToScreenXY(screenRaDec, canvasSize, window.config.viewState);
     }
-    // // デバイスオリエンテーションを使用した画面座標から水平座標への変換
-    // screenXYToHorizontalWithOrientation(
-    //     x: number, 
-    //     y: number, 
-    //     canvas: HTMLCanvasElement, 
-    //     deviceOrientationManager: DeviceOrientationManager
-    // ): HorizontalCoordinates {
-    //     const deviceInfo = deviceOrientationManager.getDeviceInfo();
-    //     // 画面座標を画面RA/Decに変換
-    //     const screenRaDec = this.screenXYToScreenRaDec(x, y, canvas);
-    //     // デバイスオリエンテーションが利用可能で許可されている場合
-    //     if (deviceInfo.os === 'iphone' && deviceOrientationManager.isOrientationPermitted()) {
-    //         const compassHeading = deviceOrientationManager.getCompassHeading();
-    //         // 基本的な水平座標変換
-    //         const basicHorizontal = this.screenRaDecToHorizontal_View(screenRaDec);
-    //         // コンパス方位を考慮して方位角を調整
-    //         if (compassHeading !== 0) {
-    //             const adjustedAzimuth = (basicHorizontal.az + compassHeading) % 360;
-    //             return {
-    //                 az: adjustedAzimuth,
-    //                 alt: basicHorizontal.alt
-    //             };
-    //         }
-    //         return basicHorizontal;
-    //     }
-    //     // デバイスオリエンテーションが利用できない場合は通常の変換
-    //     return this.screenRaDecToHorizontal_View(screenRaDec);
-    // }
-    // // デバイスオリエンテーションを使用したリアルタイム座標変換
-    // getRealTimeCoordinatesWithOrientation(
-    //     deviceOrientationManager: DeviceOrientationManager
-    // ): { azimuth: number, altitude: number, ra: number, dec: number } {
-    //     const deviceInfo = deviceOrientationManager.getDeviceInfo();
-    //     const orientationData = deviceOrientationManager.getOrientationData();
-    //     if (deviceInfo.os === 'iphone' && deviceOrientationManager.isOrientationPermitted()) {
-    //         const alpha = orientationData.alpha || 0;
-    //         const beta = orientationData.beta || 0;
-    //         const gamma = orientationData.gamma || 0;
-    //         const compassHeading = deviceOrientationManager.getCompassHeading();
-    //         // デバイスの向きから水平座標を計算
-    //         const {x, y, z} = this.rotateZ(
-    //             this.rotateY(
-    //                 this.rotateX({x: 0, y: 0, z: 1}, gamma * DEG_TO_RAD), 
-    //                 beta * DEG_TO_RAD
-    //             ), 
-    //             alpha * DEG_TO_RAD
-    //         );
-    //         const altitude = Math.asin(z) * RAD_TO_DEG;
-    //         const azimuth = ((Math.atan2(-y, x) * RAD_TO_DEG + compassHeading + 90) % 360 + 360) % 360;
-    //         // 水平座標から赤道座標に変換
-    //         const siderealTime = (window as any).config?.displayTime?.siderealTime || 0;
-    //         const equatorial = this.horizontalToEquatorial(
-    //             {az: azimuth, alt: altitude}, 
-    //             siderealTime, 
-    //             this.getLocation().latitude
-    //         );
-    //         return {
-    //             azimuth,
-    //             altitude,
-    //             ra: equatorial.ra,
-    //             dec: equatorial.dec
-    //         };
-    //     }
-    //     // デバイスオリエンテーションが利用できない場合はデフォルト値
-    //     return {
-    //         azimuth: 0,
-    //         altitude: 0,
-    //         ra: 0,
-    //         dec: 0
-    //     };
-    // }
     pinchNewCenterRaDec(center1, pinchRaDec, pinchScreenRaDec, scale) {
         // x, yは固定。screenRA_p, screenDec_p(pinchの座標)はscale倍になる。
         // Equ->screenRaDecの関数でthetaSH=atan2(b, a)は符号も含めて変化せず、arccos(c)はscale倍になる。
@@ -634,13 +574,13 @@ export class CoordinateConverter {
         const r1 = Math.sqrt(pinchScreenRaDec.ra * pinchScreenRaDec.ra + pinchScreenRaDec.dec * pinchScreenRaDec.dec);
         const c1 = Math.cos(r1 * DEG_TO_RAD);
         // const c1 = Math.cos(centerDec1) * Math.cos(pinchDec) * Math.cos(ra_diff1) + Math.sin(centerDec1) * Math.sin(pinchDec);
-        const c2 = Math.acos(scale * Math.acos(c1));
+        const c2 = this.acosrad(scale * this.acosrad(c1));
         const a2 = Math.cos(thetaSH1 / Math.sqrt(1 - c1 * c1));
         const b2 = Math.sin(thetaSH1 / Math.sqrt(1 - c1 * c1));
         // c2 * sin(centerDec2) - a2 * cos(centerDec2) = sin(pinchDec)
         // c2 * cos(centerDec2) + a2 * sin(centerDec2) = cos(pinchDec) * cos(ra_diff2)
         const ra2 = Math.atan2(b2, a2) * RAD_TO_DEG;
-        const dec2 = Math.asin(Math.sin(centerDec1) * Math.sin(c2)) * RAD_TO_DEG;
+        const dec2 = this.asindeg(Math.sin(centerDec1) * Math.sin(c2));
         return { ra: 0, dec: 0 };
     }
 }

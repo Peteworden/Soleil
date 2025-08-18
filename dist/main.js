@@ -1,8 +1,11 @@
+import { CacheInfoController } from './controllers/CacheInfoController.js';
+import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 import { ObservationSiteController } from './controllers/ObservationSiteController.js';
-import { SettingController } from './controllers/SettingController.js';
 import { SearchController } from './controllers/SearchController.js';
+import { SettingController } from './controllers/SettingController.js';
 import { SolarSystemController } from './controllers/SolarSystemController.js';
 import { TimeController } from './controllers/TimeController.js';
+import { UserObjectController } from './controllers/UserObjectController.js';
 import { DataStore } from './models/DataStore.js';
 import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
@@ -10,11 +13,8 @@ import { InteractionController } from "./renderer/interactionController.js";
 import { AstronomicalCalculator } from './utils/calculations.js';
 import { CoordinateConverter } from './utils/coordinates.js';
 import { DataLoader } from './utils/DataLoader.js';
-import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
-import { ObjectInfoController } from './controllers/ObjectInfoController.js';
-import { UserObjectController } from './controllers/UserObjectController.js';
-import { CacheInfoController } from './controllers/CacheInfoController.js';
+import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
     { time: '2025-08-18T00:00:00', title: 'お気に入り天体', text: '自分の好きな天体を星図に表示できるようになりました。設定>その他の設定>お気に入り天体の編集 から設定できます。' },
     { time: '2025-08-15T20:19:30', title: '天の北極・南極', text: '印をつけました' },
