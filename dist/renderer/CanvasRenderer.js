@@ -73,7 +73,6 @@ export class CanvasRenderer {
             markFlag = false;
         }
         this.ctx.font = '14px Arial';
-        this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'orange';
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = 'orange';
@@ -96,10 +95,14 @@ export class CanvasRenderer {
         */
         this.ctx.beginPath();
         if (nameCorner == 'bottom-right') {
-            this.ctx.fillText(object.getName(), x + 5, y + 10);
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'top';
+            this.ctx.fillText(object.getName(), x, y);
         }
         else {
-            this.ctx.fillText(object.getName(), x + 5, y - 5);
+            this.ctx.textAlign = 'left';
+            this.ctx.textBaseline = 'bottom';
+            this.ctx.fillText(object.getName(), x, y);
         }
         if (type === 'Gx') { // Galaxy, 楕円
             this.ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2);
@@ -226,8 +229,6 @@ export class CanvasRenderer {
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const zeroMagSize = this.starSize_0mag(this.config);
-        this.ctx.font = '18px Arial';
-        this.ctx.textAlign = 'left';
         this.ctx.fillStyle = 'white';
         for (const object of objects) {
             if (object.getType() === 'sun') {
@@ -264,6 +265,7 @@ export class CanvasRenderer {
         const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fieldOfViewRA, 13);
         this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'yellow';
         this.ctx.beginPath();
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -273,6 +275,7 @@ export class CanvasRenderer {
     drawPlanet(planet, limitingMagnitude, zeroMagSize) {
         this.ctx.font = '18px serif';
         this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'bottom';
         const coords = planet.getRaDec();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
         if (!screenXY[0])
@@ -336,6 +339,7 @@ export class CanvasRenderer {
         }
         this.ctx.font = '18x serif';
         this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         if (k < 0.5) {
@@ -365,6 +369,7 @@ export class CanvasRenderer {
     drawMinorObject(minorObject, limitingMagnitude, zeroMagSize) {
         this.ctx.font = '16px serif';
         this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'bottom';
         const coords = minorObject.getRaDec();
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
         if (!screenXY[0])
@@ -377,7 +382,7 @@ export class CanvasRenderer {
             y: y,
             data: minorObject
         });
-        const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude);
+        const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude) - 1;
         const radius = Math.max(this.getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = 'rgb(255, 219, 88)';
@@ -448,6 +453,7 @@ export class CanvasRenderer {
             tierLimit = 2;
         }
         this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         for (const starName of starNames) {
@@ -774,7 +780,8 @@ export class CanvasRenderer {
         const a = 0.626; // 2025年始の天の北極とポラリスの離角
         const a_canvas = a * this.config.canvasSize.height / this.config.viewState.fieldOfViewDec;
         this.ctx.font = '14px Arial';
-        this.ctx.textAlign = 'left';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'orange';
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = 'orange';
@@ -796,7 +803,7 @@ export class CanvasRenderer {
                 this.ctx.lineTo(x + a_canvas * cos, y + a_canvas * sin);
             }
             this.ctx.stroke();
-            this.ctx.fillText('2025', x - 15, y - a_canvas - 2);
+            this.ctx.fillText('2025', x, y - a_canvas - 2);
         }
     }
     // 星座線
@@ -854,6 +861,7 @@ export class CanvasRenderer {
             return;
         this.ctx.font = '16px Arial';
         this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
         const siderealTime = window.config.siderealTime;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         for (const constellation of constellations) {

@@ -66,14 +66,9 @@ export class ObjectInfoController {
         if (['messier', 'rec', 'ngc'].includes(objectInfo.type)) {
             infoText = this.generateMessierInfo(objectInfo.data);
             imageUrl = this.getImageUrl(objectInfo.data);
-            // } else if (objectInfo.type == 'ngc') {
-            //     infoText = this.generateNGCInfo(objectInfo.data);
-            //     imageUrl = this.getImageUrl(objectInfo.data);
         }
         else if (['planet', 'asteroidComet'].includes(objectInfo.type)) {
             infoText = this.generatePlanetInfo(objectInfo.data);
-            // } else if (objectInfo.type == 'asteroidComet') {
-            //     infoText = this.generateAsteroidCometInfo(objectInfo.data);
         }
         else if (objectInfo.type == 'sun') {
             infoText = this.generateSunInfo(objectInfo.data);
@@ -180,7 +175,12 @@ export class ObjectInfoController {
         const jpnName = planetData.jpnName;
         const engName = planetData.engName;
         const type = (planetData instanceof Planet) ? '惑星' : (planetData instanceof Asteroid) ? '準惑星・小惑星' : '彗星';
-        infoText += `${jpnName} (${engName})<br>分類: ${type}<br>`;
+        if (engName != jpnName) {
+            infoText += `${jpnName} (${engName})<br>分類: ${type}<br>`;
+        }
+        else {
+            infoText += `${jpnName}<br>分類: ${type}<br>`;
+        }
         // 座標情報
         const raHM = this.coordinateConverter.radeg2hm(planetData.raDec.ra);
         const decDM = this.coordinateConverter.decdeg2dm(planetData.raDec.dec);
@@ -262,11 +262,16 @@ export class ObjectInfoController {
             const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
             const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
+            console.log(config.observationSite.observerPlanet);
             if (config.observationSite.observerPlanet == '地球') {
                 const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
                 infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
             }
         }
+        // 距離情報
+        infoText += `距離: ${(data.distance / 1000).toFixed(0)},000 km<br>`;
+        const lightMinutes = data.distance / 299792.458;
+        infoText += `（光の速さで${lightMinutes.toFixed(1)}秒）<br>`;
         return infoText;
     }
     /**

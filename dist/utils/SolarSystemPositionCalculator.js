@@ -253,10 +253,10 @@ export class SolarSystemPositionCalculator {
         else if (isMinorObject(object)) {
             if ('orbit' in object) {
                 const orbit = object.orbit;
-                if (orbit.e < 0.999) {
+                if (orbit.e < 0.99999999999999999) {
                     this.calculateEllipticOrbitPositions(object, jd);
                 }
-                else if (orbit.e > 1.001) {
+                else if (orbit.e > 1.0000000000000001) {
                     this.calculateHyperbolicOrbitPositions(object, jd);
                 }
                 else {

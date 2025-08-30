@@ -67,7 +67,7 @@ export function updateInfoDisplay() {
     // 視野角情報を更新
     if (fovInfo) {
         const { fieldOfViewRA, fieldOfViewDec } = config.viewState;
-        const fovText = `${fieldOfViewRA.toFixed(1)}° × ${fieldOfViewDec.toFixed(1)}°`;
+        const fovText = `${fieldOfViewRA.toFixed(1)}°`;
         fovInfo.textContent = fovText;
     }
     if (limitingMagnitudeInfo) {
@@ -95,6 +95,8 @@ export function handleResize() {
         if (bottomButtons)
             bottomButtons.style.display = 'flex';
     }
+    // Canvasサイズの更新とrenderAllの呼び出し
+    updateCanvasSize();
 }
 /**
  * ブラウザのUIを除いた描画可能領域のサイズを取得
@@ -165,6 +167,44 @@ export function measureBrowserUI() {
     const right = screenWidth - (windowLeft + windowWidth);
     const bottom = screenHeight - (windowTop + windowHeight);
     return { top, bottom, left, right };
+}
+/**
+ * Canvasサイズを更新し、renderAllを呼び出す
+ */
+export function updateCanvasSize() {
+    // グローバルなconfigとrendererにアクセス
+    const globalConfig = window.config;
+    const renderer = window.renderer;
+    const renderAll = window.renderAll;
+    if (!globalConfig || !renderer || !renderAll) {
+        console.warn('updateCanvasSize: 必要なグローバル変数が見つかりません');
+        return;
+    }
+    // 現在のウィンドウサイズを取得
+    const { width, height } = getCurrentWindowSize();
+    // Canvasサイズを更新
+    globalConfig.canvasSize.width = width;
+    globalConfig.canvasSize.height = height;
+    if (width > height) {
+        globalConfig.viewState.fieldOfViewDec = globalConfig.viewState.fieldOfViewRA * height / width;
+    }
+    else {
+        globalConfig.viewState.fieldOfViewRA = globalConfig.viewState.fieldOfViewDec * width / height;
+    }
+    // rendererのcanvasサイズも更新
+    if (renderer.canvas) {
+        renderer.canvas.width = width;
+        renderer.canvas.height = height;
+    }
+    // rendererのupdateOptionsを呼び出して設定を更新
+    if (renderer.updateOptions) {
+        renderer.updateOptions({
+            canvasSize: { width, height }
+        });
+    }
+    // renderAllを呼び出して再描画
+    renderAll();
+    console.log(`Canvasサイズを更新しました: ${width}x${height}`);
 }
 /**
  * より正確な描画可能領域を取得（動的測定版）
