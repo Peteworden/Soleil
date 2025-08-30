@@ -94,29 +94,6 @@ export class TimeController {
             renderAll();
         }
     }
-    static addDays(days) {
-        const config = window.config;
-        if (!config)
-            return;
-        const jd = config.displayTime.jd + days;
-        const targetJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
-        const updateConfig = window.updateConfig;
-        if (updateConfig) {
-            updateConfig({
-                displayTime: {
-                    year: targetJd.year,
-                    month: targetJd.month,
-                    day: targetJd.day,
-                    hour: targetJd.hour,
-                    minute: targetJd.minute,
-                    second: targetJd.second,
-                    jd: jd,
-                    realTime: 'off' // 手動設定時はリアルタイムをオフにする
-                }
-            });
-        }
-        this.updateSliderValue();
-    }
     static setToCurrentTime() {
         const config = window.config;
         if (!config)

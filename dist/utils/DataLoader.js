@@ -1,4 +1,3 @@
-// import { SolarObjectsLoader } from './SolarObjectsLoader.js';
 import { HipStar, MessierObject, NGCObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
 export class DataLoader {

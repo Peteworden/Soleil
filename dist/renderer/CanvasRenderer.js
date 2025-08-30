@@ -568,6 +568,8 @@ export class CanvasRenderer {
         const centerDec = this.config.viewState.centerDec;
         const centerAz = this.config.viewState.centerAz;
         const centerAlt = this.config.viewState.centerAlt;
+        const siderealTime = this.config.siderealTime;
+        const latitude = this.config.observationSite.latitude;
         if (this.config.displaySettings.mode == 'view') {
             const minAlt = Math.max(-90, Math.min(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).alt, centerAlt - fieldOfViewDec / 2));
             const maxAlt = Math.min(90, Math.max(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).alt, centerAlt + fieldOfViewDec / 2));
@@ -707,6 +709,25 @@ export class CanvasRenderer {
                 }
             }
             this.ctx.stroke();
+            const directions = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'top';
+            this.ctx.font = '18px monospace';
+            this.ctx.fillStyle = '#DDDDDD';
+            for (i = 0; i < 360; i += 45) {
+                const direction = directions[i / 45];
+                const directionEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: i, alt: 0 }, siderealTime, latitude);
+                const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial, this.config);
+                if (ifin) {
+                    const directionEquatorial2 = this.coordinateConverter.horizontalToEquatorial({ az: i + 1, alt: 0 }, siderealTime, latitude);
+                    const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial2, this.config);
+                    this.ctx.save();
+                    this.ctx.translate(x, y);
+                    this.ctx.rotate(Math.atan2(y2 - y, x2 - x));
+                    this.ctx.fillText(direction, 0, 0);
+                    this.ctx.restore();
+                }
+            }
         }
     }
     drawHorizontalLine(j, az, alt, screenRA0, screenDec0) {

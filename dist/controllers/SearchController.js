@@ -82,23 +82,24 @@ export class SearchController {
         const matchPlanetsInclude = [];
         if (SolarSystemDataManager.getAllObjects()) {
             for (const planet of SolarSystemDataManager.getAllObjects()) {
+                const param = { title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } };
                 if (this.normalizeText(planet.jpnName).includes(query)) {
-                    matchPlanetsInclude.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                    matchPlanetsInclude.push(param);
                 }
                 else if (this.normalizeText(planet.jpnName).startsWith(query)) {
-                    matchPlanetsStart.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                    matchPlanetsStart.push(param);
                 }
-                if (this.normalizeText(planet.hiraganaName).startsWith(query)) {
-                    matchPlanetsStart.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                else if (this.normalizeText(planet.hiraganaName).startsWith(query)) {
+                    matchPlanetsStart.push(param);
                 }
                 else if (this.normalizeText(planet.hiraganaName).includes(query)) {
-                    matchPlanetsInclude.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                    matchPlanetsInclude.push(param);
                 }
-                if (this.normalizeText(planet.engName).startsWith(query)) {
-                    matchPlanetsStart.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                else if (this.normalizeText(planet.engName).startsWith(query)) {
+                    matchPlanetsStart.push(param);
                 }
                 else if (this.normalizeText(planet.engName).includes(query)) {
-                    matchPlanetsInclude.push({ title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } });
+                    matchPlanetsInclude.push(param);
                 }
             }
         }
@@ -124,9 +125,7 @@ export class SearchController {
             // 「数字のみ」「m+数字」のときのみ検索
             if ((query[0] === 'm' && this.isInteger(query.slice(1))) || this.isInteger(query)) {
                 const queryNumber = this.isInteger(query) ? query : query.slice(1);
-                console.log(queryNumber, DataStore.messierData.length);
                 for (const messier of DataStore.messierData) {
-                    console.log(messier.getNumberChar(), queryNumber);
                     if (messier.getNumberChar() === queryNumber) {
                         matchMessierStart.push({ title: messier.getName(), position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec } });
                         break;
@@ -168,13 +167,29 @@ export class SearchController {
         }
         const matchNgc = [];
         if (DataStore.ngcData) {
-            if (this.isInteger(query) || query.slice(0, 3) === 'ngc' || query.slice(0, 2) === 'ic') {
-                const queryNumber = this.isInteger(query) ? query : (query.slice(0, 3) === 'ngc' ? query.slice(3) : query.slice(2));
+            let catalogName = '';
+            let queryNumber = '0';
+            if (this.isInteger(query)) {
+                queryNumber = query;
+            }
+            else if (query.slice(0, 3) === 'ngc') {
+                catalogName = 'NGC';
+                queryNumber = query.slice(3);
+            }
+            else if (query.slice(0, 2) === 'ic') {
+                catalogName = 'IC';
+                queryNumber = query.slice(2);
+            }
+            if (queryNumber !== '0') {
+                const mayInclude = `(${catalogName}${queryNumber})`;
                 for (const ngc of DataStore.ngcData) {
+                    if (catalogName !== '' && ngc.getCatalog() !== catalogName) {
+                        continue;
+                    }
                     if (ngc.getNumberChar() === queryNumber &&
-                        !matchRecStart.some(rec => rec.title.includes(`${ngc.getCatalog()}${ngc.getNumber()}`)) &&
-                        !matchMessierInclude.some(messier => messier.title.includes(`${ngc.getCatalog()}${ngc.getNumber()}`)) &&
-                        !matchRecInclude.some(rec => rec.title.includes(`${ngc.getCatalog()}${ngc.getNumber()}`))) {
+                        !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
+                        !matchMessierInclude.some(messier => messier.title.includes(mayInclude)) &&
+                        !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
                         matchNgc.push({ title: `${ngc.getCatalog()}${ngc.getNumber()}`, position: { ra: ngc.getCoordinates().ra, dec: ngc.getCoordinates().dec } });
                         if (matchNgc.length === 2) {
                             break;

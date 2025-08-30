@@ -308,7 +308,7 @@ export async function main() {
         let gaia111_115HelpData = [];
         let constellationData = [];
         let messierData = [];
-        // let recData: any[] = [];
+        let recData = [];
         let ngcData = [];
         let starNames = [];
         // imageCacheの初期化
@@ -367,26 +367,24 @@ export async function main() {
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
             try {
-                const [constellationDataResult, hipStarsResult] = await Promise.all([
+                [constellationData, hipStars] = await Promise.all([
                     DataLoader.loadConstellationData(),
                     DataLoader.loadHIPData()
                 ]);
-                constellationData = constellationDataResult;
-                hipStars = hipStarsResult;
-                // 基本的なデータが読み込まれたら即座にレンダリング
                 renderAll();
-                const [messierDataResult, recDataResult, gaia100DataResult, gaia100HelpDataResult] = await Promise.all([
+                [messierData, recData, gaia100Data, gaia100HelpData] = await Promise.all([
                     DataLoader.loadMessierData(),
                     DataLoader.loadRecData(),
                     DataLoader.loadGaiaData('-100'),
                     DataLoader.loadGaiaHelpData('-100'),
                 ]);
-                messierData = messierDataResult;
-                DataStore.setRecData(recDataResult);
-                gaia100Data = gaia100DataResult;
-                gaia100HelpData = gaia100HelpDataResult;
+                DataStore.messierData = messierData;
+                DataStore.recData = recData;
                 renderAll();
-                const [ngcDataResult, starNamesResult, gaia101_110DataResult, gaia101_110HelpDataResult, gaia111_115DataResult, gaia111_115HelpDataResult,] = await Promise.all([
+                [ngcData, starNames,
+                    gaia101_110Data, gaia101_110HelpData,
+                    gaia111_115Data, gaia111_115HelpData,
+                ] = await Promise.all([
                     DataLoader.loadNGCData(),
                     DataLoader.loadStarNames(),
                     DataLoader.loadGaiaData('101-110'),
@@ -394,12 +392,6 @@ export async function main() {
                     DataLoader.loadGaiaData('111-115'),
                     DataLoader.loadGaiaHelpData('111-115')
                 ]);
-                ngcData = ngcDataResult;
-                starNames = starNamesResult;
-                gaia101_110Data = gaia101_110DataResult;
-                gaia101_110HelpData = gaia101_110HelpDataResult;
-                gaia111_115Data = gaia111_115DataResult;
-                gaia111_115HelpData = gaia111_115HelpDataResult;
                 renderAll();
                 // imageCacheの更新
                 if (messierData.length > 0) {
@@ -431,7 +423,6 @@ export async function main() {
                 renderAll();
                 DataStore.hipStars = hipStars;
                 DataStore.constellationData = constellationData;
-                // DataStore.recData = recData;
                 DataStore.ngcData = ngcData;
                 DataStore.starNames = starNames;
             }
