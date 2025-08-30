@@ -114,23 +114,25 @@
     <div class="info-display" id="infoDisplay">
         <div class="info-row">
             <!-- <span class="info-label">観測地:</span> -->
-            <span class="info-value" id="locationInfo">北緯35° 東経135°</span>
+            <span class="info-value" id="locationInfo">--</span>
         </div>
         <div class="info-row">
             <!-- <span class="info-label">時刻:</span> -->
-            <span class="info-value" id="timeInfo">2024年1月1日 12:00</span>
+            <span class="info-value" id="timeInfo">--</span>
         </div>
         <div class="info-row">
-            <span class="info-label">中心:</span>
-            <span class="info-value" id="centerInfo">赤経0h 赤緯0°</span>
+            <span id="centerLabel" class="info-label">中心:</span>
+        </div>
+        <div class="info-row">
+            <span class="info-value" id="centerInfo">--</span>
         </div>
         <div class="info-row">
             <span class="info-label">視野（左右）:</span>
-            <span class="info-value" id="fovInfo">90°</span>
+            <span class="info-value" id="fovInfo">--</span>
         </div>
         <div class="info-row">
             <span class="info-label">最微等級:</span>
-            <span class="info-value" id="limitingMagnitudeInfo">11.5</span>
+            <span class="info-value" id="limitingMagnitudeInfo">--</span>
         </div>
     </div>
 
@@ -439,6 +441,14 @@
                         </label>
                     </div>
 
+                    <h5>画面左上の情報</h5>
+                    <div class="switch-row">
+                        <label class="switch-text">赤道座標の基準:</label>
+                        <select id="equinox">
+                            <option value="apparent" checked>視位置(正確には平均春分点)</option>
+                            <option value="j2000">J2000.0</option>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- 色などの設定タブ -->

@@ -75,7 +75,6 @@ export class SearchController {
         const container = document.getElementById('suggestionButtonContainer');
         if (!container)
             return;
-        console.log("displaySearchResults", query);
         // 検索結果をクリア
         container.innerHTML = '';
         const matchPlanetsStart = [];

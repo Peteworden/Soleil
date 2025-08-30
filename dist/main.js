@@ -18,7 +18,7 @@ import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
     { time: '2025-08-30T13:50:00', title: '', text: '横に伸びる不具合は直ったでしょうか？' },
     { time: '2025-08-30T13:40:00', title: '彗星追加', text: '今話題のLemmon彗星とK1 ATLASを追加しました。' },
-    { time: '2025-08-30T12:40:00', title: '方角の表示', text: 'ご要望に応えてプラネモードで方角を出しました。右上メニュー>ご意見フォームからご意見お待ちしております（貼り忘れてました。ご指摘ありがとうございます。SNS繋がってる方はそっちの方が早いです）。' },
+    { time: '2025-08-30T12:40:00', title: '方角の表示', text: 'ご要望に応えてプラネモードで方角を出しました。右上メニュー>ご意見フォームからご意見お待ちしております（SNS繋がってる方はそっちの方が早いです）。' },
     { time: '2025-08-18T00:00:00', title: 'お気に入り天体', text: '自分の好きな天体を星図に表示できるようになりました。設定>その他の設定>お気に入り天体の編集 から設定できます。' },
     { time: '2025-08-15T20:19:30', title: '天の北極・南極', text: '印をつけました' },
     { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
@@ -44,7 +44,8 @@ function initializeConfig(noLoad = false) {
         showNGC: false,
         showCameraView: false,
         camera: 'none',
-        showTopography: false // 読み込み時は常にfalse
+        showTopography: false, // 読み込み時は常にfalse
+        equinox: 'apparent',
         // showSatellites: false,
         // showSatelliteLabels: false,
         // showSatelliteOrbits: false
@@ -77,6 +78,13 @@ function initializeConfig(noLoad = false) {
         realTime: 'off',
         loadOnCurrentTime: true
     };
+    const planetMotion = {
+        planet: [],
+        duration: 30,
+        interval: 1.0,
+        timeDisplayStep: 5,
+        timeDisplayContent: 'md'
+    };
     const newsPopup = {
         lastShownTime: '',
         dontShow: false
@@ -106,6 +114,7 @@ function initializeConfig(noLoad = false) {
             observationSite: observationSite,
             displayTime: displayTime,
             canvasSize: canvasSize,
+            planetMotion: planetMotion,
             siderealTime: siderealTime,
             newsPopup: newsPopup
         };
@@ -193,6 +202,7 @@ function initializeConfig(noLoad = false) {
         observationSite: observationSite,
         displayTime: displayTime,
         canvasSize: canvasSize,
+        planetMotion: planetMotion,
         siderealTime: siderealTime,
         newsPopup: newsPopup
     };
@@ -210,31 +220,28 @@ export function resetConfig() {
 }
 // newconfigを受け取り、configを更新する
 export function updateConfig(newConfig) {
+    const config = window.config;
     Object.assign(config, newConfig);
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
     }
     window.config = config;
     window.renderer.updateOptions(config);
-    if (newConfig.displaySettings) {
-        // Object.assign(config.displaySettings, newConfig.displaySettings);
-        window.controller.updateOptions(config.displaySettings);
-    }
-    // 時刻関連の更新があればTimeControllerも更新
-    if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
-        // (window as any).renderer.updateOptions(newConfig);
-        // TimeController.initialize();
+    if (newConfig.displaySettings || newConfig.viewState) {
+        window.controller.updateOptions({
+            displaySettings: config.displaySettings,
+            viewState: config.viewState
+        });
     }
     window.renderAll();
 }
 // ViewStateのみを更新する関数
-export function updateViewState(newViewState) {
-    Object.assign(config.viewState, newViewState);
-    window.renderer.updateOptions(newViewState);
-    window.controller.updateOptions(newViewState);
-    window.renderAll();
-    updateInfoDisplay();
-}
+// export function updateViewState(newViewState: Partial<ViewState>): void {
+//     Object.assign(config.viewState, newViewState);
+//     (window as any).renderer.updateOptions(newViewState);
+//     (window as any).controller.updateOptions(newViewState);
+//     (window as any).renderAll();
+// }
 function resetAll() {
     // LocalStorage, config, UIをリセット
     resetConfig();
@@ -267,7 +274,7 @@ function showErrorMessage(text) {
 window.config = config;
 window.DataStore = DataStore;
 window.updateConfig = updateConfig;
-window.updateViewState = updateViewState;
+// (window as any).updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
 window.resetConfig = resetConfig;
 window.saveConfig = SettingController.saveConfigToLocalStorage;
@@ -768,9 +775,13 @@ function setupButtonEvents() {
     document.getElementById('magLimitSlider')?.addEventListener('change', function () {
         const magLimitSlider = document.getElementById('magLimitSlider');
         const magLimitSliderValue = parseFloat(magLimitSlider.value);
-        updateViewState({
-            starSizeKey1: magLimitSliderValue,
-            starSizeKey2: 1.8
+        const viewState = window.config.viewState;
+        if (viewState) {
+            viewState.starSizeKey1 = magLimitSliderValue;
+            viewState.starSizeKey2 = 1.8;
+        }
+        updateConfig({
+            viewState: viewState
         });
     });
     document.getElementById('cameraTiltSlider')?.addEventListener('input', function () {

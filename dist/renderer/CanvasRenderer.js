@@ -3,6 +3,7 @@ import { HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
+import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
         this.imageCache = {};
@@ -246,6 +247,98 @@ export class CanvasRenderer {
             else if (object.getType() === 'comet') {
                 this.drawMinorObject(object, limitingMagnitude, zeroMagSize);
             }
+        }
+        this.drawPlanetMotion();
+    }
+    drawPlanetMotion() {
+        if (this.config.planetMotion.planet.length == 0)
+            return;
+        const duration = this.config.planetMotion.duration;
+        const interval = this.config.planetMotion.interval;
+        const timeDisplayStep = this.config.planetMotion.timeDisplayStep;
+        const timeDisplayContent = this.config.planetMotion.timeDisplayContent;
+        const halfCount = Math.floor(duration / interval);
+        const minJd = this.config.displayTime.jd - halfCount * interval;
+        const maxJd = this.config.displayTime.jd + halfCount * interval;
+        const objectsBaseData = SolarSystemDataManager.getAllObjects();
+        for (const planet of this.config.planetMotion.planet) {
+            if (planet == this.config.observationSite.observerPlanet)
+                continue;
+            const jds = [];
+            const timeLabels = [];
+            const ras = [];
+            const decs = [];
+            const xys = [];
+            const distances = [];
+            for (let jd = minJd; jd <= maxJd; jd += interval) {
+                if (jd == this.config.displayTime.jd)
+                    continue;
+                const objectData = SolarSystemPositionCalculator.oneObjectData(objectsBaseData, planet, jd, this.config.observationSite);
+                if (objectData) {
+                    jds.push(jd);
+                    const ymdhms = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
+                    timeLabels.push(formatTime(ymdhms, timeDisplayContent));
+                    const coords = objectData.getRaDec();
+                    ras.push(coords.ra);
+                    decs.push(coords.dec);
+                    const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, true, this.orientationData);
+                    xys.push(screenXY[1]);
+                    distances.push(objectData.getDistance());
+                }
+            }
+            this.ctx.font = '14px serif';
+            this.ctx.strokeStyle = '#AAFFAA';
+            this.ctx.fillStyle = 'yellow';
+            this.ctx.textAlign = 'left';
+            this.ctx.beginPath();
+            for (let i = 0; i < jds.length; i++) {
+                this.ctx.moveTo(xys[i][0] - 3, xys[i][1] - 3);
+                this.ctx.lineTo(xys[i][0] + 3, xys[i][1] + 3);
+                this.ctx.moveTo(xys[i][0] - 3, xys[i][1] + 3);
+                this.ctx.lineTo(xys[i][0] + 3, xys[i][1] - 3);
+            }
+            this.ctx.stroke();
+            for (let i = timeDisplayStep; i < halfCount; i += timeDisplayStep) {
+                let idx = halfCount - i - 1;
+                if ((xys[idx + 1][1] - xys[idx][1]) * (xys[idx + 1][0] - xys[idx][0]) < 0) { // 軌跡が左上-右下
+                    this.ctx.textBaseline = 'top';
+                }
+                else { // 軌跡が左下-右上
+                    this.ctx.textBaseline = 'bottom';
+                }
+                this.ctx.fillText(timeLabels[idx], xys[idx][0], xys[idx][1]);
+                idx = halfCount + i;
+                if (idx + 1 < jds.length) {
+                    if ((xys[idx + 1][1] - xys[idx][1]) * (xys[idx + 1][0] - xys[idx][0]) < 0) { // 軌跡が左上-右下
+                        this.ctx.textBaseline = 'top';
+                    }
+                    else { // 軌跡が左下-右上
+                        this.ctx.textBaseline = 'bottom';
+                    }
+                }
+                this.ctx.fillText(timeLabels[idx], xys[idx][0], xys[idx][1]);
+            }
+        }
+        function formatTime(ymdhms, format) {
+            const y = ymdhms.year;
+            const m = ymdhms.month;
+            const d = ymdhms.day;
+            const h = ymdhms.hour;
+            const mi = ymdhms.minute;
+            const s = ymdhms.second;
+            if (format == 'ym') {
+                return `${y}/${m}`;
+            }
+            else if (format == 'md') {
+                return `${m}/${d}`;
+            }
+            else if (format == 'mdh') {
+                return `${m}/${d} ${h}時`;
+            }
+            else if (format == 'hm') {
+                return `${h}:${mi}`;
+            }
+            return `${y}/${m}/${d} ${h}:${mi}:${s}`;
         }
     }
     drawSun(sun) {

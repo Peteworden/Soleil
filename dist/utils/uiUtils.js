@@ -1,4 +1,5 @@
 import { AstronomicalCalculator } from "./calculations.js";
+import { CoordinateConverter } from "./coordinates.js";
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
     const locationInfo = document.getElementById('locationInfo');
@@ -48,7 +49,24 @@ export function updateInfoDisplay() {
     }
     // 中心座標情報を更新
     if (centerInfo) {
-        const { centerRA, centerDec, centerAlt, centerAz } = config.viewState;
+        let { centerRA, centerDec, centerAlt, centerAz } = config.viewState;
+        const equinox = config.displaySettings.equinox;
+        if (equinox == 'j2000') {
+            const coordinateConverter = new CoordinateConverter();
+            const { ra, dec } = coordinateConverter.precessionEquatorial({ ra: centerRA, dec: centerDec }, undefined, config.displayTime.jd, 'j2000');
+            centerRA = ra;
+            centerDec = dec;
+            const centerLabel = document.getElementById('centerLabel');
+            if (centerLabel) {
+                centerLabel.textContent = '中心(J2000.0):';
+            }
+        }
+        else {
+            const centerLabel = document.getElementById('centerLabel');
+            if (centerLabel) {
+                centerLabel.textContent = '中心(視位置):';
+            }
+        }
         let centerRArounded = Math.round(centerRA * 4 * 10);
         if (centerRArounded == 1440)
             centerRArounded = 0;

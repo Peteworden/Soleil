@@ -304,8 +304,8 @@ export class InteractionController {
             }
         }
         Object.assign(this.config, newOptions);
-        Object.assign(this.viewState, newOptions.viewState);
-        Object.assign(this.displaySettings, newOptions.displaySettings);
+        Object.assign(this.viewState, this.config.viewState);
+        Object.assign(this.displaySettings, this.config.displaySettings);
         // グローバルconfigも確実に更新
         if (globalConfig) {
             Object.assign(globalConfig, newOptions);

@@ -64,48 +64,26 @@ export class ObjectInfoController {
         let infoText = '';
         let imageUrl = '';
         if (['messier', 'rec', 'ngc'].includes(objectInfo.type)) {
-            infoText = this.generateMessierInfo(objectInfo.data);
+            this.generateMessierInfo(objectInfoTextElement, objectInfo.data);
             imageUrl = this.getImageUrl(objectInfo.data);
         }
         else if (['planet', 'asteroidComet'].includes(objectInfo.type)) {
-            infoText = this.generatePlanetInfo(objectInfo.data);
+            this.generatePlanetInfo(objectInfoTextElement, objectInfo.data);
         }
         else if (objectInfo.type == 'sun') {
-            infoText = this.generateSunInfo(objectInfo.data);
+            this.generateSunInfo(objectInfoTextElement, objectInfo.data);
         }
         else if (objectInfo.type == 'moon') {
-            infoText = this.generateMoonInfo(objectInfo.data);
+            this.generateMoonInfo(objectInfoTextElement, objectInfo.data);
         }
         else if (objectInfo.type == 'star') {
-            infoText = this.generateStarInfo(objectInfo.data);
+            this.generateStarInfo(objectInfoTextElement, objectInfo.data);
         }
         else if (objectInfo.type == 'constellation') {
-            infoText = this.generateConstellationInfo(objectInfo.data);
+            this.generateConstellationInfo(objectInfoTextElement, objectInfo.data);
         }
-        // switch (objectInfo.type) {
-        //     case 'messier':
-        //         infoText = this.generateMessierInfo(objectInfo.data);
-        //         imageUrl = this.getImageUrl(objectInfo.name);
-        //         break;
-        //     case 'rec':
-        //         infoText = this.generateRecInfo(objectInfo.data);
-        //         imageUrl = this.getImageUrl(objectInfo.name);
-        //         break;
-        //     case 'ngc':
-        //         infoText = this.generateNGCInfo(objectInfo.data);
-        //         imageUrl = this.getImageUrl(objectInfo.name);
-        //         break;
-        //     case 'planet':
-        //         infoText = this.generatePlanetInfo(objectInfo.name, objectInfo.data);
-        //         break;
-        //     case 'star':
-        //         infoText = this.generateStarInfo(objectInfo.data);
-        //         break;
-        //     default:
-        //         infoText = '情報がありません';
-        // }
         // 情報テキストを設定
-        objectInfoTextElement.innerHTML = infoText;
+        // objectInfoTextElement.innerHTML = infoText;
         // 画像を表示
         if (imageUrl != '') {
             const img = new Image();
@@ -127,7 +105,7 @@ export class ObjectInfoController {
     /**
      * メシエ天体の情報を生成
      */
-    static generateMessierInfo(data) {
+    static generateMessierInfo(objectInfoTextElement, data) {
         const config = window.config;
         let infoText = '';
         // 座標情報
@@ -164,12 +142,13 @@ export class ObjectInfoController {
                 infoText += `<br><a href="https://ja.wikipedia.org/wiki/M${messierNumber}_(天体)" target="_blank">Wikipedia</a>`;
             }
         }
-        return infoText;
+        objectInfoTextElement.innerHTML = infoText;
+        return;
     }
     /**
      * 惑星の情報を生成
      */
-    static generatePlanetInfo(planetData) {
+    static generatePlanetInfo(objectInfoTextElement, planetData) {
         const config = window.config;
         let infoText = '';
         const jpnName = planetData.jpnName;
@@ -198,10 +177,10 @@ export class ObjectInfoController {
         // 等級
         const magnitude = planetData.getMagnitude();
         if (magnitude != null && magnitude != 100 && planetData.jpnName != '地球') {
-            infoText += `およその等級: ${magnitude.toFixed(1)}<br>`;
+            infoText += `明るさ: ${magnitude.toFixed(1)}等級<br>`;
         }
         // 距離情報
-        infoText += `距離: ${planetData.distance.toFixed(2)}au<br>`;
+        infoText += `距離: ${planetData.distance.toFixed(2)}au `;
         const lightMinutes = planetData.distance * 149597870700 / 299792458 / 60;
         if (lightMinutes < 60) {
             infoText += `（光の速さで${lightMinutes.toFixed(1)}分）<br>`;
@@ -224,9 +203,11 @@ export class ObjectInfoController {
         if ((!(planetData instanceof Planet) && !['太陽', '月'].includes(planetData.jpnName)) || ['天王星', '海王星'].includes(planetData.jpnName)) {
             infoText += '<br>詳しい位置の確認は<a href="gaiaChart.html" target="_blank">こちらのPythonスクリプト</a>で！<br>';
         }
-        return infoText;
+        objectInfoTextElement.innerHTML = infoText;
+        this.planetTrack(objectInfoTextElement, planetData.jpnName);
+        return;
     }
-    static generateSunInfo(data) {
+    static generateSunInfo(objectInfoTextElement, data) {
         const config = window.config;
         let infoText = '';
         // 座標情報
@@ -248,9 +229,10 @@ export class ObjectInfoController {
         if (magnitude != null && config && config.observationSite.observerPlanet == '地球') {
             infoText += `等級: ${magnitude}<br>`;
         }
-        return infoText;
+        objectInfoTextElement.innerHTML = infoText;
+        return;
     }
-    static generateMoonInfo(data) {
+    static generateMoonInfo(objectInfoTextElement, data) {
         const config = window.config;
         let infoText = '';
         // 座標情報
@@ -272,12 +254,175 @@ export class ObjectInfoController {
         infoText += `距離: ${(data.distance / 1000).toFixed(0)},000 km<br>`;
         const lightMinutes = data.distance / 299792.458;
         infoText += `（光の速さで${lightMinutes.toFixed(1)}秒）<br>`;
-        return infoText;
+        objectInfoTextElement.innerHTML = infoText;
+        return;
+    }
+    static planetTrack(objectInfoTextElement, name) {
+        // 毎回新しいチェックボックスを作成
+        const planetTrackCheck = document.createElement('input');
+        planetTrackCheck.type = 'checkbox';
+        planetTrackCheck.id = 'planetTrackCheck_' + name;
+        const config = window.config;
+        planetTrackCheck.checked = config.planetMotion.planet.includes(name);
+        planetTrackCheck.addEventListener('change', () => {
+            const config = window.config;
+            console.log(config.viewState.centerRA, config.viewState.centerDec);
+            if (!config.planetMotion.planet.includes(name)) {
+                config.planetMotion.planet.push(name);
+            }
+            else {
+                config.planetMotion.planet = config.planetMotion.planet.filter((p) => p !== name);
+            }
+            // configを更新
+            const updateConfig = window.updateConfig;
+            if (updateConfig) {
+                updateConfig({ planetMotion: config.planetMotion });
+            }
+            const renderAll = window.renderAll;
+            if (renderAll) {
+                renderAll();
+            }
+        });
+        // 惑星軌跡設定のUIを作成
+        const trackDiv = document.createElement('div');
+        // チェックボックス
+        const trackLabel = document.createElement('label');
+        trackLabel.appendChild(planetTrackCheck);
+        trackLabel.appendChild(document.createTextNode('移動を描画'));
+        trackDiv.appendChild(trackLabel);
+        // 設定項目
+        const trackMarkSettingDiv = document.createElement('div');
+        trackMarkSettingDiv.innerHTML = `
+            印：<input type="text" id="trackInterval" value="1" style="width: 40px;">
+            <select id="trackIntervalUnit">
+                <option value="日">日</option>
+            </select>
+            ごとに前後それぞれ
+            <input type="text" id="trackDuration" value="30" style="width: 40px;">
+            <select id="trackDurationUnit">
+                <option value="日">日</option>
+            </select>
+        `;
+        trackDiv.appendChild(trackMarkSettingDiv);
+        const trackTimeDisplaySettingDiv = document.createElement('div');
+        trackTimeDisplaySettingDiv.innerHTML = `
+        日時：印<input type="text" id="trackTimeDisplayInterval" value="1" style="width: 40px;">
+        個ごとに
+        <select id="trackTimeDisplayContent">
+            <option value="ym">年月</option>
+            <option value="md" selectec>月日</option>
+            <option value="mdh">月日時</option>
+            <option value="hm">時分</option>
+        </select>
+        を表示
+    `;
+        trackDiv.appendChild(trackTimeDisplaySettingDiv);
+        // select要素の変更イベントリスナーを設定
+        setTimeout(() => {
+            const trackInterval = document.getElementById('trackInterval');
+            const trackIntervalUnit = document.getElementById('trackIntervalUnit');
+            const trackDuration = document.getElementById('trackDuration');
+            const trackDurationUnit = document.getElementById('trackDurationUnit');
+            const trackTimeDisplayInterval = document.getElementById('trackTimeDisplayInterval');
+            const trackTimeDisplayContent = document.getElementById('trackTimeDisplayContent');
+            if (trackInterval && trackIntervalUnit && trackDuration && trackDurationUnit && trackTimeDisplayInterval && trackTimeDisplayContent) {
+                // 間隔設定の変更
+                const handleIntervalChange = () => {
+                    const config = window.config;
+                    config.planetMotion.interval = parseFloat(trackInterval.value) || 1;
+                    if (config.planetMotion.interval <= 0) {
+                        config.planetMotion.interval = 1;
+                        trackInterval.value = config.planetMotion.interval.toString();
+                    }
+                    console.log('間隔設定変更:', config.planetMotion.interval);
+                    // configを更新
+                    const updateConfig = window.updateConfig;
+                    if (updateConfig) {
+                        updateConfig({ planetMotion: config.planetMotion });
+                    }
+                    const renderAll = window.renderAll;
+                    if (renderAll) {
+                        renderAll();
+                    }
+                };
+                // 期間設定の変更
+                const handleDurationChange = () => {
+                    const config = window.config;
+                    config.planetMotion.duration = parseFloat(trackDuration.value) || 30;
+                    if (config.planetMotion.duration <= 0) {
+                        config.planetMotion.duration = 30;
+                        trackDuration.value = config.planetMotion.duration.toString();
+                    }
+                    console.log('期間設定変更:', config.planetMotion.duration);
+                    // configを更新
+                    const updateConfig = window.updateConfig;
+                    if (updateConfig) {
+                        updateConfig({ planetMotion: config.planetMotion });
+                    }
+                    const renderAll = window.renderAll;
+                    if (renderAll) {
+                        renderAll();
+                    }
+                };
+                const handleTimeDisplayIntervalChange = () => {
+                    const config = window.config;
+                    config.planetMotion.timeDisplayStep = parseInt(trackTimeDisplayInterval.value) || 1;
+                    if (config.planetMotion.timeDisplayStep < 1) {
+                        config.planetMotion.timeDisplayStep = 1;
+                    }
+                    config.planetMotion.timeDisplayContent = trackTimeDisplayContent.value;
+                    // configを更新
+                    const updateConfig = window.updateConfig;
+                    if (updateConfig) {
+                        updateConfig({ planetMotion: config.planetMotion });
+                    }
+                    const renderAll = window.renderAll;
+                    if (renderAll) {
+                        renderAll();
+                    }
+                };
+                const handleTimeDisplayContentChange = () => {
+                    const config = window.config;
+                    config.planetMotion.timeDisplayContent = trackTimeDisplayContent.value;
+                    // configを更新
+                    const updateConfig = window.updateConfig;
+                    if (updateConfig) {
+                        updateConfig({ planetMotion: config.planetMotion });
+                    }
+                    const renderAll = window.renderAll;
+                    if (renderAll) {
+                        renderAll();
+                    }
+                };
+                // イベントリスナーを追加
+                trackInterval.addEventListener('input', handleIntervalChange);
+                trackIntervalUnit.addEventListener('change', handleIntervalChange);
+                trackDuration.addEventListener('input', handleDurationChange);
+                trackDurationUnit.addEventListener('change', handleDurationChange);
+                trackTimeDisplayInterval.addEventListener('input', handleTimeDisplayIntervalChange);
+                trackTimeDisplayContent.addEventListener('change', handleTimeDisplayContentChange);
+                // 初期値をconfigから設定
+                if (config.planetMotion.interval) {
+                    trackInterval.value = config.planetMotion.interval.toString();
+                }
+                if (config.planetMotion.duration) {
+                    trackDuration.value = config.planetMotion.duration.toString();
+                }
+                if (config.planetMotion.timeDisplayStep) {
+                    trackTimeDisplayInterval.value = config.planetMotion.timeDisplayStep.toString();
+                }
+                if (config.planetMotion.timeDisplayContent) {
+                    trackTimeDisplayContent.value = config.planetMotion.timeDisplayContent;
+                }
+            }
+        }, 0);
+        objectInfoTextElement.appendChild(trackDiv);
+        return;
     }
     /**
      * 恒星の情報を生成(今は使っていない)
      */
-    static generateStarInfo(star) {
+    static generateStarInfo(objectInfoTextElement, star) {
         const config = window.config;
         let infoText = '';
         // 座標情報
@@ -294,16 +439,18 @@ export class ObjectInfoController {
         if (magnitude != null) {
             infoText += `等級: ${magnitude}<br>`;
         }
-        return infoText;
+        objectInfoTextElement.innerHTML = infoText;
+        return;
     }
-    static generateConstellationInfo(data) {
+    static generateConstellationInfo(objectInfoTextElement, data) {
         let infoText = '';
         infoText += `日本語名: ${data.JPNname}座<br>`;
         infoText += `英語名: ${data.IAUname}<br>`;
         infoText += `略符: ${data.abbr}<br>`;
         infoText += `赤経: ${data.ra.toFixed(1)}h<br>`;
         infoText += `赤緯: ${data.dec.toFixed(1)}°<br>`;
-        return infoText;
+        objectInfoTextElement.innerHTML = infoText;
+        return;
     }
     /**
      * 天体情報ウィンドウを閉じる
@@ -368,5 +515,5 @@ export class ObjectInfoController {
     }
 }
 ObjectInfoController.coordinateConverter = new CoordinateConverter();
-ObjectInfoController.CLICK_THRESHOLD = 30; // クリック判定の閾値（ピクセル）
+ObjectInfoController.CLICK_THRESHOLD = 50; // クリック判定の閾値（ピクセル）
 //# sourceMappingURL=ObjectInfoController.js.map

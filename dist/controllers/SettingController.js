@@ -119,9 +119,11 @@ export class SettingController {
                     longitude: longitude,
                     timezone: 9
                 };
+                console.log(window.config.viewState.centerRA, window.config.viewState.centerDec);
                 updateConfig({
                     observationSite: observationSite
                 });
+                console.log(window.config.viewState.centerRA, window.config.viewState.centerDec);
             }
         }
         // 表示設定を読み取り
@@ -140,9 +142,10 @@ export class SettingController {
         const recCheck = document.getElementById('recCheck');
         const ngcCheck = document.getElementById('ngcCheck');
         const camera = document.getElementById('camera');
+        const equinox = document.getElementById('equinox');
         if (modeSelect && gridCheck && magLimitSlider &&
             reticleCheck && objectInfoCheck && starCheck && starNameSelect &&
-            planetCheck && messierCheck && recCheck && ngcCheck && camera) {
+            planetCheck && messierCheck && recCheck && ngcCheck && camera && equinox) {
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 const currentConfig = window.config;
@@ -160,7 +163,8 @@ export class SettingController {
                     showMessiers: messierCheck.checked,
                     showRecs: recCheck.checked,
                     showNGC: ngcCheck.checked,
-                    camera: camera.value
+                    camera: camera.value,
+                    equinox: equinox.value
                 };
                 updateConfig({
                     displaySettings: newDisplaySettings
@@ -258,6 +262,7 @@ export class SettingController {
         const config = window.config;
         if (!config)
             return;
+        console.log(config.viewState.centerRA, config.viewState.centerDec);
         // 観測地の設定
         const observerPlanetSelect = document.getElementById('observer_planet');
         const observationSiteSelect = document.getElementById('observation-site-select');
@@ -291,6 +296,7 @@ export class SettingController {
         const recCheck = document.getElementById('recCheck');
         const ngcCheck = document.getElementById('ngcCheck');
         const camera = document.getElementById('camera');
+        const equinox = document.getElementById('equinox');
         if (modeSelect)
             modeSelect.value = config.displaySettings.mode || 'AEP';
         if (magLimitSlider)
@@ -320,6 +326,8 @@ export class SettingController {
             ngcCheck.checked = config.displaySettings.showNGC;
         if (camera)
             camera.value = config.displaySettings.camera;
+        if (equinox)
+            equinox.value = config.displaySettings.equinox;
         if (camera.value != 'none') {
             const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
             if (cameraTiltSliderDiv)

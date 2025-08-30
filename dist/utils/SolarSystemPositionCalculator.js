@@ -1,4 +1,4 @@
-import { isMinorObject, isMoon } from '../models/SolarSystemObjects.js';
+import { Moon, isMinorObject, isMoon } from '../models/SolarSystemObjects.js';
 import { isPlanet, isSun } from '../types/index.js';
 import { CoordinateConverter } from './coordinates.js';
 const DEG_TO_RAD = Math.PI / 180;
@@ -78,25 +78,86 @@ export class SolarSystemPositionCalculator {
             }
         });
         // 観測地の惑星の日心直交座標をセット
-        this.observerPlanetPosition = observerPlanetObject.xyz;
+        // this.observerPlanetPosition = observerPlanetObject.xyz;
         // 全天体の位置と等級を更新
         objects.forEach(obj => {
-            this.updateObjectData(obj, jd);
+            this.updateObjectData(obj, jd, observerPlanetObject.xyz);
         });
+    }
+    static oneObjectData(objects0, objName, jd, observationSite) {
+        this.observationSite = observationSite;
+        if (objects0.length === 0) {
+            console.warn('天体データがありません');
+            return undefined;
+        }
+        // 元のオブジェクトの型を保持するディープコピーを作成
+        const objects = objects0.map(obj => this.deepCopySolarSystemObject(obj));
+        const obj = objects.find(obj => obj.jpnName === objName);
+        if (!obj) {
+            console.warn(`天体「${objName}」が見つかりません`);
+            return undefined;
+        }
+        const observerPlanetObject = objects.find(obj => obj.jpnName === observationSite.observerPlanet);
+        if (!observerPlanetObject) {
+            console.warn(`観測地の惑星「${observationSite.observerPlanet}」が見つかりません`);
+            return undefined;
+        }
+        if (isMoon(obj)) {
+            if (observerPlanetObject.jpnName != "地球") {
+                return undefined;
+            }
+            const sun = objects.find(obj => isSun(obj));
+            if (sun) {
+                this.calculateXYZ(obj, jd, sun);
+            }
+            //月のxyzに地球のxyzを加算
+            this.calculateXYZ(observerPlanetObject, jd);
+            obj.xyz.x += observerPlanetObject.xyz.x;
+            obj.xyz.y += observerPlanetObject.xyz.y;
+            obj.xyz.z += observerPlanetObject.xyz.z;
+        }
+        else if (isMoon(observerPlanetObject)) {
+            const sun = objects.find(obj => isSun(obj));
+            if (sun) {
+                this.calculateXYZ(observerPlanetObject, jd, sun);
+            }
+            if (obj.jpnName === "地球") {
+                this.calculateXYZ(obj, jd);
+                observerPlanetObject.xyz.x += obj.xyz.x;
+                observerPlanetObject.xyz.y += obj.xyz.y;
+                observerPlanetObject.xyz.z += obj.xyz.z;
+            }
+            else {
+                const earth = objects.find(obj => isPlanet(obj) && obj.jpnName === "地球");
+                if (earth) {
+                    this.calculateXYZ(earth, jd);
+                    observerPlanetObject.xyz.x += earth.xyz.x;
+                    observerPlanetObject.xyz.y += earth.xyz.y;
+                    observerPlanetObject.xyz.z += earth.xyz.z;
+                }
+                this.calculateXYZ(observerPlanetObject, jd);
+            }
+        }
+        else {
+            this.calculateXYZ(obj, jd);
+            this.calculateXYZ(observerPlanetObject, jd);
+        }
+        this.updateObjectData(obj, jd, observerPlanetObject.xyz);
+        return obj;
     }
     /**
      * 個別天体の位置を更新
      */
-    static updateObjectData(obj, jd) {
+    static updateObjectData(obj, jd, observerPlanetPosition) {
         if (isMoon(obj) && this.observationSite.observerPlanet === "地球") {
             //すでに地球基準の座標が設定されている
             return;
         }
         // 観測地の天体を中心とする直交座標
         const xyz = {
-            x: obj.xyz.x - this.observerPlanetPosition.x,
-            y: obj.xyz.y - this.observerPlanetPosition.y,
-            z: obj.xyz.z - this.observerPlanetPosition.z
+            x: obj.xyz.x - observerPlanetPosition.x,
+            y: obj.xyz.y - observerPlanetPosition.y,
+            z: obj.xyz.z - observerPlanetPosition.z
         };
         const distance = this.calculateDistance(xyz);
         const equatorialCoordsJ2000 = this.calculateEquatorialCoordinates(xyz, distance);
@@ -104,7 +165,7 @@ export class SolarSystemPositionCalculator {
         // 天体の座標と距離と等級を更新
         obj.raDec = equatorialCoords;
         obj.distance = distance;
-        this.updateMagnitude(obj, distance);
+        this.updateMagnitude(obj, distance, observerPlanetPosition);
     }
     /**
      * 直交座標から赤道座標を計算
@@ -135,12 +196,12 @@ export class SolarSystemPositionCalculator {
      * https://arxiv.org/abs/1808.01973
      * Computing Apparent Planetary Magnitudes for The Astronomical Almanac
      */
-    static updateMagnitude(obj, distance) {
+    static updateMagnitude(obj, distance, observerPlanetPosition) {
         if (obj.jpnName === this.observationSite.observerPlanet) {
             obj.magnitude = 100;
             return;
         }
-        const sun_obs = this.calculateDistance(this.observerPlanetPosition);
+        const sun_obs = this.calculateDistance(observerPlanetPosition);
         const sun_pln = this.calculateDistance(obj.xyz);
         const obs_pln = distance;
         if (obj.type === 'sun') {
@@ -233,12 +294,6 @@ export class SolarSystemPositionCalculator {
         else if (obj.type === 'comet') {
             obj.magnitude = 100;
         }
-    }
-    /**
-     * 観測地惑星の位置を取得（デバッグ用）
-     */
-    static getObserverPlanetPosition() {
-        return { ...this.observerPlanetPosition };
     }
     static calculateXYZ(object, jd, sun) {
         if (isSun(object)) {
@@ -473,6 +528,34 @@ export class SolarSystemPositionCalculator {
         const Qz = cosPeri * cosIncl * cosNode * sinEpsl - sinPeri * sinNode * sinEpsl + cosPeri * sinIncl * cosEpsl;
         return { Px: Px, Qx: Qx, Py: Py, Qy: Qy, Pz: Pz, Qz: Qz };
     }
+    /**
+     * 太陽系天体オブジェクトのディープコピーを作成（メソッドを保持）
+     */
+    static deepCopySolarSystemObject(obj) {
+        // 元のオブジェクトのコンストラクタを使用して新しいインスタンスを作成
+        const copy = new obj.constructor({
+            jpnName: obj.jpnName,
+            hiraganaName: obj.hiraganaName,
+            engName: obj.engName,
+            type: obj.type,
+            xyz: { x: obj.xyz.x, y: obj.xyz.y, z: obj.xyz.z },
+            raDec: { ra: obj.raDec.ra, dec: obj.raDec.dec },
+            distance: obj.distance,
+            magnitude: obj.magnitude
+        });
+        // 軌道要素がある場合はコピー（Planetクラスの場合）
+        if ('orbit' in obj && obj.orbit) {
+            copy.orbit = { ...obj.orbit };
+        }
+        // Moonクラスの追加プロパティをコピー
+        if (obj instanceof Moon) {
+            copy.Ms = obj.Ms;
+            copy.ws = obj.ws;
+            copy.lon_moon = obj.lon_moon;
+            copy.lat_moon = obj.lat_moon;
+        }
+        return copy;
+    }
 }
 SolarSystemPositionCalculator.observationSite = {
     observerPlanet: '地球',
@@ -481,6 +564,6 @@ SolarSystemPositionCalculator.observationSite = {
     longitude: 0,
     timezone: 0
 };
-SolarSystemPositionCalculator.observerPlanetPosition = { x: 0, y: 0, z: 0 };
+// private static observerPlanetPosition: CartesianCoordinates = { x: 0, y: 0, z: 0 };
 SolarSystemPositionCalculator.coordinateConverter = new CoordinateConverter();
 //# sourceMappingURL=SolarSystemPositionCalculator.js.map
