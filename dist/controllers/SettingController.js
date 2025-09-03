@@ -76,7 +76,7 @@ export class SettingController {
             }
         }
         // controlPanelの可視性を更新
-        const timeController = window.TimeController;
+        const timeController = TimeController;
         if (timeController && timeController.updateControlPanelVisibility) {
             timeController.updateControlPanelVisibility();
         }

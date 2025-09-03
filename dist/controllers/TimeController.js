@@ -11,7 +11,6 @@ export class TimeController {
                 realTime.value = 'off';
             });
         }
-        // this.setupTimeButtons();
     }
     static setupTimeSlider() {
         this.timeSliderDiv = document.getElementById('timeSliderDiv');
@@ -24,7 +23,6 @@ export class TimeController {
         const config = window.config;
         if (config && config.displayTime.realTime === 'off') {
             this.timeSliderDiv.style.display = 'block';
-            // this.timeSlider.style.display = 'block';
             // 現在のJDから前後1時間の範囲を設定
             const currentJd = config.displayTime.jd;
             const minJd = currentJd - 1.0 / 24.0; // 1時間前
@@ -257,7 +255,7 @@ export class TimeController {
                         day: d,
                         hour: h,
                         minute: mi,
-                        second: 0,
+                        second: s,
                         realTime: 'azalt'
                     }
                 });

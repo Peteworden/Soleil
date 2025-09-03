@@ -332,13 +332,13 @@ export function setupTimeUpdate() {
     // 初期表示
     updateTimeDisplay();
 }
-export function showLoading(show = true) {
-    const loadingText = document.getElementById('loadingtext');
-    if (loadingText) {
-        loadingText.textContent = show ? 'Loading...' : '';
-        loadingText.style.display = show ? 'block' : 'none';
-    }
-}
+// export function showLoading(show: boolean = true) {
+//     const loadingText = document.getElementById('loadingtext');
+//     if (loadingText) {
+//         loadingText.textContent = show ? 'Loading...' : '';
+//         loadingText.style.display = show ? 'block' : 'none';
+//     }
+// }
 export function showError(message) {
     // エラーメッセージを表示
     console.error(message);
@@ -383,30 +383,30 @@ export function recalculateCanvasSize(canvas) {
         }
     }, 100);
 }
-export function showSuccess(message) {
-    // 成功メッセージを表示
-    console.log(message);
-    const successDiv = document.createElement('div');
-    successDiv.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(0, 255, 0, 0.9);
-        color: white;
-        padding: 20px;
-        border-radius: 8px;
-        z-index: 1000;
-        max-width: 80%;
-        text-align: center;
-    `;
-    successDiv.textContent = message;
-    document.body.appendChild(successDiv);
-    // 2秒後に自動削除
-    setTimeout(() => {
-        if (successDiv.parentNode) {
-            successDiv.parentNode.removeChild(successDiv);
-        }
-    }, 2000);
-}
+// export function showSuccess(message: string) {
+//     // 成功メッセージを表示
+//     console.log(message);
+//     const successDiv = document.createElement('div');
+//     successDiv.style.cssText = `
+//         position: fixed;
+//         top: 50%;
+//         left: 50%;
+//         transform: translate(-50%, -50%);
+//         background: rgba(0, 255, 0, 0.9);
+//         color: white;
+//         padding: 20px;
+//         border-radius: 8px;
+//         z-index: 1000;
+//         max-width: 80%;
+//         text-align: center;
+//     `;
+//     successDiv.textContent = message;
+//     document.body.appendChild(successDiv);
+//     // 2秒後に自動削除
+//     setTimeout(() => {
+//         if (successDiv.parentNode) {
+//             successDiv.parentNode.removeChild(successDiv);
+//         }
+//     }, 2000);
+// } 
 //# sourceMappingURL=uiUtils.js.map

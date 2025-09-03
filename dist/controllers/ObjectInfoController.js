@@ -82,8 +82,6 @@ export class ObjectInfoController {
         else if (objectInfo.type == 'constellation') {
             this.generateConstellationInfo(objectInfoTextElement, objectInfo.data);
         }
-        // 情報テキストを設定
-        // objectInfoTextElement.innerHTML = infoText;
         // 画像を表示
         if (imageUrl != '') {
             const img = new Image();

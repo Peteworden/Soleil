@@ -82,6 +82,9 @@ export class NGCObject extends CelestialObject {
     constructor(name, coordinates, magnitude, type) {
         super(name, coordinates, magnitude, type);
     }
+    getName() {
+        return this.name;
+    }
     getCatalog() {
         if (this.name.slice(0, 3) === 'NGC') {
             return 'NGC';

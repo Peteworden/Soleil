@@ -165,6 +165,7 @@ export class SearchController {
             }
         }
         const matchNgc = [];
+        const matchNgcData = [];
         if (DataStore.ngcData) {
             let catalogName = '';
             let queryNumber = '0';
@@ -190,6 +191,7 @@ export class SearchController {
                         !matchMessierInclude.some(messier => messier.title.includes(mayInclude)) &&
                         !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
                         matchNgc.push({ title: `${ngc.getCatalog()}${ngc.getNumber()}`, position: { ra: ngc.getCoordinates().ra, dec: ngc.getCoordinates().dec } });
+                        matchNgcData.push(ngc);
                         if (matchNgc.length === 2) {
                             break;
                         }
@@ -236,8 +238,25 @@ export class SearchController {
             button.className = 'suggestionButton';
             button.textContent = result.title;
             const epoch = (matchPlanetsStart.some(planet => planet.title === result.title) || matchPlanetsInclude.some(planet => planet.title === result.title)) ? 'current' : 'j2000';
-            button.addEventListener('click', () => {
-                this.selectSearchResult(result.position, epoch);
+            button.addEventListener('click', async () => {
+                // NGC/IC の場合は天体オブジェクトを保存
+                const isNgcIc = matchNgc.some(ngc => ngc.title === result.title);
+                if (isNgcIc) {
+                    const object = matchNgcData.find(ngc => ngc.getName() === result.title);
+                    if (object) {
+                        try {
+                            sessionStorage.setItem('tempTarget', JSON.stringify(object));
+                        }
+                        catch (_) { }
+                    }
+                }
+                else {
+                    try {
+                        sessionStorage.removeItem('tempTarget');
+                    }
+                    catch (_) { }
+                }
+                await this.selectSearchResult(result.position, epoch);
             });
             button.classList.add('suggestionButton');
             container.appendChild(button);
@@ -261,27 +280,60 @@ export class SearchController {
             }
         }
     }
-    static selectSearchResult(position0, epoch = 'j2000') {
+    static async selectSearchResult(position0, epoch = 'j2000') {
         // 検索結果が選択された時の処理
         const config = window.config;
-        if (!config) {
+        if (!config)
             return;
-        }
+        const renderAll = window.renderAll;
+        if (!renderAll)
+            return;
         const coordinateConverter = new CoordinateConverter();
         let position = position0;
         if (epoch === 'j2000') {
             position = coordinateConverter.precessionEquatorial(position0, undefined, 'j2000', config.displayTime.jd);
         }
-        config.viewState.centerRA = position.ra;
-        config.viewState.centerDec = position.dec;
-        const horizontal = coordinateConverter.equatorialToHorizontal(position, config.siderealTime);
-        config.viewState.centerAz = horizontal.az;
-        config.viewState.centerAlt = horizontal.alt;
-        window.updateConfig({
-            viewState: config.viewState
-        });
-        window.renderAll();
+        const start_vector = coordinateConverter.equatorialToCartesian({ ra: config.viewState.centerRA, dec: config.viewState.centerDec });
+        const end_vector = coordinateConverter.equatorialToCartesian(position);
+        const steps = 30;
+        const path_ras = [];
+        const path_decs = [];
+        const path_azs = [];
+        const path_alts = [];
+        for (let i = 0; i <= steps; i++) {
+            const division_vector = {
+                x: start_vector.x + (end_vector.x - start_vector.x) * i / steps,
+                y: start_vector.y + (end_vector.y - start_vector.y) * i / steps,
+                z: start_vector.z + (end_vector.z - start_vector.z) * i / steps
+            };
+            const new_position = coordinateConverter.cartesianToEquatorial(division_vector);
+            const horizontal = coordinateConverter.equatorialToHorizontal({ ra: new_position.ra, dec: new_position.dec }, config.siderealTime);
+            path_ras.push(new_position.ra);
+            path_decs.push(new_position.dec);
+            path_azs.push(horizontal.az);
+            path_alts.push(horizontal.alt);
+        }
         this.closeSearch();
+        const interval = 20;
+        async function move() {
+            for (let i = 0; i <= steps; i++) {
+                config.viewState.centerRA = path_ras[i];
+                config.viewState.centerDec = path_decs[i];
+                config.viewState.centerAz = path_azs[i];
+                config.viewState.centerAlt = path_alts[i];
+                window.updateConfig({
+                    viewState: config.viewState
+                });
+                renderAll();
+                await new Promise(resolve => setTimeout(resolve, interval));
+            }
+        }
+        const interactionController = window.interactionController;
+        if (interactionController) {
+            interactionController.removeEventListeners();
+            await move();
+            interactionController.setupEventListeners();
+        }
     }
     //カタカナをひらがなにする関数
     static kanaToHira(name) {
@@ -300,26 +352,9 @@ export class SearchController {
     static normalizeText(name) {
         return this.kanaToHira(this.toHalfWidth(name)).toLowerCase();
     }
-    static toHalfWidthLower(name) {
-        return this.toHalfWidth(name).toLowerCase();
-    }
     static isInteger(name) {
         return /^\d+$/.test(name);
     }
-    // private static showObjectInfo(object: any) {
-    //     const objectInfo = document.getElementById('objectInfo');
-    //     const objectInfoName = document.getElementById('objectInfoName');
-    //     const objectInfoText = document.getElementById('objectInfoText');
-    //     if (objectInfo && objectInfoName && objectInfoText) {
-    //         objectInfoName.textContent = object.name;
-    //         objectInfoText.innerHTML = `
-    //             <p><strong>種類:</strong> ${object.type}</p>
-    //             <p><strong>赤経:</strong> ${object.ra}</p>
-    //             <p><strong>赤緯:</strong> ${object.dec}</p>
-    //         `;
-    //         objectInfo.style.display = 'block';
-    //     }
-    // }
     static setupSearchInput() {
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {

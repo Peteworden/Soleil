@@ -1,5 +1,5 @@
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { HipStar, MessierObject } from '../models/CelestialObject.js';
+import { CelestialObject, HipStar, MessierObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
@@ -60,7 +60,6 @@ export class CanvasRenderer {
         if (!screenXY[0])
             return;
         const [x, y] = screenXY[1];
-        const magnitude = object.getMagnitude();
         const type = object.getType();
         this.objectInfomation.push({
             name: object.getName(),
@@ -222,6 +221,15 @@ export class CanvasRenderer {
             return;
         this.drawJsonObject(ngcObjects, 'ngc', 'bottom-right');
     }
+    drawTempTarget(tempTarget) {
+        if (!tempTarget)
+            return;
+        const tempTargetJson = JSON.parse(tempTarget);
+        const tempTargetObject = new CelestialObject(tempTargetJson.name, tempTargetJson.coordinates, tempTargetJson.magnitude, tempTargetJson.type);
+        if (tempTargetObject) {
+            this.drawJsonObject([tempTargetObject], 'ngc', 'bottom-right');
+        }
+    }
     drawSolarSystemObjects() {
         if (!this.config.displaySettings.showPlanets)
             return;
@@ -327,7 +335,7 @@ export class CanvasRenderer {
             const mi = ymdhms.minute;
             const s = ymdhms.second;
             if (format == 'ym') {
-                return `${y}/${m}`;
+                return `${y}/${m}/${d}`;
             }
             else if (format == 'md') {
                 return `${m}/${d}`;

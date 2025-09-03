@@ -77,8 +77,6 @@ export class SolarSystemPositionCalculator {
                 this.calculateXYZ(obj, jd);
             }
         });
-        // 観測地の惑星の日心直交座標をセット
-        // this.observerPlanetPosition = observerPlanetObject.xyz;
         // 全天体の位置と等級を更新
         objects.forEach(obj => {
             this.updateObjectData(obj, jd, observerPlanetObject.xyz);

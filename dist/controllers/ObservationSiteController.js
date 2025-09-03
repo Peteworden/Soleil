@@ -268,21 +268,6 @@ export class ObservationSiteController {
         SettingController.saveConfigToLocalStorage();
     }
     /**
-     * ローカルストレージに観測地を保存
-     */
-    // private static saveObservationSiteToLocalStorage(name: string, lat: number, lon: number): void {
-    //     // 座標も保存
-    //     const latInput = document.getElementById('lat') as HTMLInputElement;
-    //     const lonInput = document.getElementById('lon') as HTMLInputElement;
-    //     const nsSelect = document.getElementById('NSCombo') as HTMLSelectElement;
-    //     const ewSelect = document.getElementById('EWCombo') as HTMLSelectElement;
-    //     if (latInput && lonInput && nsSelect && ewSelect) {
-    //         // const lat = parseFloat(latInput.value) * (nsSelect.value === '北緯' ? 1 : -1);
-    //         // const lon = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
-    //         this.updateConfig(name, lat, lon);
-    //     }
-    // }
-    /**
      * 保存された観測地を読み込み
      */
     static loadSavedObservationSite() {

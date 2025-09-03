@@ -16,6 +16,9 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-09-03T21:02:00', title: '検索時のアニメーション', text: '検索した天体までゆっくりと移動するようにしてみました。' },
+    { time: '2025-09-03T21:01:00', title: '検索したNGC/IC天体のみの表示', text: 'おすすめに含まれないNGC天体・IC天体を検索したときに、その天体のみ表示するようにしました。NGC/IC天体をすべて表示する必要がなくなりました。' },
+    { time: '2025-09-03T21:00:00', title: '太陽系天体の軌跡', text: '惑星などの太陽系天体をタップ/クリックしたときの画面から、移動経路を描画できるようにしました。同時に複数の天体の経路を表示できます。' },
     { time: '2025-08-30T13:50:00', title: '', text: '横に伸びる不具合は直ったでしょうか？' },
     { time: '2025-08-30T13:40:00', title: '彗星追加', text: '今話題のLemmon彗星とK1 ATLASを追加しました。' },
     { time: '2025-08-30T12:40:00', title: '方角の表示', text: 'ご要望に応えてプラネモードで方角を出しました。右上メニュー>ご意見フォームからご意見お待ちしております（SNS繋がってる方はそっちの方が早いです）。' },
@@ -23,6 +26,45 @@ const news = [
     { time: '2025-08-15T20:19:30', title: '天の北極・南極', text: '印をつけました' },
     { time: '2025-08-12T12:19:30', title: 'ペルセウス座流星群が見ごろ', text: '曇って見れなさそう...' },
 ];
+function setSessionItem(key, value) {
+    try {
+        if (value == null || value === '') {
+            sessionStorage.removeItem(key);
+        }
+        else {
+            sessionStorage.setItem(key, value);
+        }
+    }
+    catch (_) {
+        // ignore storage errors
+    }
+}
+function getSessionItem(key) {
+    try {
+        return sessionStorage.getItem(key);
+    }
+    catch (_) {
+        return null;
+    }
+}
+export function setTempTarget(value) {
+    if (value == null) {
+        setSessionItem('tempTarget', null);
+        return;
+    }
+    setSessionItem('tempTarget', JSON.stringify(value));
+}
+export function getTempTarget() {
+    const raw = getSessionItem('tempTarget');
+    if (!raw)
+        return null;
+    try {
+        return raw;
+    }
+    catch (_) {
+        return null;
+    }
+}
 // 初期設定を読み込む関数
 function initializeConfig(noLoad = false) {
     const savedSettings = localStorage.getItem('config');
@@ -45,10 +87,7 @@ function initializeConfig(noLoad = false) {
         showCameraView: false,
         camera: 'none',
         showTopography: false, // 読み込み時は常にfalse
-        equinox: 'apparent',
-        // showSatellites: false,
-        // showSatelliteLabels: false,
-        // showSatelliteOrbits: false
+        equinox: 'apparent'
     };
     const viewState = {
         centerRA: 90,
@@ -89,7 +128,6 @@ function initializeConfig(noLoad = false) {
         lastShownTime: '',
         dontShow: false
     };
-    // const canvasSize: CanvasSize = getCanvasSize();
     const canvasSize = {
         width: window.innerWidth,
         height: window.innerHeight
@@ -209,7 +247,6 @@ function initializeConfig(noLoad = false) {
 }
 // 星空表示の設定
 export const config = initializeConfig();
-// resetConfig();
 // 設定をリセットする関数
 export function resetConfig() {
     localStorage.removeItem('config');
@@ -228,20 +265,13 @@ export function updateConfig(newConfig) {
     window.config = config;
     window.renderer.updateOptions(config);
     if (newConfig.displaySettings || newConfig.viewState) {
-        window.controller.updateOptions({
+        window.interactionController.updateOptions({
             displaySettings: config.displaySettings,
             viewState: config.viewState
         });
     }
     window.renderAll();
 }
-// ViewStateのみを更新する関数
-// export function updateViewState(newViewState: Partial<ViewState>): void {
-//     Object.assign(config.viewState, newViewState);
-//     (window as any).renderer.updateOptions(newViewState);
-//     (window as any).controller.updateOptions(newViewState);
-//     (window as any).renderAll();
-// }
 function resetAll() {
     // LocalStorage, config, UIをリセット
     resetConfig();
@@ -270,19 +300,9 @@ function showErrorMessage(text) {
     }
     console.log(errorMessage);
 }
-// グローバルにconfigを公開（SettingControllerからアクセス可能）
 window.config = config;
-window.DataStore = DataStore;
 window.updateConfig = updateConfig;
-// (window as any).updateViewState = updateViewState;
 window.updateInfoDisplay = updateInfoDisplay;
-window.resetConfig = resetConfig;
-window.saveConfig = SettingController.saveConfigToLocalStorage;
-window.loadSettingsFromConfig = SettingController.loadSettingsFromConfig;
-window.TimeController = TimeController;
-window.updateTimeSlider = TimeController.updateSlider;
-window.toggleRealTime = TimeController.toggleRealTime;
-window.ObjectInfoController = ObjectInfoController;
 window.showErrorMessage = showErrorMessage;
 // メイン関数
 export async function main() {
@@ -293,10 +313,6 @@ export async function main() {
         // 設定を初期化（DOM要素が読み込まれた後に実行）
         const config = initializeConfig();
         window.config = config;
-        // const userObject = localStorage.getItem('userObject');
-        // if (userObject) {
-        //     localStorage.removeItem('userObject');
-        // }
         // キャンバスの取得（HTMLで作成済み）
         const canvas = document.getElementById('starChartCanvas');
         if (!canvas) {
@@ -328,6 +344,30 @@ export async function main() {
             const time000 = performance.now();
             renderer.clearObjectInfomation();
             renderer.clear();
+            // tempTarget がある場合は単独描画に切り替え
+            const tempTarget = getTempTarget();
+            // if (tempTarget) {
+            //     // 背景と最低限の要素
+            //     renderer.drawGrid();
+            //     renderer.drawPoleMark();
+            //     renderer.drawCameraView();
+            //     // NGC/IC から該当天体を探す
+            //     let target = null as NGCObject | null;
+            //     for (const obj of ngcData) {
+            //         if (obj.getCatalog() + obj.getNumber() === tempTarget.toUpperCase()) {
+            //             target = obj;
+            //             break;
+            //         }
+            //     }
+            //     if (target) {
+            //         // 等価の単独描画: 必要最低限の星図に対象を強調
+            //         renderer.drawNGC([target]);
+            //         renderer.drawReticle();
+            //         updateInfoDisplay();
+            //         return;
+            //     }
+            //     // 見つからない場合は通常描画
+            // }
             renderer.drawGrid();
             renderer.drawPoleMark();
             renderer.drawCameraView();
@@ -342,6 +382,7 @@ export async function main() {
             renderer.drawMessier(messierData);
             renderer.drawRec(DataStore.getRecData());
             renderer.drawNGC(ngcData);
+            renderer.drawTempTarget(tempTarget);
             renderer.writeConstellationNames(constellationData);
             renderer.drawSolarSystemObjects();
             renderer.drawReticle();
@@ -445,8 +486,8 @@ export async function main() {
         loadDataStep();
         await SolarSystemController.initialize();
         SolarSystemDataManager.updateAllData(config.displayTime.jd, config.observationSite);
-        const controller = new InteractionController(canvas, config, renderAll);
-        window.controller = controller;
+        const interactionController = new InteractionController(canvas, config, renderAll);
+        window.interactionController = interactionController;
         UserObjectController.init();
         setupButtonEvents();
         setupResizeHandler();
@@ -535,7 +576,6 @@ function updateFullScreenState(isFullscreen) {
         // config.canvasSize.width = window.outerWidth;
         config.canvasSize.height = window.outerHeight;
         config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * config.canvasSize.height / config.canvasSize.width;
-        console.log(config.canvasSize, config.viewState.fieldOfViewDec);
         updateConfig(config);
     }
     else {

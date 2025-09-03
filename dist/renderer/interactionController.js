@@ -352,10 +352,16 @@ export class InteractionController {
     setupEventListeners() {
         // PointerEventでマウスとタッチを両方扱う
         this.canvas.addEventListener('pointerdown', this.onPointerDown, { passive: false });
-        // this.canvas.addEventListener('pointermove', this.onPointerMove, { passive: false });
         this.canvas.addEventListener('pointerup', this.onPointerUp, { passive: false });
         this.canvas.addEventListener('pointercancel', this.onPointerUp, { passive: false });
         this.canvas.addEventListener('wheel', this.onWheel, { passive: false });
+    }
+    removeEventListeners() {
+        this.canvas.removeEventListener('pointerdown', this.onPointerDown);
+        this.canvas.removeEventListener('pointermove', this.onPointerMove);
+        this.canvas.removeEventListener('pointerup', this.onPointerUp);
+        this.canvas.removeEventListener('pointercancel', this.onPointerUp);
+        this.canvas.removeEventListener('wheel', this.onWheel);
     }
 }
 //# sourceMappingURL=interactionController.js.map
