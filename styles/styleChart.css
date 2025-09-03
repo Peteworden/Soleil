@@ -93,7 +93,7 @@ input[type='range']::-moz-range-thumb {
     line-height: 1.4;
     z-index: 5;
     backdrop-filter: blur(3px);
-    min-width: 200px;
+    min-width: 50px;
 }
 
 .info-display .info-row {
@@ -1884,6 +1884,32 @@ canvas {
     overflow-y: auto;
 }
 
+/* 天体追加・編集ボタンのスタイル */
+#openUserObjectManage {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: 2px solid #2c5aa0;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    box-shadow: 0 3px 6px rgba(74, 144, 226, 0.3);
+    transition: all 0.2s ease;
+    min-width: 180px;
+}
+
+#openUserObjectManage:hover {
+    background: linear-gradient(135deg, #357abd, #2c5aa0);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(74, 144, 226, 0.4);
+    border-color: #1e4a8a;
+}
+
+#openUserObjectManage:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
+}
+
 .close-add-object {
     position: absolute;
     top: 10px;
@@ -2495,10 +2521,12 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.2);
     display: flex;
-    overflow: auto;
-    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    z-index: 3000;
 }
 
 .error-message-title {
@@ -2506,10 +2534,14 @@ canvas {
     color: #e2e8f0;
     text-align: center;
     margin: 10px;
+    overflow-wrap:anywhere;
 }
 
+/* 横幅が足りなかったら折り返す */
 .error-message-text {
     font-size: 16px;
     color: #e2e8f0;
     text-align: center;
+    overflow-wrap:anywhere;
+    word-break: break-all;
 }
