@@ -1,4 +1,5 @@
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
+// import { EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements, PlanetOrbitalElements, SolarObjectType } from '../types/solarObjects.js';
 import { DataStore } from './DataStore.js';
 // 共通プロパティ
 export class SolarSystemObjectBase {
@@ -110,52 +111,53 @@ export function isSun(obj) {
 export function isMoon(obj) {
     return obj.type === 'moon';
 }
-// // ファクトリー関数
-export class SolarSystemObjectFactory {
-    static create(data) {
-        if (isSun(data)) {
-            return new Sun(data);
-        }
-        else if (isMoon(data)) {
-            return new Moon(data);
-        }
-        else if (isPlanet(data)) {
-            return new Planet(data);
-        }
-        else if (isAsteroid(data)) {
-            return new Asteroid(data);
-        }
-        else if (isComet(data)) {
-            return new Comet(data);
-        }
-        else {
-            throw new Error(`Unknown solar system object type: ${data.type}`);
-        }
-    }
-    static createFromArray(dataArray) {
-        return dataArray.map(data => this.create(data));
-    }
+export function isOrbitalObject(obj) {
+    return obj.type === 'asteroid' || obj.type === 'comet' || obj.type === 'planet';
 }
+// // ファクトリー関数
+// export class SolarSystemObjectFactory {
+//     static create(data: SolarSystemObject): SolarSystemObjectBase {
+//         if (isSun(data)) {
+//             return new Sun(data);
+//         } else if (isMoon(data)) {
+//             return new Moon(data);
+//         } else if (isPlanet(data)) {
+//             return new Planet(data);
+//         } else if (isAsteroid(data)) {
+//             return new Asteroid(data);
+//         } else if (isComet(data)) {
+//             return new Comet(data);
+//         } else {
+//             throw new Error(`Unknown solar system object type: ${(data as any).type}`);
+//         }
+//     }
+//     static createFromArray(dataArray: SolarSystemObject[]): SolarSystemObjectBase[] {
+//         return dataArray.map(data => this.create(data));
+//     }
+// }
 /**
  * 太陽系天体データ管理クラス
  * データの読み込み、保存、検索、分類を統合管理
  */
 export class SolarSystemDataManager {
+    static async initialize() {
+        await this.loadSolarSystemObjectElements();
+        const config = window.config;
+        if (config) {
+            this.updateAllData(config.displayTime.jd, config.observationSite);
+        }
+    }
     /**
      * solarObjects.jsonからデータを読み込む（最初の読み込み時のみ）
      */
     static async loadSolarSystemObjectElements() {
-        if (this.isLoaded) {
-            console.log('太陽系天体データはすでに読み込まれています');
-            return;
-        }
         try {
             const response = await fetch('./data/solarObjects.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            this.solarObjects = SolarSystemObjectFactory.createFromArray(data);
+            this.solarObjects = this.createSpecificClassObjectFromArray(data);
             const userObjects = localStorage.getItem('userObject');
             if (userObjects) {
                 const userObjectsData = JSON.parse(userObjects);
@@ -163,7 +165,7 @@ export class SolarSystemDataManager {
                     for (const item of userObjectsData.userSolarSystem) {
                         const object = item.content;
                         if (object.orbit != null) {
-                            this.solarObjects.push(SolarSystemObjectFactory.create(object));
+                            this.solarObjects.push(this.createSpecificClassObject(object));
                         }
                         else {
                             userObjectsData.userSolarSystem.splice(userObjectsData.userSolarSystem.indexOf(item), 1);
@@ -172,7 +174,6 @@ export class SolarSystemDataManager {
                 }
                 localStorage.setItem('userObject', JSON.stringify(userObjectsData));
             }
-            this.isLoaded = true;
         }
         catch (error) {
             console.error('太陽系天体データの読み込みに失敗:', error);
@@ -198,6 +199,29 @@ export class SolarSystemDataManager {
         }
         DataStore.triggerRenderUpdate();
     }
+    static createSpecificClassObject(data) {
+        if (isSun(data)) {
+            return new Sun(data);
+        }
+        else if (isMoon(data)) {
+            return new Moon(data);
+        }
+        else if (isPlanet(data)) {
+            return new Planet(data);
+        }
+        else if (isAsteroid(data)) {
+            return new Asteroid(data);
+        }
+        else if (isComet(data)) {
+            return new Comet(data);
+        }
+        else {
+            throw new Error(`Unknown solar system object type: ${data.type}`);
+        }
+    }
+    static createSpecificClassObjectFromArray(dataArray) {
+        return dataArray.map(data => this.createSpecificClassObject(data));
+    }
     /**
      * 全ての天体を取得
      * SearchController, CanvasRendererで使用
@@ -207,5 +231,4 @@ export class SolarSystemDataManager {
     }
 }
 SolarSystemDataManager.solarObjects = [];
-SolarSystemDataManager.isLoaded = false;
 //# sourceMappingURL=SolarSystemObjects.js.map

@@ -408,10 +408,13 @@ export class CanvasRenderer {
         const moonRaRad = moonRaDeg * Math.PI / 180;
         const moonDecRad = moonDecDeg * Math.PI / 180;
         const moonDist = moon.getDistance();
-        const radius = Math.max(this.canvas.width * (0.259 / (moonDist / 384400)) / this.config.viewState.fieldOfViewRA, 13);
+        const angRadius = 0.259 / (moonDist / 384400);
+        const pxRadius0 = this.canvas.width * angRadius / this.config.viewState.fieldOfViewRA;
+        const radius = Math.max(pxRadius0, 13);
+        const scale = radius / pxRadius0; // 実際の視半径より何倍に見せているか
         const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
         const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
-        let p, RA1, Dec1, A1, h1, scrRA1, scrDec1, x1, y1;
+        let p, RA1, Dec1;
         const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.config, false, this.orientationData);
         if (!screenXY[0])
             return;
@@ -463,6 +466,53 @@ export class CanvasRenderer {
             this.ctx.arc(x, y, radius, p - Math.PI, p);
             this.ctx.ellipse(x, y, radius, radius * (2 * k - 1), p, 0, Math.PI);
             this.ctx.fill();
+        }
+        // 簡易月食表現（本影・半影の重なりを描画）
+        // 利用可能な月の黄経・黄緯（moon.lon_moon, moon.lat_moon）と太陽の黄経（lon_sun）を使う
+        try {
+            const penumbraRadiusDeg = 1.25 * 384400 / moonDist; // 半影半径（度）
+            const umbraRadiusDeg = 0.75 * 384400 / moonDist; // 
+            const penumbraPx = (penumbraRadiusDeg / angRadius) * radius;
+            const umbraPx = (umbraRadiusDeg / angRadius) * radius;
+            // 影の向き（画面上で太陽反対方向）
+            const shadowCenterFromEarthCenter = this.coordinateConverter.equatorialToCartesian({ ra: (sunRaDeg + 180) % 360, dec: -sunDecDeg }, moonDist);
+            const obsLat = this.config.observationSite.latitude * Math.PI / 180;
+            const siderealTime = this.config.siderealTime;
+            const shadowCenterXYZFromObserver = {
+                x: shadowCenterFromEarthCenter.x - Math.cos(obsLat) * Math.cos(siderealTime) * 6378.14,
+                y: shadowCenterFromEarthCenter.y - Math.cos(obsLat) * Math.sin(siderealTime) * 6378.14,
+                z: shadowCenterFromEarthCenter.z - Math.sin(obsLat) * 6378.14
+            };
+            const shadowCenterRaDecFromObserver = this.coordinateConverter.cartesianToEquatorial(shadowCenterXYZFromObserver);
+            const shadowCenterXY = this.coordinateConverter.equatorialToScreenXYifin(shadowCenterRaDecFromObserver, this.config, true, this.orientationData);
+            const [sx0, sy0] = shadowCenterXY[1];
+            const sx = x + (sx0 - x) * scale;
+            const sy = y + (sy0 - y) * scale;
+            const angDistanceDeg = this.coordinateConverter.angularDistanceEquatorial(shadowCenterRaDecFromObserver, { ra: moonRaDeg, dec: moonDecDeg });
+            const drawEarthShadow = (red, green, blue, alpha, shadowRadius) => {
+                this.ctx.save();
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+                this.ctx.clip();
+                this.ctx.beginPath();
+                this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha.toFixed(3)})`;
+                this.ctx.arc(sx, sy, shadowRadius, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.restore();
+            };
+            // 半影（淡い影）
+            if (angDistanceDeg < penumbraRadiusDeg + angRadius) {
+                const penAlpha = Math.min(0.5, Math.max(0.20, (penumbraRadiusDeg - angDistanceDeg) / penumbraRadiusDeg * 0.5));
+                drawEarthShadow(0, 0, 0, penAlpha, penumbraPx);
+                // 本影（濃い影、赤銅色）
+                if (angDistanceDeg < umbraRadiusDeg + angRadius) {
+                    const umbAlpha = Math.min(0.9, Math.max(0.7, (umbraRadiusDeg - angDistanceDeg) / umbraRadiusDeg * 0.9));
+                    drawEarthShadow(120, 20, 20, umbAlpha, umbraPx);
+                }
+            }
+        }
+        catch (e) {
+            // 影データが取得できない等の場合は何もしない
         }
         this.ctx.fillStyle = 'yellow';
         this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
@@ -938,20 +988,6 @@ export class CanvasRenderer {
                 this.ctx.moveTo(x1, y1);
                 this.ctx.lineTo(x2, y2);
             }
-            // for (const longLine of constellation.lines) {
-            //     for (let i = 0; i < longLine.length - 3; i+=2) {
-            //         const coords1J2000 = { ra: longLine[i], dec: longLine[i+1] };
-            //         const coords1 = this.coordinateConverter.precessionEquatorial(coords1J2000, precessionAngle);
-            //         const coords2J2000 = { ra: longLine[i+2], dec: longLine[i+3] };
-            //         const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
-            //         const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true, this.orientationData);
-            //         const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true, this.orientationData);
-            //         if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin) continue;
-            //         if ((x1-x2) * (x1-x2) + (y1-y2) * (y1-y2) > maxLength * maxLength) continue;
-            //         this.ctx.moveTo(x1, y1);
-            //         this.ctx.lineTo(x2, y2);
-            //     }
-            // }
         }
         this.ctx.stroke();
     }
@@ -1063,7 +1099,6 @@ export class CanvasRenderer {
     getStarColor(bv) {
         let c;
         let starColor = 'white';
-        // if (darker) {
         if (bv === undefined || bv === 100) {
             c = starColor;
         }

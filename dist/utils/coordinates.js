@@ -16,7 +16,6 @@ export class CoordinateConverter {
             this.centerAlt = globalConfig.viewState.centerAlt;
             this.fieldOfViewRA = globalConfig.viewState.fieldOfViewRA;
             this.fieldOfViewDec = globalConfig.viewState.fieldOfViewDec;
-            this.mode = globalConfig.displaySettings.mode;
         }
         else {
             // デフォルト値（東京）
@@ -28,7 +27,6 @@ export class CoordinateConverter {
             this.centerAlt = 0;
             this.fieldOfViewRA = 60;
             this.fieldOfViewDec = 60;
-            this.mode = 'AEP';
             console.warn('CoordinateConverter: config not found, using default coordinates (Tokyo)');
         }
     }
@@ -558,6 +556,13 @@ export class CoordinateConverter {
         // デバイスオリエンテーションが利用できない場合は通常の変換
         const screenRaDec = this.horizontalToScreenRaDec_View(horizontal, centerHorizontal);
         return this.screenRaDecToScreenXY(screenRaDec, canvasSize, window.config.viewState);
+    }
+    angularDistanceEquatorial(coords1, coords2) {
+        const ra1 = coords1.ra * DEG_TO_RAD;
+        const dec1 = coords1.dec * DEG_TO_RAD;
+        const ra2 = coords2.ra * DEG_TO_RAD;
+        const dec2 = coords2.dec * DEG_TO_RAD;
+        return this.acosdeg(Math.cos(dec1) * Math.cos(dec2) * Math.cos(ra1 - ra2) + Math.sin(dec1) * Math.sin(dec2));
     }
     pinchNewCenterRaDec(center1, pinchRaDec, pinchScreenRaDec, scale) {
         // x, yは固定。screenRA_p, screenDec_p(pinchの座標)はscale倍になる。

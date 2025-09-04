@@ -1,6 +1,6 @@
 import { DataStore } from '../models/DataStore.js';
-import { CoordinateConverter } from '../utils/coordinates.js';
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
+import { CoordinateConverter } from '../utils/coordinates.js';
 export class SearchController {
     static openSearch() {
         const searchDiv = document.getElementById('search');

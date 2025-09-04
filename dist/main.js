@@ -3,7 +3,6 @@ import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 import { ObservationSiteController } from './controllers/ObservationSiteController.js';
 import { SearchController } from './controllers/SearchController.js';
 import { SettingController } from './controllers/SettingController.js';
-import { SolarSystemController } from './controllers/SolarSystemController.js';
 import { TimeController } from './controllers/TimeController.js';
 import { UserObjectController } from './controllers/UserObjectController.js';
 import { DataStore } from './models/DataStore.js';
@@ -16,6 +15,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-09-04T23:40:00', title: '月食の表示', text: '8日未明は皆既月食ですね。というわけで月食を表示できるようにしました。' },
     { time: '2025-09-03T21:02:00', title: '検索時のアニメーション', text: '検索した天体までゆっくりと移動するようにしてみました。' },
     { time: '2025-09-03T21:01:00', title: '検索したNGC/IC天体のみの表示', text: 'おすすめに含まれないNGC天体・IC天体を検索したときに、その天体のみ表示するようにしました。NGC/IC天体をすべて表示する必要がなくなりました。' },
     { time: '2025-09-03T21:00:00', title: '太陽系天体の軌跡', text: '惑星などの太陽系天体をタップ/クリックしたときの画面から、移動経路を描画できるようにしました。同時に複数の天体の経路を表示できます。' },
@@ -275,7 +275,7 @@ export function updateConfig(newConfig) {
 function resetAll() {
     // LocalStorage, config, UIをリセット
     resetConfig();
-    SettingController.loadSettingsFromConfig();
+    SettingController.setUiOnConfig();
 }
 function showErrorMessage(text) {
     const errorMessage = document.getElementById('errorMessage');
@@ -304,7 +304,6 @@ window.config = config;
 window.updateConfig = updateConfig;
 window.updateInfoDisplay = updateInfoDisplay;
 window.showErrorMessage = showErrorMessage;
-// メイン関数
 export async function main() {
     const app = document.getElementById('app');
     if (!app)
@@ -344,30 +343,7 @@ export async function main() {
             const time000 = performance.now();
             renderer.clearObjectInfomation();
             renderer.clear();
-            // tempTarget がある場合は単独描画に切り替え
             const tempTarget = getTempTarget();
-            // if (tempTarget) {
-            //     // 背景と最低限の要素
-            //     renderer.drawGrid();
-            //     renderer.drawPoleMark();
-            //     renderer.drawCameraView();
-            //     // NGC/IC から該当天体を探す
-            //     let target = null as NGCObject | null;
-            //     for (const obj of ngcData) {
-            //         if (obj.getCatalog() + obj.getNumber() === tempTarget.toUpperCase()) {
-            //             target = obj;
-            //             break;
-            //         }
-            //     }
-            //     if (target) {
-            //         // 等価の単独描画: 必要最低限の星図に対象を強調
-            //         renderer.drawNGC([target]);
-            //         renderer.drawReticle();
-            //         updateInfoDisplay();
-            //         return;
-            //     }
-            //     // 見つからない場合は通常描画
-            // }
             renderer.drawGrid();
             renderer.drawPoleMark();
             renderer.drawCameraView();
@@ -394,7 +370,7 @@ export async function main() {
         }
         window.renderAll = renderAll;
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
-        SettingController.loadSettingsFromConfig();
+        SettingController.setUiOnConfig();
         TimeController.initialize();
         ObservationSiteController.initialize();
         const deviceOrientationManager = new DeviceOrientationManager();
@@ -484,8 +460,7 @@ export async function main() {
             }
         };
         loadDataStep();
-        await SolarSystemController.initialize();
-        SolarSystemDataManager.updateAllData(config.displayTime.jd, config.observationSite);
+        await SolarSystemDataManager.initialize();
         const interactionController = new InteractionController(canvas, config, renderAll);
         window.interactionController = interactionController;
         UserObjectController.init();

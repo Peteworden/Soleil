@@ -6,25 +6,31 @@ import { Asteroid, Comet, SolarSystemDataManager } from "../models/SolarSystemOb
 import { ObjectInfoController } from "./ObjectInfoController.js";
 export class UserObjectController {
     static init() {
-        const openUserObjectManage = document.getElementById('openUserObjectManage');
+        const get = (id) => {
+            return document.getElementById(id);
+        };
+        const getClass = (className) => {
+            return Array.from(document.getElementsByClassName(className));
+        };
+        const openUserObjectManage = get('openUserObjectManage');
         //トップ画面
-        const userObjectManage = document.getElementById('userObject-manage');
-        const backToUserObjectManage = document.getElementsByClassName('back-to-userObject-manage');
-        const closeUserObjectManage = document.getElementById('userObject-close-manage');
-        const finishManageButton = document.getElementById('userObject-finish-manage');
+        const userObjectManage = get('userObject-manage');
+        const backToUserObjectManage = getClass('back-to-userObject-manage');
+        const closeUserObjectManage = get('userObject-close-manage');
+        const finishManageButton = get('userObject-finish-manage');
         // 新規天体の情報を入力するページへ行くボタン
-        const newUserObjectRecButton = document.getElementById('userObject-rec-button');
-        const newUserObjectEllipticButton = document.getElementById('userObject-elliptic-button');
-        const newUserObjectParabolicButton = document.getElementById('userObject-parabolic-button');
-        const newUserObjectHyperbolicButton = document.getElementById('userObject-hyperbolic-button');
-        const userObjectRec = document.getElementById('userObject-rec');
-        const userObjectElliptic = document.getElementById('userObject-elliptic');
-        const userObjectParabolic = document.getElementById('userObject-parabolic');
-        const userObjectHyperbolic = document.getElementById('userObject-hyperbolic');
-        const saveObjectRecButton = document.getElementById('userObject-rec-add-button');
-        const saveObjectEllipticButton = document.getElementById('userObject-elliptic-add-button');
-        const saveObjectParabolicButton = document.getElementById('userObject-parabolic-add-button');
-        const saveObjectHyperbolicButton = document.getElementById('userObject-hyperbolic-add-button');
+        const newUserObjectRecButton = get('userObject-rec-button');
+        const newUserObjectEllipticButton = get('userObject-elliptic-button');
+        const newUserObjectParabolicButton = get('userObject-parabolic-button');
+        const newUserObjectHyperbolicButton = get('userObject-hyperbolic-button');
+        const userObjectRec = get('userObject-rec');
+        const userObjectElliptic = get('userObject-elliptic');
+        const userObjectParabolic = get('userObject-parabolic');
+        const userObjectHyperbolic = get('userObject-hyperbolic');
+        const saveObjectRecButton = get('userObject-rec-add-button');
+        const saveObjectEllipticButton = get('userObject-elliptic-add-button');
+        const saveObjectParabolicButton = get('userObject-parabolic-add-button');
+        const saveObjectHyperbolicButton = get('userObject-hyperbolic-add-button');
         //トップ画面
         if (userObjectManage) {
             this.setManagement();
@@ -318,21 +324,24 @@ export class UserObjectController {
         }
     }
     static saveEllipticObject() {
-        const typeSelect = document.getElementById('userObject-elliptic-type');
-        const jpnNameInput = document.getElementById('userObject-elliptic-jpnName');
-        const hiraganaNameInput = document.getElementById('userObject-elliptic-hiraganaName');
-        const engNameInput = document.getElementById('userObject-elliptic-engName');
-        const epochTypeSelect = document.getElementById('userObject-elliptic-epochType');
-        const epochYmdInput = document.getElementById('userObject-elliptic-ymd');
-        const epochJdInput = document.getElementById('userObject-elliptic-jd');
-        const aInput = document.getElementById('userObject-elliptic-a');
-        const eInput = document.getElementById('userObject-elliptic-e');
-        const iInput = document.getElementById('userObject-elliptic-i');
-        const nodeInput = document.getElementById('userObject-elliptic-node');
-        const periInput = document.getElementById('userObject-elliptic-peri');
-        const m0Input = document.getElementById('userObject-elliptic-m0');
-        const hInput = document.getElementById('userObject-elliptic-h');
-        const gInput = document.getElementById('userObject-elliptic-g');
+        const get = (id) => {
+            return document.getElementById(id);
+        };
+        const typeSelect = get('userObject-elliptic-type');
+        const jpnNameInput = get('userObject-elliptic-jpnName');
+        const hiraganaNameInput = get('userObject-elliptic-hiraganaName');
+        const engNameInput = get('userObject-elliptic-engName');
+        const epochTypeSelect = get('userObject-elliptic-epochType');
+        const epochYmdInput = get('userObject-elliptic-ymd');
+        const epochJdInput = get('userObject-elliptic-jd');
+        const aInput = get('userObject-elliptic-a');
+        const eInput = get('userObject-elliptic-e');
+        const iInput = get('userObject-elliptic-i');
+        const nodeInput = get('userObject-elliptic-node');
+        const periInput = get('userObject-elliptic-peri');
+        const m0Input = get('userObject-elliptic-m0');
+        const hInput = get('userObject-elliptic-h');
+        const gInput = get('userObject-elliptic-g');
         if (typeSelect && jpnNameInput && hiraganaNameInput && engNameInput && epochTypeSelect && epochYmdInput && epochJdInput && aInput && eInput && iInput && nodeInput && periInput && m0Input && hInput && gInput) {
             const type = typeSelect.value;
             const jpnName = jpnNameInput.value.trim();

@@ -1,5 +1,4 @@
-import { Moon, isMinorObject, isMoon } from '../models/SolarSystemObjects.js';
-import { isPlanet, isSun } from '../types/index.js';
+import { Moon, isPlanet, isSun, isMinorObject, isMoon, isOrbitalObject } from '../models/SolarSystemObjects.js';
 import { CoordinateConverter } from './coordinates.js';
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
@@ -148,7 +147,8 @@ export class SolarSystemPositionCalculator {
      */
     static updateObjectData(obj, jd, observerPlanetPosition) {
         if (isMoon(obj) && this.observationSite.observerPlanet === "地球") {
-            //すでに地球基準の座標が設定されている
+            const equatorialCoords = this.coordinateConverter.precessionEquatorial(obj.raDec, undefined, 'j2000', jd);
+            obj.raDec = equatorialCoords;
             return;
         }
         // 観測地の天体を中心とする直交座標
@@ -190,7 +190,7 @@ export class SolarSystemPositionCalculator {
         return Math.sqrt(x * x + y * y + z * z);
     }
     /**
-     * 等級を更新（距離効果を考慮）
+     * 等級を更新
      * https://arxiv.org/abs/1808.01973
      * Computing Apparent Planetary Magnitudes for The Astronomical Almanac
      */
@@ -304,7 +304,7 @@ export class SolarSystemPositionCalculator {
             this.calculatePlanetPositions(object, jd);
         }
         else if (isMinorObject(object)) {
-            if ('orbit' in object) {
+            if (isOrbitalObject(object)) {
                 const orbit = object.orbit;
                 if (orbit.e < 0.99999999999999999) {
                     this.calculateEllipticOrbitPositions(object, jd);
@@ -336,7 +336,6 @@ export class SolarSystemPositionCalculator {
         const peri = elements.longPeri - elements.node;
         const meanAnomaly = ((elements.meanLong - elements.longPeri) % 360) * DEG_TO_RAD;
         const e = elements.e;
-        // ケプラー方程式を解く
         let eccentricAnomaly = meanAnomaly + e * Math.sin(meanAnomaly);
         let newE = meanAnomaly + e * Math.sin(eccentricAnomaly);
         while (Math.abs(newE - eccentricAnomaly) > 0.00000001) {

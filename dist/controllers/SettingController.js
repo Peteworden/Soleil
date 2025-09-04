@@ -42,7 +42,7 @@ export class SettingController {
             });
         }
         // 設定をUIに反映
-        SettingController.loadSettingsFromConfig();
+        SettingController.setUiOnConfig();
         SettingController.setObservationSiteOnMode(modeSelect.value);
         // デバイスに応じてモードの有効/無効を制御
         SettingController.updateModeSelectAvailability();
@@ -93,13 +93,16 @@ export class SettingController {
     }
     static updateConfigFromInputs() {
         console.log('🔧 updateConfigFromInputs called');
+        const get = (id) => {
+            return document.getElementById(id);
+        };
         // 観測地の設定を読み取り
-        const observerPlanetSelect = document.getElementById('observer_planet');
-        const observationSiteSelect = document.getElementById('observation-site-select');
-        const latInput = document.getElementById('lat');
-        const lonInput = document.getElementById('lon');
-        const nsSelect = document.getElementById('NSCombo');
-        const ewSelect = document.getElementById('EWCombo');
+        const observerPlanetSelect = get('observer_planet');
+        const observationSiteSelect = get('observation-site-select');
+        const latInput = get('lat');
+        const lonInput = get('lon');
+        const nsSelect = get('NSCombo');
+        const ewSelect = get('EWCombo');
         if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
             const observerPlanet = observerPlanetSelect.value;
             if (latInput.value.length === 0) {
@@ -127,25 +130,26 @@ export class SettingController {
             }
         }
         // 表示設定を読み取り
-        const modeSelect = document.getElementById('mode');
-        const magLimitSlider = document.getElementById('magLimitSlider');
+        const modeSelect = get('mode');
+        const magLimitSlider = get('magLimitSlider');
         // const darkMode = document.getElementById('dark') as HTMLInputElement;
-        const gridCheck = document.getElementById('gridCheck');
-        const reticleCheck = document.getElementById('reticleCheck');
-        const objectInfoCheck = document.getElementById('objectInfoCheck');
-        const starCheck = document.getElementById('starCheck');
-        const starNameSelect = document.getElementById('starName');
-        const constellationNameCheck = document.getElementById('constellationNameCheck');
-        const constellationLineCheck = document.getElementById('constellationLineCheck');
-        const planetCheck = document.getElementById('planetCheck');
-        const messierCheck = document.getElementById('messierCheck');
-        const recCheck = document.getElementById('recCheck');
-        const ngcCheck = document.getElementById('ngcCheck');
-        const camera = document.getElementById('camera');
-        const equinox = document.getElementById('equinox');
+        const gridCheck = get('gridCheck');
+        const reticleCheck = get('reticleCheck');
+        const objectInfoCheck = get('objectInfoCheck');
+        const starCheck = get('starCheck');
+        const starNameSelect = get('starName');
+        const constellationNameCheck = get('constellationNameCheck');
+        const constellationLineCheck = get('constellationLineCheck');
+        const planetCheck = get('planetCheck');
+        const messierCheck = get('messierCheck');
+        const recCheck = get('recCheck');
+        const ngcCheck = get('ngcCheck');
+        const cameraSelect = get('camera');
+        const equinoxSelect = get('equinox');
         if (modeSelect && gridCheck && magLimitSlider &&
             reticleCheck && objectInfoCheck && starCheck && starNameSelect &&
-            planetCheck && messierCheck && recCheck && ngcCheck && camera && equinox) {
+            constellationNameCheck && constellationLineCheck &&
+            planetCheck && messierCheck && recCheck && ngcCheck && cameraSelect && equinoxSelect) {
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 const currentConfig = window.config;
@@ -163,8 +167,8 @@ export class SettingController {
                     showMessiers: messierCheck.checked,
                     showRecs: recCheck.checked,
                     showNGC: ngcCheck.checked,
-                    camera: camera.value,
-                    equinox: equinox.value
+                    camera: cameraSelect.value,
+                    equinox: equinoxSelect.value
                 };
                 updateConfig({
                     displaySettings: newDisplaySettings
@@ -180,9 +184,9 @@ export class SettingController {
             }
         }
         // 時刻設定を読み取り
-        const dtlInput = document.getElementById('dtl');
-        const loadOnCurrentTimeCheck = document.getElementById('loadOnCurrentTime');
-        const realTime = document.getElementById('realTime');
+        const dtlInput = get('dtl');
+        const loadOnCurrentTimeCheck = get('loadOnCurrentTime');
+        const realTime = get('realTime');
         if (dtlInput && realTime && loadOnCurrentTimeCheck) {
             let year, month, day, hour, minute, second, jd;
             const currentConfig = window.config;
@@ -258,18 +262,38 @@ export class SettingController {
         localStorage.setItem('config', JSON.stringify(config));
     }
     // main.tsのconfigから設定をUIに反映するメソッド
-    static loadSettingsFromConfig() {
+    static setUiOnConfig() {
         const config = window.config;
         if (!config)
             return;
-        console.log(config.viewState.centerRA, config.viewState.centerDec);
+        const get = (id) => {
+            return document.getElementById(id);
+        };
+        const apply = {
+            select: (element, value) => {
+                if (element && value)
+                    element.value = value;
+            },
+            input: (element, value) => {
+                if (element && value)
+                    element.value = value;
+            },
+            checkbox: (element, checked) => {
+                if (element)
+                    element.checked = checked;
+            },
+            slider: (element, value) => {
+                if (element && value)
+                    element.value = value.toString();
+            }
+        };
         // 観測地の設定
-        const observerPlanetSelect = document.getElementById('observer_planet');
-        const observationSiteSelect = document.getElementById('observation-site-select');
-        const latInput = document.getElementById('lat');
-        const lonInput = document.getElementById('lon');
-        const nsSelect = document.getElementById('NSCombo');
-        const ewSelect = document.getElementById('EWCombo');
+        const observerPlanetSelect = get('observer_planet');
+        const observationSiteSelect = get('observation-site-select');
+        const latInput = get('lat');
+        const lonInput = get('lon');
+        const nsSelect = get('NSCombo');
+        const ewSelect = get('EWCombo');
         if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
             observerPlanetSelect.value = config.observationSite.observerPlanet;
             observationSiteSelect.value = config.observationSite.name;
@@ -280,56 +304,27 @@ export class SettingController {
             nsSelect.value = config.observationSite.latitude >= 0 ? '北緯' : '南緯';
             ewSelect.value = config.observationSite.longitude >= 0 ? '東経' : '西経';
         }
-        // 表示設定
-        const modeSelect = document.getElementById('mode');
-        const magLimitSlider = document.getElementById('magLimitSlider');
-        // const darkMode = document.getElementById('dark') as HTMLInputElement;
-        const gridCheck = document.getElementById('gridCheck');
-        const reticleCheck = document.getElementById('reticleCheck');
-        const objectInfoCheck = document.getElementById('objectInfoCheck');
-        const starCheck = document.getElementById('starCheck');
-        const starNameSelect = document.getElementById('starName');
-        const constellationNameCheck = document.getElementById('constellationNameCheck');
-        const constellationLineCheck = document.getElementById('constellationLineCheck');
-        const planetCheck = document.getElementById('planetCheck');
-        const messierCheck = document.getElementById('messierCheck');
-        const recCheck = document.getElementById('recCheck');
-        const ngcCheck = document.getElementById('ngcCheck');
-        const camera = document.getElementById('camera');
-        const equinox = document.getElementById('equinox');
-        if (modeSelect)
-            modeSelect.value = config.displaySettings.mode || 'AEP';
-        if (magLimitSlider)
-            magLimitSlider.value = config.viewState.starSizeKey1.toString();
-        // if (darkMode) darkMode.checked = config.displaySettings.darkMode;
-        if (gridCheck)
-            gridCheck.checked = config.displaySettings.showGrid;
-        if (reticleCheck)
-            reticleCheck.checked = config.displaySettings.showReticle;
-        if (objectInfoCheck)
-            objectInfoCheck.checked = config.displaySettings.showObjectInfo;
-        if (starCheck)
-            starCheck.checked = config.displaySettings.showStars;
-        if (starNameSelect)
-            starNameSelect.value = config.displaySettings.showStarNames;
-        if (constellationNameCheck)
-            constellationNameCheck.checked = config.displaySettings.showConstellationNames;
-        if (constellationLineCheck)
-            constellationLineCheck.checked = config.displaySettings.showConstellationLines;
-        if (planetCheck)
-            planetCheck.checked = config.displaySettings.showPlanets;
-        if (messierCheck)
-            messierCheck.checked = config.displaySettings.showMessiers;
-        if (recCheck)
-            recCheck.checked = config.displaySettings.showRecs;
-        if (ngcCheck)
-            ngcCheck.checked = config.displaySettings.showNGC;
-        if (camera)
-            camera.value = config.displaySettings.camera;
-        if (equinox)
-            equinox.value = config.displaySettings.equinox;
-        if (camera.value != 'none') {
-            const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
+        const ds = config.displaySettings;
+        const vs = config.viewState;
+        apply.select(get('mode'), ds.mode);
+        apply.slider(get('magLimitSlider'), vs.starSizeKey1);
+        apply.checkbox(get('gridCheck'), ds.showGrid);
+        apply.checkbox(get('reticleCheck'), ds.showReticle);
+        apply.checkbox(get('objectInfoCheck'), ds.showObjectInfo);
+        apply.checkbox(get('messierCheck'), ds.showMessiers);
+        apply.checkbox(get('recCheck'), ds.showRecs);
+        apply.checkbox(get('ngcCheck'), ds.showNGC);
+        // apply.select(get<HTMLSelectElement>('camera'), ds.camera);
+        apply.checkbox(get('starCheck'), ds.showStars);
+        apply.select(get('starName'), ds.showStarNames);
+        apply.checkbox(get('constellationNameCheck'), ds.showConstellationNames);
+        apply.checkbox(get('constellationLineCheck'), ds.showConstellationLines);
+        apply.checkbox(get('planetCheck'), ds.showPlanets);
+        apply.select(get('equinox'), ds.equinox);
+        const cameraSelect = get('camera');
+        apply.select(cameraSelect, ds.camera);
+        if (cameraSelect && cameraSelect.value != 'none') {
+            const cameraTiltSliderDiv = get('cameraTiltSliderDiv');
             if (cameraTiltSliderDiv)
                 cameraTiltSliderDiv.style.display = 'block';
         }
@@ -339,10 +334,10 @@ export class SettingController {
                 cameraTiltSliderDiv.style.display = 'none';
         }
         // 時刻設定
-        const dtlInput = document.getElementById('dtl');
-        const loadOnCurrentTimeCheck = document.getElementById('loadOnCurrentTime');
-        const realTime = document.getElementById('realTime');
-        if (dtlInput && realTime && loadOnCurrentTimeCheck) {
+        const dtlInput = get('dtl');
+        const loadOnCurrentTimeCheck = get('loadOnCurrentTime');
+        const realTimeSelect = get('realTime');
+        if (dtlInput && realTimeSelect && loadOnCurrentTimeCheck) {
             // ローカル時間で日時を作成（世界時変換を避ける）
             const year = config.displayTime.year;
             const month = String(config.displayTime.month).padStart(2, '0');
@@ -353,7 +348,7 @@ export class SettingController {
             const localDateTime = `${year}-${month}-${day}T${hour}:${minute}`;
             dtlInput.value = localDateTime;
             loadOnCurrentTimeCheck.checked = config.displayTime.loadOnCurrentTime;
-            realTime.value = config.displayTime.realTime;
+            realTimeSelect.value = config.displayTime.realTime;
         }
         console.log('🔧 Settings loaded from config to UI');
     }
