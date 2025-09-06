@@ -655,7 +655,6 @@ export class CanvasRenderer {
             console.error("brightestMagnitude looks strange: ", brightestMagnitude);
             return;
         }
-        const siderealTime = window.config.siderealTime;
         const currentJd = window.config.displayTime.jd;
         // 歳差運動補正をキャッシュ
         let precessionAngle;
@@ -668,21 +667,15 @@ export class CanvasRenderer {
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
             recalculate = true;
         }
-        // キャッシュされたGaiaデータを使用
-        // const cachedGaiaData = this.getCachedGaiaData(gaiaNum, gaiaData, currentJd);
-        // const cachedGaiaData = gaiaData;
-        // if (cachedGaiaData.length == 0) return;
-        this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
         const zeroMagSize = this.starSize_0mag(this.config);
         // キャッシュされた領域候補を使用（毎回計算しない）
         const areas = this.areaCandidates();
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
         for (const area of areas) {
             for (let unit = area[0]; unit < area[1] + 1; unit++) {
                 const raInt = unit % 360;
                 const decInt = Math.floor(unit / 360) - 90;
-                // const precessionCenter = this.coordinateConverter.precessionEquatorial({ra: raInt + 0.5, dec: decInt + 0.5}, precessionAngle);
-                // const precessionDiff = {ra: precessionCenter.ra - raInt - 0.5, dec: precessionCenter.dec - decInt - 0.5};
                 const st = gaiaHelpData[unit];
                 const fi = gaiaHelpData[unit + 1];
                 // バッチ処理で座標変換を最適化
@@ -693,11 +686,8 @@ export class CanvasRenderer {
                         continue;
                     const ra = raInt + data[0];
                     const dec = decInt + data[1];
-                    // const coords = {ra, dec};
                     const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
-                    // const coords = {ra: ra + precessionDiff.ra, dec: dec + precessionDiff.dec};
                     const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
-                    // const screenXY = [true, [0, 0]];
                     if (!screenXY[0])
                         continue;
                     const [x, y] = screenXY[1];
@@ -721,8 +711,6 @@ export class CanvasRenderer {
         let i, j;
         const fieldOfViewRA = this.config.viewState.fieldOfViewRA;
         const fieldOfViewDec = this.config.viewState.fieldOfViewDec;
-        const centerRA = this.config.viewState.centerRA;
-        const centerDec = this.config.viewState.centerDec;
         const centerAz = this.config.viewState.centerAz;
         const centerAlt = this.config.viewState.centerAlt;
         const siderealTime = this.config.siderealTime;
@@ -1082,7 +1070,7 @@ export class CanvasRenderer {
         this.ctx.stroke();
     }
     starSize_0mag(config) {
-        return Math.max(13 - 2.4 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 3), 5);
+        return Math.max(200.0 / (Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 15), 5);
     }
     getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
         if (limitingMagnitude === undefined) {
@@ -1094,7 +1082,7 @@ export class CanvasRenderer {
         if (magnitude > limitingMagnitude)
             return 1;
         else
-            return 1.0 + starSize_0mag * limitingMagnitude / (limitingMagnitude + 1) * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
+            return 1.0 + starSize_0mag * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
     }
     getStarColor(bv) {
         let c;
@@ -1130,12 +1118,53 @@ export class CanvasRenderer {
         return Math.floor(360 * Math.floor(dec + 90) + Math.floor(ra));
     }
     floodFillAreaCandidates(edgeRA, edgeDec, np, sp) {
-        const candidates = [];
+        // npのときは+85°以北を、spのときは-85°より南をすべて含める
         const RA_min = Math.min(...edgeRA);
         const RA_max = Math.max(...edgeRA);
         const Dec_min = sp ? -90 : Math.min(...edgeDec);
         const Dec_max = np ? 89.9 : Math.max(...edgeDec);
         let ra0Dec = []; // 赤経0度線を横切るときの赤緯
+        // console.log(Dec_min.toFixed(2), Dec_max.toFixed(2));
+        // 赤経0°の線を描く
+        const ra0degLine = false;
+        if (ra0degLine) {
+            this.ctx.strokeStyle = 'red';
+            this.ctx.fillStyle = 'transparent';
+            this.ctx.lineWidth = 2;
+            this.ctx.beginPath();
+            this.ctx.moveTo(...this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.config, true, this.orientationData)[1]);
+            for (let dec = -89; dec <= 90; dec++) {
+                this.ctx.lineTo(...this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: dec }, this.config, true, this.orientationData)[1]);
+            }
+            this.ctx.stroke();
+        }
+        const debubMap = false;
+        const mapWidth = this.config.canvasSize.width * 0.6;
+        const mapHeight = mapWidth * 0.5;
+        const toAreaMapXY = (ra, dec) => {
+            const x = this.config.canvasSize.width * 0.5 - mapWidth * (ra - 180) / 360;
+            const y = this.config.canvasSize.height * 0.5 - mapHeight * dec / 180;
+            return [x, y];
+        };
+        if (debubMap) {
+            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
+            this.ctx.strokeStyle = 'red';
+            this.ctx.beginPath();
+            this.ctx.moveTo(...toAreaMapXY(0, -90));
+            this.ctx.lineTo(...toAreaMapXY(0, 90));
+            this.ctx.lineTo(...toAreaMapXY(360, 90));
+            this.ctx.lineTo(...toAreaMapXY(360, -90));
+            this.ctx.lineTo(...toAreaMapXY(0, -90));
+            this.ctx.fill();
+            this.ctx.stroke();
+            this.ctx.fillStyle = 'transparent';
+            this.ctx.strokeStyle = 'blue';
+            for (let i = 0; i < edgeRA.length - 1; i++) {
+                this.ctx.beginPath();
+                this.ctx.arc(...toAreaMapXY(edgeRA[i], edgeDec[i]), 1, 0, Math.PI * 2);
+                this.ctx.stroke();
+            }
+        }
         // 境界線をセグメントに分割
         const segments = [];
         for (let i = 0; i < edgeRA.length - 1; i++) {
@@ -1163,95 +1192,113 @@ export class CanvasRenderer {
             ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[edgeRA.length - 1] - edgeRA[0] + 360) * edgeRA[edgeRA.length - 1]);
         }
         if (np) {
-            if (sp) {
-                if (ra0Dec.length % 2 === 0) {
-                    segments.push({
-                        ra1: 0, dec1: -90,
-                        ra2: 0, dec2: 89.9,
-                        crossDecs: Array.from({ length: 89 - (-90) + 1 }, (_, i) => -90 + i)
-                    });
-                    segments.push({
-                        ra1: 359.999, dec1: -90,
-                        ra2: 359.999, dec2: 89.9,
-                        crossDecs: Array.from({ length: 89 - (-90) + 1 }, (_, i) => -90 + i)
-                    });
-                }
-                else {
-                    console.log("np && sp but ra0Dec.length != 0", ra0Dec);
-                }
-            }
-            else {
-                if (ra0Dec.length === 1) {
-                    segments.push({
-                        ra1: 0, dec1: ra0Dec[0],
-                        ra2: 0, dec2: 89.9,
-                        crossDecs: rangeInt(ra0Dec[0], 89.9)
-                    });
-                    segments.push({
-                        ra1: 359.999, dec1: ra0Dec[0],
-                        ra2: 359.999, dec2: 89.9,
-                        crossDecs: rangeInt(ra0Dec[0], 89.9)
-                    });
-                }
-                else {
-                    console.log("np && !sp but ra0Dec.length != 1");
-                }
-            }
+            ra0Dec.push(85);
+            ra0Dec.filter(dec => dec <= 85);
         }
-        else if (!np && sp) {
-            if (ra0Dec.length === 1) {
-                segments.push({
-                    ra1: 0, dec1: -90,
-                    ra2: 0, dec2: ra0Dec[0],
-                    crossDecs: rangeInt(-90, ra0Dec[0])
-                });
-                segments.push({
-                    ra1: 359.999, dec1: ra0Dec[0],
-                    ra2: 359.999, dec2: -90,
-                    crossDecs: rangeInt(-90, ra0Dec[0])
-                });
-            }
-            else {
-                console.log("!np && sp but ra0Dec.length != 1");
-            }
+        if (sp) {
+            ra0Dec.push(-85);
+            ra0Dec.filter(dec => dec >= -85);
         }
-        else if (ra0Dec.length === 2) {
+        ra0Dec.sort((a, b) => a - b);
+        for (let i = 0; i < ra0Dec.length; i += 2) {
             segments.push({
-                ra1: 0, dec1: ra0Dec[0],
-                ra2: 0, dec2: ra0Dec[1],
-                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
+                ra1: 0, dec1: ra0Dec[i],
+                ra2: 0, dec2: ra0Dec[i + 1],
+                crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
             });
             segments.push({
-                ra1: 359.999, dec1: ra0Dec[0],
-                ra2: 359.999, dec2: ra0Dec[1],
-                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
+                ra1: 359.999, dec1: ra0Dec[i],
+                ra2: 359.999, dec2: ra0Dec[i + 1],
+                crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
             });
         }
-        else if (ra0Dec.length === 4) {
-            segments.push({
-                ra1: 0, dec1: ra0Dec[0],
-                ra2: 0, dec2: ra0Dec[1],
-                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
-            });
-            segments.push({
-                ra1: 359.999, dec1: ra0Dec[0],
-                ra2: 359.999, dec2: ra0Dec[1],
-                crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
-            });
-            segments.push({
-                ra1: 0, dec1: ra0Dec[2],
-                ra2: 0, dec2: ra0Dec[3],
-                crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
-            });
-            segments.push({
-                ra1: 359.999, dec1: ra0Dec[2],
-                ra2: 359.999, dec2: ra0Dec[3],
-                crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
-            });
-        }
-        else if (ra0Dec.length > 0) {
-            console.log(ra0Dec);
-        }
+        // if (Dec_max > 85) {
+        //     if (Dec_min < -85) {
+        //         if (ra0Dec.length % 2 === 0) {
+        //             for (let i = 0; i < ra0Dec.length; i += 2) {
+        //                 segments.push({
+        //                     ra1: 0, dec1: ra0Dec[i],
+        //                     ra2: 0, dec2: ra0Dec[i+1],
+        //                     crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+        //                 });
+        //                 segments.push({
+        //                     ra1: 359.999, dec1: ra0Dec[i],
+        //                     ra2: 359.999, dec2: ra0Dec[i+1],
+        //                     crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+        //                 });
+        //             }
+        //         } else {
+        //             console.log("np && sp but ra0Dec.length%2 != 0", ra0Dec);
+        //         }
+        //     } else {
+        //         if (ra0Dec.length % 2 === 1) {
+        //             for (let i = 0; i < ra0Dec.length; i += 2) {
+        //                 segments.push({
+        //                     ra1: 0, dec1: ra0Dec[0],
+        //                     ra2: 0, dec2: ra0Dec[i+1],
+        //                     crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+        //                 });
+        //                 segments.push({
+        //                     ra1: 359.999, dec1: ra0Dec[0],
+        //                     ra2: 359.999, dec2: 89.9,
+        //                     crossDecs: rangeInt(ra0Dec[0], 89.9)
+        //                 });
+        //             }
+        //         } else {
+        //             console.log("np && !sp but ra0Dec.length%2 != 1");
+        //         }
+        //     }
+        // } else if (!np && sp) {
+        //     if (ra0Dec.length === 1) {
+        //         segments.push({
+        //             ra1: 0, dec1: -90,
+        //             ra2: 0, dec2: ra0Dec[0],
+        //             crossDecs: rangeInt(-90, ra0Dec[0])
+        //         });
+        //         segments.push({
+        //             ra1: 359.999, dec1: ra0Dec[0],
+        //             ra2: 359.999, dec2: -90,
+        //             crossDecs: rangeInt(-90, ra0Dec[0])
+        //         });
+        //     } else {
+        //         console.log("!np && sp but ra0Dec.length != 1");
+        //     }
+        // } else if (ra0Dec.length === 2) {
+        //     segments.push({
+        //         ra1: 0, dec1: ra0Dec[0],
+        //         ra2: 0, dec2: ra0Dec[1],
+        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
+        //     });
+        //     segments.push({
+        //         ra1: 359.999, dec1: ra0Dec[0],
+        //         ra2: 359.999, dec2: ra0Dec[1],
+        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
+        //     });
+        // } else if (ra0Dec.length === 4) {
+        //     segments.push({
+        //         ra1: 0, dec1: ra0Dec[0],
+        //         ra2: 0, dec2: ra0Dec[1],
+        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
+        //     });
+        //     segments.push({
+        //         ra1: 359.999, dec1: ra0Dec[0],
+        //         ra2: 359.999, dec2: ra0Dec[1],
+        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
+        //     });
+        //     segments.push({
+        //         ra1: 0, dec1: ra0Dec[2],
+        //         ra2: 0, dec2: ra0Dec[3],
+        //         crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
+        //     });
+        //     segments.push({
+        //         ra1: 359.999, dec1: ra0Dec[2],
+        //         ra2: 359.999, dec2: ra0Dec[3],
+        //         crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
+        //     });
+        // } else if (ra0Dec.length > 0) {
+        //     console.log(ra0Dec);
+        // }
+        // i番目:赤緯i-90の線と境界線が交わる点の赤経
         const allIntersections = Array.from({ length: 180 }, () => ({ intersections: [] }));
         for (const segment of segments) {
             for (const dec of segment.crossDecs) {
@@ -1269,21 +1316,43 @@ export class CanvasRenderer {
                 allIntersections[dec + 90].intersections.push(intersectionRA);
             }
         }
-        // 赤緯の範囲を1度ずつ処理
-        for (let dec = Math.floor(Dec_min); dec <= Math.min(Math.floor(Dec_max), 89); dec++) {
+        const candidateAreas = [];
+        const raRanges = [];
+        const areaNumberRange = (ra1, ra2, dec) => {
+            const startArea = this.areaNumber(ra1, dec);
+            const endArea = this.areaNumber(ra2, dec);
+            return [startArea, endArea];
+        };
+        if (Dec_max > 84) {
+            candidateAreas.push([this.areaNumber(0, 85.5), this.areaNumber(359.9, 89.9)]);
+            for (let dec = 85.5; dec <= 89.9; dec++) {
+                raRanges.push([0, 359.9, dec]);
+            }
+        }
+        if (Dec_min < -84) {
+            candidateAreas.push([this.areaNumber(0, -89.9), this.areaNumber(359.9, -85.5)]);
+            for (let dec = -89.9; dec <= -85.5; dec++) {
+                raRanges.push([0, 359.9, dec]);
+            }
+        }
+        // 赤緯1度ごとに
+        for (let dec = (sp ? -85 : Math.floor(Dec_min)); dec <= (np ? 84 : Math.floor(Dec_max)); dec++) {
             const intersections = allIntersections[dec + 90].intersections;
             intersections.sort((a, b) => a - b);
+            let count = 0;
             // 交点のペアで領域を決定
-            const raRanges = [];
             if (intersections.length === 0) {
                 // この場合はないはず
                 // 交点がない場合は範囲全体を含める
                 if (RA_max > 300 && RA_min < 60) {
-                    raRanges.push([0, Math.min(RA_min, 359.9)]);
-                    raRanges.push([Math.max(RA_max, 0), 359.9]);
+                    raRanges.push([0, Math.min(RA_min, 359.9), dec]);
+                    raRanges.push([Math.max(RA_max, 0), 359.9, dec]);
+                    candidateAreas.push(areaNumberRange(0, Math.min(RA_min, 359.9), dec));
+                    candidateAreas.push(areaNumberRange(Math.max(RA_max, 0), 359.9, dec));
                 }
                 else {
-                    raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9)]);
+                    raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec]);
+                    candidateAreas.push(areaNumberRange(Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec));
                 }
             }
             else {
@@ -1291,18 +1360,32 @@ export class CanvasRenderer {
                     const startRA = Math.max(intersections[i], 0);
                     const endRA = Math.min(intersections[i + 1], 359.9);
                     if (startRA < endRA) {
-                        raRanges.push([startRA, endRA]);
+                        raRanges.push([startRA, endRA, dec]);
+                        // console.log(dec, startRA.toFixed(2), endRA.toFixed(2));
+                        candidateAreas.push(areaNumberRange(startRA, endRA, dec));
+                        count++;
                     }
                 }
             }
-            // 各範囲をマス番号に変換
-            for (const [startRA, endRA] of raRanges) {
-                const startArea = this.areaNumber(startRA, dec);
-                const endArea = this.areaNumber(endRA, dec);
-                candidates.push([startArea, endArea]);
+        }
+        if (debubMap) {
+            this.ctx.strokeStyle = 'green';
+            this.ctx.fillStyle = 'transparent';
+            this.ctx.lineWidth = 1;
+            for (const [startRA, endRA, dec] of raRanges) {
+                // const startArea = this.areaNumber(startRA, dec);
+                // const endArea = this.areaNumber(endRA, dec);
+                // candidateAreas.push([startArea, endArea]);
+                const startXY = toAreaMapXY(startRA, dec);
+                const endXY = toAreaMapXY(endRA, dec);
+                this.ctx.beginPath();
+                this.ctx.moveTo(...startXY);
+                this.ctx.lineTo(...endXY);
+                this.ctx.stroke();
             }
         }
-        return candidates;
+        return candidateAreas;
+        // 小さい方以上大きい方以下の整数
         function rangeInt(a, b) {
             const c = a > b ? a : b; // 大きい方
             const d = a > b ? b : a; // 小さい方
@@ -1317,7 +1400,7 @@ export class CanvasRenderer {
         // キャッシュをチェック（設定が変更されていない場合）
         const currentTime = Date.now();
         if (this.areaCandidatesCache &&
-            currentTime - this.areaCandidatesCache.timestamp < 10) { // 20ms以内ならキャッシュを使用
+            currentTime - this.areaCandidatesCache.timestamp < 10) { // 10ms以内ならキャッシュを使用
             return this.areaCandidatesCache.areas;
         }
         const edgeRA = [];

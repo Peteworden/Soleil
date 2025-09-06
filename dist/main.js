@@ -15,6 +15,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-09-06T19:30:00', title: '薄明情報', text: '時刻の横に薄明などの状況が出ます' },
     { time: '2025-09-04T23:40:00', title: '月食の表示', text: '8日未明は皆既月食ですね。というわけで月食を表示できるようにしました。' },
     { time: '2025-09-03T21:02:00', title: '検索時のアニメーション', text: '検索した天体までゆっくりと移動するようにしてみました。' },
     { time: '2025-09-03T21:01:00', title: '検索したNGC/IC天体のみの表示', text: 'おすすめに含まれないNGC天体・IC天体を検索したときに、その天体のみ表示するようにしました。NGC/IC天体をすべて表示する必要がなくなりました。' },

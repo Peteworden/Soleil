@@ -1,5 +1,6 @@
 import { AstronomicalCalculator } from "./calculations.js";
 import { CoordinateConverter } from "./coordinates.js";
+import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
     const locationInfo = document.getElementById('locationInfo');
@@ -45,7 +46,9 @@ export function updateInfoDisplay() {
             hour: '2-digit',
             minute: '2-digit'
         });
-        timeInfo.textContent = timeText;
+        const twilight = SolarSystemDataManager.getTwilight();
+        timeInfo.textContent = timeText + ' (' + twilight + ')';
+        // timeInfo.textContent = timeText;
     }
     // 中心座標情報を更新
     if (centerInfo) {

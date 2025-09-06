@@ -1,3 +1,4 @@
+import { CoordinateConverter } from '../utils/coordinates.js';
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
 // import { EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements, PlanetOrbitalElements, SolarObjectType } from '../types/solarObjects.js';
 import { DataStore } from './DataStore.js';
@@ -228,6 +229,39 @@ export class SolarSystemDataManager {
      */
     static getAllObjects() {
         return [...this.solarObjects];
+    }
+    static getSun() {
+        return this.solarObjects.find(obj => isSun(obj));
+    }
+    static getTwilight() {
+        const sun = this.getSun();
+        if (!sun)
+            return '';
+        const sunRaDec = sun.getRaDec();
+        const siderealTime = window.config.siderealTime;
+        const coordinateConverter = new CoordinateConverter();
+        const sunAltitude = coordinateConverter.equatorialToHorizontal(sunRaDec, siderealTime).alt;
+        let twilight = '';
+        if (sunAltitude > -0.84) {
+            twilight = '昼';
+        }
+        else if (sunAltitude > -6) {
+            twilight = '常用薄明';
+        }
+        else if (sunAltitude > -12) {
+            twilight = '航海薄明';
+        }
+        else if (sunAltitude > -18) {
+            twilight = '天文薄明';
+        }
+        else if (sunAltitude <= -18) {
+            twilight = '深夜';
+        }
+        else {
+            twilight = '';
+            console.log(sunAltitude);
+        }
+        return twilight;
     }
 }
 SolarSystemDataManager.solarObjects = [];
