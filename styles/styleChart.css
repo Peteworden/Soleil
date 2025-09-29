@@ -155,7 +155,7 @@ input[type='range']::-moz-range-thumb {
 }
 
 .title ul li a:hover {
-    color: #4CAF50;
+    color: #00BFFF;
 }
 
 .title ul li:nth-child(4) {
@@ -505,6 +505,18 @@ img {
     font-weight: 500;
 }
 
+.donation-text {
+    text-align: left;
+    font-size: 10px;
+    line-height: 1.6;
+    margin: 20px 0;
+}
+
+.donation-text a {
+    color: #00BFFF;
+    text-decoration: none;
+}
+
 .zuho {
     background: rgba(255, 255, 255, 0.05);
     padding: 15px;
@@ -705,7 +717,7 @@ img {
 }
 
 .demDescriptionText a {
-    color: #4CAF50;
+    color: #00BFFF;
     text-decoration: none;
 }
 
@@ -1123,7 +1135,7 @@ input:checked + .slider:before {
 }
 
 .description a {
-    color: #4CAF50;
+    color: #00BFFF;
     text-decoration: none;
 }
 
@@ -1389,7 +1401,7 @@ h1, p {
 }
 
 #objectInfoText a {
-    color: #4CAF50;
+    color: #00BFFF;
     text-decoration: none;
 }
 
