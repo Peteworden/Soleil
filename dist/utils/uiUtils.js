@@ -48,7 +48,6 @@ export function updateInfoDisplay() {
         });
         const twilight = SolarSystemDataManager.getTwilight();
         timeInfo.textContent = timeText + ' (' + twilight + ')';
-        // timeInfo.textContent = timeText;
     }
     // 中心座標情報を更新
     if (centerInfo) {

@@ -37,7 +37,7 @@ function setSessionItem(key, value) {
         }
     }
     catch (_) {
-        // ignore storage errors
+        console.log('setSessionItem error');
     }
 }
 function getSessionItem(key) {

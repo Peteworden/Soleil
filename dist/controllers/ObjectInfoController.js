@@ -252,15 +252,6 @@ export class ObjectInfoController {
         infoText += `距離: ${(data.distance / 1000).toFixed(0)},000 km<br>`;
         const lightMinutes = data.distance / 299792.458;
         infoText += `（光の速さで${lightMinutes.toFixed(1)}秒）<br>`;
-        infoText += '<h4>2025年9月8日 月食情報（国立天文台HPより）</h4>';
-        infoText += '<table border="1">';
-        infoText += '<th></th><th>時刻</th><th>京都での高度</th>';
-        infoText += '<tr><td>部分食の始まり</td><td>01:27</td><td>42.1</td></tr>';
-        infoText += '<tr><td>皆既食の始まり</td><td>02:30</td><td>34.0</td></tr>';
-        infoText += '<tr><td>食の最大</td><td>03:12</td><td>27.4</td></tr>';
-        infoText += '<tr><td>皆既食の終わり</td><td>03:53</td><td>20.2</td></tr>';
-        infoText += '<tr><td>部分食の終わり</td><td>04:57</td><td>8.5</td></tr>';
-        infoText += '</table>';
         objectInfoTextElement.innerHTML = infoText;
         return;
     }

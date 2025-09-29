@@ -270,6 +270,12 @@
                         </select>
                         <input type="text" id="lon" class="observation-site-input" size="1" value="135">°
                     </div>
+
+                    <p class="donation-text">
+                        現在は星図に関する費用はゼロですが、将来的にはオフラインで使えるようにスマホアプリ化なども検討しており、それには費用がかかります。
+                        でも広告は入れたくないので、もしよければPayPayなどで個人的に寄付いただけるととても嬉しいです。
+                        ほしい機能や特典の提案、星図の不具合があれば、<a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">ご意見フォーム</a>からお願いします。
+                    </p>
                 </div>
 
                 <!-- 表示設定タブ -->
@@ -512,42 +518,36 @@
     <!-- 説明画面 -->
     <div id="description" class="description" style="display: none;">
         <div class="description-header">
-            <h3>星図の使い方・天体観測ガイド</h3>
+            <h3>memo</h3>
             <button id="closeDescription" type="button">閉じる</button>
         </div>
         
         <div class="description-content">
-            <!-- 表示設定 -->
+            <!-- 関連リンク -->
             <div class="description-section">
-                <h4>⚙️ 表示設定のポイント</h4>
+                <h4>🔗 関連リンク</h4>
                 <ul>
-                    <li><strong>リアルタイム:</strong> 現在時刻で自動更新</li>
-                    <li><strong>観測地:</strong> 「現在地」や「地図上で選択」もできます</li>
-                    <li><strong>表示モード:</strong> 赤道座標系（北が上）/プラネタリウム（上が上）/スマホに合わせる（スマホの向きや傾きに応じた表示）</li>
-                    <li><strong>最微等級:</strong> 見える星の数を調整</li>
+                    <li><strong>ご意見フォーム:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">ご意見フォーム</a></li>
+                    <li><strong>画像提供:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">バグ報告フォーム</a></li>
+                    <li><strong>木星の衛星:</strong> <a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館</a></li>
+                    <li><strong>土星の衛星:</strong> <a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPE</a></li>
+                    <li><strong>Heavens-Above:</strong> <a href="https://www.heavens-above.com/" target="_blank">Heavens-Above</a></li>
+                    <li><strong>ぴーとの部屋（トップ）:</strong> <a href="https://peteworden.github.io/Soleil/PeteHOME.html" target="_blank">トップ</a></li>
+                    <li><strong>もっと細かい星図を作成:</strong> <a href="https://peteworden.github.io/Soleil/gaiaChart.html" target="_blank">Gaia Archiveのデータから星図を作る</a></li>
+                    <li><strong>簡易水準器:</strong> <a href="https://peteworden.github.io/Soleil/level.html" target="_blank">簡易水準器</a></li>
+                    <li><strong>ソースコード・データソース:</strong> <a href="https://github.com/Peteworden/Soleil" target="_blank">GitHub</a></li>
                 </ul>
             </div>
-            
+
             <!-- 記号の説明 -->
             <div class="description-section">
-                <h4>⭐ 記号の説明</h4>
+                <h4>⭐ 記号</h4>
                 <ul>
                     <li>楕円: 銀河</li>
                     <li>◇: 星雲</li>
                     <li>△: 散開星団</li>
                     <li>○: 球状星団</li>
                     <li>☆: 1~数個の星</li>
-                </ul>
-            </div>
-
-            <!-- 季節の天体 -->
-            <div class="description-section">
-                <h4>🌌 AIが考える 季節の星座</h4>
-                <ul>
-                    <li><strong>春:</strong> しし座、おとめ座、うしかい座</li>
-                    <li><strong>夏:</strong> さそり座、いて座、わし座</li>
-                    <li><strong>秋:</strong> ペガスス座、アンドロメダ座、カシオペヤ座</li>
-                    <li><strong>冬:</strong> オリオン座、おおいぬ座、こいぬ座</li>
                 </ul>
             </div>
 
@@ -563,19 +563,28 @@
                 </details>
             </div>
 
-            <!-- 関連リンク -->
             <div class="description-section">
-                <h4>🔗 関連リンク</h4>
+                <h4>Known Issues</h4>
                 <ul>
-                    <li><strong>ご意見フォーム:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">ご意見フォーム</a></li>
-                    <li><strong>画像提供:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">バグ報告フォーム</a></li>
-                    <li><strong>木星の衛星:</strong> <a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館</a></li>
-                    <li><strong>土星の衛星:</strong> <a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPE</a></li>
-                    <li><strong>Heavens-Above:</strong> <a href="https://www.heavens-above.com/" target="_blank">Heavens-Above</a></li>
-                    <li><strong>ぴーとの部屋（トップ）:</strong> <a href="https://peteworden.github.io/Soleil/PeteHOME.html" target="_blank">トップ</a></li>
-                    <li><strong>もっと細かい星図を作成:</strong> <a href="https://peteworden.github.io/Soleil/gaiaChart.html" target="_blank">Gaia Archiveのデータから星図を作る</a></li>
-                    <li><strong>簡易水準器:</strong> <a href="https://peteworden.github.io/Soleil/level.html" target="_blank">簡易水準器</a></li>
-                    <li><strong>ソースコード・データソース:</strong> <a href="https://github.com/Peteworden/Soleil" target="_blank">GitHub</a></li>
+                    <li>読み込み時に時刻のスライダーの丸が左端にある</li>
+                    <li>風景と重ねるモードにある多数のバグ</li>
+                    <li>スマホだとちょっと縦長になっている</li>
+                    <li>全画面表示がうまく動かないときがある</li>
+                    <li>ほかにあればご意見フォームで教えてください</li>
+                </ul>
+            </div>
+
+            <div class="description-section">
+                <h4>Todo</h4>
+                <ul>
+                    <li>画面中心が属する星座を表示</li>
+                    <li>バイエル符号、フラムスティード番号を表示</li>
+                    <li>出没時刻を表示</li>
+                    <li>ダークモード</li>
+                    <li>お気に入り観測地</li>
+                    <li>星雲の絵を増やす</li>
+                    <li>おすすめ天体の提案</li>
+                    <li>ほかにあればご意見フォームで教えてください</li>
                 </ul>
             </div>
 

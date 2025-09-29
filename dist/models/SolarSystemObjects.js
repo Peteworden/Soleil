@@ -115,27 +115,6 @@ export function isMoon(obj) {
 export function isOrbitalObject(obj) {
     return obj.type === 'asteroid' || obj.type === 'comet' || obj.type === 'planet';
 }
-// // ファクトリー関数
-// export class SolarSystemObjectFactory {
-//     static create(data: SolarSystemObject): SolarSystemObjectBase {
-//         if (isSun(data)) {
-//             return new Sun(data);
-//         } else if (isMoon(data)) {
-//             return new Moon(data);
-//         } else if (isPlanet(data)) {
-//             return new Planet(data);
-//         } else if (isAsteroid(data)) {
-//             return new Asteroid(data);
-//         } else if (isComet(data)) {
-//             return new Comet(data);
-//         } else {
-//             throw new Error(`Unknown solar system object type: ${(data as any).type}`);
-//         }
-//     }
-//     static createFromArray(dataArray: SolarSystemObject[]): SolarSystemObjectBase[] {
-//         return dataArray.map(data => this.create(data));
-//     }
-// }
 /**
  * 太陽系天体データ管理クラス
  * データの読み込み、保存、検索、分類を統合管理
@@ -259,7 +238,6 @@ export class SolarSystemDataManager {
         }
         else {
             twilight = '';
-            console.log(sunAltitude);
         }
         return twilight;
     }

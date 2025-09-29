@@ -359,7 +359,7 @@ export class SolarSystemPositionCalculator {
         const Ms = (356.0470 + 0.9856002585 * d) % 360 * DEG_TO_RAD;
         const Mm = (115.3654 + 13.0649929509 * d) % 360 * DEG_TO_RAD;
         const Nm = (125.1228 - 0.0529538083 * d) % 360 * DEG_TO_RAD;
-        const ws = (282.9404 + 0.0000470935 * d) * DEG_TO_RAD;
+        const ws = (282.9404 + 0.0000470935 * d) % 360 * DEG_TO_RAD;
         const wm = (318.0634 + 0.1643573223 * d) % 360 * DEG_TO_RAD;
         const e = 0.054900;
         const a = 60.2666;
