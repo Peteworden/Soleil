@@ -72,7 +72,7 @@ export class CanvasRenderer {
         if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay().width < 2.0 * 30.0 / this.canvas.width) {
             markFlag = false;
         }
-        this.ctx.font = '14px Arial';
+        this.ctx.font = '12px Arial';
         this.ctx.fillStyle = 'orange';
         this.ctx.lineWidth = 1;
         this.ctx.strokeStyle = 'orange';
@@ -364,7 +364,7 @@ export class CanvasRenderer {
             data: sun
         });
         const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fieldOfViewRA, 13);
-        this.ctx.font = '18px serif';
+        this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'yellow';
@@ -374,7 +374,7 @@ export class CanvasRenderer {
         this.ctx.fillText(sun.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawPlanet(planet, limitingMagnitude, zeroMagSize) {
-        this.ctx.font = '18px serif';
+        this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         const coords = planet.getRaDec();
@@ -441,7 +441,7 @@ export class CanvasRenderer {
         else {
             return;
         }
-        this.ctx.font = '18x serif';
+        this.ctx.font = '15x serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'white';
@@ -518,7 +518,7 @@ export class CanvasRenderer {
         this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
     drawMinorObject(minorObject, limitingMagnitude, zeroMagSize) {
-        this.ctx.font = '16px serif';
+        this.ctx.font = '12px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         const coords = minorObject.getRaDec();
@@ -619,7 +619,7 @@ export class CanvasRenderer {
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
-            this.ctx.font = `${18 - 1 * starName.tier}px serif`;
+            this.ctx.font = `${15 - 1 * starName.tier}px serif`;
             if (starName.jpnName) {
                 this.ctx.fillText(starName.jpnName, x + 2, y - 2);
             }
@@ -984,7 +984,7 @@ export class CanvasRenderer {
             return;
         if (!this.config.displaySettings.showConstellationNames)
             return;
-        this.ctx.font = '16px Arial';
+        this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         const siderealTime = window.config.siderealTime;
