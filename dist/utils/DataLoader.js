@@ -57,10 +57,6 @@ export class DataLoader {
         }
         return gaia;
     }
-    // static async loadSolarSystemObjects(): Promise<SolarSystemObjectBase[]> {
-    //     const solarObjects = await SolarSystemDataManager.loadSolarSystemObjectElements();
-    //     return solarObjects;
-    // }
     // HIP星表データの読み込み
     static async loadHIPData() {
         const h = await this.fetchText('data/hip_65.txt');
@@ -81,6 +77,21 @@ export class DataLoader {
     static async loadConstellationData() {
         return await this.fetchJson('data/constellation.json');
         // return await this.fetchJson('下準備/202505星座線書き換え/constellation_new.json');
+    }
+    static async loadConstellationBoundariesData() {
+        const data = await this.fetchText('data/constellation_boundaries.txt');
+        const data_split = data.split(',');
+        const data_length = data_split.length;
+        const constellationBoundaries = [];
+        for (let i = 0; i < data_length; i += 5) {
+            const num = +data_split[i];
+            const ra1 = +data_split[i + 1];
+            const dec1 = +data_split[i + 2];
+            const ra2 = +data_split[i + 3];
+            const dec2 = +data_split[i + 4];
+            constellationBoundaries.push({ num, ra1, dec1, ra2, dec2 });
+        }
+        return constellationBoundaries;
     }
     // 星名データの読み込み
     static async loadStarNames() {

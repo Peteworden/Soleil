@@ -441,7 +441,7 @@ export class CanvasRenderer {
         else {
             return;
         }
-        this.ctx.font = '15x serif';
+        this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'white';

@@ -1,3 +1,4 @@
+import { DataStore } from '../models/DataStore.js';
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 const epsilon = 0.4090926;
@@ -353,6 +354,33 @@ export class CoordinateConverter {
         const scrRA = r * Math.sin(thetaSH);
         const scrDec = -r * Math.cos(thetaSH);
         return { ra: scrRA, dec: scrDec };
+    }
+    determineConstellation(center) {
+        const constellations = DataStore.constellationData;
+        const boundaries = DataStore.constellationBoundariesData;
+        if (constellations.length == 0 || boundaries.length == 0) {
+            return "";
+        }
+        const a = Array(89).fill(0);
+        for (const boundary of boundaries) {
+            const { num, ra1, dec1, ra2, dec2 } = boundary;
+            if (Math.min(dec1, dec2) <= center.dec && center.dec < Math.max(dec1, dec2)) {
+                if (center.ra >= (center.dec - dec1) * (ra2 - ra1) / (dec2 - dec1) + ra1) {
+                    a[num - 1] = (a[num - 1] + 1) % 2;
+                }
+            }
+        }
+        let centerConstellation = "";
+        for (let i = 0; i < 89; i++) {
+            if (a[i] == 1) {
+                centerConstellation = constellations[i].JPNname + "座";
+                break;
+            }
+        }
+        if (centerConstellation == "") {
+            centerConstellation = center.dec > 0 ? "こぐま座" : "はちぶんぎ座";
+        }
+        return centerConstellation;
     }
     // ------------------------------地平座標からの変換------------------------------
     // 地平座標から赤道座標への変換

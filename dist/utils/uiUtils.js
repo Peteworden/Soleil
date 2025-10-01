@@ -69,6 +69,12 @@ export function updateInfoDisplay() {
                 centerLabel.textContent = '中心(視位置):';
             }
         }
+        const coordinateConverter = new CoordinateConverter();
+        const centerConstellation = coordinateConverter.determineConstellation({ ra: centerRA, dec: centerDec });
+        const centerConstellationInfo = document.getElementById('centerConstellation');
+        if (centerConstellationInfo) {
+            centerConstellationInfo.textContent = centerConstellation;
+        }
         let centerRArounded = Math.round(centerRA * 4 * 10);
         if (centerRArounded == 1440)
             centerRArounded = 0;

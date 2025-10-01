@@ -333,6 +333,7 @@ export async function main() {
         let gaia101_110HelpData = [];
         let gaia111_115HelpData = [];
         let constellationData = [];
+        let constellationBoundariesData = [];
         let messierData = [];
         let recData = [];
         let ngcData = [];
@@ -395,10 +396,13 @@ export async function main() {
         // 段階的なデータ読み込みとレンダリング
         const loadDataStep = async () => {
             try {
-                [constellationData, hipStars] = await Promise.all([
+                [constellationData, constellationBoundariesData, hipStars] = await Promise.all([
                     DataLoader.loadConstellationData(),
+                    DataLoader.loadConstellationBoundariesData(),
                     DataLoader.loadHIPData()
                 ]);
+                DataStore.constellationData = constellationData;
+                DataStore.constellationBoundariesData = constellationBoundariesData;
                 renderAll();
                 [messierData, recData, gaia100Data, gaia100HelpData] = await Promise.all([
                     DataLoader.loadMessierData(),
@@ -450,7 +454,6 @@ export async function main() {
                 // 最終レンダリング
                 renderAll();
                 DataStore.hipStars = hipStars;
-                DataStore.constellationData = constellationData;
                 DataStore.ngcData = ngcData;
                 DataStore.starNames = starNames;
             }

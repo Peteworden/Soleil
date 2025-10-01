@@ -44,6 +44,7 @@ DataStore.gaia100Data = [];
 DataStore.gaia101_110Data = [];
 DataStore.gaia111_115Data = [];
 DataStore.constellationData = [];
+DataStore.constellationBoundariesData = [];
 DataStore.messierData = [];
 DataStore.recData = [];
 DataStore.ngcData = [];
