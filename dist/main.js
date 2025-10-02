@@ -7,7 +7,7 @@ import { TimeController } from './controllers/TimeController.js';
 import { UserObjectController } from './controllers/UserObjectController.js';
 import { DataStore } from './models/DataStore.js';
 import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
-import { CanvasRenderer } from './renderer/CanvasRenderer.js';
+import { createRenderer } from './renderer/index.js';
 import { InteractionController } from "./renderer/interactionController.js";
 import { AstronomicalCalculator } from './utils/calculations.js';
 import { CoordinateConverter } from './utils/coordinates.js';
@@ -185,7 +185,7 @@ function initializeConfig(noLoad = false) {
                 observationSite[key] = savedValue;
             }
         });
-        if (observationSite.name === '地図上で選択') {
+        if (observationSite.name === '地図上で選択' || observationSite.name === '現在地') {
             observationSite.name = 'カスタム';
         }
     }
@@ -321,8 +321,10 @@ export async function main() {
         canvas.width = config.canvasSize.width;
         canvas.height = config.canvasSize.height;
         ;
-        // レンダラーの作成
-        const renderer = new CanvasRenderer(canvas, config);
+        // レンダラーの作成（URLパラメータ renderer=webgl で切替。例: ?renderer=webgl）
+        const params = new URLSearchParams(location.search);
+        const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
+        const renderer = createRenderer(rendererType, canvas, config);
         window.renderer = renderer;
         // データの読み込み（段階的に）
         let hipStars = [];

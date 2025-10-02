@@ -25,7 +25,7 @@ export class DataLoader {
         const view = new DataView(buffer);
         const bufferByteLength = buffer.byteLength;
         let gaia = [];
-        if (url == 'data/gaia_-100_liten250719.bin') {
+        if (url == 'data/gaia_-100.bin') {
             const count = Math.floor(bufferByteLength / 4);
             gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 4) {
@@ -35,7 +35,7 @@ export class DataLoader {
                 gaia[i >> 2] = [ra, dec, mag];
             }
         }
-        else if (url == 'data/gaia_101-110_liten250719.bin') {
+        else if (url == 'data/gaia_101-110.bin') {
             const count = Math.floor(bufferByteLength / 3);
             gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 3) {
@@ -45,7 +45,7 @@ export class DataLoader {
                 gaia[i / 3] = [ra, dec, mag];
             }
         }
-        else if (url == 'data/gaia_111-115_liten250719.bin') {
+        else if (url == 'data/gaia_111-115.bin') {
             const count = Math.floor(bufferByteLength / 3);
             gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 3) {
@@ -177,13 +177,13 @@ export class DataLoader {
     // Gaiaデータの読み込み
     static async loadGaiaData(magnitudeRange) {
         if (magnitudeRange == '-100') {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}_liten250719.bin`);
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
         }
         else if (magnitudeRange == '101-110') {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}_liten250719.bin`);
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
         }
         else if (magnitudeRange == '111-115') {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}_liten250719.bin`);
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
         }
         else {
             throw new Error(`Invalid magnitude range: ${magnitudeRange}`);
