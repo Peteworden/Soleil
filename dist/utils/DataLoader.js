@@ -190,8 +190,12 @@ export class DataLoader {
         }
     }
     static async loadGaiaHelpData(magnitudeRange) {
-        const help = await this.fetchText(`data/gaia_${magnitudeRange}_helper.txt`);
-        const helpData = help.split(',').map(Number);
+        const helpDiff = await this.fetchText(`data/gaia_${magnitudeRange}_helper.txt`);
+        const helpDiffData = helpDiff.split(',').map(Number);
+        const helpData = new Array(helpDiffData.length + 1).fill(0);
+        for (let i = 0; i < helpDiffData.length; i++) {
+            helpData[i + 1] = helpData[i] + helpDiffData[i];
+        }
         return helpData;
     }
     // 追加天体データの読み込み

@@ -428,6 +428,10 @@ export class CoordinateConverter {
         const cosAzDiff = Math.cos(az_diff);
         const sinCenterAlt = Math.sin(centerAltRad);
         const cosCenterAlt = Math.cos(centerAltRad);
+        // rotateY(coords: CartesianCoordinates, angle: number): CartesianCoordinates {
+        //         x: cos*coords.x+sin*coords.z,
+        //         y: coords.y,
+        //         z: -sin*coords.x+cos*coords.z
         // const a = sinCenterAlt * cosAlt * Math.cos(az_diff) - cosCenterAlt * sinAlt;
         // const b =                cosAlt * Math.sin(az_diff);
         // const c = cosCenterAlt * cosAlt * Math.cos(az_diff) + sinCenterAlt * sinAlt;
@@ -515,8 +519,6 @@ export class CoordinateConverter {
             const r = Math.sqrt(Ra * Ra + Dec * Dec);
             const center = this.getCurrentCenter();
             const centerAlt_rad = center.alt * DEG_TO_RAD;
-            const sinAlt = Math.sin(centerAlt_rad);
-            const cosAlt = Math.cos(centerAlt_rad);
             const sinR = Math.sin(r);
             const cosR = Math.cos(r);
             const sinThetaSH = Math.sin(thetaSH);
