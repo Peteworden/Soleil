@@ -30,6 +30,11 @@
         "image_url": "M43.jpg"
     },
     {
+        "name": "M45",
+        "credit": "me",
+        "image_url": "M45.png"
+    },
+    {
         "name": "M51",
         "credit": "me",
         "image_url": "M51.jpg"
