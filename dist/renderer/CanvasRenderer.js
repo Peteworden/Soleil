@@ -678,7 +678,12 @@ export class CanvasRenderer {
         const zeroMagSize = this.starSize_0mag(this.config);
         // キャッシュされた領域候補を使用（毎回計算しない）
         const areas = this.areaCandidates();
-        this.ctx.fillStyle = 'white';
+        if (this.config.displaySettings.darkMode) {
+            this.ctx.fillStyle = 'rgba(200, 100, 100, 0.8)';
+        }
+        else {
+            this.ctx.fillStyle = 'white';
+        }
         this.ctx.beginPath();
         for (const area of areas) {
             for (let unit = area[0]; unit < area[1] + 1; unit++) {
@@ -959,7 +964,12 @@ export class CanvasRenderer {
             return;
         if (!this.config.displaySettings.showConstellationLines)
             return;
-        this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
+        if (this.config.displaySettings.darkMode) {
+            this.ctx.strokeStyle = 'rgba(100, 150, 150, 0.8)';
+        }
+        else {
+            this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
+        }
         this.ctx.lineWidth = 1;
         const xmax = this.canvas.width;
         const xmin = 0;
@@ -1094,6 +1104,7 @@ export class CanvasRenderer {
     }
     getStarColor(bv) {
         let c;
+        let opacity = 1;
         let starColor = 'white';
         if (bv === undefined || bv === 100) {
             c = starColor;
@@ -1118,7 +1129,12 @@ export class CanvasRenderer {
             r = Math.round(r * 255);
             g = Math.round(g * 255);
             b = Math.round(b * 255);
-            c = `rgba(${r}, ${g}, ${b}, 1)`;
+            if (this.config.displaySettings.darkMode) {
+                r = Math.round(r * 0.8);
+                g = Math.round(g * 0.4);
+                b = Math.round(b * 0.4);
+            }
+            c = `rgba(${r}, ${g}, ${b}, ${opacity})`;
         }
         return c;
     }

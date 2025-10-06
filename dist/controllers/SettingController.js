@@ -132,7 +132,7 @@ export class SettingController {
         // 表示設定を読み取り
         const modeSelect = get('mode');
         const magLimitSlider = get('magLimitSlider');
-        // const darkMode = document.getElementById('dark') as HTMLInputElement;
+        const darkMode = document.getElementById('dark');
         const gridCheck = get('gridCheck');
         const reticleCheck = get('reticleCheck');
         const objectInfoCheck = get('objectInfoCheck');
@@ -146,8 +146,8 @@ export class SettingController {
         const ngcCheck = get('ngcCheck');
         const cameraSelect = get('camera');
         const equinoxSelect = get('equinox');
-        if (modeSelect && gridCheck && magLimitSlider &&
-            reticleCheck && objectInfoCheck && usedStarSelect && starNameSelect &&
+        if (modeSelect && gridCheck && magLimitSlider && usedStarSelect && darkMode &&
+            reticleCheck && objectInfoCheck && starNameSelect &&
             constellationNameCheck && constellationLineCheck &&
             planetCheck && messierCheck && recCheck && ngcCheck && cameraSelect && equinoxSelect) {
             const updateConfig = window.updateConfig;
@@ -156,6 +156,7 @@ export class SettingController {
                 const newDisplaySettings = {
                     ...currentConfig.displaySettings, // 既存の値を保持
                     mode: modeSelect.value,
+                    darkMode: darkMode.checked,
                     showGrid: gridCheck.checked,
                     showReticle: reticleCheck.checked,
                     showObjectInfo: objectInfoCheck.checked,
@@ -308,14 +309,14 @@ export class SettingController {
         const vs = config.viewState;
         apply.select(get('mode'), ds.mode);
         apply.slider(get('magLimitSlider'), vs.starSizeKey1);
+        apply.checkbox(get('usedStarSelect'), ds.usedStar);
+        apply.checkbox(get('dark'), ds.darkMode);
         apply.checkbox(get('gridCheck'), ds.showGrid);
         apply.checkbox(get('reticleCheck'), ds.showReticle);
         apply.checkbox(get('objectInfoCheck'), ds.showObjectInfo);
         apply.checkbox(get('messierCheck'), ds.showMessiers);
         apply.checkbox(get('recCheck'), ds.showRecs);
         apply.checkbox(get('ngcCheck'), ds.showNGC);
-        // apply.select(get<HTMLSelectElement>('camera'), ds.camera);
-        apply.checkbox(get('usedStarSelect'), ds.usedStar);
         apply.select(get('starName'), ds.showStarNames);
         apply.checkbox(get('constellationNameCheck'), ds.showConstellationNames);
         apply.checkbox(get('constellationLineCheck'), ds.showConstellationLines);
