@@ -120,7 +120,17 @@ export class AstronomicalCalculator {
     static limitingMagnitude(config) {
         const key1 = config.viewState.starSizeKey1;
         const key2 = config.viewState.starSizeKey2;
-        const lm = Math.min(12.0, Math.max(4.0, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
+        const usedStar = config.displaySettings.usedStar;
+        let lm = Math.min(12.0, Math.max(3.0, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) / 2)));
+        if (usedStar == 'noStar') {
+            lm = -2.0;
+        }
+        if (usedStar == 'to6') {
+            lm = Math.min(lm, 6.0);
+        }
+        else if (usedStar == 'to10') {
+            lm = Math.min(lm, 10.0);
+        }
         return lm;
     }
 }

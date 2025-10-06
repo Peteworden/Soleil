@@ -544,7 +544,7 @@ export class CanvasRenderer {
     drawHipStars(hipStars) {
         if (hipStars.length == 0)
             return;
-        if (!this.config.displaySettings.showStars)
+        if (this.config.displaySettings.usedStar == 'noStar')
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const currentJd = this.config.displayTime.jd;
@@ -630,7 +630,7 @@ export class CanvasRenderer {
         this.ctx.fill();
     }
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
-        if (!this.config.displaySettings.showStars)
+        if (this.config.displaySettings.usedStar == 'noStar')
             return;
         if (!["AEP", "view"].includes(this.config.displaySettings.mode))
             return;
@@ -646,9 +646,17 @@ export class CanvasRenderer {
             gaiaNum = 1;
         }
         else if (brightestMagnitude === 10.1) {
+            if (this.config.displaySettings.usedStar == 'to6')
+                return;
+            if (this.config.displaySettings.usedStar == 'to10')
+                return;
             gaiaNum = 2;
         }
         else if (brightestMagnitude === 11.1) {
+            if (this.config.displaySettings.usedStar == 'to6')
+                return;
+            if (this.config.displaySettings.usedStar == 'to10')
+                return;
             gaiaNum = 3;
         }
         else {

@@ -339,9 +339,18 @@
                         <label>最微等級:</label>
                         <div class="set-mag-limit">
                             <img src="images/キラキラ1.png" alt="" class="magLimit-image magLimit-left-image">
-                            <input type="range" id="magLimitSlider" min="9" max="13" step="0.1" value="11">
+                            <input type="range" id="magLimitSlider" min="8" max="13" step="0.1" value="11">
                             <img src="images/キラキラ2.png" alt="" class="magLimit-image magLimit-right-image">
                         </div>
+                    </div>
+                    <div class="switch-row">
+                        <label class="switch-text">表示する星:</label>
+                        <select id="usedStarSelect">
+                            <option value="noStar">表示しない</option>
+                            <option value="to6">6等星まで</option>
+                            <option value="to10">10.0等星まで</option>
+                            <option value="to12" selected>12.0等星まで</option>
+                        </select>
                     </div>
 
                     <!-- <div class="switch-row">
@@ -408,13 +417,13 @@
                     </select>
 
                     <h5>天体</h5>
-                    <div class="switch-row">
+                    <!-- <div class="switch-row">
                         <label class="switch-text">恒星:</label>
                         <label class="switch">
                             <input type="checkbox" id="starCheck" checked>
                             <span class="slider round"></span>
                         </label>
-                    </div>
+                    </div> -->
                     <div class="switch-row">
                         <label class="switch-text">恒星名表示:</label>
                         <select id="starName">

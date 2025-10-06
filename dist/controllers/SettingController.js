@@ -136,7 +136,7 @@ export class SettingController {
         const gridCheck = get('gridCheck');
         const reticleCheck = get('reticleCheck');
         const objectInfoCheck = get('objectInfoCheck');
-        const starCheck = get('starCheck');
+        const usedStarSelect = get('usedStarSelect');
         const starNameSelect = get('starName');
         const constellationNameCheck = get('constellationNameCheck');
         const constellationLineCheck = get('constellationLineCheck');
@@ -147,7 +147,7 @@ export class SettingController {
         const cameraSelect = get('camera');
         const equinoxSelect = get('equinox');
         if (modeSelect && gridCheck && magLimitSlider &&
-            reticleCheck && objectInfoCheck && starCheck && starNameSelect &&
+            reticleCheck && objectInfoCheck && usedStarSelect && starNameSelect &&
             constellationNameCheck && constellationLineCheck &&
             planetCheck && messierCheck && recCheck && ngcCheck && cameraSelect && equinoxSelect) {
             const updateConfig = window.updateConfig;
@@ -159,7 +159,7 @@ export class SettingController {
                     showGrid: gridCheck.checked,
                     showReticle: reticleCheck.checked,
                     showObjectInfo: objectInfoCheck.checked,
-                    showStars: starCheck.checked,
+                    usedStar: usedStarSelect.value,
                     showStarNames: starNameSelect.value,
                     showPlanets: planetCheck.checked,
                     showConstellationNames: constellationNameCheck.checked,
@@ -315,7 +315,7 @@ export class SettingController {
         apply.checkbox(get('recCheck'), ds.showRecs);
         apply.checkbox(get('ngcCheck'), ds.showNGC);
         // apply.select(get<HTMLSelectElement>('camera'), ds.camera);
-        apply.checkbox(get('starCheck'), ds.showStars);
+        apply.checkbox(get('usedStarSelect'), ds.usedStar);
         apply.select(get('starName'), ds.showStarNames);
         apply.checkbox(get('constellationNameCheck'), ds.showConstellationNames);
         apply.checkbox(get('constellationLineCheck'), ds.showConstellationLines);

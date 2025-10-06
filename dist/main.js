@@ -15,6 +15,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-10-06T22:45:00', title: '等級設定を追加', text: '星が多すぎると思われるかもしれないので、限界等級の設定を等級スライドバーの下に作りました。' },
     { time: '2025-10-06T19:03:00', title: '最微等級が12.0等級に！', text: '最も暗い星の等級がこれまでの11.5等級から12.0等級になりました！これで星の数は320万個以上になりましたが、工夫して星以外も含めた総データサイズを11MBに抑えています。' },
     { time: '2025-10-04T20:30:00', title: 'アプリ名募集！', text: 'この星図をアンドロイドアプリにします！思ったより早く完成しそうなので名前募集中です～' },
     { time: '2025-09-06T19:30:00', title: '薄明情報', text: '時刻の横に薄明などの状況が出ます' },
@@ -79,7 +80,7 @@ function initializeConfig(noLoad = false) {
         showGrid: true,
         showReticle: true,
         showObjectInfo: true,
-        showStars: true,
+        usedStar: 'to12',
         showStarNames: 'to2',
         showPlanets: true,
         showConstellationNames: true,

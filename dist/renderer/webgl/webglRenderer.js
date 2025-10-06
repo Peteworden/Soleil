@@ -38,7 +38,7 @@ export class WebGLRenderer {
     // 入力がRA/Dec, helpDataの通常経路の場合: 画面内の領域候補から投影して[xPx, yPx, mag]を生成
     // 既に[xPx, yPx, mag]が来る場合はそのまま変換
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
-        if (!this.config.displaySettings.showStars)
+        if (this.config.displaySettings.usedStar == 'noStar')
             return;
         if (!['AEP', 'view'].includes(this.config.displaySettings.mode))
             return;
