@@ -15,6 +15,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-10-06T19:03:00', title: '最微等級が12.0等級に！', text: '最も暗い星の等級がこれまでの11.5等級から12.0等級になりました！これで星の数は320万個以上になりましたが、工夫して星以外も含めた総データサイズを11MBに抑えています。' },
     { time: '2025-10-04T20:30:00', title: 'アプリ名募集！', text: 'この星図をアンドロイドアプリにします！思ったより早く完成しそうなので名前募集中です～' },
     { time: '2025-09-06T19:30:00', title: '薄明情報', text: '時刻の横に薄明などの状況が出ます' },
     { time: '2025-09-04T23:40:00', title: '月食の表示', text: '8日未明は皆既月食ですね。というわけで月食を表示できるようにしました。' },
@@ -331,10 +332,10 @@ export async function main() {
         let hipStars = [];
         let gaia100Data = [];
         let gaia101_110Data = [];
-        let gaia111_115Data = [];
+        let gaia111_120Data = [];
         let gaia100HelpData = [];
         let gaia101_110HelpData = [];
-        let gaia111_115HelpData = [];
+        let gaia111_120HelpData = [];
         let constellationData = [];
         let constellationBoundariesData = [];
         let messierData = [];
@@ -354,7 +355,7 @@ export async function main() {
             renderer.drawCameraView();
             renderer.drawConstellationLines(constellationData);
             const time100 = performance.now();
-            renderer.drawGaiaStars(gaia111_115Data, gaia111_115HelpData, 11.1);
+            renderer.drawGaiaStars(gaia111_120Data, gaia111_120HelpData, 11.1);
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
             renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
             const time200 = performance.now();
@@ -418,14 +419,14 @@ export async function main() {
                 renderAll();
                 [ngcData, starNames,
                     gaia101_110Data, gaia101_110HelpData,
-                    gaia111_115Data, gaia111_115HelpData,
+                    gaia111_120Data, gaia111_120HelpData,
                 ] = await Promise.all([
                     DataLoader.loadNGCData(),
                     DataLoader.loadStarNames(),
                     DataLoader.loadGaiaData('101-110'),
                     DataLoader.loadGaiaHelpData('101-110'),
-                    DataLoader.loadGaiaData('111-115'),
-                    DataLoader.loadGaiaHelpData('111-115')
+                    DataLoader.loadGaiaData('111-120'),
+                    DataLoader.loadGaiaHelpData('111-120')
                 ]);
                 renderAll();
                 // imageCacheの更新

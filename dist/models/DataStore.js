@@ -42,7 +42,7 @@ export class DataStore {
 DataStore.hipStars = [];
 DataStore.gaia100Data = [];
 DataStore.gaia101_110Data = [];
-DataStore.gaia111_115Data = [];
+DataStore.gaia111_120Data = [];
 DataStore.constellationData = [];
 DataStore.constellationBoundariesData = [];
 DataStore.messierData = [];

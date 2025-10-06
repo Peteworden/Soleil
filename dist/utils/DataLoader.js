@@ -45,7 +45,7 @@ export class DataLoader {
                 gaia[i / 3] = [ra, dec, mag];
             }
         }
-        else if (url == 'data/gaia_111-115.bin') {
+        else if (url == 'data/gaia_111-120.bin') {
             const count = Math.floor(bufferByteLength / 3);
             gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 3) {
@@ -55,6 +55,7 @@ export class DataLoader {
                 gaia[i / 3] = [ra, dec, mag];
             }
         }
+        console.log(url, gaia.length, "stars");
         return gaia;
     }
     // HIP星表データの読み込み
@@ -71,6 +72,7 @@ export class DataLoader {
             hipData[i + 3] * 0.1 // bv
             ));
         }
+        console.log('Hipparcos', hips.length, "stars");
         return hips;
     }
     // 星座データの読み込み
@@ -170,19 +172,9 @@ export class DataLoader {
     static async loadBrightStars() {
         return await this.fetchText('data/brights.txt');
     }
-    // 星座境界データの読み込み
-    // static async loadConstellationBoundaries(): Promise<number[][]> {
-    //     return await this.fetchBinary('data/constellation_boundaries.bin');
-    // }
     // Gaiaデータの読み込み
     static async loadGaiaData(magnitudeRange) {
-        if (magnitudeRange == '-100') {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
-        }
-        else if (magnitudeRange == '101-110') {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
-        }
-        else if (magnitudeRange == '111-115') {
+        if (['-100', '101-110', '111-120'].includes(magnitudeRange)) {
             return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
         }
         else {
