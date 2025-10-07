@@ -52,6 +52,8 @@ export class SettingController {
         console.log('🔧 finishSetting called');
         // 設定値を読み取ってconfigを更新
         SettingController.updateConfigFromInputs();
+        //darkmode
+        SettingController.toggleDarkMode();
         // 設定画面を隠す
         const setting = document.getElementById('setting');
         if (window.innerWidth <= 768) {
@@ -132,7 +134,7 @@ export class SettingController {
         // 表示設定を読み取り
         const modeSelect = get('mode');
         const magLimitSlider = get('magLimitSlider');
-        const darkMode = document.getElementById('dark');
+        const darkMode = get('dark');
         const gridCheck = get('gridCheck');
         const reticleCheck = get('reticleCheck');
         const objectInfoCheck = get('objectInfoCheck');
@@ -267,6 +269,7 @@ export class SettingController {
         const config = window.config;
         if (!config)
             return;
+        SettingController.toggleDarkMode();
         const get = (id) => {
             return document.getElementById(id);
         };
@@ -449,6 +452,17 @@ export class SettingController {
                 }
             }
         }
+    }
+    static toggleDarkMode() {
+        const darkMode = window.config.displaySettings.darkMode;
+        document.querySelectorAll('*').forEach(el => {
+            if (darkMode) {
+                el.classList.add('dark-mode');
+            }
+            else {
+                el.classList.remove('dark-mode');
+            }
+        });
     }
 }
 //# sourceMappingURL=SettingController.js.map

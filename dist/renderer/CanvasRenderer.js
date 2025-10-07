@@ -73,9 +73,15 @@ export class CanvasRenderer {
             markFlag = false;
         }
         this.ctx.font = '12px Arial';
-        this.ctx.fillStyle = 'orange';
+        if (this.config.displaySettings.darkMode) {
+            this.ctx.fillStyle = 'rgb(200, 150, 0)';
+            this.ctx.strokeStyle = 'rgb(200, 150, 0)';
+        }
+        else {
+            this.ctx.fillStyle = 'orange';
+            this.ctx.strokeStyle = 'orange';
+        }
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = 'orange';
         /*
         Gx       Galaxy 銀河
         OC       Open star cluster 散開星団
@@ -605,7 +611,12 @@ export class CanvasRenderer {
         }
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
-        this.ctx.fillStyle = 'white';
+        if (this.config.displaySettings.darkMode) {
+            this.ctx.fillStyle = 'rgb(200, 150, 150)';
+        }
+        else {
+            this.ctx.fillStyle = 'white';
+        }
         this.ctx.beginPath();
         for (const starName of starNames) {
             if (tierLimit == 1 && starName.tier > 0)
@@ -679,7 +690,7 @@ export class CanvasRenderer {
         // キャッシュされた領域候補を使用（毎回計算しない）
         const areas = this.areaCandidates();
         if (this.config.displaySettings.darkMode) {
-            this.ctx.fillStyle = 'rgba(200, 100, 100, 0.8)';
+            this.ctx.fillStyle = 'rgb(200, 100, 100)';
         }
         else {
             this.ctx.fillStyle = 'white';
@@ -1005,6 +1016,12 @@ export class CanvasRenderer {
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
+        if (this.config.displaySettings.darkMode) {
+            this.ctx.fillStyle = 'rgb(200, 150, 150)';
+        }
+        else {
+            this.ctx.fillStyle = 'white';
+        }
         const siderealTime = window.config.siderealTime;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         for (const constellation of constellations) {
@@ -1021,7 +1038,6 @@ export class CanvasRenderer {
                 y: y,
                 data: constellation
             });
-            this.ctx.fillStyle = 'white';
             this.ctx.fillText(constellation.JPNname, x, y);
         }
     }

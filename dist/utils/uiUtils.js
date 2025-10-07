@@ -13,7 +13,6 @@ export function updateInfoDisplay() {
     if (!config) {
         return;
     }
-    const infoDisplay = document.getElementById('infoDisplay');
     // 観測地情報を更新
     if (locationInfo) {
         const observationSite = config.observationSite;
