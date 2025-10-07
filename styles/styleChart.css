@@ -1,3 +1,25 @@
+/* --- 基本（ライト＝デフォルト） --- */
+:root{
+    /* 全体の変数 — デフォルトは「ライト（だけど文字白）」という要件に合わせる */
+    --bg-color: #001f3f;       /* 例: navy 背景（ユーザー設定に合わせて）*/
+    --text-color: #ffffff;     /* デフォルト文字色は白 */
+    --muted-color: #aaaaaa;    /* 補助色 */
+    --accent-color: #0077cc;   /* ボタンなどのアクセント */
+    --card-bg: rgba(255,255,255,0.03); /* カードなどの背景（半透明） */
+    --border-color: rgba(255,255,255,0.08);
+}
+
+
+/* --- ダークモード --- */
+.dark-mode, .dark-mode :root {
+    --bg-color: #050406;       /* より暗い背景 */
+    --text-color: rgba(200, 100, 100, 0.8);     /* 基本文字は「赤黒」 -> 深赤 (dark red) */
+    --muted-color: rgba(200, 100, 100, 0.8);
+    --accent-color: #bb2222;   /* ダークでのアクセント（赤寄り） */
+    --card-bg: rgba(255,255,255,0.02);
+    --border-color: rgba(255,255,255,0.04);
+}
+
 * {
     box-sizing: border-box;
 }
@@ -103,12 +125,12 @@ input[type='range']::-moz-range-thumb {
 }
 
 .info-display .info-label {
-    color: #aaa;
+    color: var(--muted-color);
     font-weight: 500;
 }
 
 .info-display .info-value {
-    color: #fff;
+    color: var(--text-color);
     font-weight: 600;
 }
 
@@ -116,6 +138,7 @@ input[type='range']::-moz-range-thumb {
 .title {
     position: fixed;
     background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: var(--text-color);
     margin: 0px;
     height: 35px;
     top: 0;
@@ -148,7 +171,7 @@ input[type='range']::-moz-range-thumb {
 }
 
 .title ul li a {
-    color: white;
+    color: var(--text-color);
     text-decoration: none;
     font-weight: 500;
     transition: color 0.2s ease;
