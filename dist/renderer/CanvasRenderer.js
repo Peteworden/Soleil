@@ -4,6 +4,7 @@ import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
+import { getColorManager } from '../utils/colorManager.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
         this.imageCache = {};
@@ -40,6 +41,8 @@ export class CanvasRenderer {
                 webkitCompassHeading: data.webkitCompassHeading
             };
         });
+        // 色管理システムを初期化
+        this.colorManager = getColorManager(this.config.displaySettings.darkMode);
     }
     // imageCacheを設定
     setImageCache(imageCache) {
@@ -73,14 +76,8 @@ export class CanvasRenderer {
             markFlag = false;
         }
         this.ctx.font = '12px Arial';
-        if (this.config.displaySettings.darkMode) {
-            this.ctx.fillStyle = 'rgb(200, 150, 0)';
-            this.ctx.strokeStyle = 'rgb(200, 150, 0)';
-        }
-        else {
-            this.ctx.fillStyle = 'orange';
-            this.ctx.strokeStyle = 'orange';
-        }
+        this.ctx.fillStyle = this.colorManager.getColor('dso');
+        this.ctx.strokeStyle = this.colorManager.getColor('dso');
         this.ctx.lineWidth = 1;
         /*
         Gx       Galaxy 銀河
@@ -301,8 +298,8 @@ export class CanvasRenderer {
                 }
             }
             this.ctx.font = '14px serif';
-            this.ctx.strokeStyle = '#AAFFAA';
-            this.ctx.fillStyle = 'yellow';
+            this.ctx.strokeStyle = this.colorManager.getColor('solarSystemMotion');
+            this.ctx.fillStyle = this.colorManager.getColor('orange');
             this.ctx.textAlign = 'left';
             this.ctx.beginPath();
             for (let i = 0; i < jds.length; i++) {
@@ -373,7 +370,7 @@ export class CanvasRenderer {
         this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
-        this.ctx.fillStyle = 'yellow';
+        this.ctx.fillStyle = this.colorManager.getColor('yellow');
         this.ctx.beginPath();
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
@@ -397,7 +394,7 @@ export class CanvasRenderer {
         });
         const radius = Math.max(this.getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
-        this.ctx.fillStyle = 'rgb(255, 219, 88)';
+        this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         const dxy = Math.max(2, 0.8 * radius);
@@ -453,21 +450,21 @@ export class CanvasRenderer {
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         if (k < 0.5) {
-            this.ctx.fillStyle = 'yellow';
+            this.ctx.fillStyle = this.colorManager.getColor('yellow');
             this.ctx.arc(x, y, radius, 0, Math.PI * 2);
             this.ctx.fill();
-            this.ctx.fillStyle = '#333';
+            this.ctx.fillStyle = this.colorManager.getColor('moonShade');
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius, p, p + Math.PI);
             this.ctx.ellipse(x, y, radius, radius * (1 - 2 * k), p - Math.PI, 0, Math.PI);
             this.ctx.fill();
         }
         else {
-            this.ctx.fillStyle = '#333';
+            this.ctx.fillStyle = this.colorManager.getColor('moonShade');
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius, p - Math.PI, p);
             this.ctx.fill();
-            this.ctx.fillStyle = 'yellow';
+            this.ctx.fillStyle = this.colorManager.getColor('yellow');
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius, p - Math.PI, p);
             this.ctx.ellipse(x, y, radius, radius * (2 * k - 1), p, 0, Math.PI);
@@ -542,7 +539,7 @@ export class CanvasRenderer {
         const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude) - 1;
         const radius = Math.max(this.getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
-        this.ctx.fillStyle = 'rgb(255, 219, 88)';
+        this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.fillText(minorObject.getJapaneseName(), x + 2, y - 2);
@@ -611,12 +608,7 @@ export class CanvasRenderer {
         }
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
-        if (this.config.displaySettings.darkMode) {
-            this.ctx.fillStyle = 'rgb(200, 150, 150)';
-        }
-        else {
-            this.ctx.fillStyle = 'white';
-        }
+        this.ctx.fillStyle = this.colorManager.getColor('text');
         this.ctx.beginPath();
         for (const starName of starNames) {
             if (tierLimit == 1 && starName.tier > 0)
@@ -689,12 +681,7 @@ export class CanvasRenderer {
         const zeroMagSize = this.starSize_0mag(this.config);
         // キャッシュされた領域候補を使用（毎回計算しない）
         const areas = this.areaCandidates();
-        if (this.config.displaySettings.darkMode) {
-            this.ctx.fillStyle = 'rgb(200, 100, 100)';
-        }
-        else {
-            this.ctx.fillStyle = 'white';
-        }
+        this.ctx.fillStyle = this.colorManager.getColor('star');
         this.ctx.beginPath();
         for (const area of areas) {
             for (let unit = area[0]; unit < area[1] + 1; unit++) {
@@ -739,13 +726,13 @@ export class CanvasRenderer {
         const centerAlt = this.config.viewState.centerAlt;
         const siderealTime = this.config.siderealTime;
         const latitude = this.config.observationSite.latitude;
+        this.ctx.strokeStyle = this.colorManager.getColor('grid');
         if (this.config.displaySettings.mode == 'view') {
             const minAlt = Math.max(-90, Math.min(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).alt, centerAlt - fieldOfViewDec / 2));
             const maxAlt = Math.min(90, Math.max(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).alt, centerAlt + fieldOfViewDec / 2));
             const altGridCalcIv = Math.min(fieldOfViewRA, fieldOfViewDec) / 40;
             const azGridCalcIv = Math.min(altGridCalcIv / Math.max(Math.cos(centerAlt * Math.PI / 180), 0.1), 8); //天頂、天底付近で発散するため
             const gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
-            this.ctx.strokeStyle = 'gray';
             this.ctx.lineWidth = 1;
             let altGridIv = 45;
             for (i = 0; i < gridIvChoices.length; i++) {
@@ -882,7 +869,7 @@ export class CanvasRenderer {
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'top';
             this.ctx.font = '18px monospace';
-            this.ctx.fillStyle = '#DDDDDD';
+            this.ctx.fillStyle = this.colorManager.getColor('text');
             for (i = 0; i < 360; i += 45) {
                 const direction = directions[i / 45];
                 const directionEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: i, alt: 0 }, siderealTime, latitude);
@@ -945,9 +932,9 @@ export class CanvasRenderer {
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'bottom';
-        this.ctx.fillStyle = 'orange';
+        this.ctx.fillStyle = this.colorManager.getColor('orange');
         this.ctx.lineWidth = 1;
-        this.ctx.strokeStyle = 'orange';
+        this.ctx.strokeStyle = this.colorManager.getColor('orange');
         this.ctx.beginPath();
         this.ctx.moveTo(x - 4, y - 4);
         this.ctx.lineTo(x + 4, y + 4);
@@ -975,12 +962,7 @@ export class CanvasRenderer {
             return;
         if (!this.config.displaySettings.showConstellationLines)
             return;
-        if (this.config.displaySettings.darkMode) {
-            this.ctx.strokeStyle = 'rgba(100, 150, 150, 0.8)';
-        }
-        else {
-            this.ctx.strokeStyle = 'rgba(68, 190, 206, 0.8)';
-        }
+        this.ctx.strokeStyle = this.colorManager.getColor('constellationLine');
         this.ctx.lineWidth = 1;
         const xmax = this.canvas.width;
         const xmin = 0;
@@ -1016,12 +998,7 @@ export class CanvasRenderer {
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
-        if (this.config.displaySettings.darkMode) {
-            this.ctx.fillStyle = 'rgb(200, 150, 150)';
-        }
-        else {
-            this.ctx.fillStyle = 'white';
-        }
+        this.ctx.fillStyle = this.colorManager.getColor('constellationName');
         const siderealTime = window.config.siderealTime;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         for (const constellation of constellations) {
@@ -1044,7 +1021,7 @@ export class CanvasRenderer {
     drawReticle() {
         if (!this.config.displaySettings.showReticle)
             return;
-        this.ctx.strokeStyle = 'white';
+        this.ctx.strokeStyle = this.colorManager.getColor('reticle');
         this.ctx.lineWidth = 1;
         const a = 20;
         const b = 4;
@@ -1091,8 +1068,8 @@ export class CanvasRenderer {
         const decWidth = this.config.viewState.fieldOfViewDec;
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
-        this.ctx.strokeStyle = 'orange';
-        this.ctx.fillStyle = 'rgba(255, 255, 0, 0.1)';
+        this.ctx.strokeStyle = this.colorManager.getColor('orange');
+        this.ctx.fillStyle = this.colorManager.getColorWithAlpha('orange', 0.1);
         this.ctx.lineWidth = 1;
         this.ctx.beginPath();
         this.ctx.moveTo(centerX * (1 - w1 / raWidth), centerY * (1 - h1 / decWidth));
@@ -1119,40 +1096,7 @@ export class CanvasRenderer {
             return 1.0 + starSize_0mag * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
     }
     getStarColor(bv) {
-        let c;
-        let opacity = 1;
-        let starColor = 'white';
-        if (bv === undefined || bv === 100) {
-            c = starColor;
-        }
-        else {
-            bv = Math.max(-0.4, Math.min(2.0, bv));
-            let r = 0, g = 0, b = 0;
-            if (bv < 0.4)
-                r = 0.5 + 0.5 * (bv + 0.4) / 0.8;
-            else
-                r = 1.0;
-            if (bv < 0)
-                g = 1.0 + bv;
-            else if (bv < 0.4)
-                g = 1.0;
-            else
-                g = 1.0 - 0.6 * (bv - 0.4) / 1.6;
-            if (bv < 0.4)
-                b = 1.0;
-            else
-                b = 1.0 - 0.8 * (bv - 0.4) / 1.6;
-            r = Math.round(r * 255);
-            g = Math.round(g * 255);
-            b = Math.round(b * 255);
-            if (this.config.displaySettings.darkMode) {
-                r = Math.round(r * 0.8);
-                g = Math.round(g * 0.4);
-                b = Math.round(b * 0.4);
-            }
-            c = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-        }
-        return c;
+        return this.colorManager.getStarColor(bv);
     }
     areaNumber(ra, dec) {
         return Math.floor(360 * Math.floor(dec + 90) + Math.floor(ra));
@@ -1168,7 +1112,7 @@ export class CanvasRenderer {
         // 赤経0°の線を描く
         const ra0degLine = false;
         if (ra0degLine) {
-            this.ctx.strokeStyle = 'red';
+            this.ctx.strokeStyle = this.colorManager.getColor('orange');
             this.ctx.fillStyle = 'transparent';
             this.ctx.lineWidth = 2;
             this.ctx.beginPath();
@@ -1187,8 +1131,8 @@ export class CanvasRenderer {
             return [x, y];
         };
         if (debubMap) {
-            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.2)';
-            this.ctx.strokeStyle = 'red';
+            this.ctx.fillStyle = this.colorManager.getColorWithAlpha('orange', 0.2);
+            this.ctx.strokeStyle = this.colorManager.getColor('orange');
             this.ctx.beginPath();
             this.ctx.moveTo(...toAreaMapXY(0, -90));
             this.ctx.lineTo(...toAreaMapXY(0, 90));

@@ -1,8 +1,10 @@
+import { getColorManager } from '../utils/colorManager.js';
 export class SatelliteRenderer {
-    constructor(ctx, canvasSize, viewState) {
+    constructor(ctx, canvasSize, viewState, isDarkMode = false) {
         this.ctx = ctx;
         this.canvasSize = canvasSize;
         this.viewState = viewState;
+        this.colorManager = getColorManager(isDarkMode);
     }
     /**
      * 人工衛星を描画
@@ -28,7 +30,7 @@ export class SatelliteRenderer {
         // 人工衛星を描画
         this.ctx.save();
         this.ctx.fillStyle = color;
-        this.ctx.strokeStyle = satellite.illuminated ? '#ffffff' : '#666666';
+        this.ctx.strokeStyle = satellite.illuminated ? this.colorManager.getColor('text') : this.colorManager.getColor('textSecondary');
         this.ctx.lineWidth = 1;
         // 人工衛星のシンボルを描画（十字マーク）
         this.drawSatelliteSymbol(x, y, size);
@@ -60,8 +62,8 @@ export class SatelliteRenderer {
     drawSatelliteLabel(x, y, name, alt, range) {
         const fontSize = 12;
         this.ctx.font = `${fontSize}px Arial`;
-        this.ctx.fillStyle = '#ffffff';
-        this.ctx.strokeStyle = '#000000';
+        this.ctx.fillStyle = this.colorManager.getColor('text');
+        this.ctx.strokeStyle = this.colorManager.getColor('background');
         this.ctx.lineWidth = 2;
         // 高度と距離の情報を含むラベル
         const label = `${name}\n${alt.toFixed(1)}° ${(range / 1000).toFixed(0)}km`;
@@ -72,10 +74,10 @@ export class SatelliteRenderer {
         const padding = 4;
         const labelWidth = Math.max(...lines.map(line => this.ctx.measureText(line).width));
         const labelHeight = totalHeight;
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillStyle = this.colorManager.getColorWithAlpha('background', 0.7);
         this.ctx.fillRect(x + 10, y - labelHeight / 2, labelWidth + padding * 2, labelHeight + padding * 2);
         // テキストを描画
-        this.ctx.fillStyle = '#ffffff';
+        this.ctx.fillStyle = this.colorManager.getColor('text');
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'middle';
         for (let i = 0; i < lines.length; i++) {
@@ -99,12 +101,7 @@ export class SatelliteRenderer {
      * 人工衛星の色を決定
      */
     getSatelliteColor(illuminated) {
-        if (illuminated) {
-            return '#ffff00'; // 太陽光に照らされている場合は黄色
-        }
-        else {
-            return '#888888'; // 影に入っている場合は灰色
-        }
+        return this.colorManager.getSatelliteColor(illuminated);
     }
     /**
      * 赤道座標を画面座標に変換
@@ -152,7 +149,7 @@ export class SatelliteRenderer {
         if (futurePositions.length < 2)
             return;
         this.ctx.save();
-        this.ctx.strokeStyle = 'rgba(255, 255, 0, 0.5)';
+        this.ctx.strokeStyle = this.colorManager.getColorWithAlpha('satellite', 0.5);
         this.ctx.lineWidth = 1;
         this.ctx.setLineDash([5, 5]);
         this.ctx.beginPath();

@@ -266,6 +266,12 @@ export function updateConfig(newConfig) {
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
     }
+    // ダークモードが変更された場合、色管理システムを更新
+    if (newConfig.displaySettings?.darkMode !== undefined) {
+        import('./utils/colorManager.js').then(({ getColorManager }) => {
+            getColorManager(newConfig.displaySettings.darkMode);
+        });
+    }
     window.config = config;
     window.renderer.updateOptions(config);
     if (newConfig.displaySettings || newConfig.viewState) {
@@ -316,6 +322,9 @@ export async function main() {
         // 設定を初期化（DOM要素が読み込まれた後に実行）
         const config = initializeConfig();
         window.config = config;
+        // 色管理システムを初期化
+        const { getColorManager } = await import('./utils/colorManager.js');
+        getColorManager(config.displaySettings.darkMode);
         // キャンバスの取得（HTMLで作成済み）
         const canvas = document.getElementById('starChartCanvas');
         if (!canvas) {
