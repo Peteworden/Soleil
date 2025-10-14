@@ -82,6 +82,7 @@ function initializeConfig(noLoad = false) {
         showObjectInfo: true,
         usedStar: 'to12',
         showStarNames: 'to2',
+        showBayerFS: true,
         showPlanets: true,
         showConstellationNames: true,
         showConstellationLines: true,
@@ -346,6 +347,7 @@ export async function main() {
         let gaia100HelpData = [];
         let gaia101_110HelpData = [];
         let gaia111_120HelpData = [];
+        let brightStars = [];
         let constellationData = [];
         let constellationBoundariesData = [];
         let messierData = [];
@@ -371,6 +373,7 @@ export async function main() {
             const time200 = performance.now();
             renderer.drawHipStars(hipStars);
             renderer.writeStarNames(starNames);
+            renderer.drawBayerDesignations(brightStars, AstronomicalCalculator.limitingMagnitude(config));
             renderer.drawMessier(messierData);
             renderer.drawRec(DataStore.getRecData());
             renderer.drawNGC(ngcData);
@@ -417,27 +420,30 @@ export async function main() {
                 ]);
                 DataStore.constellationData = constellationData;
                 DataStore.constellationBoundariesData = constellationBoundariesData;
+                document.getElementById('loadingtext').innerHTML = 'loading 3/13';
                 renderAll();
-                [messierData, recData, gaia100Data, gaia100HelpData] = await Promise.all([
+                [messierData, recData, starNames, gaia100Data, gaia100HelpData] = await Promise.all([
                     DataLoader.loadMessierData(),
                     DataLoader.loadRecData(),
+                    DataLoader.loadStarNames(),
                     DataLoader.loadGaiaData('-100'),
                     DataLoader.loadGaiaHelpData('-100'),
                 ]);
                 DataStore.messierData = messierData;
                 DataStore.recData = recData;
+                document.getElementById('loadingtext').innerHTML = 'loading 8/13';
                 renderAll();
-                [ngcData, starNames,
-                    gaia101_110Data, gaia101_110HelpData,
-                    gaia111_120Data, gaia111_120HelpData,
-                ] = await Promise.all([
-                    DataLoader.loadNGCData(),
-                    DataLoader.loadStarNames(),
+                [gaia101_110Data, gaia101_110HelpData] = await Promise.all([
                     DataLoader.loadGaiaData('101-110'),
-                    DataLoader.loadGaiaHelpData('101-110'),
-                    DataLoader.loadGaiaData('111-120'),
-                    DataLoader.loadGaiaHelpData('111-120')
+                    DataLoader.loadGaiaHelpData('101-110')
                 ]);
+                document.getElementById('loadingtext').innerHTML = 'loading 11/13';
+                renderAll();
+                [ngcData, brightStars] = await Promise.all([
+                    DataLoader.loadNGCData(),
+                    DataLoader.loadBrightStars()
+                ]);
+                document.getElementById('loadingtext').innerHTML = 'loading 9/13';
                 renderAll();
                 // imageCacheの更新
                 if (messierData.length > 0) {
@@ -465,7 +471,11 @@ export async function main() {
                     }
                 }
                 renderer.setImageCache(imageCache);
-                // 最終レンダリング
+                [gaia111_120Data, gaia111_120HelpData] = await Promise.all([
+                    DataLoader.loadGaiaData('111-120'),
+                    DataLoader.loadGaiaHelpData('111-120')
+                ]);
+                document.getElementById('loadingtext').innerHTML = '';
                 renderAll();
                 DataStore.hipStars = hipStars;
                 DataStore.ngcData = ngcData;

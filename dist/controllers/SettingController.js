@@ -140,6 +140,7 @@ export class SettingController {
         const objectInfoCheck = get('objectInfoCheck');
         const usedStarSelect = get('usedStarSelect');
         const starNameSelect = get('starName');
+        const bayerFSCheck = get('bayerFSCheck');
         const constellationNameCheck = get('constellationNameCheck');
         const constellationLineCheck = get('constellationLineCheck');
         const planetCheck = get('planetCheck');
@@ -149,7 +150,7 @@ export class SettingController {
         const cameraSelect = get('camera');
         const equinoxSelect = get('equinox');
         if (modeSelect && gridCheck && magLimitSlider && usedStarSelect && darkMode &&
-            reticleCheck && objectInfoCheck && starNameSelect &&
+            reticleCheck && objectInfoCheck && starNameSelect && bayerFSCheck &&
             constellationNameCheck && constellationLineCheck &&
             planetCheck && messierCheck && recCheck && ngcCheck && cameraSelect && equinoxSelect) {
             const updateConfig = window.updateConfig;
@@ -164,6 +165,7 @@ export class SettingController {
                     showObjectInfo: objectInfoCheck.checked,
                     usedStar: usedStarSelect.value,
                     showStarNames: starNameSelect.value,
+                    showBayerFS: bayerFSCheck.checked,
                     showPlanets: planetCheck.checked,
                     showConstellationNames: constellationNameCheck.checked,
                     showConstellationLines: constellationLineCheck.checked,
@@ -321,6 +323,7 @@ export class SettingController {
         apply.checkbox(get('recCheck'), ds.showRecs);
         apply.checkbox(get('ngcCheck'), ds.showNGC);
         apply.select(get('starName'), ds.showStarNames);
+        apply.checkbox(get('bayerFSCheck'), ds.showBayerFS);
         apply.checkbox(get('constellationNameCheck'), ds.showConstellationNames);
         apply.checkbox(get('constellationLineCheck'), ds.showConstellationLines);
         apply.checkbox(get('planetCheck'), ds.showPlanets);

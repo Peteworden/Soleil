@@ -632,6 +632,45 @@ export class CanvasRenderer {
         }
         this.ctx.fill();
     }
+    /**
+     * ベイヤー記号を描画する
+     */
+    drawBayerDesignations(bayerData, limitingMagnitude) {
+        if (!bayerData || bayerData.length === 0)
+            return;
+        if (!this.config.displaySettings.showBayerFS)
+            return;
+        if (this.config.viewState.fieldOfViewRA * this.config.viewState.fieldOfViewDec > 400)
+            return;
+        this.ctx.save();
+        this.ctx.fillStyle = this.colorManager.getColor('text');
+        this.ctx.font = '12px serif';
+        this.ctx.textAlign = 'left';
+        this.ctx.textBaseline = 'top';
+        // 歳差運動補正
+        const currentJd = this.config.displayTime.jd;
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
+        for (const bayerStar of bayerData) {
+            if (!bayerStar.coordinates)
+                continue;
+            const coords = this.coordinateConverter.precessionEquatorial(bayerStar.coordinates, precessionAngle);
+            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
+            if (!screenXY[0])
+                continue;
+            const [x, y] = screenXY[1];
+            // ベイヤー記号を表示（既にフォーマット済み）
+            if (bayerStar.bayer && bayerStar.flam) {
+                this.ctx.fillText(`${bayerStar.bayer} (${bayerStar.flam})`, x + 5, y + 5);
+            }
+            else if (bayerStar.bayer) {
+                this.ctx.fillText(bayerStar.bayer, x + 5, y + 5);
+            }
+            else if (bayerStar.flam) {
+                this.ctx.fillText(`${bayerStar.flam}`, x + 5, y + 5);
+            }
+        }
+        this.ctx.restore();
+    }
     drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
         if (this.config.displaySettings.usedStar == 'noStar')
             return;

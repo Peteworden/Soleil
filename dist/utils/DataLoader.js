@@ -1,5 +1,6 @@
 import { HipStar, MessierObject, NGCObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
+import { formatBayerDesignation } from './textFormatter.js';
 export class DataLoader {
     static async fetchText(url) {
         const response = await fetch(url);
@@ -62,15 +63,16 @@ export class DataLoader {
     static async loadHIPData() {
         const h = await this.fetchText('data/hip_65.txt');
         const hipData = h.split(',').map(Number);
-        const hips = [];
+        const hipCount = hipData.length / 4;
+        const hips = new Array(hipCount);
         for (let i = 0; i < hipData.length; i += 4) {
             const coordinates = {
                 ra: hipData[i] * 0.001,
                 dec: hipData[i + 1] * 0.001
             };
-            hips.push(new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
+            hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
             hipData[i + 3] * 0.1 // bv
-            ));
+            );
         }
         console.log('Hipparcos', hips.length, "stars");
         return hips;
@@ -84,14 +86,15 @@ export class DataLoader {
         const data = await this.fetchText('data/constellation_boundaries.txt');
         const data_split = data.split(',');
         const data_length = data_split.length;
-        const constellationBoundaries = [];
+        const boundaryCount = data_length / 5;
+        const constellationBoundaries = new Array(boundaryCount);
         for (let i = 0; i < data_length; i += 5) {
             const num = +data_split[i];
             const ra1 = +data_split[i + 1];
             const dec1 = +data_split[i + 2];
             const ra2 = +data_split[i + 3];
             const dec2 = +data_split[i + 4];
-            constellationBoundaries.push({ num, ra1, dec1, ra2, dec2 });
+            constellationBoundaries[i / 5] = { num, ra1, dec1, ra2, dec2 };
         }
         return constellationBoundaries;
     }
@@ -162,15 +165,31 @@ export class DataLoader {
     // NGC天体データの読み込み
     static async loadNGCData() {
         const data = (await this.fetchText('data/ngc.txt')).split(',');
-        const ngc = [];
+        const ngcCount = data.length / 5;
+        const ngc = new Array(ngcCount);
         for (let i = 0; i < data.length; i += 5) {
-            ngc.push(new NGCObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]));
+            ngc[i / 5] = new NGCObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]);
         }
         return ngc;
     }
     // 明るい星データの読み込み
     static async loadBrightStars() {
-        return await this.fetchText('data/brights.txt');
+        const data = await this.fetchText('data/brights.txt');
+        const data_split = data.split(',');
+        const starCount = data_split.length / 6;
+        const brightStars = new Array(starCount);
+        for (let i = 0; i < data_split.length; i += 6) {
+            const flam = data_split[i + 2].length > 0 ? +data_split[i + 2] : null;
+            const bayer = data_split[i + 3].length > 0 ? formatBayerDesignation(data_split[i + 3], +data_split[i + 4]) : null;
+            const constellation = data_split[i + 5];
+            brightStars[i / 6] = {
+                coordinates: { ra: +data_split[i], dec: +data_split[i + 1] },
+                flam: flam || undefined,
+                bayer: bayer || undefined,
+                constellation: constellation
+            };
+        }
+        return brightStars;
     }
     // Gaiaデータの読み込み
     static async loadGaiaData(magnitudeRange) {

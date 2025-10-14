@@ -21,6 +21,12 @@ export class WebGLRenderer {
     setImageCache(imageCache) {
         this.imageCache = imageCache;
     }
+    // ベイヤー記号の描画（WebGLでは未実装、Canvasにフォールバック）
+    drawBayerDesignations(bayerData, limitingMagnitude) {
+        // WebGLではテキスト描画が複雑なため、当面は空実装
+        // 将来的にはCanvas2DやWebGLテキスト描画ライブラリを使用する予定
+        console.log('drawBayerDesignations called (WebGL - not implemented)');
+    }
     // 設定更新時にcanvasサイズやviewportを同期
     updateOptions(options) {
         Object.assign(this.config, options);
