@@ -8,6 +8,7 @@
     --card-bg: rgba(255,255,255,0.03); /* カードなどの背景（半透明） */
     --border-color: rgba(255,255,255,0.08);
     --setting-bg-color: linear-gradient(135deg, #1a1a2e, #16213e);
+    --select-focus-bg: #60a5fa;
 }
 
 
@@ -20,6 +21,7 @@
     --card-bg: rgba(255,255,255,0.02);
     --border-color: rgba(255,255,255,0.04);
     --setting-bg-color: linear-gradient(135deg, #0a0a1a, #09091c);
+    --select-focus-bg: #2a2a2a;
 }
 
 * {
@@ -34,6 +36,7 @@ html {
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
+    color: var(--text-color);
 }
 
 body {
@@ -54,7 +57,7 @@ input {
     margin: 5px 0;
     width: 3em;
     max-width: 100%;
-    color: whitesmoke;
+    color: var(--text-color);
     background-color: #8F5A3C;
     border: 1px solid #666;
     border-radius: 3px;
@@ -85,7 +88,7 @@ input[type='range']::-webkit-slider-thumb {
     border-radius: 50%;
     position: relative;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    background: #fff;
+    background: var(--text-color);
     cursor: pointer;
 }
 
@@ -95,7 +98,7 @@ input[type='range']::-moz-range-thumb {
     border-radius: 50%;
     position: relative;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    background: #fff;
+    background: var(--text-color);
     cursor: pointer;
 }
 
@@ -276,11 +279,11 @@ input[type="file"] {
 
 /* ダークモード時のボタンの色 */
 .dark-mode .main-screen-button {
-    filter: brightness(40%) sepia(100%);
+    background-color: rgba(50, 10, 10, 0.6);
 }
 
 .dark-mode .main-screen-button:hover {
-    filter: brightness(60%) sepia(100%);
+    background-color: rgba(50, 10, 10, 0.8);
 }
 
 .dark-mode .mobile-button-dock .main-screen-button {
@@ -869,6 +872,7 @@ button:hover {
 /* ダークモード時のボタンの色 */
 .dark-mode button {
     background-color: #bb2222;
+    color: var(--text-color);
 }
 
 .dark-mode button:hover {
@@ -892,6 +896,19 @@ select {
     border-radius: 4px;
     padding: 4px 8px;
     font-size: 14px;
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--select-focus-bg);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+    background-color: #17233a;
+}
+
+/* ドロップダウンの中身も暗色で統一 */
+select option, select optgroup {
+    background-color: var(--card-bg);
+    color: var(--text-color);
 }
 
 .switch {
@@ -940,7 +957,7 @@ input:checked + .slider:before {
 
 .showBtn {
     background-color: #4CAF50;
-    color: white;
+    color: var(--text-color);
     border: none;
     padding: 10px 20px;
     border-radius: 4px;

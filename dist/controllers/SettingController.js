@@ -466,6 +466,7 @@ export class SettingController {
                 el.classList.remove('dark-mode');
             }
         });
+        window.renderer.updateColorManager();
     }
 }
 //# sourceMappingURL=SettingController.js.map

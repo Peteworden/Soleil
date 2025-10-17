@@ -633,7 +633,7 @@ export class CanvasRenderer {
         this.ctx.fill();
     }
     /**
-     * ベイヤー記号を描画する
+     * バイエル符号、フラムスティード番号
      */
     drawBayerDesignations(bayerData, limitingMagnitude) {
         if (!bayerData || bayerData.length === 0)
@@ -644,7 +644,7 @@ export class CanvasRenderer {
             return;
         this.ctx.save();
         this.ctx.fillStyle = this.colorManager.getColor('text');
-        this.ctx.font = '12px serif';
+        this.ctx.font = '14px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'top';
         // 歳差運動補正
@@ -666,7 +666,7 @@ export class CanvasRenderer {
                 this.ctx.fillText(bayerStar.bayer, x + 5, y + 5);
             }
             else if (bayerStar.flam) {
-                this.ctx.fillText(`${bayerStar.flam}`, x + 5, y + 5);
+                this.ctx.fillText(`${bayerStar.flam}`, x + 2, y + 2);
             }
         }
         this.ctx.restore();
@@ -1648,6 +1648,9 @@ export class CanvasRenderer {
             this.gaiaDataCache3 = null;
             this.objectInfomation = [];
         }
+    }
+    updateColorManager() {
+        this.colorManager = getColorManager(this.config.displaySettings.darkMode);
     }
     setOrientationData(orientationData) {
         this.orientationData = orientationData;

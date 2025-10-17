@@ -363,6 +363,10 @@ export function updateConfig(newConfig) {
     if (newConfig.displaySettings?.darkMode !== undefined) {
         import('./utils/colorManager.js').then(({ getColorManager }) => {
             getColorManager(newConfig.displaySettings.darkMode);
+            // レンダラーの色も即時更新
+            // if ((window as any).renderer && (window as any).renderer.updateOptions) {
+            //     (window as any).renderer.updateOptions({ displaySettings: { ...config.displaySettings } });
+            // }
         });
     }
     window.config = config;
@@ -373,6 +377,8 @@ export function updateConfig(newConfig) {
             viewState: config.viewState
         });
     }
+    console.log('updateConfig called');
+    console.log(config);
     window.renderAll();
 }
 function resetAll() {
@@ -673,10 +679,10 @@ function updateFullScreenState(isFullscreen) {
         // フルスクリーンになった時
         console.log('Updating buttons to exit fullscreen state');
         if (fullScreenBtn) {
-            fullScreenBtn.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+            fullScreenBtn.innerHTML = `<i class="fas fa-compress" aria-hidden="true"></i>`;
         }
         if (fullScreenBtnMobile) {
-            fullScreenBtnMobile.innerHTML = `<img src="images/exitFullScreenBtn.png" alt="全画面表示終了">`;
+            fullScreenBtnMobile.innerHTML = `<i class="fas fa-compress" aria-hidden="true"></i>`;
         }
         const config = window.config;
         // config.canvasSize.width = window.outerWidth;
@@ -688,10 +694,10 @@ function updateFullScreenState(isFullscreen) {
         // フルスクリーンが解除された時
         console.log('Updating buttons to enter fullscreen state');
         if (fullScreenBtn) {
-            fullScreenBtn.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+            fullScreenBtn.innerHTML = `<i class="fas fa-expand" aria-hidden="true"></i>`;
         }
         if (fullScreenBtnMobile) {
-            fullScreenBtnMobile.innerHTML = `<img src="images/fullScreenBtn.png" alt="全画面表示">`;
+            fullScreenBtnMobile.innerHTML = `<i class="fas fa-expand" aria-hidden="true"></i>`;
         }
         const config = window.config;
         // config.canvasSize.width = window.innerWidth;
