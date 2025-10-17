@@ -523,7 +523,7 @@ export async function main() {
                 ]);
                 DataStore.constellationData = constellationData;
                 DataStore.constellationBoundariesData = constellationBoundariesData;
-                document.getElementById('loadingtext').innerHTML = 'loading 3/13';
+                document.getElementById('loadingtext').innerHTML = 'loading 3/14';
                 renderAll();
                 [messierData, recData, starNames, gaia100Data, gaia100HelpData] = await Promise.all([
                     DataLoader.loadMessierData(),
@@ -534,19 +534,19 @@ export async function main() {
                 ]);
                 DataStore.messierData = messierData;
                 DataStore.recData = recData;
-                document.getElementById('loadingtext').innerHTML = 'loading 8/13';
+                document.getElementById('loadingtext').innerHTML = 'loading 8/14';
                 renderAll();
                 [gaia101_110Data, gaia101_110HelpData] = await Promise.all([
                     DataLoader.loadGaiaData('101-110'),
                     DataLoader.loadGaiaHelpData('101-110')
                 ]);
-                document.getElementById('loadingtext').innerHTML = 'loading 11/13';
+                document.getElementById('loadingtext').innerHTML = 'loading 10/14';
                 renderAll();
                 [ngcData, brightStars] = await Promise.all([
                     DataLoader.loadNGCData(),
                     DataLoader.loadBrightStars()
                 ]);
-                document.getElementById('loadingtext').innerHTML = 'loading 9/13';
+                document.getElementById('loadingtext').innerHTML = 'loading 12/14';
                 renderAll();
                 // imageCacheの更新
                 if (messierData.length > 0) {
