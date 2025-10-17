@@ -1,6 +1,7 @@
 import { CacheInfoController } from './controllers/CacheInfoController.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 import { ObservationSiteController } from './controllers/ObservationSiteController.js';
+import { ShareController } from './controllers/ShareController.js';
 import { SearchController } from './controllers/SearchController.js';
 import { SettingController } from './controllers/SettingController.js';
 import { TimeController } from './controllers/TimeController.js';
@@ -137,6 +138,64 @@ function initializeConfig(noLoad = false) {
         width: window.innerWidth,
         height: window.innerHeight
     };
+    // URL クエリからの初期値上書き（例: ?ra=123.45）
+    const params = new URLSearchParams(location.search);
+    const raParam = params.get('ra');
+    const decParam = params.get('dec');
+    const latParam = params.get('lat');
+    const lonParam = params.get('lon');
+    const timeParam = params.get('time'); // YYYYMMDD-HHMM.M （JST）
+    let raOverride = null;
+    let decOverride = null;
+    let latOverride = null;
+    let lonOverride = null;
+    let timeOverride = null;
+    if (raParam != null) {
+        const raParsed = parseFloat(raParam);
+        if (!Number.isNaN(raParsed)) {
+            raOverride = ((raParsed % 360) + 360) % 360;
+        }
+    }
+    if (decParam != null) {
+        const decParsed = parseFloat(decParam);
+        if (!Number.isNaN(decParsed)) {
+            decOverride = Math.max(-90, Math.min(90, decParsed));
+        }
+    }
+    if (latParam != null) {
+        const latParsed = parseFloat(latParam);
+        if (!Number.isNaN(latParsed)) {
+            latOverride = Math.max(-90, Math.min(90, latParsed));
+        }
+    }
+    if (lonParam != null) {
+        const lonParsed = parseFloat(lonParam);
+        if (!Number.isNaN(lonParsed)) {
+            // -180～180 に正規化
+            lonOverride = (((lonParsed + 180) % 360) + 360) % 360 - 180;
+        }
+    }
+    if (timeParam != null) {
+        // フォーマット: YYYYMMDD-HHMMSS
+        // 例: 20251017-213030 => 2025/10/17 21:30:30 JST
+        const m = timeParam.match(/^(\d{8})-(\d{2})(\d{2})(\d{2})$/);
+        if (m) {
+            const yyyymmdd = m[1];
+            const hourStr = m[2];
+            const minuteStr = m[3];
+            const secondStr = m[4];
+            const year = parseInt(yyyymmdd.slice(0, 4));
+            const month = parseInt(yyyymmdd.slice(4, 6));
+            const day = parseInt(yyyymmdd.slice(6, 8));
+            const hour = parseInt(hourStr);
+            const minute = parseInt(minuteStr);
+            const second = parseInt(secondStr);
+            if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day) &&
+                Number.isFinite(hour) && Number.isFinite(minute) && Number.isFinite(second)) {
+                timeOverride = { year, month, day, hour, minute, second };
+            }
+        }
+    }
     if (noLoad) {
         const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
         const converter = new CoordinateConverter();
@@ -180,6 +239,12 @@ function initializeConfig(noLoad = false) {
             }
         });
     }
+    if (raOverride != null) {
+        viewState.centerRA = raOverride;
+    }
+    if (decOverride != null) {
+        viewState.centerDec = decOverride;
+    }
     viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
     if (savedSettingsObject && savedSettingsObject.observationSite) {
         const savedObservationSite = savedSettingsObject.observationSite;
@@ -192,6 +257,14 @@ function initializeConfig(noLoad = false) {
         if (observationSite.name === '地図上で選択' || observationSite.name === '現在地') {
             observationSite.name = 'カスタム';
         }
+    }
+    if (latOverride != null) {
+        observationSite.latitude = latOverride;
+        observationSite.name = 'カスタム';
+    }
+    if (lonOverride != null) {
+        observationSite.longitude = lonOverride;
+        observationSite.name = 'カスタム';
     }
     if (savedSettingsObject && savedSettingsObject.displayTime) {
         const savedDisplayTime = savedSettingsObject.displayTime;
@@ -216,8 +289,18 @@ function initializeConfig(noLoad = false) {
             displayTime.minute = savedDisplayTime.minute;
             displayTime.second = savedDisplayTime.second;
         }
-        displayTime.jd = AstronomicalCalculator.jdTTFromYmdhmsJst(displayTime.year, displayTime.month, displayTime.day, displayTime.hour, displayTime.minute, displayTime.second);
     }
+    if (timeOverride != null) {
+        displayTime.year = timeOverride.year;
+        displayTime.month = timeOverride.month;
+        displayTime.day = timeOverride.day;
+        displayTime.hour = timeOverride.hour;
+        displayTime.minute = timeOverride.minute;
+        displayTime.second = timeOverride.second;
+        displayTime.realTime = 'off';
+        displayTime.loadOnCurrentTime = false;
+    }
+    displayTime.jd = AstronomicalCalculator.jdTTFromYmdhmsJst(displayTime.year, displayTime.month, displayTime.day, displayTime.hour, displayTime.minute, displayTime.second);
     const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
     if (savedSettingsObject && savedSettingsObject.newsPopup) {
         const savedNewsPopup = savedSettingsObject.newsPopup;
@@ -229,15 +312,22 @@ function initializeConfig(noLoad = false) {
         });
     }
     const converter = new CoordinateConverter();
-    if (displaySettings.mode === 'AEP') {
+    if (raOverride != null || decOverride != null) {
         const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
         viewState.centerAz = centerHorizontal.az;
         viewState.centerAlt = centerHorizontal.alt;
     }
-    else if (displaySettings.mode === 'view') {
-        const centerEquatorial = converter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, siderealTime, observationSite.latitude);
-        viewState.centerRA = centerEquatorial.ra;
-        viewState.centerDec = centerEquatorial.dec;
+    else {
+        if (displaySettings.mode === 'AEP') {
+            const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
+            viewState.centerAz = centerHorizontal.az;
+            viewState.centerAlt = centerHorizontal.alt;
+        }
+        else if (displaySettings.mode === 'view') {
+            const centerEquatorial = converter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, siderealTime, observationSite.latitude);
+            viewState.centerRA = centerEquatorial.ra;
+            viewState.centerDec = centerEquatorial.dec;
+        }
     }
     return {
         displaySettings: displaySettings,
@@ -263,6 +353,8 @@ export function resetConfig() {
 // newconfigを受け取り、configを更新する
 export function updateConfig(newConfig) {
     const config = window.config;
+    // 状態変更時はクエリパラメータをクリア
+    resetURL();
     Object.assign(config, newConfig);
     if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
@@ -287,6 +379,17 @@ function resetAll() {
     // LocalStorage, config, UIをリセット
     resetConfig();
     SettingController.setUiOnConfig();
+}
+function resetURL() {
+    try {
+        if (location.search && history.replaceState) {
+            const newUrl = location.pathname + location.hash;
+            history.replaceState(null, '', newUrl);
+        }
+    }
+    catch (_) {
+        // noop
+    }
 }
 function showErrorMessage(text) {
     const errorMessage = document.getElementById('errorMessage');
@@ -667,6 +770,19 @@ function setupButtonEvents() {
     if (settingBtn) {
         settingBtn.addEventListener('click', () => {
             SettingController.initialize();
+        });
+    }
+    // 共有ボタン
+    const shareBtn = document.getElementById('shareBtn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', () => {
+            ShareController.copyShareUrl();
+        });
+    }
+    const shareBtnMobile = document.getElementById('shareBtnMobile');
+    if (shareBtnMobile) {
+        shareBtnMobile.addEventListener('click', () => {
+            ShareController.copyShareUrl();
         });
     }
     // 設定ボタン（モバイル）

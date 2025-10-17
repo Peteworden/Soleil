@@ -156,6 +156,8 @@ export class InteractionController {
                 }
                 this.baseDistance = distance;
             }
+            // URLのクエリを一度だけ削除（軽量）
+            clearUrlSearchOnce();
             // グローバルconfigも確実に更新
             const globalConfig = window.config;
             if (globalConfig && globalConfig.viewState) {
@@ -258,6 +260,8 @@ export class InteractionController {
                 this.viewState.centerRA = centerNewEquatorial.ra;
                 this.viewState.centerDec = centerNewEquatorial.dec;
             }
+            // URLのクエリを一度だけ削除（軽量）
+            clearUrlSearchOnce();
             // グローバルconfigも確実に更新
             const globalConfig = window.config;
             if (globalConfig && globalConfig.viewState) {
@@ -362,6 +366,27 @@ export class InteractionController {
         this.canvas.removeEventListener('pointerup', this.onPointerUp);
         this.canvas.removeEventListener('pointercancel', this.onPointerUp);
         this.canvas.removeEventListener('wheel', this.onWheel);
+    }
+}
+// クエリ削除を一度だけ行う軽量関数（履歴書き換えの回数を抑制）
+let __urlCleared = false;
+function clearUrlSearchOnce() {
+    if (__urlCleared)
+        return;
+    if (!location.search) {
+        __urlCleared = true;
+        return;
+    }
+    try {
+        if (history.replaceState) {
+            history.replaceState(null, '', location.pathname + location.hash);
+        }
+    }
+    catch (_) {
+        // noop
+    }
+    finally {
+        __urlCleared = true;
     }
 }
 //# sourceMappingURL=interactionController.js.map
