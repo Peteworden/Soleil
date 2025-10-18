@@ -25,7 +25,6 @@ export class InteractionController {
             this.clickStartTime = Date.now();
             this.clickStartX = e.clientX;
             this.clickStartY = e.clientY;
-            console.log('onPointerDown', e.pointerType, e.pointerId);
             if (this.activePointers.size <= 2) {
                 // ポインターIDを追跡
                 this.activePointers.add(e.pointerId);

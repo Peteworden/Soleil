@@ -432,10 +432,10 @@ export class CoordinateConverter {
         //         x: cos*coords.x+sin*coords.z,
         //         y: coords.y,
         //         z: -sin*coords.x+cos*coords.z
-        // const a = sinCenterAlt * cosAlt * Math.cos(az_diff) - cosCenterAlt * sinAlt;
-        // const b =                cosAlt * Math.sin(az_diff);
-        // const c = cosCenterAlt * cosAlt * Math.cos(az_diff) + sinCenterAlt * sinAlt;
-        const { x: a, y: b, z: c } = this.rotateY({ x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt }, -Math.PI / 2 + centerAltRad);
+        const a = sinCenterAlt * cosAlt * cosAzDiff - cosCenterAlt * sinAlt;
+        const b = cosAlt * sinAzDiff;
+        const c = cosCenterAlt * cosAlt * cosAzDiff + sinCenterAlt * sinAlt;
+        // const {x: a, y: b, z: c} = this.rotateY({x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt}, -Math.PI / 2 + centerAltRad);
         const r = this.acosdeg(c); //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRa = r * Math.sin(thetaSH);

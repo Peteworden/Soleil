@@ -16,6 +16,7 @@ export class CanvasRenderer {
         this.gaiaDataCache3 = null;
         this.objectInfomation = [];
         this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
+        this.gaiaSprites = new Map();
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context)
@@ -43,6 +44,7 @@ export class CanvasRenderer {
         });
         // 色管理システムを初期化
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
+        this.createGaiaSprites();
     }
     // imageCacheを設定
     setImageCache(imageCache) {
@@ -671,7 +673,7 @@ export class CanvasRenderer {
         }
         this.ctx.restore();
     }
-    drawGaiaStars(gaiaData, gaiaHelpData, brightestMagnitude) {
+    drawGaiaStars(gaiaData, gaiaHelpData, magBrightest) {
         if (this.config.displaySettings.usedStar == 'noStar')
             return;
         if (!["AEP", "view"].includes(this.config.displaySettings.mode))
@@ -681,29 +683,15 @@ export class CanvasRenderer {
         if (!gaiaHelpData || gaiaHelpData.length == 0)
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
-        if (brightestMagnitude > limitingMagnitude)
+        if (magBrightest > limitingMagnitude)
             return;
-        let gaiaNum = 0;
-        if (brightestMagnitude < 10) {
-            gaiaNum = 1;
+        if (this.config.displaySettings.usedStar == 'to6') {
+            if (magBrightest > 6.5)
+                return;
         }
-        else if (brightestMagnitude === 10.1) {
-            if (this.config.displaySettings.usedStar == 'to6')
+        else if (this.config.displaySettings.usedStar == 'to10') {
+            if (magBrightest > 10.0)
                 return;
-            if (this.config.displaySettings.usedStar == 'to10')
-                return;
-            gaiaNum = 2;
-        }
-        else if (brightestMagnitude === 11.1) {
-            if (this.config.displaySettings.usedStar == 'to6')
-                return;
-            if (this.config.displaySettings.usedStar == 'to10')
-                return;
-            gaiaNum = 3;
-        }
-        else {
-            console.error("brightestMagnitude looks strange: ", brightestMagnitude);
-            return;
         }
         const currentJd = window.config.displayTime.jd;
         // 歳差運動補正をキャッシュ
@@ -722,6 +710,9 @@ export class CanvasRenderer {
         const areas = this.areaCandidates();
         this.ctx.fillStyle = this.colorManager.getColor('star');
         this.ctx.beginPath();
+        let count1 = 0;
+        let count2 = 0;
+        let count3 = 0;
         for (const area of areas) {
             for (let unit = area[0]; unit < area[1] + 1; unit++) {
                 const raInt = unit % 360;
@@ -730,29 +721,46 @@ export class CanvasRenderer {
                 const fi = gaiaHelpData[unit + 1];
                 // バッチ処理で座標変換を最適化
                 for (let i = st; i < fi; i++) {
+                    count1++;
                     const data = gaiaData[i];
                     const mag = data[2];
                     if (mag >= limitingMagnitude)
                         continue;
+                    count2++;
                     const ra = raInt + data[0];
                     const dec = decInt + data[1];
                     const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
                     const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
                     if (!screenXY[0])
                         continue;
+                    count3++;
                     const [x, y] = screenXY[1];
                     const starSize = this.getStarSize(mag, limitingMagnitude, zeroMagSize);
-                    if (starSize < 0.5) {
-                        this.ctx.rect(x - 0.5, y - 0.5, 1, 1);
+                    if (starSize < 2.0) {
+                        this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
                     }
                     else {
                         this.ctx.moveTo(x, y);
                         this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
                     }
+                    // spriteは遅くはならないがあんまり変わらない
+                    // if (starSize < 2.0) {
+                    //     this.ctx.fillRect(x - starSize*0.7, y - starSize*0.7, starSize*1.4, starSize*1.4);
+                    // } else {
+                    //     const sprite = this.getGaiaSprite(starSize);
+                    //     if (sprite) {
+                    //         this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+                    //     } else {
+                    //         // console.log("No sprite:", starSize);
+                    //         this.ctx.moveTo(x, y);
+                    //         this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+                    //     }
+                    // }
                 }
             }
         }
         this.ctx.fill();
+        // console.log(`${magBrightest}: inArea: ${count1} magOK: ${count2} drawn: ${count3}`);
     }
     // グリッドを描画
     drawGrid() {
@@ -1120,7 +1128,7 @@ export class CanvasRenderer {
         this.ctx.stroke();
     }
     starSize_0mag(config) {
-        return Math.max(200.0 / (Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 15), 5);
+        return Math.max(200.0 / (Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 15), 2.0);
     }
     getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
         if (limitingMagnitude === undefined) {
@@ -1129,10 +1137,15 @@ export class CanvasRenderer {
         if (starSize_0mag === undefined) {
             starSize_0mag = this.starSize_0mag(this.config);
         }
-        if (magnitude > limitingMagnitude)
+        if (magnitude > limitingMagnitude) {
             return 1;
-        else
+        }
+        else if (magnitude > 0) {
             return 1.0 + starSize_0mag * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
+        }
+        else {
+            return starSize_0mag - magnitude;
+        }
     }
     getStarColor(bv) {
         return this.colorManager.getStarColor(bv);
@@ -1614,6 +1627,30 @@ export class CanvasRenderer {
         }
         console.log("Gaia", gaianum, "cache created with", correctedData.length, "stars");
         return correctedData;
+    }
+    createGaiaSprites() {
+        const gaiaSprites = new Map();
+        for (let size = 2.0; size <= 5.0; size += 0.5) {
+            const index = Math.round(size * 2);
+            const off = document.createElement("canvas");
+            off.width = size * 2;
+            off.height = size * 2;
+            const ctx = off.getContext("2d");
+            const g = ctx.createRadialGradient(size, size, 0, size, size, size);
+            g.addColorStop(0.0, this.colorManager.getColor('star'));
+            g.addColorStop(1.0, "transparent");
+            ctx.fillStyle = g;
+            // ctx.fillStyle = this.colorManager.getColor('star');
+            ctx.beginPath();
+            ctx.arc(size, size, size, 0, Math.PI * 2);
+            ctx.fill();
+            gaiaSprites.set(index, off);
+        }
+        this.gaiaSprites = gaiaSprites;
+        return;
+    }
+    getGaiaSprite(size) {
+        return this.gaiaSprites.get(Math.round(size * 2)) || null;
     }
     // 描画オプションを更新
     // timeSliderが動いたときに呼び出される

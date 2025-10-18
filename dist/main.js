@@ -450,10 +450,14 @@ export async function main() {
         window.renderer = renderer;
         // データの読み込み（段階的に）
         let hipStars = [];
-        let gaia100Data = [];
+        let gaia0_80Data = [];
+        let gaia81_90Data = [];
+        let gaia91_100Data = [];
         let gaia101_110Data = [];
         let gaia111_120Data = [];
-        let gaia100HelpData = [];
+        let gaia0_80HelpData = [];
+        let gaia81_90HelpData = [];
+        let gaia91_100HelpData = [];
         let gaia101_110HelpData = [];
         let gaia111_120HelpData = [];
         let brightStars = [];
@@ -466,6 +470,11 @@ export async function main() {
         // imageCacheの初期化
         const imageCache = {};
         const imageCacheNames = [];
+        let timer1 = new Array(0).fill(0);
+        let timer2 = new Array(0).fill(0);
+        let timer3 = new Array(0).fill(0);
+        let timer4 = new Array(0).fill(0);
+        let renderCount = 0;
         function renderAll() {
             const time000 = performance.now();
             renderer.clearObjectInfomation();
@@ -478,7 +487,9 @@ export async function main() {
             const time100 = performance.now();
             renderer.drawGaiaStars(gaia111_120Data, gaia111_120HelpData, 11.1);
             renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
-            renderer.drawGaiaStars(gaia100Data, gaia100HelpData, 0);
+            renderer.drawGaiaStars(gaia91_100Data, gaia91_100HelpData, 9.1);
+            renderer.drawGaiaStars(gaia81_90Data, gaia81_90HelpData, 8.1);
+            renderer.drawGaiaStars(gaia0_80Data, gaia0_80HelpData, 0);
             const time200 = performance.now();
             renderer.drawHipStars(hipStars);
             renderer.writeStarNames(starNames);
@@ -492,8 +503,23 @@ export async function main() {
             renderer.drawReticle();
             updateInfoDisplay();
             const time300 = performance.now();
-            // if (1 || time300 - time000 > 10) {
-            //     console.log((time300 - time000).toFixed(1), 'ms (', (time100 - time000).toFixed(1), 'ms, ', (time200 - time100).toFixed(1), 'ms, ', (time300 - time200).toFixed(1), 'ms)');
+            // renderCount++;
+            // timer1.push(time100 - time000);
+            // timer2.push(time200 - time100);
+            // timer3.push(time300 - time200);
+            // timer4.push(time300 - time000);
+            // if (renderCount > 30) {
+            //     timer1.shift();
+            //     timer2.shift();
+            //     timer3.shift();
+            //     timer4.shift();
+            //     console.log(
+            //         (timer1.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
+            //         (timer2.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
+            //         (timer3.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
+            //         (timer4.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
+            //         renderCount
+            //     );
             // }
         }
         window.renderAll = renderAll;
@@ -531,20 +557,25 @@ export async function main() {
                 DataStore.constellationBoundariesData = constellationBoundariesData;
                 document.getElementById('loadingtext').innerHTML = 'loading 3/14';
                 renderAll();
-                [messierData, recData, starNames, gaia100Data, gaia100HelpData] = await Promise.all([
+                [messierData, recData, starNames, gaia0_80Data, gaia0_80HelpData] = await Promise.all([
                     DataLoader.loadMessierData(),
                     DataLoader.loadRecData(),
                     DataLoader.loadStarNames(),
-                    DataLoader.loadGaiaData('-100'),
-                    DataLoader.loadGaiaHelpData('-100'),
+                    DataLoader.loadGaiaData('0-80', '4bytes', 0),
+                    DataLoader.loadGaiaHelpData('0-80'),
                 ]);
                 DataStore.messierData = messierData;
                 DataStore.recData = recData;
                 document.getElementById('loadingtext').innerHTML = 'loading 8/14';
                 renderAll();
-                [gaia101_110Data, gaia101_110HelpData] = await Promise.all([
-                    DataLoader.loadGaiaData('101-110'),
-                    DataLoader.loadGaiaHelpData('101-110')
+                [
+                    gaia81_90Data, gaia81_90HelpData,
+                    gaia91_100Data, gaia91_100HelpData
+                ] = await Promise.all([
+                    DataLoader.loadGaiaData('81-90', '3bytes', 8.1),
+                    DataLoader.loadGaiaHelpData('81-90'),
+                    DataLoader.loadGaiaData('91-100', '3bytes', 9.1),
+                    DataLoader.loadGaiaHelpData('91-100')
                 ]);
                 document.getElementById('loadingtext').innerHTML = 'loading 10/14';
                 renderAll();
@@ -580,8 +611,13 @@ export async function main() {
                     }
                 }
                 renderer.setImageCache(imageCache);
-                [gaia111_120Data, gaia111_120HelpData] = await Promise.all([
-                    DataLoader.loadGaiaData('111-120'),
+                [
+                    gaia101_110Data, gaia101_110HelpData,
+                    gaia111_120Data, gaia111_120HelpData
+                ] = await Promise.all([
+                    DataLoader.loadGaiaData('101-110', '3bytes', 10.1),
+                    DataLoader.loadGaiaHelpData('101-110'),
+                    DataLoader.loadGaiaData('111-120', '3bytes', 11.1),
                     DataLoader.loadGaiaHelpData('111-120')
                 ]);
                 document.getElementById('loadingtext').innerHTML = '';
@@ -710,7 +746,7 @@ function setupFullScreenButton() {
     const fullScreenBtn = document.getElementById('fullScreenBtn');
     const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
     if (fullScreenBtn) {
-        console.log('fullScreenBtn found, adding event listener');
+        // console.log('fullScreenBtn found, adding event listener');
         fullScreenBtn.addEventListener('click', () => {
             console.log('fullScreenBtn clicked');
             togglefullScreen();
@@ -720,7 +756,7 @@ function setupFullScreenButton() {
         console.log('fullScreenBtn not found');
     }
     if (fullScreenBtnMobile) {
-        console.log('fullScreenBtnMobile found, adding event listener');
+        // console.log('fullScreenBtnMobile found, adding event listener');
         fullScreenBtnMobile.addEventListener('click', () => {
             console.log('fullScreenBtnMobile clicked');
             togglefullScreen();
@@ -770,7 +806,6 @@ function setupOrientationPermissionButton(deviceOrientationManager) {
 // ページ読み込み時に実行
 window.addEventListener('DOMContentLoaded', main);
 function setupButtonEvents() {
-    console.log("setupButtonEvents called");
     // 設定ボタン
     const settingBtn = document.getElementById('settingBtn');
     if (settingBtn) {

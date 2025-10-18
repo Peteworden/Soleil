@@ -17,7 +17,7 @@ export class DataLoader {
         const data = await response.json();
         return Object.values(data);
     }
-    static async fetchGaiaBinaryData(url) {
+    static async fetchGaiaBinaryData(url, encodeStyle, magOffset) {
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`Failed to load ${url}: ${response.statusText}`);
@@ -26,35 +26,28 @@ export class DataLoader {
         const view = new DataView(buffer);
         const bufferByteLength = buffer.byteLength;
         let gaia = [];
-        if (url == 'data/gaia_-100.bin') {
+        if (encodeStyle == '3bytes') {
+            const count = Math.floor(bufferByteLength / 3);
+            gaia = new Array(count);
+            for (let i = 0; i < bufferByteLength; i += 3) {
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + magOffset;
+                gaia[i / 3] = [ra, dec, mag];
+            }
+        }
+        else if (encodeStyle == '4bytes') {
             const count = Math.floor(bufferByteLength / 4);
             gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 4) {
                 const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
                 const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
-                const mag = (((view.getUint8(i + 2) & 0x0F) << 3) | ((view.getUint8(i + 3) & 0xE0) >> 5)) * 0.1 - 2.0;
+                const mag = view.getUint8(i + 3) * 0.1 + magOffset;
                 gaia[i >> 2] = [ra, dec, mag];
             }
         }
-        else if (url == 'data/gaia_101-110.bin') {
-            const count = Math.floor(bufferByteLength / 3);
-            gaia = new Array(count);
-            for (let i = 0; i < bufferByteLength; i += 3) {
-                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
-                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
-                const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + 10.1;
-                gaia[i / 3] = [ra, dec, mag];
-            }
-        }
-        else if (url == 'data/gaia_111-120.bin') {
-            const count = Math.floor(bufferByteLength / 3);
-            gaia = new Array(count);
-            for (let i = 0; i < bufferByteLength; i += 3) {
-                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
-                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
-                const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + 11.1;
-                gaia[i / 3] = [ra, dec, mag];
-            }
+        else {
+            throw new Error(`Invalid encode style: ${encodeStyle}`);
         }
         console.log(url, gaia.length, "stars");
         return gaia;
@@ -111,6 +104,7 @@ export class DataLoader {
                 jpnName: starName.jpnname
             });
         }
+        console.log(`${starNames.length} star names`);
         return starNames;
     }
     // メシエ天体データの読み込み
@@ -140,6 +134,7 @@ export class DataLoader {
             }
             rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
+        console.log(`${rec.length} recommended objects`);
         const userObjects = localStorage.getItem('userObject');
         if (userObjects) {
             const userObjectsData = JSON.parse(userObjects);
@@ -159,6 +154,7 @@ export class DataLoader {
                 }
             }
             localStorage.setItem('userObject', JSON.stringify(userObjectsData));
+            console.log(`${userObjectsData.userRecs.length} user's objects`);
         }
         return rec;
     }
@@ -170,6 +166,7 @@ export class DataLoader {
         for (let i = 0; i < data.length; i += 5) {
             ngc[i / 5] = new NGCObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]);
         }
+        console.log(`${ngc.length} NGC and IC objects`);
         return ngc;
     }
     // 明るい星データの読み込み
@@ -192,12 +189,13 @@ export class DataLoader {
         return brightStars;
     }
     // Gaiaデータの読み込み
-    static async loadGaiaData(magnitudeRange) {
-        if (['-100', '101-110', '111-120'].includes(magnitudeRange)) {
-            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`);
+    static async loadGaiaData(magnitudeRange, encodeStyle, magOffset) {
+        try {
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`, encodeStyle, magOffset);
         }
-        else {
-            throw new Error(`Invalid magnitude range: ${magnitudeRange}`);
+        catch (error) {
+            console.error(`Failed to load Gaia data: ${magnitudeRange}, ${encodeStyle}, ${magOffset}, ${error}`);
+            return [];
         }
     }
     static async loadGaiaHelpData(magnitudeRange) {

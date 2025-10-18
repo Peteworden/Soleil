@@ -25,7 +25,6 @@ export class AstronomicalCalculator {
     }
     static calculateCurrentJdTT() {
         const now = new Date();
-        console.log(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
         return this.jdTTFromYmdhmsJst(now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
     }
     static calculateYmdhmsJstFromJdTT(jd_TT) {
