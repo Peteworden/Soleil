@@ -1127,6 +1127,34 @@ export class CanvasRenderer {
         this.ctx.fill();
         this.ctx.stroke();
     }
+    drawMilkyWay(milkyWay) {
+        if (milkyWay.length == 0)
+            return;
+        if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) < 30)
+            return;
+        const ifins = [];
+        const screenXYs = [];
+        for (let i = 0; i < milkyWay.length; i++) {
+            const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: milkyWay[i][0], dec: milkyWay[i][1] }, this.config, true, this.orientationData);
+            ifins.push(ifin);
+            screenXYs.push([x, y]);
+        }
+        // (ra=0, dec=55)と同じ側を塗る
+        // const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ra: 0, dec: 55}, this.config, true, this.orientationData);
+        this.ctx.strokeStyle = 'rgba(106, 171, 241, 0.5)';
+        // this.ctx.fillStyle = 'rgba(8, 46, 87, 0.5)';
+        // this.ctx.fillStyle = this.colorManager.getColorWithAlpha('orange', 0.1);
+        this.ctx.setLineDash([3, 3]);
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.moveTo(screenXYs[0][0], screenXYs[0][1]);
+        for (let i = 1; i < screenXYs.length; i++) {
+            this.ctx.lineTo(screenXYs[i][0], screenXYs[i][1]);
+        }
+        this.ctx.stroke();
+        // this.ctx.fill();
+        this.ctx.setLineDash([]);
+    }
     starSize_0mag(config) {
         return Math.max(200.0 / (Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 15), 2.0);
     }
@@ -1248,92 +1276,6 @@ export class CanvasRenderer {
                 crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
             });
         }
-        // if (Dec_max > 85) {
-        //     if (Dec_min < -85) {
-        //         if (ra0Dec.length % 2 === 0) {
-        //             for (let i = 0; i < ra0Dec.length; i += 2) {
-        //                 segments.push({
-        //                     ra1: 0, dec1: ra0Dec[i],
-        //                     ra2: 0, dec2: ra0Dec[i+1],
-        //                     crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
-        //                 });
-        //                 segments.push({
-        //                     ra1: 359.999, dec1: ra0Dec[i],
-        //                     ra2: 359.999, dec2: ra0Dec[i+1],
-        //                     crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
-        //                 });
-        //             }
-        //         } else {
-        //             console.log("np && sp but ra0Dec.length%2 != 0", ra0Dec);
-        //         }
-        //     } else {
-        //         if (ra0Dec.length % 2 === 1) {
-        //             for (let i = 0; i < ra0Dec.length; i += 2) {
-        //                 segments.push({
-        //                     ra1: 0, dec1: ra0Dec[0],
-        //                     ra2: 0, dec2: ra0Dec[i+1],
-        //                     crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
-        //                 });
-        //                 segments.push({
-        //                     ra1: 359.999, dec1: ra0Dec[0],
-        //                     ra2: 359.999, dec2: 89.9,
-        //                     crossDecs: rangeInt(ra0Dec[0], 89.9)
-        //                 });
-        //             }
-        //         } else {
-        //             console.log("np && !sp but ra0Dec.length%2 != 1");
-        //         }
-        //     }
-        // } else if (!np && sp) {
-        //     if (ra0Dec.length === 1) {
-        //         segments.push({
-        //             ra1: 0, dec1: -90,
-        //             ra2: 0, dec2: ra0Dec[0],
-        //             crossDecs: rangeInt(-90, ra0Dec[0])
-        //         });
-        //         segments.push({
-        //             ra1: 359.999, dec1: ra0Dec[0],
-        //             ra2: 359.999, dec2: -90,
-        //             crossDecs: rangeInt(-90, ra0Dec[0])
-        //         });
-        //     } else {
-        //         console.log("!np && sp but ra0Dec.length != 1");
-        //     }
-        // } else if (ra0Dec.length === 2) {
-        //     segments.push({
-        //         ra1: 0, dec1: ra0Dec[0],
-        //         ra2: 0, dec2: ra0Dec[1],
-        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
-        //     });
-        //     segments.push({
-        //         ra1: 359.999, dec1: ra0Dec[0],
-        //         ra2: 359.999, dec2: ra0Dec[1],
-        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
-        //     });
-        // } else if (ra0Dec.length === 4) {
-        //     segments.push({
-        //         ra1: 0, dec1: ra0Dec[0],
-        //         ra2: 0, dec2: ra0Dec[1],
-        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
-        //     });
-        //     segments.push({
-        //         ra1: 359.999, dec1: ra0Dec[0],
-        //         ra2: 359.999, dec2: ra0Dec[1],
-        //         crossDecs: rangeInt(ra0Dec[0], ra0Dec[1])
-        //     });
-        //     segments.push({
-        //         ra1: 0, dec1: ra0Dec[2],
-        //         ra2: 0, dec2: ra0Dec[3],
-        //         crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
-        //     });
-        //     segments.push({
-        //         ra1: 359.999, dec1: ra0Dec[2],
-        //         ra2: 359.999, dec2: ra0Dec[3],
-        //         crossDecs: rangeInt(ra0Dec[2], ra0Dec[3])
-        //     });
-        // } else if (ra0Dec.length > 0) {
-        //     console.log(ra0Dec);
-        // }
         // i番目:赤緯i-90の線と境界線が交わる点の赤経
         const allIntersections = Array.from({ length: 180 }, () => ({ intersections: [] }));
         for (const segment of segments) {

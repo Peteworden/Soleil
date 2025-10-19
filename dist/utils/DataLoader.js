@@ -207,6 +207,17 @@ export class DataLoader {
         }
         return helpData;
     }
+    static async loadMilkyWayData() {
+        const data = await this.fetchText('data/milky_way.txt');
+        const data_split = data.split(',');
+        const pointCount = data_split.length / 2;
+        const milkyWay = new Array(pointCount + 1);
+        for (let i = 0; i < data_split.length; i += 2) {
+            milkyWay[i / 2] = [+data_split[i], +data_split[i + 1]];
+        }
+        milkyWay[pointCount] = milkyWay[0];
+        return milkyWay;
+    }
     // 追加天体データの読み込み
     static async loadAdditionalObjects() {
         return await this.fetchText('data/additional_objects.txt');

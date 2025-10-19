@@ -8,7 +8,7 @@ import { TimeController } from './controllers/TimeController.js';
 import { UserObjectController } from './controllers/UserObjectController.js';
 import { DataStore } from './models/DataStore.js';
 import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
-import { createRenderer } from './renderer/index.js';
+import { CanvasRenderer } from './renderer/CanvasRenderer.js';
 import { InteractionController } from "./renderer/interactionController.js";
 import { AstronomicalCalculator } from './utils/calculations.js';
 import { CoordinateConverter } from './utils/coordinates.js';
@@ -444,9 +444,10 @@ export async function main() {
         canvas.height = config.canvasSize.height;
         ;
         // レンダラーの作成（URLパラメータ renderer=webgl で切替。例: ?renderer=webgl）
-        const params = new URLSearchParams(location.search);
-        const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
-        const renderer = createRenderer(rendererType, canvas, config);
+        // const params = new URLSearchParams(location.search);
+        // const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
+        // const renderer = createRenderer(rendererType as any, canvas, config);
+        const renderer = new CanvasRenderer(canvas, config);
         window.renderer = renderer;
         // データの読み込み（段階的に）
         let hipStars = [];
@@ -467,6 +468,7 @@ export async function main() {
         let recData = [];
         let ngcData = [];
         let starNames = [];
+        let milkyWayData = [];
         // imageCacheの初期化
         const imageCache = {};
         const imageCacheNames = [];
@@ -481,6 +483,7 @@ export async function main() {
             renderer.clear();
             const tempTarget = getTempTarget();
             renderer.drawGrid();
+            renderer.drawMilkyWay(milkyWayData);
             renderer.drawPoleMark();
             renderer.drawCameraView();
             renderer.drawConstellationLines(constellationData);
@@ -557,12 +560,15 @@ export async function main() {
                 DataStore.constellationBoundariesData = constellationBoundariesData;
                 document.getElementById('loadingtext').innerHTML = 'loading 3/14';
                 renderAll();
-                [messierData, recData, starNames, gaia0_80Data, gaia0_80HelpData] = await Promise.all([
+                [
+                    messierData, recData, starNames, gaia0_80Data, gaia0_80HelpData, milkyWayData
+                ] = await Promise.all([
                     DataLoader.loadMessierData(),
                     DataLoader.loadRecData(),
                     DataLoader.loadStarNames(),
                     DataLoader.loadGaiaData('0-80', '4bytes', 0),
                     DataLoader.loadGaiaHelpData('0-80'),
+                    DataLoader.loadMilkyWayData(),
                 ]);
                 DataStore.messierData = messierData;
                 DataStore.recData = recData;
