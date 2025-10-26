@@ -54,6 +54,7 @@ export class InteractionController {
         };
         this.onPointerMove = (e) => {
             e.preventDefault();
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             // ポインターの座標を更新
             // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
@@ -85,7 +86,7 @@ export class InteractionController {
                     const dcenterDec = deltaY * moveScale;
                     this.viewState.centerRA = ((this.viewState.centerRA + dcenterRA) % 360 + 360) % 360;
                     this.viewState.centerDec = Math.min(Math.max(this.viewState.centerDec + dcenterDec, -90), 90);
-                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: this.viewState.centerRA, dec: this.viewState.centerDec }, window.config.siderealTime);
+                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: this.viewState.centerRA, dec: this.viewState.centerDec });
                     this.viewState.centerAz = centerHorizontal.az;
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
@@ -94,7 +95,7 @@ export class InteractionController {
                     const dcenterAlt = deltaY * moveScale;
                     this.viewState.centerAz = ((this.viewState.centerAz + dcenterAz) % 360 + 360) % 360;
                     this.viewState.centerAlt = Math.min(Math.max(this.viewState.centerAlt + dcenterAlt, -90), 90);
-                    const centerEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: this.viewState.centerAz, alt: this.viewState.centerAlt }, window.config.siderealTime);
+                    const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt });
                     this.viewState.centerRA = centerEquatorial.ra;
                     this.viewState.centerDec = centerEquatorial.dec;
                 }
@@ -139,7 +140,7 @@ export class InteractionController {
                     const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
                     this.viewState.centerRA = pinchEquatorial.ra;
                     this.viewState.centerDec = pinchEquatorial.dec;
-                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: pinchEquatorial.ra, dec: pinchEquatorial.dec }, window.config.siderealTime);
+                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: pinchEquatorial.ra, dec: pinchEquatorial.dec });
                     this.viewState.centerAz = centerHorizontal.az;
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
@@ -149,7 +150,7 @@ export class InteractionController {
                     const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
                     this.viewState.centerAz = pinchHorizontal.az;
                     this.viewState.centerAlt = pinchHorizontal.alt;
-                    const pinchEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: pinchHorizontal.az, alt: pinchHorizontal.alt }, window.config.siderealTime);
+                    const pinchEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: pinchHorizontal.az, alt: pinchHorizontal.alt });
                     this.viewState.centerRA = pinchEquatorial.ra;
                     this.viewState.centerDec = pinchEquatorial.dec;
                 }
@@ -243,11 +244,12 @@ export class InteractionController {
             const pinchScreenDec = -this.viewState.fieldOfViewDec * y / this.canvas.height;
             const centerNewScreenRA = pinchScreenRA * (1 - 1 / scale);
             const centerNewScreenDec = pinchScreenDec * (1 - 1 / scale);
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             if (this.displaySettings.mode == 'AEP') {
                 const centerNewEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: centerNewScreenRA, dec: centerNewScreenDec });
                 this.viewState.centerRA = centerNewEquatorial.ra;
                 this.viewState.centerDec = centerNewEquatorial.dec;
-                const centerHorizontal = this.coordinateConverter.equatorialToHorizontal({ ra: centerNewEquatorial.ra, dec: centerNewEquatorial.dec }, window.config.siderealTime);
+                const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: centerNewEquatorial.ra, dec: centerNewEquatorial.dec });
                 this.viewState.centerAz = centerHorizontal.az;
                 this.viewState.centerAlt = centerHorizontal.alt;
             }
@@ -255,7 +257,7 @@ export class InteractionController {
                 const centerNewHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerNewScreenRA, dec: centerNewScreenDec });
                 this.viewState.centerAz = centerNewHorizontal.az;
                 this.viewState.centerAlt = centerNewHorizontal.alt;
-                const centerNewEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: centerNewHorizontal.az, alt: centerNewHorizontal.alt }, window.config.siderealTime);
+                const centerNewEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: centerNewHorizontal.az, alt: centerNewHorizontal.alt });
                 this.viewState.centerRA = centerNewEquatorial.ra;
                 this.viewState.centerDec = centerNewEquatorial.dec;
             }

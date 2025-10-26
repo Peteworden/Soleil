@@ -159,8 +159,9 @@ export class DeviceOrientationManager {
         }
         const coordinateConverter = new CoordinateConverter();
         if (coordinateConverter) {
+            const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
             const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ ra: 0, dec: 0 }, this.orientationData);
-            const centerRaDec = coordinateConverter.horizontalToEquatorial(centerHorizontal, window.config.siderealTime);
+            const centerRaDec = coordinateConverter.horizontalToEquatorial(lstLat, centerHorizontal);
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 updateConfig({

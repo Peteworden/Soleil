@@ -217,9 +217,11 @@ export class SolarSystemDataManager {
         if (!sun)
             return '';
         const sunRaDec = sun.getRaDec();
+        const latitude = window.config.observationSite.latitude;
         const siderealTime = window.config.siderealTime;
+        const lstLat = { lst: siderealTime, lat: latitude };
         const coordinateConverter = new CoordinateConverter();
-        const sunAltitude = coordinateConverter.equatorialToHorizontal(sunRaDec, siderealTime).alt;
+        const sunAltitude = coordinateConverter.equatorialToHorizontal(lstLat, sunRaDec).alt;
         let twilight = '';
         if (sunAltitude > -0.84) {
             twilight = '昼';

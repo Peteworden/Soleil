@@ -16,6 +16,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-10-26T13:20:00', title: '天の川', text: '天の川の輪郭を作りました。あと、ちょっと前にバイエル符号とフラムスティード番号も出るようにしています。' },
     { time: '2025-10-06T22:45:00', title: '等級設定を追加', text: '星が多すぎると思われるかもしれないので、限界等級の設定を等級スライドバーの下に作りました。' },
     { time: '2025-10-06T19:03:00', title: '最微等級が12.0等級に！', text: '最も暗い星の等級がこれまでの11.5等級から12.0等級になりました！これで星の数は320万個以上になりましたが、工夫して星以外も含めた総データサイズを11MBに抑えています。' },
     { time: '2025-10-04T20:30:00', title: 'アプリ名募集！', text: 'この星図をアンドロイドアプリにします！思ったより早く完成しそうなので名前募集中です～' },
@@ -200,12 +201,12 @@ function initializeConfig(noLoad = false) {
         const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
         const converter = new CoordinateConverter();
         if (displaySettings.mode === 'AEP') {
-            const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
+            const centerHorizontal = converter.equatorialToHorizontal({ lst: siderealTime, lat: observationSite.latitude }, { ra: viewState.centerRA, dec: viewState.centerDec });
             viewState.centerAz = centerHorizontal.az;
             viewState.centerAlt = centerHorizontal.alt;
         }
         else if (displaySettings.mode === 'view') {
-            const centerEquatorial = converter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, siderealTime, observationSite.latitude);
+            const centerEquatorial = converter.horizontalToEquatorial({ lst: siderealTime, lat: observationSite.latitude }, { az: viewState.centerAz, alt: viewState.centerAlt });
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
         }
@@ -313,18 +314,18 @@ function initializeConfig(noLoad = false) {
     }
     const converter = new CoordinateConverter();
     if (raOverride != null || decOverride != null) {
-        const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
+        const centerHorizontal = converter.equatorialToHorizontal({ lst: siderealTime, lat: observationSite.latitude }, { ra: viewState.centerRA, dec: viewState.centerDec });
         viewState.centerAz = centerHorizontal.az;
         viewState.centerAlt = centerHorizontal.alt;
     }
     else {
         if (displaySettings.mode === 'AEP') {
-            const centerHorizontal = converter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, siderealTime, observationSite.latitude);
+            const centerHorizontal = converter.equatorialToHorizontal({ lst: siderealTime, lat: observationSite.latitude }, { ra: viewState.centerRA, dec: viewState.centerDec });
             viewState.centerAz = centerHorizontal.az;
             viewState.centerAlt = centerHorizontal.alt;
         }
         else if (displaySettings.mode === 'view') {
-            const centerEquatorial = converter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, siderealTime, observationSite.latitude);
+            const centerEquatorial = converter.horizontalToEquatorial({ lst: siderealTime, lat: observationSite.latitude }, { az: viewState.centerAz, alt: viewState.centerAlt });
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
         }
@@ -378,7 +379,6 @@ export function updateConfig(newConfig) {
         });
     }
     console.log('updateConfig called');
-    console.log(config);
     window.renderAll();
 }
 function resetAll() {

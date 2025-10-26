@@ -58,12 +58,12 @@ export class TimeController {
         const viewState = config.viewState;
         const coordinateConverter = new CoordinateConverter();
         if (config.displaySettings.mode == 'AEP') {
-            const centerAzAlt = coordinateConverter.equatorialToHorizontal({ ra: viewState.centerRA, dec: viewState.centerDec }, config.siderealTime);
+            const centerAzAlt = coordinateConverter.equatorialToHorizontal({ lst: config.siderealTime, lat: config.observationSite.latitude }, { ra: viewState.centerRA, dec: viewState.centerDec });
             viewState.centerAz = centerAzAlt.az;
             viewState.centerAlt = centerAzAlt.alt;
         }
         else if (config.displaySettings.mode == 'view') {
-            const centerRaDec = coordinateConverter.horizontalToEquatorial({ az: viewState.centerAz, alt: viewState.centerAlt }, config.siderealTime);
+            const centerRaDec = coordinateConverter.horizontalToEquatorial({ lst: config.siderealTime, lat: config.observationSite.latitude }, { az: viewState.centerAz, alt: viewState.centerAlt });
             viewState.centerRA = centerRaDec.ra;
             viewState.centerDec = centerRaDec.dec;
         }
@@ -205,7 +205,7 @@ export class TimeController {
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             config.displayTime.jd = jd;
             const coordinateConverter = new CoordinateConverter();
-            const newCenterHorizontal = coordinateConverter.equatorialToHorizontal({ ra: config.viewState.centerRA, dec: config.viewState.centerDec }, config.siderealTime);
+            const newCenterHorizontal = coordinateConverter.equatorialToHorizontal({ lst: config.siderealTime, lat: config.observationSite.latitude }, { ra: config.viewState.centerRA, dec: config.viewState.centerDec });
             config.viewState.centerAz = newCenterHorizontal.az;
             config.viewState.centerAlt = newCenterHorizontal.alt;
             const updateConfig = window.updateConfig;
@@ -241,7 +241,7 @@ export class TimeController {
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             config.displayTime.jd = jd;
             const coordinateConverter = new CoordinateConverter();
-            const newCenterEquatorial = coordinateConverter.horizontalToEquatorial({ az: config.viewState.centerAz, alt: config.viewState.centerAlt }, config.siderealTime);
+            const newCenterEquatorial = coordinateConverter.horizontalToEquatorial({ lst: config.siderealTime, lat: config.observationSite.latitude }, { az: config.viewState.centerAz, alt: config.viewState.centerAlt });
             config.viewState.centerRA = newCenterEquatorial.ra;
             config.viewState.centerDec = newCenterEquatorial.dec;
             const updateConfig = window.updateConfig;

@@ -112,7 +112,8 @@ export class ObjectInfoController {
         const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (J2000.0)<br>`;
         if (config && config.observationSite.observerPlanet == '地球') {
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(coords, config.siderealTime);
+            const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+            const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
             infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
         }
         // 等級
@@ -168,7 +169,8 @@ export class ObjectInfoController {
             const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
             if (config.observationSite.observerPlanet == '地球') {
-                const horizontal = this.coordinateConverter.equatorialToHorizontal(planetData.raDec, config.siderealTime);
+                const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+                const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, planetData.raDec);
                 infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
             }
         }
@@ -218,7 +220,8 @@ export class ObjectInfoController {
             const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
             if (config.observationSite.observerPlanet == '地球') {
-                const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
+                const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+                const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, data.raDec);
                 infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
             }
         }
@@ -244,7 +247,8 @@ export class ObjectInfoController {
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
             console.log(config.observationSite.observerPlanet);
             if (config.observationSite.observerPlanet == '地球') {
-                const horizontal = this.coordinateConverter.equatorialToHorizontal(data.raDec, config.siderealTime);
+                const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+                const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, data.raDec);
                 infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
             }
         }
@@ -429,7 +433,8 @@ export class ObjectInfoController {
         const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed(0)}'<br>`;
         if (config && config.observationSite.observerPlanet == '地球') {
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(coords, config.siderealTime);
+            const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+            const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
             infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
         }
         // 等級

@@ -5,6 +5,7 @@ import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
 import { getColorManager } from '../utils/colorManager.js';
+import { starSize_0mag, getStarSize, getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from '../utils/canvasHelpers.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
         this.imageCache = {};
@@ -242,7 +243,7 @@ export class CanvasRenderer {
         if (objects.length == 0)
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
-        const zeroMagSize = this.starSize_0mag(this.config);
+        const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
         this.ctx.fillStyle = 'white';
         for (const object of objects) {
             if (object.getType() === 'sun') {
@@ -394,7 +395,7 @@ export class CanvasRenderer {
             y: y,
             data: planet
         });
-        const radius = Math.max(this.getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+        const radius = Math.max(getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -539,14 +540,14 @@ export class CanvasRenderer {
             data: minorObject
         });
         const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude) - 1;
-        const radius = Math.max(this.getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
+        const radius = Math.max(getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
         this.ctx.beginPath();
         this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         this.ctx.fillText(minorObject.getJapaneseName(), x + 2, y - 2);
     }
-    drawHipStars(hipStars) {
+    async drawHipStars(hipStars) {
         if (hipStars.length == 0)
             return;
         if (this.config.displaySettings.usedStar == 'noStar')
@@ -566,7 +567,53 @@ export class CanvasRenderer {
         const cachedStars = this.getCachedHipStars(hipStars, currentJd);
         if (cachedStars.length == 0)
             return;
-        const zeroMagSize = this.starSize_0mag(this.config);
+        const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        // console.time('drawHipStars');
+        // if (['AEP', 'view'].includes(this.config.displaySettings.mode)) {
+        //     const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
+        //     // const stars = cachedStars.filter(s => s.getMagnitude()! <= limitingMagnitude)
+        //     const stars = cachedStars;
+        //     const numStars = stars.length;
+        //     const starArray = new Array(numStars);
+        //     const raArray = new Float64Array(numStars);
+        //     const decArray = new Float64Array(numStars);
+        //     let count = 0;
+        //     for (let i = 0; i < numStars; i++) {
+        //         const star = stars[i];
+        //         if (star.magnitude! <= limitingMagnitude) {
+        //             starArray[count] = star;
+        //             const coords = star.coordinates;
+        //             raArray[count] = coords.ra;
+        //             decArray[count] = coords.dec;
+        //             count++;
+        //         }
+        //     }
+        //     const numStarsFiltered = count;
+        //     const starArrayFiltered = starArray.slice(0, numStarsFiltered);
+        //     const raFiltered = raArray.subarray(0, count);
+        //     const decFiltered = decArray.subarray(0, count);
+        //     console.time('wasm');
+        //     const screenRaDecs = await this.coordinateConverter.equatorialToScreenRaDecWasm(
+        //         lstLat, this.config.displaySettings.mode, this.config.viewState, this.config.canvasSize, 
+        //         raFiltered, decFiltered
+        //     );  
+        //     // console.time('drawHipStars');
+        //     for (let i = 0; i < numStarsFiltered; i++) {
+        //         const scrRA = screenRaDecs[i * 2];
+        //         const scrDec = screenRaDecs[i * 2 + 1];
+        //         if (Math.abs(scrRA) > this.config.viewState.fieldOfViewRA * 0.5 || Math.abs(scrDec) > this.config.viewState.fieldOfViewDec * 0.5) continue;
+        //         const [x, y] = this.coordinateConverter.screenRaDecToScreenXY({ ra: scrRA, dec: scrDec }, this.config.canvasSize, this.config.viewState);
+        //         const star = starArrayFiltered[i];
+        //         const starSize = getStarSize(star.getMagnitude()!, limitingMagnitude, zeroMagSize) + 0.4;
+        //         this.ctx.beginPath();
+        //         this.ctx.fillStyle = this.getStarColor(star.getBv()!);
+        //         this.ctx.arc(x, y, starSize, 0, Math.PI * 2);  
+        //         this.ctx.fill();
+        //     }
+        //     // console.timeEnd('drawHipStars');
+        // }
+        // console.time('drawHipStars2');
+        const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
         for (const star of cachedStars) {
             if (star.getMagnitude() > limitingMagnitude)
                 continue;
@@ -575,12 +622,13 @@ export class CanvasRenderer {
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
-            const starSize = this.getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
+            const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
             this.ctx.beginPath();
             this.ctx.fillStyle = this.getStarColor(star.getBv());
             this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
             this.ctx.fill();
         }
+        // console.timeEnd('drawHipStars2');
     }
     writeStarNames(starNames) {
         if (starNames.length == 0)
@@ -705,7 +753,7 @@ export class CanvasRenderer {
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
             recalculate = true;
         }
-        const zeroMagSize = this.starSize_0mag(this.config);
+        const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
         // キャッシュされた領域候補を使用（毎回計算しない）
         const areas = this.areaCandidates();
         this.ctx.fillStyle = this.colorManager.getColor('star');
@@ -735,7 +783,7 @@ export class CanvasRenderer {
                         continue;
                     count3++;
                     const [x, y] = screenXY[1];
-                    const starSize = this.getStarSize(mag, limitingMagnitude, zeroMagSize);
+                    const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize);
                     if (starSize < 2.0) {
                         this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
                     }
@@ -766,152 +814,325 @@ export class CanvasRenderer {
     drawGrid() {
         if (!this.config.displaySettings.showGrid)
             return;
+        if (!["AEP", "view"].includes(this.config.displaySettings.mode))
+            return;
         let i, j;
         const fieldOfViewRA = this.config.viewState.fieldOfViewRA;
         const fieldOfViewDec = this.config.viewState.fieldOfViewDec;
+        const centerRA = this.config.viewState.centerRA;
+        const centerDec = this.config.viewState.centerDec;
         const centerAz = this.config.viewState.centerAz;
         const centerAlt = this.config.viewState.centerAlt;
         const siderealTime = this.config.siderealTime;
         const latitude = this.config.observationSite.latitude;
+        const lstLat = { lst: siderealTime, lat: latitude };
+        const mode = this.config.displaySettings.mode;
+        const alpha = mode == 'AEP' ? centerRA : centerAz;
+        const beta = mode == 'AEP' ? centerDec : centerAlt;
+        const [alphaInterval, betaInterval, alphaCalcInterval, betaCalcInterval] = getGridIntervals(fieldOfViewRA, fieldOfViewDec, alpha, beta);
+        const [minBeta, maxBeta] = getBetaRange(lstLat, fieldOfViewRA, fieldOfViewDec, centerRA, centerDec, centerAz, centerAlt, mode, this.coordinateConverter, this.orientationData);
+        const minBetaLineIdx = Math.ceil(minBeta / betaInterval);
+        const maxBetaLineIdx = Math.floor(maxBeta / betaInterval);
+        const minBetaCalcIdx = Math.floor(minBeta / betaCalcInterval);
+        const maxBetaCalcIdx = Math.ceil(maxBeta / betaCalcInterval);
         this.ctx.strokeStyle = this.colorManager.getColor('grid');
-        if (this.config.displaySettings.mode == 'view') {
-            const minAlt = Math.max(-90, Math.min(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).alt, centerAlt - fieldOfViewDec / 2));
-            const maxAlt = Math.min(90, Math.max(this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).alt, centerAlt + fieldOfViewDec / 2));
-            const altGridCalcIv = Math.min(fieldOfViewRA, fieldOfViewDec) / 40;
-            const azGridCalcIv = Math.min(altGridCalcIv / Math.max(Math.cos(centerAlt * Math.PI / 180), 0.1), 8); //天頂、天底付近で発散するため
-            const gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
+        const canvasSize = this.config.canvasSize;
+        const maxLengthSquared = this.coordinateConverter.getMaxLineLengthSquared(canvasSize, this.config.viewState);
+        let a = 0.0, b = 0.0;
+        let preXY = { ifin: false, x: 0.0, y: 0.0 };
+        let ifin = false, x = 0.0, y = 0.0;
+        let newLine = true;
+        if (maxBeta == 90.0) {
+            // 横の線
+            for (i = minBetaLineIdx; i <= maxBetaLineIdx; i++) {
+                newLine = true;
+                b = i * betaInterval;
+                this.ctx.lineWidth = getGridLineWidth(b);
+                this.ctx.beginPath();
+                for (j = 0; j <= 360 / alphaCalcInterval; j++) {
+                    a = j * alphaCalcInterval;
+                    if (mode == 'AEP') {
+                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                    }
+                    else if (mode == 'view') {
+                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                    }
+                    if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
+                        this.ctx.moveTo(preXY.x, preXY.y);
+                        this.ctx.lineTo(x, y);
+                    }
+                    preXY = { ifin: ifin, x: x, y: y };
+                    newLine = false;
+                }
+                this.ctx.stroke();
+            }
+            // 縦の線
             this.ctx.lineWidth = 1;
-            let altGridIv = 45;
-            for (i = 0; i < gridIvChoices.length; i++) {
-                if (gridIvChoices[i] > Math.min(fieldOfViewDec, fieldOfViewRA) / 6) {
-                    altGridIv = gridIvChoices[i];
-                    break;
+            for (i = 0; i <= Math.ceil(360 / alphaInterval); i++) {
+                newLine = true;
+                a = i * alphaInterval;
+                for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
+                    b = j * betaCalcInterval;
+                    if (mode == 'AEP') {
+                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                    }
+                    else if (mode == 'view') {
+                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                    }
+                    if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
+                        this.ctx.moveTo(preXY.x, preXY.y);
+                        this.ctx.lineTo(x, y);
+                    }
+                    preXY = { ifin: ifin, x: x, y: y };
+                    newLine = false;
                 }
+                this.ctx.stroke();
             }
-            let azGridIv = 45;
-            for (i = 0; i < gridIvChoices.length; i++) {
-                if (gridIvChoices[i] > altGridIv / Math.cos(centerAlt * Math.PI / 180)) {
-                    azGridIv = gridIvChoices[i];
-                    break;
+        }
+        else if (minBeta == -90.0) {
+            // 横の線
+            for (i = maxBetaLineIdx; i >= minBetaLineIdx; i--) {
+                newLine = true;
+                b = i * betaInterval;
+                this.ctx.lineWidth = getGridLineWidth(b);
+                this.ctx.beginPath();
+                for (j = 0; j <= 360 / alphaCalcInterval; j++) {
+                    a = j * alphaCalcInterval;
+                    if (mode == 'AEP') {
+                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                    }
+                    else if (mode == 'view') {
+                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                    }
+                    if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
+                        this.ctx.moveTo(preXY.x, preXY.y);
+                        this.ctx.lineTo(x, y);
+                    }
+                    preXY = { ifin: ifin, x: x, y: y };
+                    newLine = false;
                 }
+                this.ctx.stroke();
             }
-            let az, alt, screenRA0, screenDec0;
-            if (maxAlt == 90) { // 天頂を含むとき
-                for (i = Math.floor(minAlt / altGridIv); i < Math.ceil(90 / altGridIv); i++) {
-                    alt = i * altGridIv;
-                    if (alt == 0)
-                        this.ctx.lineWidth = 3;
-                    else
-                        this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
-                        az = j * azGridCalcIv;
-                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+            // 縦の線
+            this.ctx.lineWidth = 1;
+            for (i = 0; i <= Math.ceil(360 / alphaInterval); i++) {
+                newLine = true;
+                a = i * alphaInterval;
+                for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
+                    b = j * betaCalcInterval;
+                    if (mode == 'AEP') {
+                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
                     }
-                    this.ctx.stroke();
-                }
-                this.ctx.lineWidth = 1;
-                for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
-                    az = i * azGridIv;
-                    for (j = 0; j < Math.ceil(90 / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-                        alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    else if (mode == 'view') {
+                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
                     }
-                    this.ctx.stroke();
+                    if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
+                        this.ctx.moveTo(preXY.x, preXY.y);
+                        this.ctx.lineTo(x, y);
+                    }
+                    preXY = { ifin: ifin, x: x, y: y };
+                    newLine = false;
                 }
+                this.ctx.stroke();
             }
-            else if (minAlt == -90) { // 天底を含むとき
-                // 等高度線
-                for (i = Math.floor(-90 / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
-                    alt = i * altGridIv;
-                    if (alt == 0)
-                        this.ctx.lineWidth = 3;
-                    else
-                        this.ctx.lineWidth = 1;
-                    this.ctx.beginPath();
-                    for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
-                        az = j * azGridCalcIv;
-                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        }
+        else {
+            const alphaRange = getAlphaRange(lstLat, fieldOfViewRA, fieldOfViewDec, alpha, mode, this.coordinateConverter, this.orientationData);
+            const minAlphaLineIdx = Math.ceil((alpha - alphaRange) / alphaInterval);
+            const maxAlphaLineIdx = Math.floor((alpha + alphaRange) / alphaInterval);
+            const maxAlphaCalcIdx = Math.ceil(alphaRange / alphaCalcInterval);
+            // 横の線
+            for (i = minBetaLineIdx; i <= maxBetaLineIdx; i++) {
+                newLine = true;
+                b = i * betaInterval;
+                this.ctx.lineWidth = getGridLineWidth(b);
+                this.ctx.beginPath();
+                for (j = -maxAlphaCalcIdx; j <= maxAlphaCalcIdx; j++) {
+                    a = alpha + j * alphaCalcInterval;
+                    if (mode == 'AEP') {
+                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
                     }
-                    this.ctx.stroke();
-                }
-                this.ctx.lineWidth = 1;
-                // 等方位線
-                for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
-                    az = i * azGridIv;
-                    for (j = 0; j < Math.ceil((maxAlt + 90) / altGridCalcIv) + 1; j++) {
-                        alt = -90 + j * altGridCalcIv;
-                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    else if (mode == 'view') {
+                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
                     }
-                    this.ctx.stroke();
+                    if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
+                        this.ctx.moveTo(preXY.x, preXY.y);
+                        this.ctx.lineTo(x, y);
+                    }
+                    preXY = { ifin: ifin, x: x, y: y };
+                    newLine = false;
                 }
+                this.ctx.stroke();
             }
-            else {
-                const azRange = Math.max((this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).az - centerAz + 360) % 360, (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: 0 }).az - centerAz + 360) % 360, (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).az - centerAz + 360) % 360);
-                for (i = Math.floor(minAlt / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
-                    alt = i * altGridIv;
-                    if (alt == 0) {
-                        this.ctx.lineWidth = 3;
+            // 縦の線
+            this.ctx.lineWidth = 1;
+            for (i = minAlphaLineIdx; i <= maxAlphaLineIdx; i++) {
+                newLine = true;
+                a = i * alphaInterval;
+                for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
+                    b = j * betaCalcInterval;
+                    if (mode == 'AEP') {
+                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
                     }
-                    else {
-                        this.ctx.lineWidth = 1;
+                    else if (mode == 'view') {
+                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
                     }
-                    this.ctx.beginPath();
-                    for (j = 0; j < 2 * azRange / azGridCalcIv + 1; j++) {
-                        az = centerAz - azRange + j * azGridCalcIv;
-                        [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+                    if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
+                        this.ctx.moveTo(preXY.x, preXY.y);
+                        this.ctx.lineTo(x, y);
                     }
-                    this.ctx.stroke();
+                    preXY = { ifin: ifin, x: x, y: y };
+                    newLine = false;
                 }
-                this.ctx.lineWidth = 1;
-                if (centerAz - azRange < 0) {
-                    for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
-                        az = i * azGridIv;
-                        for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-                            alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-                            [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-                        }
-                        this.ctx.stroke();
-                    }
-                    for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
-                        az = i * azGridIv;
-                        for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-                            alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-                            [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-                        }
-                        this.ctx.stroke();
-                    }
-                }
-                else if (centerAz + azRange > 360) {
-                    for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
-                        az = i * azGridIv;
-                        for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-                            alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-                            [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-                        }
-                        this.ctx.stroke();
-                    }
-                    for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
-                        az = i * azGridIv;
-                        for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-                            alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-                            [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-                        }
-                        this.ctx.stroke();
-                    }
-                }
-                else {
-                    for (i = Math.floor((centerAz - azRange) / azGridIv); i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
-                        az = i * azGridIv;
-                        for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-                            alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-                            [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-                        }
-                        this.ctx.stroke();
-                    }
-                }
+                this.ctx.stroke();
             }
-            this.ctx.stroke();
+        }
+        // if (this.config.displaySettings.mode == 'view') {
+        //     const minAlt = Math.max(
+        //         -90,
+        //         Math.min(
+        //             this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).alt,
+        //             centerAlt - fieldOfViewDec / 2
+        //         )
+        //     );
+        //     const maxAlt = Math.min(
+        //         90,
+        //         Math.max(
+        //             this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).alt,
+        //             centerAlt + fieldOfViewDec / 2
+        //         )
+        //     );
+        //     const altGridCalcIv = Math.min(fieldOfViewRA, fieldOfViewDec) / 40;
+        //     const azGridCalcIv = Math.min(altGridCalcIv / Math.max(Math.cos(centerAlt*Math.PI/180), 0.1), 8); //天頂、天底付近で発散するため
+        //     const gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
+        //     this.ctx.lineWidth = 1;
+        //     let altGridIv = 45;
+        //     for (i = 0; i < gridIvChoices.length; i++) {
+        //         if (gridIvChoices[i] > Math.min(fieldOfViewDec, fieldOfViewRA) / 6) {
+        //             altGridIv = gridIvChoices[i];
+        //             break;
+        //         }
+        //     }
+        //     let azGridIv = 45;
+        //     for (i=0; i<gridIvChoices.length; i++) {
+        //         if (gridIvChoices[i] > altGridIv / Math.cos(centerAlt*Math.PI/180)) {
+        //             azGridIv = gridIvChoices[i];
+        //             break;
+        //         }
+        //     }
+        //     let az, alt, screenRA0, screenDec0;
+        //     if (maxAlt == 90) { // 天頂を含むとき
+        //         for (i = Math.floor(minAlt/altGridIv); i < Math.ceil(90/altGridIv); i++) {
+        //             alt = i * altGridIv;
+        //             if (alt == 0) this.ctx.lineWidth = 3;
+        //             else this.ctx.lineWidth = 1;
+        //             this.ctx.beginPath();
+        //             for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
+        //                 az = j * azGridCalcIv;
+        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //             }
+        //             this.ctx.stroke();
+        //         }
+        //         this.ctx.lineWidth = 1;
+        //         for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
+        //             az = i * azGridIv;
+        //             for (j = 0; j < Math.ceil(90 / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+        //                 alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //             }
+        //             this.ctx.stroke();
+        //         }
+        //     } else if (minAlt == -90) { // 天底を含むとき
+        //         // 等高度線
+        //         for (i = Math.floor(-90 / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
+        //             alt = i * altGridIv;
+        //             if (alt == 0) this.ctx.lineWidth = 3;
+        //             else this.ctx.lineWidth = 1;
+        //             this.ctx.beginPath();
+        //             for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
+        //                 az = j * azGridCalcIv;
+        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //             }
+        //             this.ctx.stroke();
+        //         }
+        //         this.ctx.lineWidth = 1;
+        //         // 等方位線
+        //         for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
+        //             az = i * azGridIv;
+        //             for (j = 0; j < Math.ceil((maxAlt + 90) / altGridCalcIv) + 1; j++) {
+        //                 alt = -90 + j * altGridCalcIv;
+        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //             }
+        //             this.ctx.stroke();
+        //         }
+        //     } else {
+        //         const azRange = Math.max(
+        //             (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec:  fieldOfViewDec / 2 }).az - centerAz + 360) % 360,
+        //             (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: 0                   }).az - centerAz + 360) % 360,
+        //             (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).az - centerAz + 360) % 360
+        //         );
+        //         for (i = Math.floor(minAlt / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
+        //             alt = i * altGridIv;
+        //             if (alt == 0) {
+        //                 this.ctx.lineWidth = 3;
+        //             } else {
+        //                 this.ctx.lineWidth = 1;
+        //             }
+        //             this.ctx.beginPath();
+        //             for (j = 0; j < 2 * azRange / azGridCalcIv + 1; j++) {
+        //                 az = centerAz - azRange + j * azGridCalcIv;
+        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //             }
+        //             this.ctx.stroke();
+        //         }
+        //         this.ctx.lineWidth = 1;
+        //         if (centerAz - azRange < 0) {
+        //             for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
+        //                 az = i * azGridIv;
+        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //                 }
+        //                 this.ctx.stroke();
+        //             }
+        //             for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
+        //                 az = i * azGridIv;
+        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //                 }
+        //                 this.ctx.stroke();
+        //             }
+        //         } else if (centerAz + azRange > 360) {
+        //             for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
+        //                 az = i * azGridIv;
+        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //                 }
+        //                 this.ctx.stroke();
+        //             }
+        //             for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
+        //                 az = i * azGridIv;
+        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //                 }
+        //                 this.ctx.stroke();
+        //             }
+        //         } else {
+        //             for (i = Math.floor((centerAz - azRange) / azGridIv); i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
+        //                 az = i * azGridIv;
+        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
+        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
+        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
+        //                 }
+        //                 this.ctx.stroke();
+        //             }
+        //         }
+        //     }
+        //     this.ctx.stroke();
+        if (mode == 'view') {
             const directions = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
             this.ctx.textAlign = 'center';
             this.ctx.textBaseline = 'top';
@@ -919,11 +1140,11 @@ export class CanvasRenderer {
             this.ctx.fillStyle = this.colorManager.getColor('text');
             for (i = 0; i < 360; i += 45) {
                 const direction = directions[i / 45];
-                const directionEquatorial = this.coordinateConverter.horizontalToEquatorial({ az: i, alt: 0 }, siderealTime, latitude);
-                const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial, this.config);
+                const directionEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: i, alt: 0 });
+                const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial, this.config, false, this.orientationData);
                 if (ifin) {
-                    const directionEquatorial2 = this.coordinateConverter.horizontalToEquatorial({ az: i + 1, alt: 0 }, siderealTime, latitude);
-                    const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial2, this.config);
+                    const directionEquatorial2 = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: i + 1, alt: 0 });
+                    const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial2, this.config, false, this.orientationData);
                     this.ctx.save();
                     this.ctx.translate(x, y);
                     this.ctx.rotate(Math.atan2(y2 - y, x2 - x));
@@ -1011,13 +1232,8 @@ export class CanvasRenderer {
             return;
         this.ctx.strokeStyle = this.colorManager.getColor('constellationLine');
         this.ctx.lineWidth = 1;
-        const xmax = this.canvas.width;
-        const xmin = 0;
-        const ymax = this.canvas.height;
-        const ymin = 0;
-        const fieldSize = Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
-        const maxLength = 30 * 2 * Math.max(xmax, ymax) / fieldSize;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
+        const maxLengthSquared = this.coordinateConverter.getMaxLineLengthSquared(this.config.canvasSize, this.config.viewState);
         this.ctx.beginPath();
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
@@ -1027,12 +1243,10 @@ export class CanvasRenderer {
                 const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
                 const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true, this.orientationData);
                 const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true, this.orientationData);
-                if (Math.min(x1, x2) > xmax || Math.max(x1, x2) < xmin || Math.min(y1, y2) > ymax || Math.max(y1, y2) < ymin)
-                    continue;
-                if ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) > maxLength * maxLength)
-                    continue;
-                this.ctx.moveTo(x1, y1);
-                this.ctx.lineTo(x2, y2);
+                if (this.coordinateConverter.shouldDrawLine(x1, y1, x2, y2, this.config.canvasSize, maxLengthSquared)) {
+                    this.ctx.moveTo(x1, y1);
+                    this.ctx.lineTo(x2, y2);
+                }
             }
         }
         this.ctx.stroke();
@@ -1139,241 +1353,201 @@ export class CanvasRenderer {
             ifins.push(ifin);
             screenXYs.push([x, y]);
         }
+        const maxLengthSquared = this.coordinateConverter.getMaxLineLengthSquared(this.config.canvasSize, this.config.viewState);
         // (ra=0, dec=55)と同じ側を塗る
         // const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ra: 0, dec: 55}, this.config, true, this.orientationData);
         this.ctx.strokeStyle = 'rgba(106, 171, 241, 0.5)';
-        // this.ctx.fillStyle = 'rgba(8, 46, 87, 0.5)';
+        this.ctx.fillStyle = 'rgba(8, 46, 87, 0.5)';
         // this.ctx.fillStyle = this.colorManager.getColorWithAlpha('orange', 0.1);
         this.ctx.setLineDash([3, 3]);
         this.ctx.lineWidth = 2;
         this.ctx.beginPath();
         this.ctx.moveTo(screenXYs[0][0], screenXYs[0][1]);
         for (let i = 1; i < screenXYs.length; i++) {
-            this.ctx.lineTo(screenXYs[i][0], screenXYs[i][1]);
+            if (this.coordinateConverter.shouldDrawLine(screenXYs[i - 1][0], screenXYs[i - 1][1], screenXYs[i][0], screenXYs[i][1], this.config.canvasSize, maxLengthSquared)) {
+                this.ctx.moveTo(screenXYs[i - 1][0], screenXYs[i - 1][1]);
+                this.ctx.lineTo(screenXYs[i][0], screenXYs[i][1]);
+            }
         }
         this.ctx.stroke();
         // this.ctx.fill();
         this.ctx.setLineDash([]);
     }
-    starSize_0mag(config) {
-        return Math.max(200.0 / (Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) + 15), 2.0);
-    }
-    getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
-        if (limitingMagnitude === undefined) {
-            limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
-        }
-        if (starSize_0mag === undefined) {
-            starSize_0mag = this.starSize_0mag(this.config);
-        }
-        if (magnitude > limitingMagnitude) {
-            return 1;
-        }
-        else if (magnitude > 0) {
-            return 1.0 + starSize_0mag * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
-        }
-        else {
-            return starSize_0mag - magnitude;
-        }
-    }
     getStarColor(bv) {
         return this.colorManager.getStarColor(bv);
     }
-    areaNumber(ra, dec) {
-        return Math.floor(360 * Math.floor(dec + 90) + Math.floor(ra));
-    }
-    floodFillAreaCandidates(edgeRA, edgeDec, np, sp) {
-        // npのときは+85°以北を、spのときは-85°より南をすべて含める
-        const RA_min = Math.min(...edgeRA);
-        const RA_max = Math.max(...edgeRA);
-        const Dec_min = sp ? -90 : Math.min(...edgeDec);
-        const Dec_max = np ? 89.9 : Math.max(...edgeDec);
-        let ra0Dec = []; // 赤経0度線を横切るときの赤緯
-        // console.log(Dec_min.toFixed(2), Dec_max.toFixed(2));
-        // 赤経0°の線を描く
-        const ra0degLine = false;
-        if (ra0degLine) {
-            this.ctx.strokeStyle = this.colorManager.getColor('orange');
-            this.ctx.fillStyle = 'transparent';
-            this.ctx.lineWidth = 2;
-            this.ctx.beginPath();
-            this.ctx.moveTo(...this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.config, true, this.orientationData)[1]);
-            for (let dec = -89; dec <= 90; dec++) {
-                this.ctx.lineTo(...this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: dec }, this.config, true, this.orientationData)[1]);
-            }
-            this.ctx.stroke();
-        }
-        const debubMap = false;
-        const mapWidth = this.config.canvasSize.width * 0.6;
-        const mapHeight = mapWidth * 0.5;
-        const toAreaMapXY = (ra, dec) => {
-            const x = this.config.canvasSize.width * 0.5 - mapWidth * (ra - 180) / 360;
-            const y = this.config.canvasSize.height * 0.5 - mapHeight * dec / 180;
-            return [x, y];
-        };
-        if (debubMap) {
-            this.ctx.fillStyle = this.colorManager.getColorWithAlpha('orange', 0.2);
-            this.ctx.strokeStyle = this.colorManager.getColor('orange');
-            this.ctx.beginPath();
-            this.ctx.moveTo(...toAreaMapXY(0, -90));
-            this.ctx.lineTo(...toAreaMapXY(0, 90));
-            this.ctx.lineTo(...toAreaMapXY(360, 90));
-            this.ctx.lineTo(...toAreaMapXY(360, -90));
-            this.ctx.lineTo(...toAreaMapXY(0, -90));
-            this.ctx.fill();
-            this.ctx.stroke();
-            this.ctx.fillStyle = 'transparent';
-            this.ctx.strokeStyle = 'blue';
-            for (let i = 0; i < edgeRA.length - 1; i++) {
-                this.ctx.beginPath();
-                this.ctx.arc(...toAreaMapXY(edgeRA[i], edgeDec[i]), 1, 0, Math.PI * 2);
-                this.ctx.stroke();
-            }
-        }
-        // 境界線をセグメントに分割
-        const segments = [];
-        for (let i = 0; i < edgeRA.length - 1; i++) {
-            segments.push({
-                ra1: edgeRA[i], dec1: edgeDec[i],
-                ra2: edgeRA[i + 1], dec2: edgeDec[i + 1],
-                crossDecs: rangeInt(edgeDec[i], edgeDec[i + 1])
-            });
-            if (edgeRA[i] > 300 && edgeRA[i + 1] < 60) {
-                ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i + 1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
-            }
-            else if (edgeRA[i] < 60 && edgeRA[i + 1] > 300) {
-                ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i] - edgeRA[i + 1] + 360) * edgeRA[i]);
-            }
-        }
-        segments.push({
-            ra1: edgeRA[edgeRA.length - 1], dec1: edgeDec[edgeDec.length - 1],
-            ra2: edgeRA[0], dec2: edgeDec[0],
-            crossDecs: rangeInt(edgeDec[edgeRA.length - 1], edgeDec[0])
-        });
-        if (edgeRA[edgeRA.length - 1] > 300 && edgeRA[0] < 60) {
-            ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[0] - edgeRA[edgeRA.length - 1] + 360) * (360 - edgeRA[edgeRA.length - 1]));
-        }
-        else if (edgeRA[edgeRA.length - 1] < 60 && edgeRA[0] > 300) {
-            ra0Dec.push(edgeDec[edgeRA.length - 1] + (edgeDec[0] - edgeDec[edgeRA.length - 1]) / (edgeRA[edgeRA.length - 1] - edgeRA[0] + 360) * edgeRA[edgeRA.length - 1]);
-        }
-        if (np) {
-            ra0Dec.push(85);
-            ra0Dec.filter(dec => dec <= 85);
-        }
-        if (sp) {
-            ra0Dec.push(-85);
-            ra0Dec.filter(dec => dec >= -85);
-        }
-        ra0Dec.sort((a, b) => a - b);
-        for (let i = 0; i < ra0Dec.length; i += 2) {
-            segments.push({
-                ra1: 0, dec1: ra0Dec[i],
-                ra2: 0, dec2: ra0Dec[i + 1],
-                crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
-            });
-            segments.push({
-                ra1: 359.999, dec1: ra0Dec[i],
-                ra2: 359.999, dec2: ra0Dec[i + 1],
-                crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
-            });
-        }
-        // i番目:赤緯i-90の線と境界線が交わる点の赤経
-        const allIntersections = Array.from({ length: 180 }, () => ({ intersections: [] }));
-        for (const segment of segments) {
-            for (const dec of segment.crossDecs) {
-                const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
-                let intersectionRA;
-                if (segment.ra1 > 300 && segment.ra2 < 60) {
-                    intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
-                }
-                else if (segment.ra1 < 60 && segment.ra2 > 300) {
-                    intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
-                }
-                else {
-                    intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
-                }
-                allIntersections[dec + 90].intersections.push(intersectionRA);
-            }
-        }
-        const candidateAreas = [];
-        const raRanges = [];
-        const areaNumberRange = (ra1, ra2, dec) => {
-            const startArea = this.areaNumber(ra1, dec);
-            const endArea = this.areaNumber(ra2, dec);
-            return [startArea, endArea];
-        };
-        if (Dec_max > 84) {
-            candidateAreas.push([this.areaNumber(0, 85.5), this.areaNumber(359.9, 89.9)]);
-            for (let dec = 85.5; dec <= 89.9; dec++) {
-                raRanges.push([0, 359.9, dec]);
-            }
-        }
-        if (Dec_min < -84) {
-            candidateAreas.push([this.areaNumber(0, -89.9), this.areaNumber(359.9, -85.5)]);
-            for (let dec = -89.9; dec <= -85.5; dec++) {
-                raRanges.push([0, 359.9, dec]);
-            }
-        }
-        // 赤緯1度ごとに
-        for (let dec = (sp ? -85 : Math.floor(Dec_min)); dec <= (np ? 84 : Math.floor(Dec_max)); dec++) {
-            const intersections = allIntersections[dec + 90].intersections;
-            intersections.sort((a, b) => a - b);
-            let count = 0;
-            // 交点のペアで領域を決定
-            if (intersections.length === 0) {
-                // この場合はないはず
-                // 交点がない場合は範囲全体を含める
-                if (RA_max > 300 && RA_min < 60) {
-                    raRanges.push([0, Math.min(RA_min, 359.9), dec]);
-                    raRanges.push([Math.max(RA_max, 0), 359.9, dec]);
-                    candidateAreas.push(areaNumberRange(0, Math.min(RA_min, 359.9), dec));
-                    candidateAreas.push(areaNumberRange(Math.max(RA_max, 0), 359.9, dec));
-                }
-                else {
-                    raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec]);
-                    candidateAreas.push(areaNumberRange(Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec));
-                }
-            }
-            else {
-                for (let i = 0; i < intersections.length - 1; i += 2) {
-                    const startRA = Math.max(intersections[i], 0);
-                    const endRA = Math.min(intersections[i + 1], 359.9);
-                    if (startRA < endRA) {
-                        raRanges.push([startRA, endRA, dec]);
-                        // console.log(dec, startRA.toFixed(2), endRA.toFixed(2));
-                        candidateAreas.push(areaNumberRange(startRA, endRA, dec));
-                        count++;
-                    }
-                }
-            }
-        }
-        if (debubMap) {
-            this.ctx.strokeStyle = 'green';
-            this.ctx.fillStyle = 'transparent';
-            this.ctx.lineWidth = 1;
-            for (const [startRA, endRA, dec] of raRanges) {
-                // const startArea = this.areaNumber(startRA, dec);
-                // const endArea = this.areaNumber(endRA, dec);
-                // candidateAreas.push([startArea, endArea]);
-                const startXY = toAreaMapXY(startRA, dec);
-                const endXY = toAreaMapXY(endRA, dec);
-                this.ctx.beginPath();
-                this.ctx.moveTo(...startXY);
-                this.ctx.lineTo(...endXY);
-                this.ctx.stroke();
-            }
-        }
-        return candidateAreas;
-        // 小さい方以上大きい方以下の整数
-        function rangeInt(a, b) {
-            const c = a > b ? a : b; // 大きい方
-            const d = a > b ? b : a; // 小さい方
-            const start = Math.ceil(d); // 小さい方の切り上げ
-            const end = Math.floor(c); // 大きい方の切り下げ
-            if (end < start)
-                return [];
-            return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-        }
-    }
+    // private floodFillAreaCandidates(edgeRA: number[], edgeDec: number[], np: boolean, sp: boolean): number[][] {
+    //     // npのときは+85°以北を、spのときは-85°より南をすべて含める
+    //     const RA_min = Math.min(...edgeRA);
+    //     const RA_max = Math.max(...edgeRA);
+    //     const Dec_min = sp ? -90 : Math.min(...edgeDec);
+    //     const Dec_max = np ? 89.9 : Math.max(...edgeDec);
+    //     let ra0Dec: number[] = []; // 赤経0度線を横切るときの赤緯
+    //     // console.log(Dec_min.toFixed(2), Dec_max.toFixed(2));
+    //     // 赤経0°の線を描く
+    //     const ra0degLine = false;
+    //     if (ra0degLine) {
+    //         this.ctx.strokeStyle = this.colorManager.getColor('orange');
+    //         this.ctx.fillStyle = 'transparent';
+    //         this.ctx.lineWidth = 2;
+    //         this.ctx.beginPath();
+    //         this.ctx.moveTo(...this.coordinateConverter.equatorialToScreenXYifin({ra: 0, dec: -90}, this.config, true, this.orientationData)[1]);
+    //         for (let dec = -89; dec <= 90; dec++) {
+    //             this.ctx.lineTo(...this.coordinateConverter.equatorialToScreenXYifin({ra: 0, dec: dec}, this.config, true, this.orientationData)[1]);
+    //         }
+    //         this.ctx.stroke();
+    //     }
+    //     const debubMap = false;
+    //     const mapWidth = this.config.canvasSize.width * 0.6;
+    //     const mapHeight = mapWidth * 0.5;
+    //     const toAreaMapXY = (ra: number, dec: number): [number, number] => {
+    //         const x = this.config.canvasSize.width * 0.5 - mapWidth * (ra - 180) / 360;
+    //         const y = this.config.canvasSize.height * 0.5 - mapHeight * dec / 180;
+    //         return [x, y];
+    //     }
+    //     if (debubMap) {
+    //         this.ctx.fillStyle = this.colorManager.getColorWithAlpha('orange', 0.2);
+    //         this.ctx.strokeStyle = this.colorManager.getColor('orange');
+    //         this.ctx.beginPath();
+    //         this.ctx.moveTo(...toAreaMapXY(0, -90));
+    //         this.ctx.lineTo(...toAreaMapXY(0, 90));
+    //         this.ctx.lineTo(...toAreaMapXY(360, 90));
+    //         this.ctx.lineTo(...toAreaMapXY(360, -90));
+    //         this.ctx.lineTo(...toAreaMapXY(0, -90));
+    //         this.ctx.fill();
+    //         this.ctx.stroke();
+    //         this.ctx.fillStyle = 'transparent';
+    //         this.ctx.strokeStyle = 'blue';
+    //         for (let i = 0; i < edgeRA.length - 1; i++) {
+    //             this.ctx.beginPath();
+    //             this.ctx.arc(...toAreaMapXY(edgeRA[i], edgeDec[i]), 1, 0, Math.PI * 2);
+    //             this.ctx.stroke();
+    //         }
+    //     }
+    //     // 境界線をセグメントに分割
+    //     const segments: Array<{ra1: number, dec1: number, ra2: number, dec2: number, crossDecs: number[]}> = [];
+    //     for (let i = 0; i < edgeRA.length - 1; i++) {
+    //         segments.push({
+    //             ra1: edgeRA[i], dec1: edgeDec[i],
+    //             ra2: edgeRA[i + 1], dec2: edgeDec[i + 1],
+    //             crossDecs: rangeInt(edgeDec[i], edgeDec[i+1])
+    //         });
+    //         if (edgeRA[i] > 300 && edgeRA[i+1] < 60) {
+    //             ra0Dec.push(edgeDec[i] + (edgeDec[i+1] - edgeDec[i]) / (edgeRA[i+1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
+    //         } else if (edgeRA[i] < 60 && edgeRA[i+1] > 300) {
+    //             ra0Dec.push(edgeDec[i] + (edgeDec[i+1] - edgeDec[i]) / (edgeRA[i] - edgeRA[i+1] + 360) * edgeRA[i]);
+    //         }
+    //     }
+    //     segments.push({
+    //         ra1: edgeRA[edgeRA.length - 1], dec1: edgeDec[edgeDec.length - 1],
+    //         ra2: edgeRA[0], dec2: edgeDec[0],
+    //         crossDecs: rangeInt(edgeDec[edgeRA.length-1], edgeDec[0])
+    //     });
+    //     if (edgeRA[edgeRA.length - 1] > 300 && edgeRA[0] < 60) {
+    //         ra0Dec.push(edgeDec[edgeRA.length-1] + (edgeDec[0] - edgeDec[edgeRA.length-1]) / (edgeRA[0] - edgeRA[edgeRA.length-1] + 360) * (360 - edgeRA[edgeRA.length-1]));
+    //     } else if (edgeRA[edgeRA.length-1] < 60 && edgeRA[0] > 300) {
+    //         ra0Dec.push(edgeDec[edgeRA.length-1] + (edgeDec[0] - edgeDec[edgeRA.length-1]) / (edgeRA[edgeRA.length-1] - edgeRA[0] + 360) * edgeRA[edgeRA.length-1]);
+    //     }
+    //     if (np) {
+    //         ra0Dec.push(85);
+    //         ra0Dec.filter(dec => dec <= 85);
+    //     }
+    //     if (sp) {
+    //         ra0Dec.push(-85);
+    //         ra0Dec.filter(dec => dec >= -85);
+    //     }
+    //     ra0Dec.sort((a, b) => a - b);
+    //     for (let i = 0; i < ra0Dec.length; i += 2) {
+    //         segments.push({
+    //             ra1: 0, dec1: ra0Dec[i],
+    //             ra2: 0, dec2: ra0Dec[i+1],
+    //             crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+    //         });
+    //         segments.push({
+    //             ra1: 359.999, dec1: ra0Dec[i],
+    //             ra2: 359.999, dec2: ra0Dec[i+1],
+    //             crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+    //         });
+    //     }
+    //     // i番目:赤緯i-90の線と境界線が交わる点の赤経
+    //     const allIntersections: { intersections: number[] }[] = Array.from({length: 180}, () => ({ intersections: [] }));
+    //     for (const segment of segments) {
+    //         for (const dec of segment.crossDecs) {
+    //             const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
+    //             let intersectionRA;
+    //             if (segment.ra1 > 300 && segment.ra2 < 60) {
+    //                 intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
+    //             } else if (segment.ra1 < 60 && segment.ra2 > 300) {
+    //                 intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
+    //             } else {
+    //                 intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
+    //             }
+    //             allIntersections[dec + 90].intersections.push(intersectionRA);
+    //         }
+    //     }
+    //     const candidateAreas: number[][] = [];
+    //     const raRanges: number[][] = [];
+    //     if (Dec_max > 84) {
+    //         candidateAreas.push([areaNumber(0, 85.5), areaNumber(359.9, 89.9)]);
+    //         for (let dec = 85.5; dec <= 89.9; dec++) {
+    //             raRanges.push([0, 359.9, dec]);
+    //         }
+    //     }
+    //     if (Dec_min < -84) {
+    //         candidateAreas.push([areaNumber(0, -89.9), areaNumber(359.9, -85.5)]);
+    //         for (let dec = -89.9; dec <= -85.5; dec++) {
+    //             raRanges.push([0, 359.9, dec]);
+    //         }
+    //     }
+    //     // 赤緯1度ごとに
+    //     for (let dec = (sp ? -85 : Math.floor(Dec_min)); dec <= (np ? 84 : Math.floor(Dec_max)); dec++) {
+    //         const intersections: number[] = allIntersections[dec + 90].intersections;
+    //         intersections.sort((a, b) => a - b);
+    //         let count = 0;
+    //         // 交点のペアで領域を決定
+    //         if (intersections.length === 0) {
+    //             // この場合はないはず
+    //             // 交点がない場合は範囲全体を含める
+    //             if (RA_max > 300 && RA_min < 60) {
+    //                 raRanges.push([0, Math.min(RA_min, 359.9), dec]);
+    //                 raRanges.push([Math.max(RA_max, 0), 359.9, dec]);
+    //                 candidateAreas.push(areaNumberRange(0, Math.min(RA_min, 359.9), dec));
+    //                 candidateAreas.push(areaNumberRange(Math.max(RA_max, 0), 359.9, dec));
+    //             } else {
+    //                 raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec]);
+    //                 candidateAreas.push(areaNumberRange(Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec));
+    //             }
+    //         } else {
+    //             for (let i = 0; i < intersections.length - 1; i += 2) {
+    //                 const startRA = Math.max(intersections[i], 0);
+    //                 const endRA = Math.min(intersections[i + 1], 359.9);
+    //                 if (startRA < endRA) {
+    //                     raRanges.push([startRA, endRA, dec]);
+    //                     // console.log(dec, startRA.toFixed(2), endRA.toFixed(2));
+    //                     candidateAreas.push(areaNumberRange(startRA, endRA, dec));
+    //                     count++;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //         if (debubMap) {
+    //             this.ctx.strokeStyle = 'green';
+    //             this.ctx.fillStyle = 'transparent';
+    //             this.ctx.lineWidth = 1;
+    //             for (const [startRA, endRA, dec] of raRanges) {
+    //                 // const startArea = this.areaNumber(startRA, dec);
+    //                 // const endArea = this.areaNumber(endRA, dec);
+    //                 // candidateAreas.push([startArea, endArea]);
+    //                 const startXY = toAreaMapXY(startRA, dec);
+    //                 const endXY = toAreaMapXY(endRA, dec);
+    //                 this.ctx.beginPath();
+    //                 this.ctx.moveTo(...startXY);
+    //                 this.ctx.lineTo(...endXY);
+    //                 this.ctx.stroke();
+    //             }
+    //         }
+    //     return candidateAreas;
+    // }
     areaCandidates() {
         // キャッシュをチェック（設定が変更されていない場合）
         const currentTime = Date.now();
@@ -1381,128 +1555,13 @@ export class CanvasRenderer {
             currentTime - this.areaCandidatesCache.timestamp < 10) { // 10ms以内ならキャッシュを使用
             return this.areaCandidatesCache.areas;
         }
-        const edgeRA = [];
-        const edgeDec = [];
-        const raWidth = this.config.viewState.fieldOfViewRA * 0.5 + 1.0;
-        const decWidth = this.config.viewState.fieldOfViewDec * 0.5 + 1.0;
-        const siderealTime = window.config.siderealTime;
-        const jd = window.config.displayTime.jd;
-        const currentNorthPoleJ2000 = this.coordinateConverter.precessionEquatorial({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
-        const currentSouthPoleJ2000 = this.coordinateConverter.precessionEquatorial({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
-        if (this.config.displaySettings.mode == 'AEP') {
-            const centerRA = this.config.viewState.centerRA;
-            const centerDec = this.config.viewState.centerDec;
-            const northPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec_AEP(currentNorthPoleJ2000, { ra: centerRA, dec: centerDec });
-            const southPoleScreenRaDec = this.coordinateConverter.equatorialToScreenRaDec_AEP(currentSouthPoleJ2000, { ra: centerRA, dec: centerDec });
-            const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
-            const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
-            let screenRa = -raWidth;
-            let screenDec = decWidth;
-            let dscreenRa = 0.0;
-            let dscreenDec = 0.0;
-            // 右上から左上
-            while (screenRa < raWidth) {
-                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
-                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
-                screenRa += dscreenRa;
-            }
-            // 左上から左下
-            screenRa = raWidth;
-            screenDec = decWidth;
-            while (screenDec > -decWidth) {
-                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
-                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
-                screenDec -= dscreenDec;
-            }
-            // 左下から右下
-            screenRa = raWidth;
-            screenDec = -decWidth;
-            while (screenRa > -raWidth) {
-                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
-                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
-                screenRa -= dscreenRa;
-            }
-            // 右下から右上
-            screenRa = -raWidth;
-            screenDec = -decWidth;
-            while (screenDec < decWidth) {
-                this.addEdgeAEP(screenRa, screenDec, edgeRA, edgeDec, jd);
-                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRa, dec: screenDec }).dec * Math.PI / 180);
-                screenDec += dscreenDec;
-            }
-            const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
-            // キャッシュを更新
-            this.areaCandidatesCache = {
-                areas: areaCandidates,
-                timestamp: currentTime
-            };
-            return areaCandidates;
-        }
-        else if (this.config.displaySettings.mode == 'view') {
-            const centerAz = this.config.viewState.centerAz;
-            const centerAlt = this.config.viewState.centerAlt;
-            const northPoleHorizontal = this.coordinateConverter.equatorialToHorizontal(currentNorthPoleJ2000, siderealTime);
-            const southPoleHorizontal = this.coordinateConverter.equatorialToHorizontal(currentSouthPoleJ2000, siderealTime);
-            const northPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(northPoleHorizontal, 'view', { az: centerAz, alt: centerAlt });
-            const southPoleScreenRaDec = this.coordinateConverter.horizontalToScreenRaDec(southPoleHorizontal, 'view', { az: centerAz, alt: centerAlt });
-            const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
-            const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
-            // 高速化のしどころ
-            let screenRa = -raWidth;
-            let screenDec = decWidth;
-            let dscreenRa = 0.0;
-            let dscreenDec = 0.0;
-            // 右上から左上
-            while (screenRa < raWidth) {
-                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
-                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
-                screenRa += dscreenRa;
-            }
-            // 左上から左下
-            screenRa = raWidth;
-            screenDec = decWidth;
-            while (screenDec > -decWidth) {
-                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
-                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
-                screenDec -= dscreenDec;
-            }
-            // 左下から右下
-            screenRa = raWidth;
-            screenDec = -decWidth;
-            while (screenRa > -raWidth) {
-                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
-                dscreenRa = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
-                screenRa -= dscreenRa;
-            }
-            // 右下から右上
-            screenRa = -raWidth;
-            screenDec = -decWidth;
-            while (screenDec < decWidth) {
-                this.addEdgeView(screenRa, screenDec, edgeRA, edgeDec, siderealTime, jd);
-                dscreenDec = 0.3 * Math.cos(this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRa, dec: screenDec }, siderealTime).dec * Math.PI / 180);
-                screenDec += dscreenDec;
-            }
-            const areaCandidates = this.floodFillAreaCandidates(edgeRA, edgeDec, npIsIn, spIsIn);
-            // キャッシュを更新
-            this.areaCandidatesCache = {
-                areas: areaCandidates,
-                timestamp: currentTime
-            };
-            return areaCandidates;
-        }
-        return [];
-    }
-    addEdgeAEP(screenRA, screenDec, edgeRA, edgeDec, jd) {
-        const equatorialApparent = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: screenRA, dec: screenDec });
-        const equatorial = this.coordinateConverter.precessionEquatorial(equatorialApparent, undefined, jd, 'j2000');
-        edgeRA.push(equatorial.ra);
-        edgeDec.push(equatorial.dec);
-    }
-    addEdgeView(screenRA, screenDec, edgeRA, edgeDec, siderealTime, jd) {
-        const equatorialApparent = this.coordinateConverter.screenRaDecToEquatorial_View({ ra: screenRA, dec: screenDec }, siderealTime);
-        const equatorial = this.coordinateConverter.precessionEquatorial(equatorialApparent, undefined, jd, 'j2000');
-        edgeRA.push(equatorial.ra);
-        edgeDec.push(equatorial.dec);
+        const areaCandidates = getAreaCandidates({ lst: this.config.siderealTime, lat: this.config.observationSite.latitude }, this.config.viewState, this.config.displayTime.jd, this.config.displaySettings.mode, this.coordinateConverter);
+        // キャッシュを更新
+        this.areaCandidatesCache = {
+            areas: areaCandidates,
+            timestamp: currentTime
+        };
+        return areaCandidates;
     }
     // HIP星データ全体を歳差運動補正してキャッシュ
     getCachedHipStars(hipStars, jd) {

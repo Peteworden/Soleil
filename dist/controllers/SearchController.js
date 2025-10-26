@@ -300,6 +300,7 @@ export class SearchController {
         const path_decs = [];
         const path_azs = [];
         const path_alts = [];
+        const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
         for (let i = 0; i <= steps; i++) {
             const division_vector = {
                 x: start_vector.x + (end_vector.x - start_vector.x) * i / steps,
@@ -307,7 +308,7 @@ export class SearchController {
                 z: start_vector.z + (end_vector.z - start_vector.z) * i / steps
             };
             const new_position = coordinateConverter.cartesianToEquatorial(division_vector);
-            const horizontal = coordinateConverter.equatorialToHorizontal({ ra: new_position.ra, dec: new_position.dec }, config.siderealTime);
+            const horizontal = coordinateConverter.equatorialToHorizontal(lstLat, { ra: new_position.ra, dec: new_position.dec });
             path_ras.push(new_position.ra);
             path_decs.push(new_position.dec);
             path_azs.push(horizontal.az);
