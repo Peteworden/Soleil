@@ -1,5 +1,5 @@
 import { DataStore } from '../models/DataStore.js';
-import { loadWasm } from './wasmLoader.js';
+// import { loadWasm } from './wasmLoader.js';
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 const epsilon = 0.4090926;
@@ -294,19 +294,19 @@ export class CoordinateConverter {
         const alt = this.asindeg(z);
         return { az, alt };
     }
-    async equatorialToHorizontalWasm(lstLat, raArray, decArray) {
-        const wasm = await loadWasm();
-        const memory = wasm.memory;
-        const n = raArray.length;
-        const raPtr = wasm.allocF64Array(n);
-        const decPtr = wasm.allocF64Array(n);
-        const resultPtr = wasm.allocF64Array(n * 2);
-        new Float64Array(memory.buffer, raPtr, n).set(raArray.map(c => c * DEG_TO_RAD));
-        new Float64Array(memory.buffer, decPtr, n).set(decArray.map(c => c * DEG_TO_RAD));
-        wasm.wasmEquatorialToHorizontal(lstLat.lst, lstLat.lat, raPtr, decPtr, n, resultPtr);
-        const result = new Float64Array(memory.buffer, resultPtr, n * 2);
-        return new Float64Array(result);
-    }
+    // async equatorialToHorizontalWasm(lstLat: LstLat, raArray: Float64Array, decArray: Float64Array): Promise<Float64Array> {
+    //     const wasm = await loadWasm();
+    //     const memory = wasm.memory as WebAssembly.Memory;
+    //     const n = raArray.length;
+    //     const raPtr = wasm.allocF64Array(n);
+    //     const decPtr = wasm.allocF64Array(n);
+    //     const resultPtr = wasm.allocF64Array(n * 2);
+    //     new Float64Array(memory.buffer, raPtr, n).set(raArray.map(c => c * DEG_TO_RAD));
+    //     new Float64Array(memory.buffer, decPtr, n).set(decArray.map(c => c * DEG_TO_RAD));
+    //     wasm.wasmEquatorialToHorizontal(lstLat.lst, lstLat.lat, raPtr, decPtr, n, resultPtr);
+    //     const result = new Float64Array(memory.buffer, resultPtr, n * 2);
+    //     return new Float64Array(result);
+    // }
     // 赤道座標からスクリーン座標への変換、判定
     // すべてのモードに対応
     equatorialToScreenXYifin(raDec, config, force = false, orientationData) {
