@@ -103,4 +103,29 @@ export class NGCObject extends CelestialObject {
         return this.name.replace(this.getCatalog(), '');
     }
 }
+export class SharplessObject extends CelestialObject {
+    constructor(name, coordinates, diameter, form, bright, description, link) {
+        super(name, coordinates, undefined, 'Nb');
+        this.diameter = diameter;
+        this.form = form;
+        this.bright = bright;
+        this.description = description;
+        this.link = link;
+    }
+    getDiameter() {
+        return this.diameter;
+    }
+    getForm() {
+        return this.form;
+    }
+    getBright() {
+        return this.bright;
+    }
+    getDescription() {
+        return this.description;
+    }
+    getLink() {
+        return this.link;
+    }
+}
 //# sourceMappingURL=CelestialObject.js.map

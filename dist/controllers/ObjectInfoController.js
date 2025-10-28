@@ -67,6 +67,9 @@ export class ObjectInfoController {
             this.generateMessierInfo(objectInfoTextElement, objectInfo.data);
             imageUrl = this.getImageUrl(objectInfo.data);
         }
+        else if (objectInfo.type == 'sharpless') {
+            this.generateSharplessInfo(objectInfoTextElement, objectInfo.data);
+        }
         else if (['planet', 'asteroidComet'].includes(objectInfo.type)) {
             this.generatePlanetInfo(objectInfoTextElement, objectInfo.data);
         }
@@ -140,6 +143,64 @@ export class ObjectInfoController {
                 const messierNumber = data.getName().replace('M', '');
                 infoText += `<br><a href="https://ja.wikipedia.org/wiki/M${messierNumber}_(天体)" target="_blank">Wikipedia</a>`;
             }
+        }
+        objectInfoTextElement.innerHTML = infoText;
+        return;
+    }
+    /**
+     * シャープルス天体の情報を生成
+     */
+    static generateSharplessInfo(objectInfoTextElement, data) {
+        const config = window.config;
+        let infoText = '';
+        // 座標情報
+        const coords = data.getCoordinates();
+        const raHM = this.coordinateConverter.radeg2hm(coords.ra);
+        const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
+        infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (J2000.0)<br>`;
+        if (config && config.observationSite.observerPlanet == '地球') {
+            const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+            const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
+            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+        }
+        // 明るさ
+        const bright = data.getBright();
+        if (bright == 1) {
+            infoText += `明るさ: 淡い<br>`;
+        }
+        else if (bright == 2) {
+            infoText += `明るさ: 普通<br>`;
+        }
+        else if (bright == 3) {
+            infoText += `明るさ: 比較的明るい<br>`;
+        }
+        // 分類
+        // const type = data.getType();
+        // if (type) {
+        //     infoText += `分類: ${this.getObjectClassDescription(type)}<br>`;
+        // }
+        // 直径
+        const diameter = data.getDiameter();
+        infoText += `最大視直径: ${diameter} 分角<br>`;
+        // form
+        const form = data.getForm();
+        if (form == 1) {
+            infoText += `形状: 円形<br>`;
+        }
+        else if (form == 2) {
+            infoText += `形状: 楕円形<br>`;
+        }
+        else if (form == 3) {
+            infoText += `形状: 不規則<br>`;
+        }
+        // 説明
+        const description = data.getDescription();
+        if (description.length > 0) {
+            infoText += `<br>${description}<br>`;
+        }
+        // Wikipediaリンク
+        if (data.getLink().length > 0) {
+            infoText += `<br><a href="${data.getLink()}" target="_blank">関連リンク（別のタブ）</a>`;
         }
         objectInfoTextElement.innerHTML = infoText;
         return;

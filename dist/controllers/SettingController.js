@@ -147,12 +147,14 @@ export class SettingController {
         const messierCheck = get('messierCheck');
         const recCheck = get('recCheck');
         const ngcCheck = get('ngcCheck');
+        const sharplessCheck = get('sharplessCheck');
         const cameraSelect = get('camera');
         const equinoxSelect = get('equinox');
         if (modeSelect && gridCheck && magLimitSlider && usedStarSelect && darkMode &&
             reticleCheck && objectInfoCheck && starNameSelect && bayerFSCheck &&
             constellationNameCheck && constellationLineCheck &&
-            planetCheck && messierCheck && recCheck && ngcCheck && cameraSelect && equinoxSelect) {
+            planetCheck && messierCheck && recCheck && ngcCheck && sharplessCheck &&
+            cameraSelect && equinoxSelect) {
             const updateConfig = window.updateConfig;
             if (updateConfig) {
                 const currentConfig = window.config;
@@ -172,6 +174,7 @@ export class SettingController {
                     showMessiers: messierCheck.checked,
                     showRecs: recCheck.checked,
                     showNGC: ngcCheck.checked,
+                    showSharpless: sharplessCheck.checked,
                     camera: cameraSelect.value,
                     equinox: equinoxSelect.value
                 };
@@ -322,6 +325,7 @@ export class SettingController {
         apply.checkbox(get('messierCheck'), ds.showMessiers);
         apply.checkbox(get('recCheck'), ds.showRecs);
         apply.checkbox(get('ngcCheck'), ds.showNGC);
+        apply.checkbox(get('sharplessCheck'), ds.showSharpless);
         apply.select(get('starName'), ds.showStarNames);
         apply.checkbox(get('bayerFSCheck'), ds.showBayerFS);
         apply.checkbox(get('constellationNameCheck'), ds.showConstellationNames);

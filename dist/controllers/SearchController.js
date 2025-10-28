@@ -188,7 +188,9 @@ export class SearchController {
                     }
                     if (ngc.getNumberChar() === queryNumber &&
                         !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
+                        !matchMessierStart.some(messier => messier.title.includes(mayInclude)) &&
                         !matchMessierInclude.some(messier => messier.title.includes(mayInclude)) &&
+                        !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
                         !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
                         matchNgc.push({ title: `${ngc.getCatalog()}${ngc.getNumber()}`, position: { ra: ngc.getCoordinates().ra, dec: ngc.getCoordinates().dec } });
                         matchNgcData.push(ngc);
@@ -198,6 +200,48 @@ export class SearchController {
                     }
                 }
             }
+        }
+        const matchSharpless = [];
+        const matchSharplessData = [];
+        if (DataStore.sharplessData) {
+            let catalogName = '';
+            let queryNumber = '0';
+            if (this.isInteger(query)) {
+                catalogName = 'Sh2-';
+                queryNumber = query;
+            }
+            else if (query.startsWith('sh2-')) {
+                catalogName = 'Sh2-';
+                queryNumber = query.slice(4);
+            }
+            else if (query.startsWith('sh2')) {
+                catalogName = 'Sh2-';
+                queryNumber = query.slice(3);
+            }
+            else if (query.startsWith('sh')) {
+                catalogName = 'Sh2-';
+                queryNumber = query.slice(2);
+            }
+            else if (query.startsWith('s')) {
+                catalogName = 'Sh2-';
+                queryNumber = query.slice(1);
+            }
+            if (queryNumber !== '0') {
+                const mayInclude = `${catalogName}${queryNumber}`;
+                console.log(mayInclude);
+                for (const sharpless of DataStore.sharplessData) {
+                    if (sharpless.getName() === mayInclude &&
+                        !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
+                        !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
+                        matchSharpless.push({ title: sharpless.getName(), position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec } });
+                        matchSharplessData.push(sharpless);
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            console.log('No Sharpless data found');
         }
         const matchStarNamesStart = [];
         const matchStarNamesInclude = [];
@@ -226,6 +270,7 @@ export class SearchController {
             ...matchMessierStart,
             ...matchRecStart,
             ...matchNgc,
+            ...matchSharpless,
             ...matchStarNamesStart,
             ...matchPlanetsInclude,
             ...matchConstellationsInclude,
@@ -239,10 +284,19 @@ export class SearchController {
             button.textContent = result.title;
             const epoch = (matchPlanetsStart.some(planet => planet.title === result.title) || matchPlanetsInclude.some(planet => planet.title === result.title)) ? 'current' : 'j2000';
             button.addEventListener('click', async () => {
-                // NGC/IC の場合は天体オブジェクトを保存
+                // NGC/IC/Sh2 の場合は天体オブジェクトを保存
                 const isNgcIc = matchNgc.some(ngc => ngc.title === result.title);
                 if (isNgcIc) {
                     const object = matchNgcData.find(ngc => ngc.getName() === result.title);
+                    if (object) {
+                        try {
+                            sessionStorage.setItem('tempTarget', JSON.stringify(object));
+                        }
+                        catch (_) { }
+                    }
+                }
+                else if (matchSharpless.some(sharpless => sharpless.title === result.title)) {
+                    const object = matchSharplessData.find(sharpless => sharpless.getName() === result.title);
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));

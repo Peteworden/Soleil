@@ -227,13 +227,23 @@ export class CanvasRenderer {
             return;
         this.drawJsonObject(ngcObjects, 'ngc', 'bottom-right');
     }
+    drawSharpless(sharplessObjects) {
+        if (!this.config.displaySettings.showSharpless)
+            return;
+        this.drawJsonObject(sharplessObjects, 'sharpless');
+    }
     drawTempTarget(tempTarget) {
         if (!tempTarget)
             return;
         const tempTargetJson = JSON.parse(tempTarget);
         const tempTargetObject = new CelestialObject(tempTargetJson.name, tempTargetJson.coordinates, tempTargetJson.magnitude, tempTargetJson.type);
         if (tempTargetObject) {
-            this.drawJsonObject([tempTargetObject], 'ngc', 'bottom-right');
+            if (tempTargetObject.getName().startsWith('NGC')) {
+                this.drawJsonObject([tempTargetObject], 'ngc', 'bottom-right');
+            }
+            else if (tempTargetObject.getName().startsWith('Sh2-')) {
+                this.drawJsonObject([tempTargetObject], 'sharpless');
+            }
         }
     }
     drawSolarSystemObjects() {
@@ -628,7 +638,8 @@ export class CanvasRenderer {
             this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
             this.ctx.fill();
         }
-        // console.timeEnd('drawHipStars2');
+        // console.timeEnd('drawHipSta
+        // rs2');
     }
     writeStarNames(starNames) {
         if (starNames.length == 0)

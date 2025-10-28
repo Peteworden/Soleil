@@ -16,6 +16,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-10-29T04:00:00', title: 'シャープレスカタログを追加', text: 'シャープレスカタログに含まれる313のHII領域を追加しました。' },
     { time: '2025-10-26T13:20:00', title: '天の川', text: '天の川の輪郭を作りました。あと、ちょっと前にバイエル符号とフラムスティード番号も出るようにしています。' },
     { time: '2025-10-06T22:45:00', title: '等級設定を追加', text: '星が多すぎると思われるかもしれないので、限界等級の設定を等級スライドバーの下に作りました。' },
     { time: '2025-10-06T19:03:00', title: '最微等級が12.0等級に！', text: '最も暗い星の等級がこれまでの11.5等級から12.0等級になりました！これで星の数は320万個以上になりましたが、工夫して星以外も含めた総データサイズを11MBに抑えています。' },
@@ -91,6 +92,7 @@ function initializeConfig(noLoad = false) {
         showMessiers: true,
         showRecs: true,
         showNGC: false,
+        showSharpless: false,
         showCameraView: false,
         camera: 'none',
         showTopography: false, // 読み込み時は常にfalse
@@ -467,6 +469,7 @@ export async function main() {
         let messierData = [];
         let recData = [];
         let ngcData = [];
+        let sharplessData = [];
         let starNames = [];
         let milkyWayData = [];
         // imageCacheの初期化
@@ -500,6 +503,7 @@ export async function main() {
             renderer.drawMessier(messierData);
             renderer.drawRec(DataStore.getRecData());
             renderer.drawNGC(ngcData);
+            renderer.drawSharpless(sharplessData);
             renderer.drawTempTarget(tempTarget);
             renderer.writeConstellationNames(constellationData);
             renderer.drawSolarSystemObjects();
@@ -585,9 +589,10 @@ export async function main() {
                 ]);
                 document.getElementById('loadingtext').innerHTML = 'loading 10/14';
                 renderAll();
-                [ngcData, brightStars] = await Promise.all([
+                [ngcData, brightStars, sharplessData] = await Promise.all([
                     DataLoader.loadNGCData(),
-                    DataLoader.loadBrightStars()
+                    DataLoader.loadBrightStars(),
+                    DataLoader.loadSharplessData()
                 ]);
                 document.getElementById('loadingtext').innerHTML = 'loading 12/14';
                 renderAll();
@@ -630,6 +635,7 @@ export async function main() {
                 renderAll();
                 DataStore.hipStars = hipStars;
                 DataStore.ngcData = ngcData;
+                DataStore.sharplessData = sharplessData;
                 DataStore.starNames = starNames;
             }
             catch (error) {

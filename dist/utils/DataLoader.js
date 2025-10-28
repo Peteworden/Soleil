@@ -1,4 +1,4 @@
-import { HipStar, MessierObject, NGCObject } from '../models/CelestialObject.js';
+import { HipStar, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from './coordinates.js';
 import { formatBayerDesignation } from './textFormatter.js';
 export class DataLoader {
@@ -168,6 +168,16 @@ export class DataLoader {
         }
         console.log(`${ngc.length} NGC and IC objects`);
         return ngc;
+    }
+    // https://heasarc.gsfc.nasa.gov/db-perl/W3Browse/w3table.pl?tablehead=name%3Dhiiregion&Action=More+Options
+    static async loadSharplessData() {
+        const data = await this.fetchJson('data/sharpless.json');
+        const sharpless = [];
+        for (const object of data) {
+            sharpless.push(new SharplessObject(object.name, { ra: object.ra * 0.001, dec: object.dec * 0.001 }, object.diameter, object.form, object.bright, object.description, object.link));
+        }
+        console.log(`${sharpless.length} Sharpless objects`);
+        return sharpless;
     }
     // 明るい星データの読み込み
     static async loadBrightStars() {
