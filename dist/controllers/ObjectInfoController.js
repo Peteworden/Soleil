@@ -63,6 +63,7 @@ export class ObjectInfoController {
         // 天体タイプに応じて情報を生成
         let infoText = '';
         let imageUrl = '';
+        console.log(objectInfo.type);
         if (['messier', 'rec', 'ngc'].includes(objectInfo.type)) {
             this.generateMessierInfo(objectInfoTextElement, objectInfo.data);
             imageUrl = this.getImageUrl(objectInfo.data);
@@ -151,7 +152,10 @@ export class ObjectInfoController {
      * シャープルス天体の情報を生成
      */
     static generateSharplessInfo(objectInfoTextElement, data) {
+        console.log(data);
         if (!(data instanceof SharplessObject)) {
+            objectInfoTextElement.innerHTML = '';
+            console.log('data is not a SharplessObject');
             return;
         }
         const config = window.config;
