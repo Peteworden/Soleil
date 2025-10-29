@@ -59,6 +59,8 @@ export class CanvasRenderer {
     drawObject(object, category, nameCorner) {
         if (!object.getName() || object.getName() == '')
             return;
+        console.log(object);
+        console.log(typeof object);
         const coordsJ2000 = object.getCoordinates();
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
@@ -74,6 +76,8 @@ export class CanvasRenderer {
             y: y,
             data: object
         });
+        console.log(object);
+        console.log(typeof object);
         let markFlag = true;
         if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay().width < 2.0 * 30.0 / this.canvas.width) {
             markFlag = false;

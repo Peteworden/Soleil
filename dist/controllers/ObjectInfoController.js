@@ -1,5 +1,5 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
-import { MessierObject } from "../models/CelestialObject.js";
+import { MessierObject, SharplessObject } from "../models/CelestialObject.js";
 import { Asteroid, Planet } from "../models/SolarSystemObjects.js";
 export class ObjectInfoController {
     /**
@@ -151,6 +151,9 @@ export class ObjectInfoController {
      * シャープルス天体の情報を生成
      */
     static generateSharplessInfo(objectInfoTextElement, data) {
+        if (!(data instanceof SharplessObject)) {
+            return;
+        }
         const config = window.config;
         let infoText = '';
         if (data.getAltNames().length > 0) {
