@@ -126,7 +126,18 @@ export class SearchController {
                 const queryNumber = this.isInteger(query) ? query : query.slice(1);
                 for (const messier of DataStore.messierData) {
                     if (messier.getNumberChar() === queryNumber) {
-                        matchMessierStart.push({ title: messier.getName(), position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec } });
+                        if (messier.getAltName().length > 0) {
+                            matchMessierStart.push({
+                                title: `${messier.getName()} (${messier.getAltName().join(', ')})`,
+                                position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec }
+                            });
+                        }
+                        else {
+                            matchMessierStart.push({
+                                title: messier.getName(),
+                                position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec }
+                            });
+                        }
                         break;
                     }
                 }
@@ -141,6 +152,9 @@ export class SearchController {
                     }
                 }
             }
+        }
+        else {
+            console.log('No Messier data found');
         }
         const matchRecStart = [];
         const matchRecInclude = [];
@@ -163,6 +177,9 @@ export class SearchController {
                     }
                 }
             }
+        }
+        else {
+            console.log('No REC data found');
         }
         const matchNgc = [];
         const matchNgcData = [];
@@ -194,15 +211,18 @@ export class SearchController {
                         !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
                         matchNgc.push({ title: `${ngc.getCatalog()}${ngc.getNumber()}`, position: { ra: ngc.getCoordinates().ra, dec: ngc.getCoordinates().dec } });
                         matchNgcData.push(ngc);
-                        if (matchNgc.length === 2) {
-                            break;
-                        }
+                        break;
                     }
                 }
             }
         }
-        const matchSharpless = [];
+        else {
+            console.log('No NGC/IC data found');
+        }
+        const matchSharplessStart = [];
+        const matchSharplessInclude = [];
         const matchSharplessData = [];
+        let matchSharplessFound = false;
         if (DataStore.sharplessData) {
             let catalogName = '';
             let queryNumber = '0';
@@ -210,32 +230,94 @@ export class SearchController {
                 catalogName = 'Sh2-';
                 queryNumber = query;
             }
-            else if (query.startsWith('sh2-')) {
+            else if (query.startsWith('sh2-') && this.isInteger(query.slice(4))) {
                 catalogName = 'Sh2-';
                 queryNumber = query.slice(4);
             }
-            else if (query.startsWith('sh2')) {
+            else if (query.startsWith('sh2') && this.isInteger(query.slice(3))) {
                 catalogName = 'Sh2-';
                 queryNumber = query.slice(3);
             }
-            else if (query.startsWith('sh')) {
+            else if (query.startsWith('sh') && this.isInteger(query.slice(2))) {
                 catalogName = 'Sh2-';
                 queryNumber = query.slice(2);
             }
-            else if (query.startsWith('s')) {
+            else if (query.startsWith('s') && this.isInteger(query.slice(1))) {
                 catalogName = 'Sh2-';
                 queryNumber = query.slice(1);
             }
             if (queryNumber !== '0') {
                 const mayInclude = `${catalogName}${queryNumber}`;
-                console.log(mayInclude);
                 for (const sharpless of DataStore.sharplessData) {
                     if (sharpless.getName() === mayInclude &&
                         !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
                         !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
-                        matchSharpless.push({ title: sharpless.getName(), position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec } });
+                        if (sharpless.getAltNames().length > 0) {
+                            matchSharplessStart.push({
+                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
+                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
+                            });
+                        }
+                        else {
+                            matchSharplessStart.push({
+                                title: sharpless.getName(),
+                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
+                            });
+                        }
                         matchSharplessData.push(sharpless);
+                        matchSharplessFound = true;
                         break;
+                    }
+                }
+            }
+            else {
+                for (const sharpless of DataStore.sharplessData) {
+                    const alt_names = sharpless.getAltNames();
+                    const search_names = sharpless.getSearchNames();
+                    for (const alt_name of alt_names) {
+                        if (this.normalizeText(alt_name).includes(query)) {
+                            matchSharplessInclude.push({
+                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
+                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
+                            });
+                            matchSharplessData.push(sharpless);
+                            matchSharplessFound = true;
+                        }
+                        else if (this.normalizeText(alt_name).startsWith(query)) {
+                            matchSharplessStart.push({
+                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
+                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
+                            });
+                            matchSharplessData.push(sharpless);
+                            matchSharplessFound = true;
+                        }
+                        if (matchSharplessFound) {
+                            break;
+                        }
+                    }
+                    if (matchSharplessFound) {
+                        continue;
+                    }
+                    for (const search_name of search_names) {
+                        if (this.normalizeText(search_name).includes(query)) {
+                            matchSharplessInclude.push({
+                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
+                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
+                            });
+                            matchSharplessData.push(sharpless);
+                            matchSharplessFound = true;
+                        }
+                        else if (this.normalizeText(search_name).startsWith(query)) {
+                            matchSharplessStart.push({
+                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
+                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
+                            });
+                            matchSharplessData.push(sharpless);
+                            matchSharplessFound = true;
+                        }
+                        if (matchSharplessFound) {
+                            break;
+                        }
                     }
                 }
             }
@@ -270,12 +352,13 @@ export class SearchController {
             ...matchMessierStart,
             ...matchRecStart,
             ...matchNgc,
-            ...matchSharpless,
+            ...matchSharplessStart,
             ...matchStarNamesStart,
             ...matchPlanetsInclude,
             ...matchConstellationsInclude,
             ...matchMessierInclude,
             ...matchRecInclude,
+            ...matchSharplessInclude,
             ...matchStarNamesInclude
         ];
         allResults.forEach((result) => {
@@ -284,9 +367,8 @@ export class SearchController {
             button.textContent = result.title;
             const epoch = (matchPlanetsStart.some(planet => planet.title === result.title) || matchPlanetsInclude.some(planet => planet.title === result.title)) ? 'current' : 'j2000';
             button.addEventListener('click', async () => {
-                // NGC/IC/Sh2 の場合は天体オブジェクトを保存
-                const isNgcIc = matchNgc.some(ngc => ngc.title === result.title);
-                if (isNgcIc) {
+                // NGC/IC/Sh2 の場合はそれだけ出しておく
+                if (matchNgc.some(ngc => ngc.title === result.title)) {
                     const object = matchNgcData.find(ngc => ngc.getName() === result.title);
                     if (object) {
                         try {
@@ -295,7 +377,16 @@ export class SearchController {
                         catch (_) { }
                     }
                 }
-                else if (matchSharpless.some(sharpless => sharpless.title === result.title)) {
+                else if (matchSharplessStart.some(sharpless => sharpless.title === result.title)) {
+                    const object = matchSharplessData.find(sharpless => sharpless.getName() === result.title);
+                    if (object) {
+                        try {
+                            sessionStorage.setItem('tempTarget', JSON.stringify(object));
+                        }
+                        catch (_) { }
+                    }
+                }
+                else if (matchSharplessInclude.some(sharpless => sharpless.title === result.title)) {
                     const object = matchSharplessData.find(sharpless => sharpless.getName() === result.title);
                     if (object) {
                         try {

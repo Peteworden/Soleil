@@ -153,6 +153,9 @@ export class ObjectInfoController {
     static generateSharplessInfo(objectInfoTextElement, data) {
         const config = window.config;
         let infoText = '';
+        if (data.getAltNames().length > 0) {
+            infoText += `別名: ${data.getAltNames().join(', ')}<br>`;
+        }
         // 座標情報
         const coords = data.getCoordinates();
         const raHM = this.coordinateConverter.radeg2hm(coords.ra);

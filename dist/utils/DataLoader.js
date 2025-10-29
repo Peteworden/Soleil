@@ -174,7 +174,7 @@ export class DataLoader {
         const data = await this.fetchJson('data/sharpless.json');
         const sharpless = [];
         for (const object of data) {
-            sharpless.push(new SharplessObject(object.name, { ra: object.ra * 0.001, dec: object.dec * 0.001 }, object.diameter, object.form, object.bright, object.description, object.link));
+            sharpless.push(new SharplessObject(object.name, object.alt_names, object.search_names, { ra: object.ra * 0.001, dec: object.dec * 0.001 }, object.diameter, object.form, object.bright, object.description, object.link));
         }
         console.log(`${sharpless.length} Sharpless objects`);
         return sharpless;

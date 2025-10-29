@@ -1,6 +1,8 @@
 [
     {
         "name": "Sh2-1",
+        "alt_names": [],
+        "search_names": [],
         "ra": 239712,
         "dec": -26121,
         "diameter": 150,
@@ -11,6 +13,8 @@
     },
     {
         "name": "Sh2-2",
+        "alt_names": [],
+        "search_names": [],
         "ra": 256027,
         "dec": -38143,
         "diameter": 60,
@@ -21,6 +25,8 @@
     },
     {
         "name": "Sh2-3",
+        "alt_names": [],
+        "search_names": [],
         "ra": 258437,
         "dec": -38503,
         "diameter": 12,
@@ -31,6 +37,8 @@
     },
     {
         "name": "Sh2-4",
+        "alt_names": [],
+        "search_names": [],
         "ra": 259952,
         "dec": -39339,
         "diameter": 5,
@@ -41,6 +49,8 @@
     },
     {
         "name": "Sh2-5",
+        "alt_names": [],
+        "search_names": [],
         "ra": 260014,
         "dec": -38455,
         "diameter": 100,
@@ -51,6 +61,8 @@
     },
     {
         "name": "Sh2-6",
+        "alt_names": [],
+        "search_names": [],
         "ra": 258766,
         "dec": -37117,
         "diameter": 4,
@@ -61,6 +73,8 @@
     },
     {
         "name": "Sh2-7",
+        "alt_names": [],
+        "search_names": [],
         "ra": 240081,
         "dec": -22951,
         "diameter": 240,
@@ -71,6 +85,8 @@
     },
     {
         "name": "Sh2-8",
+        "alt_names": [],
+        "search_names": [],
         "ra": 260352,
         "dec": -36035,
         "diameter": 120,
@@ -81,6 +97,8 @@
     },
     {
         "name": "Sh2-9",
+        "alt_names": [],
+        "search_names": [],
         "ra": 245295,
         "dec": -25589,
         "diameter": 80,
@@ -91,6 +109,8 @@
     },
     {
         "name": "Sh2-10",
+        "alt_names": [],
+        "search_names": [],
         "ra": 259749,
         "dec": -34090,
         "diameter": 60,
@@ -101,6 +121,8 @@
     },
     {
         "name": "Sh2-11",
+        "alt_names": [],
+        "search_names": [],
         "ra": 261628,
         "dec": -34206,
         "diameter": 90,
@@ -111,6 +133,8 @@
     },
     {
         "name": "Sh2-12",
+        "alt_names": [],
+        "search_names": [],
         "ra": 263983,
         "dec": -32599,
         "diameter": 120,
@@ -121,6 +145,8 @@
     },
     {
         "name": "Sh2-13",
+        "alt_names": [],
+        "search_names": [],
         "ra": 262618,
         "dec": -31563,
         "diameter": 40,
@@ -131,6 +157,8 @@
     },
     {
         "name": "Sh2-14",
+        "alt_names": [],
+        "search_names": [],
         "ra": 262576,
         "dec": -30263,
         "diameter": 2,
@@ -141,6 +169,8 @@
     },
     {
         "name": "Sh2-15",
+        "alt_names": [],
+        "search_names": [],
         "ra": 267642,
         "dec": -31264,
         "diameter": 30,
@@ -151,6 +181,8 @@
     },
     {
         "name": "Sh2-16",
+        "alt_names": [],
+        "search_names": [],
         "ra": 266967,
         "dec": -29304,
         "diameter": 20,
@@ -161,6 +193,8 @@
     },
     {
         "name": "Sh2-17",
+        "alt_names": [],
+        "search_names": [],
         "ra": 266536,
         "dec": -28858,
         "diameter": 25,
@@ -171,6 +205,8 @@
     },
     {
         "name": "Sh2-18",
+        "alt_names": [],
+        "search_names": [],
         "ra": 267191,
         "dec": -29252,
         "diameter": 4,
@@ -181,6 +217,8 @@
     },
     {
         "name": "Sh2-19",
+        "alt_names": [],
+        "search_names": [],
         "ra": 267339,
         "dec": -29117,
         "diameter": 12,
@@ -191,6 +229,8 @@
     },
     {
         "name": "Sh2-20",
+        "alt_names": [],
+        "search_names": [],
         "ra": 267309,
         "dec": -28667,
         "diameter": 10,
@@ -201,6 +241,8 @@
     },
     {
         "name": "Sh2-21",
+        "alt_names": [],
+        "search_names": [],
         "ra": 267912,
         "dec": -28895,
         "diameter": 5,
@@ -211,6 +253,8 @@
     },
     {
         "name": "Sh2-22",
+        "alt_names": [],
+        "search_names": [],
         "ra": 268765,
         "dec": -25036,
         "diameter": 60,
@@ -221,6 +265,8 @@
     },
     {
         "name": "Sh2-23",
+        "alt_names": [],
+        "search_names": [],
         "ra": 243352,
         "dec": -8372,
         "diameter": 50,
@@ -231,6 +277,8 @@
     },
     {
         "name": "Sh2-24",
+        "alt_names": [],
+        "search_names": [],
         "ra": 242765,
         "dec": -7077,
         "diameter": 30,
@@ -241,6 +289,8 @@
     },
     {
         "name": "Sh2-25",
+        "alt_names": [],
+        "search_names": [],
         "ra": 271357,
         "dec": -24394,
         "diameter": 90,
@@ -251,6 +301,8 @@
     },
     {
         "name": "Sh2-26",
+        "alt_names": [],
+        "search_names": [],
         "ra": 269745,
         "dec": -23326,
         "diameter": 20,
@@ -261,6 +313,8 @@
     },
     {
         "name": "Sh2-27",
+        "alt_names": [],
+        "search_names": [],
         "ra": 249301,
         "dec": -10570,
         "diameter": 480,
@@ -271,6 +325,8 @@
     },
     {
         "name": "Sh2-28",
+        "alt_names": [],
+        "search_names": [],
         "ra": 270673,
         "dec": -23584,
         "diameter": 40,
@@ -281,6 +337,8 @@
     },
     {
         "name": "Sh2-29",
+        "alt_names": [],
+        "search_names": [],
         "ra": 272628,
         "dec": -23999,
         "diameter": 40,
@@ -291,6 +349,8 @@
     },
     {
         "name": "Sh2-30",
+        "alt_names": [],
+        "search_names": [],
         "ra": 270892,
         "dec": -23015,
         "diameter": 20,
@@ -301,6 +361,8 @@
     },
     {
         "name": "Sh2-31",
+        "alt_names": [],
+        "search_names": [],
         "ra": 272826,
         "dec": -23797,
         "diameter": 8,
@@ -311,6 +373,8 @@
     },
     {
         "name": "Sh2-32",
+        "alt_names": [],
+        "search_names": [],
         "ra": 272724,
         "dec": -23648,
         "diameter": 8,
@@ -321,6 +385,8 @@
     },
     {
         "name": "Sh2-33",
+        "alt_names": [],
+        "search_names": [],
         "ra": 239968,
         "dec": -1617,
         "diameter": 35,
@@ -331,6 +397,8 @@
     },
     {
         "name": "Sh2-34",
+        "alt_names": [],
+        "search_names": [],
         "ra": 271601,
         "dec": -21658,
         "diameter": 90,
@@ -341,6 +409,8 @@
     },
     {
         "name": "Sh2-35",
+        "alt_names": [],
+        "search_names": [],
         "ra": 273960,
         "dec": -20252,
         "diameter": 20,
@@ -351,6 +421,8 @@
     },
     {
         "name": "Sh2-36",
+        "alt_names": [],
+        "search_names": [],
         "ra": 241376,
         "dec": 394,
         "diameter": 45,
@@ -361,6 +433,8 @@
     },
     {
         "name": "Sh2-37",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274429,
         "dec": -19664,
         "diameter": 20,
@@ -371,6 +445,8 @@
     },
     {
         "name": "Sh2-38",
+        "alt_names": [],
+        "search_names": [],
         "ra": 272189,
         "dec": -18269,
         "diameter": 3,
@@ -381,6 +457,8 @@
     },
     {
         "name": "Sh2-39",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274193,
         "dec": -18650,
         "diameter": 3,
@@ -391,6 +469,8 @@
     },
     {
         "name": "Sh2-40",
+        "alt_names": [],
+        "search_names": [],
         "ra": 273009,
         "dec": -17745,
         "diameter": 15,
@@ -401,6 +481,8 @@
     },
     {
         "name": "Sh2-41",
+        "alt_names": [],
+        "search_names": [],
         "ra": 273964,
         "dec": -18235,
         "diameter": 90,
@@ -411,6 +493,8 @@
     },
     {
         "name": "Sh2-42",
+        "alt_names": [],
+        "search_names": [],
         "ra": 272573,
         "dec": -16815,
         "diameter": 3,
@@ -421,6 +505,8 @@
     },
     {
         "name": "Sh2-43",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274105,
         "dec": -17400,
         "diameter": 15,
@@ -431,6 +517,8 @@
     },
     {
         "name": "Sh2-44",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274122,
         "dec": -16734,
         "diameter": 60,
@@ -441,6 +529,8 @@
     },
     {
         "name": "Sh2-45",
+        "alt_names": [],
+        "search_names": [],
         "ra": 275192,
         "dec": -16173,
         "diameter": 60,
@@ -451,6 +541,8 @@
     },
     {
         "name": "Sh2-46",
+        "alt_names": [],
+        "search_names": [],
         "ra": 271546,
         "dec": -14159,
         "diameter": 25,
@@ -461,6 +553,8 @@
     },
     {
         "name": "Sh2-47",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274435,
         "dec": -15614,
         "diameter": 5,
@@ -471,6 +565,8 @@
     },
     {
         "name": "Sh2-48",
+        "alt_names": [],
+        "search_names": [],
         "ra": 275600,
         "dec": -14586,
         "diameter": 10,
@@ -481,6 +577,8 @@
     },
     {
         "name": "Sh2-49",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274669,
         "dec": -13962,
         "diameter": 90,
@@ -491,6 +589,8 @@
     },
     {
         "name": "Sh2-50",
+        "alt_names": [],
+        "search_names": [],
         "ra": 276376,
         "dec": -14712,
         "diameter": 35,
@@ -501,6 +601,8 @@
     },
     {
         "name": "Sh2-51",
+        "alt_names": [],
+        "search_names": [],
         "ra": 280194,
         "dec": -16558,
         "diameter": 35,
@@ -511,6 +613,8 @@
     },
     {
         "name": "Sh2-52",
+        "alt_names": [],
+        "search_names": [],
         "ra": 296945,
         "dec": -23087,
         "diameter": 2,
@@ -521,6 +625,8 @@
     },
     {
         "name": "Sh2-53",
+        "alt_names": [],
+        "search_names": [],
         "ra": 276311,
         "dec": -13229,
         "diameter": 15,
@@ -531,6 +637,8 @@
     },
     {
         "name": "Sh2-54",
+        "alt_names": [],
+        "search_names": [],
         "ra": 274471,
         "dec": -11730,
         "diameter": 140,
@@ -541,6 +649,8 @@
     },
     {
         "name": "Sh2-55",
+        "alt_names": [],
+        "search_names": [],
         "ra": 278046,
         "dec": -11762,
         "diameter": 5,
@@ -551,6 +661,8 @@
     },
     {
         "name": "Sh2-56",
+        "alt_names": [],
+        "search_names": [],
         "ra": 277775,
         "dec": -9715,
         "diameter": 7,
@@ -561,6 +673,8 @@
     },
     {
         "name": "Sh2-57",
+        "alt_names": [],
+        "search_names": [],
         "ra": 277639,
         "dec": -8616,
         "diameter": 2,
@@ -571,6 +685,8 @@
     },
     {
         "name": "Sh2-58",
+        "alt_names": [],
+        "search_names": [],
         "ra": 277863,
         "dec": -8464,
         "diameter": 8,
@@ -581,6 +697,8 @@
     },
     {
         "name": "Sh2-59",
+        "alt_names": [],
+        "search_names": [],
         "ra": 279254,
         "dec": -7600,
         "diameter": 20,
@@ -591,6 +709,8 @@
     },
     {
         "name": "Sh2-60",
+        "alt_names": [],
+        "search_names": [],
         "ra": 279171,
         "dec": -6701,
         "diameter": 20,
@@ -601,6 +721,8 @@
     },
     {
         "name": "Sh2-61",
+        "alt_names": [],
+        "search_names": [],
         "ra": 278229,
         "dec": -5010,
         "diameter": 2,
@@ -611,6 +733,8 @@
     },
     {
         "name": "Sh2-62",
+        "alt_names": [],
+        "search_names": [],
         "ra": 276893,
         "dec": -3856,
         "diameter": 4,
@@ -621,6 +745,8 @@
     },
     {
         "name": "Sh2-63",
+        "alt_names": [],
+        "search_names": [],
         "ra": 299429,
         "dec": -14116,
         "diameter": 55,
@@ -631,6 +757,8 @@
     },
     {
         "name": "Sh2-64",
+        "alt_names": [],
+        "search_names": [],
         "ra": 277899,
         "dec": -1913,
         "diameter": 25,
@@ -641,6 +769,8 @@
     },
     {
         "name": "Sh2-65",
+        "alt_names": [],
+        "search_names": [],
         "ra": 281742,
         "dec": -3743,
         "diameter": 7,
@@ -651,6 +781,8 @@
     },
     {
         "name": "Sh2-66",
+        "alt_names": [],
+        "search_names": [],
         "ra": 281375,
         "dec": -1996,
         "diameter": 8,
@@ -661,6 +793,8 @@
     },
     {
         "name": "Sh2-67",
+        "alt_names": [],
+        "search_names": [],
         "ra": 282353,
         "dec": -2354,
         "diameter": 10,
@@ -671,6 +805,8 @@
     },
     {
         "name": "Sh2-68",
+        "alt_names": [],
+        "search_names": [],
         "ra": 276297,
         "dec": 855,
         "diameter": 8,
@@ -681,6 +817,8 @@
     },
     {
         "name": "Sh2-69",
+        "alt_names": [],
+        "search_names": [],
         "ra": 281108,
         "dec": -282,
         "diameter": 20,
@@ -691,6 +829,8 @@
     },
     {
         "name": "Sh2-70",
+        "alt_names": [],
+        "search_names": [],
         "ra": 273661,
         "dec": 7063,
         "diameter": 5,
@@ -701,6 +841,8 @@
     },
     {
         "name": "Sh2-71",
+        "alt_names": [],
+        "search_names": [],
         "ra": 285510,
         "dec": 2160,
         "diameter": 3,
@@ -711,6 +853,8 @@
     },
     {
         "name": "Sh2-72",
+        "alt_names": [],
+        "search_names": [],
         "ra": 285959,
         "dec": 2314,
         "diameter": 25,
@@ -721,6 +865,8 @@
     },
     {
         "name": "Sh2-73",
+        "alt_names": [],
+        "search_names": [],
         "ra": 242781,
         "dec": 21874,
         "diameter": 75,
@@ -731,6 +877,8 @@
     },
     {
         "name": "Sh2-74",
+        "alt_names": [],
+        "search_names": [],
         "ra": 287204,
         "dec": 5609,
         "diameter": 3,
@@ -741,6 +889,8 @@
     },
     {
         "name": "Sh2-75",
+        "alt_names": [],
+        "search_names": [],
         "ra": 284814,
         "dec": 7120,
         "diameter": 10,
@@ -751,6 +901,8 @@
     },
     {
         "name": "Sh2-76",
+        "alt_names": [],
+        "search_names": [],
         "ra": 284106,
         "dec": 7813,
         "diameter": 7,
@@ -761,6 +913,8 @@
     },
     {
         "name": "Sh2-77",
+        "alt_names": [],
+        "search_names": [],
         "ra": 297071,
         "dec": 1148,
         "diameter": 8,
@@ -771,6 +925,8 @@
     },
     {
         "name": "Sh2-78",
+        "alt_names": [],
+        "search_names": [],
         "ra": 285796,
         "dec": 14129,
         "diameter": 12,
@@ -781,6 +937,8 @@
     },
     {
         "name": "Sh2-79",
+        "alt_names": [],
+        "search_names": [],
         "ra": 290826,
         "dec": 13976,
         "diameter": 40,
@@ -791,6 +949,8 @@
     },
     {
         "name": "Sh2-80",
+        "alt_names": [],
+        "search_names": [],
         "ra": 287870,
         "dec": 16866,
         "diameter": 2,
@@ -801,6 +961,8 @@
     },
     {
         "name": "Sh2-81",
+        "alt_names": [],
+        "search_names": [],
         "ra": 300305,
         "dec": 11793,
         "diameter": 10,
@@ -811,6 +973,8 @@
     },
     {
         "name": "Sh2-82",
+        "alt_names": [],
+        "search_names": [],
         "ra": 292586,
         "dec": 18275,
         "diameter": 9,
@@ -821,6 +985,8 @@
     },
     {
         "name": "Sh2-83",
+        "alt_names": [],
+        "search_names": [],
         "ra": 291134,
         "dec": 20796,
         "diameter": 2,
@@ -831,6 +997,8 @@
     },
     {
         "name": "Sh2-84",
+        "alt_names": [],
+        "search_names": [],
         "ra": 297266,
         "dec": 18400,
         "diameter": 15,
@@ -841,6 +1009,8 @@
     },
     {
         "name": "Sh2-85",
+        "alt_names": [],
+        "search_names": [],
         "ra": 285821,
         "dec": 25830,
         "diameter": 6,
@@ -851,6 +1021,8 @@
     },
     {
         "name": "Sh2-86",
+        "alt_names": [],
+        "search_names": [],
         "ra": 295790,
         "dec": 23287,
         "diameter": 40,
@@ -861,6 +1033,8 @@
     },
     {
         "name": "Sh2-87",
+        "alt_names": [],
+        "search_names": [],
         "ra": 296602,
         "dec": 24628,
         "diameter": 10,
@@ -871,6 +1045,8 @@
     },
     {
         "name": "Sh2-88",
+        "alt_names": [],
+        "search_names": [],
         "ra": 296495,
         "dec": 25344,
         "diameter": 25,
@@ -881,6 +1057,8 @@
     },
     {
         "name": "Sh2-89",
+        "alt_names": [],
+        "search_names": [],
         "ra": 297509,
         "dec": 26486,
         "diameter": 5,
@@ -891,6 +1069,8 @@
     },
     {
         "name": "Sh2-90",
+        "alt_names": [],
+        "search_names": [],
         "ra": 297305,
         "dec": 26868,
         "diameter": 6,
@@ -901,6 +1081,8 @@
     },
     {
         "name": "Sh2-91",
+        "alt_names": [],
+        "search_names": [],
         "ra": 293892,
         "dec": 29604,
         "diameter": 120,
@@ -911,6 +1093,8 @@
     },
     {
         "name": "Sh2-92",
+        "alt_names": [],
+        "search_names": [],
         "ra": 296663,
         "dec": 28245,
         "diameter": 50,
@@ -921,6 +1105,8 @@
     },
     {
         "name": "Sh2-93",
+        "alt_names": [],
+        "search_names": [],
         "ra": 298755,
         "dec": 27213,
         "diameter": 1,
@@ -931,6 +1117,8 @@
     },
     {
         "name": "Sh2-94",
+        "alt_names": [],
+        "search_names": [],
         "ra": 291964,
         "dec": 31471,
         "diameter": 25,
@@ -941,6 +1129,8 @@
     },
     {
         "name": "Sh2-95",
+        "alt_names": [],
+        "search_names": [],
         "ra": 298756,
         "dec": 29297,
         "diameter": 1,
@@ -951,6 +1141,8 @@
     },
     {
         "name": "Sh2-96",
+        "alt_names": [],
+        "search_names": [],
         "ra": 292175,
         "dec": 32689,
         "diameter": 25,
@@ -961,6 +1153,8 @@
     },
     {
         "name": "Sh2-97",
+        "alt_names": [],
+        "search_names": [],
         "ra": 299021,
         "dec": 30266,
         "diameter": 10,
@@ -971,6 +1165,8 @@
     },
     {
         "name": "Sh2-98",
+        "alt_names": [],
+        "search_names": [],
         "ra": 299685,
         "dec": 31422,
         "diameter": 15,
@@ -981,6 +1177,8 @@
     },
     {
         "name": "Sh2-99",
+        "alt_names": [],
+        "search_names": [],
         "ra": 300212,
         "dec": 33493,
         "diameter": 5,
@@ -991,6 +1189,8 @@
     },
     {
         "name": "Sh2-100",
+        "alt_names": [],
+        "search_names": [],
         "ra": 300463,
         "dec": 33511,
         "diameter": 4,
@@ -1001,6 +1201,8 @@
     },
     {
         "name": "Sh2-101",
+        "alt_names": [],
+        "search_names": [],
         "ra": 299989,
         "dec": 35291,
         "diameter": 20,
@@ -1011,6 +1213,8 @@
     },
     {
         "name": "Sh2-102",
+        "alt_names": [],
+        "search_names": [],
         "ra": 307946,
         "dec": 30605,
         "diameter": 40,
@@ -1021,6 +1225,8 @@
     },
     {
         "name": "Sh2-103",
+        "alt_names": [],
+        "search_names": [],
         "ra": 312635,
         "dec": 30923,
         "diameter": 210,
@@ -1031,6 +1237,8 @@
     },
     {
         "name": "Sh2-104",
+        "alt_names": [],
+        "search_names": [],
         "ra": 304438,
         "dec": 36745,
         "diameter": 7,
@@ -1041,6 +1249,8 @@
     },
     {
         "name": "Sh2-105",
+        "alt_names": [],
+        "search_names": [],
         "ra": 303011,
         "dec": 38350,
         "diameter": 18,
@@ -1051,6 +1261,8 @@
     },
     {
         "name": "Sh2-106",
+        "alt_names": [],
+        "search_names": [],
         "ra": 306865,
         "dec": 37397,
         "diameter": 3,
@@ -1061,6 +1273,8 @@
     },
     {
         "name": "Sh2-107",
+        "alt_names": [],
+        "search_names": [],
         "ra": 310694,
         "dec": 36343,
         "diameter": 5,
@@ -1071,6 +1285,8 @@
     },
     {
         "name": "Sh2-108",
+        "alt_names": [],
+        "search_names": [],
         "ra": 305647,
         "dec": 40254,
         "diameter": 180,
@@ -1081,6 +1297,8 @@
     },
     {
         "name": "Sh2-109",
+        "alt_names": [],
+        "search_names": [],
         "ra": 308410,
         "dec": 40342,
         "diameter": 1080,
@@ -1091,6 +1309,8 @@
     },
     {
         "name": "Sh2-110",
+        "alt_names": [],
+        "search_names": [],
         "ra": 320203,
         "dec": 32458,
         "diameter": 50,
@@ -1101,6 +1321,8 @@
     },
     {
         "name": "Sh2-111",
+        "alt_names": [],
+        "search_names": [],
         "ra": 325472,
         "dec": 30105,
         "diameter": 90,
@@ -1111,6 +1333,8 @@
     },
     {
         "name": "Sh2-112",
+        "alt_names": [],
+        "search_names": [],
         "ra": 308459,
         "dec": 45660,
         "diameter": 15,
@@ -1121,6 +1345,8 @@
     },
     {
         "name": "Sh2-113",
+        "alt_names": [],
+        "search_names": [],
         "ra": 320201,
         "dec": 38091,
         "diameter": 15,
@@ -1131,6 +1357,8 @@
     },
     {
         "name": "Sh2-114",
+        "alt_names": [],
+        "search_names": [],
         "ra": 320294,
         "dec": 38709,
         "diameter": 9,
@@ -1141,6 +1369,8 @@
     },
     {
         "name": "Sh2-115",
+        "alt_names": [],
+        "search_names": [],
         "ra": 308641,
         "dec": 46878,
         "diameter": 50,
@@ -1151,6 +1381,8 @@
     },
     {
         "name": "Sh2-116",
+        "alt_names": [],
+        "search_names": [],
         "ra": 308080,
         "dec": 47357,
         "diameter": 2,
@@ -1161,6 +1393,8 @@
     },
     {
         "name": "Sh2-117",
+        "alt_names": [],
+        "search_names": [],
         "ra": 314693,
         "dec": 44322,
         "diameter": 240,
@@ -1171,6 +1405,8 @@
     },
     {
         "name": "Sh2-118",
+        "alt_names": [],
+        "search_names": [],
         "ra": 324254,
         "dec": 40216,
         "diameter": 480,
@@ -1181,6 +1417,8 @@
     },
     {
         "name": "Sh2-119",
+        "alt_names": [],
+        "search_names": [],
         "ra": 319607,
         "dec": 43938,
         "diameter": 160,
@@ -1191,6 +1429,8 @@
     },
     {
         "name": "Sh2-120",
+        "alt_names": [],
+        "search_names": [],
         "ra": 315946,
         "dec": 49881,
         "diameter": 1,
@@ -1201,6 +1441,8 @@
     },
     {
         "name": "Sh2-121",
+        "alt_names": [],
+        "search_names": [],
         "ra": 316302,
         "dec": 49650,
         "diameter": 1,
@@ -1211,6 +1453,8 @@
     },
     {
         "name": "Sh2-122",
+        "alt_names": [],
+        "search_names": [],
         "ra": 347197,
         "dec": 14925,
         "diameter": 40,
@@ -1221,6 +1465,8 @@
     },
     {
         "name": "Sh2-123",
+        "alt_names": [],
+        "search_names": [],
         "ra": 325594,
         "dec": 44540,
         "diameter": 13,
@@ -1231,6 +1477,8 @@
     },
     {
         "name": "Sh2-124",
+        "alt_names": [],
+        "search_names": [],
         "ra": 324590,
         "dec": 50351,
         "diameter": 70,
@@ -1241,6 +1489,8 @@
     },
     {
         "name": "Sh2-125",
+        "alt_names": [],
+        "search_names": [],
         "ra": 328387,
         "dec": 47272,
         "diameter": 9,
@@ -1251,6 +1501,8 @@
     },
     {
         "name": "Sh2-126",
+        "alt_names": [],
+        "search_names": [],
         "ra": 338364,
         "dec": 38582,
         "diameter": 160,
@@ -1261,6 +1513,8 @@
     },
     {
         "name": "Sh2-127",
+        "alt_names": [],
+        "search_names": [],
         "ra": 322174,
         "dec": 54621,
         "diameter": 2,
@@ -1271,6 +1525,8 @@
     },
     {
         "name": "Sh2-128",
+        "alt_names": [],
+        "search_names": [],
         "ra": 323036,
         "dec": 55859,
         "diameter": 1,
@@ -1281,16 +1537,20 @@
     },
     {
         "name": "Sh2-129",
+        "alt_names": [],
+        "search_names": [],
         "ra": 317937,
         "dec": 59961,
         "diameter": 140,
         "form": 3,
         "bright": 2,
-        "description": "ダイオウイカ星雲",
+        "description": "",
         "link": ""
     },
     {
         "name": "Sh2-130",
+        "alt_names": [],
+        "search_names": [],
         "ra": 310748,
         "dec": 63228,
         "diameter": 3,
@@ -1301,6 +1561,8 @@
     },
     {
         "name": "Sh2-131",
+        "alt_names": [],
+        "search_names": [],
         "ra": 324751,
         "dec": 57486,
         "diameter": 170,
@@ -1311,6 +1573,8 @@
     },
     {
         "name": "Sh2-132",
+        "alt_names": [],
+        "search_names": [],
         "ra": 334698,
         "dec": 56135,
         "diameter": 90,
@@ -1321,6 +1585,8 @@
     },
     {
         "name": "Sh2-133",
+        "alt_names": [],
+        "search_names": [],
         "ra": 322249,
         "dec": 64305,
         "diameter": 80,
@@ -1331,6 +1597,8 @@
     },
     {
         "name": "Sh2-134",
+        "alt_names": [],
+        "search_names": [],
         "ra": 332874,
         "dec": 59410,
         "diameter": 160,
@@ -1341,6 +1609,8 @@
     },
     {
         "name": "Sh2-135",
+        "alt_names": [],
+        "search_names": [],
         "ra": 335548,
         "dec": 58738,
         "diameter": 15,
@@ -1351,6 +1621,8 @@
     },
     {
         "name": "Sh2-136",
+        "alt_names": [],
+        "search_names": [],
         "ra": 319123,
         "dec": 68253,
         "diameter": 5,
@@ -1361,6 +1633,8 @@
     },
     {
         "name": "Sh2-137",
+        "alt_names": [],
+        "search_names": [],
         "ra": 329279,
         "dec": 64694,
         "diameter": 90,
@@ -1371,6 +1645,8 @@
     },
     {
         "name": "Sh2-138",
+        "alt_names": [],
+        "search_names": [],
         "ra": 338164,
         "dec": 58482,
         "diameter": 1,
@@ -1381,6 +1657,8 @@
     },
     {
         "name": "Sh2-139",
+        "alt_names": [],
+        "search_names": [],
         "ra": 338751,
         "dec": 58217,
         "diameter": 10,
@@ -1391,6 +1669,8 @@
     },
     {
         "name": "Sh2-140",
+        "alt_names": [],
+        "search_names": [],
         "ra": 334782,
         "dec": 63285,
         "diameter": 30,
@@ -1401,6 +1681,8 @@
     },
     {
         "name": "Sh2-141",
+        "alt_names": [],
+        "search_names": [],
         "ra": 337127,
         "dec": 61645,
         "diameter": 5,
@@ -1411,6 +1693,8 @@
     },
     {
         "name": "Sh2-142",
+        "alt_names": [],
+        "search_names": [],
         "ra": 341898,
         "dec": 58061,
         "diameter": 30,
@@ -1421,6 +1705,8 @@
     },
     {
         "name": "Sh2-143",
+        "alt_names": [],
+        "search_names": [],
         "ra": 342561,
         "dec": 57713,
         "diameter": 4,
@@ -1431,6 +1717,8 @@
     },
     {
         "name": "Sh2-144",
+        "alt_names": [],
+        "search_names": [],
         "ra": 341217,
         "dec": 59892,
         "diameter": 4,
@@ -1441,6 +1729,8 @@
     },
     {
         "name": "Sh2-145",
+        "alt_names": [],
+        "search_names": [],
         "ra": 336389,
         "dec": 64309,
         "diameter": 90,
@@ -1451,6 +1741,8 @@
     },
     {
         "name": "Sh2-146",
+        "alt_names": [],
+        "search_names": [],
         "ra": 342359,
         "dec": 59929,
         "diameter": 2,
@@ -1461,6 +1753,8 @@
     },
     {
         "name": "Sh2-147",
+        "alt_names": [],
+        "search_names": [],
         "ra": 343873,
         "dec": 58467,
         "diameter": 2,
@@ -1471,6 +1765,8 @@
     },
     {
         "name": "Sh2-148",
+        "alt_names": [],
+        "search_names": [],
         "ra": 344050,
         "dec": 58517,
         "diameter": 2,
@@ -1481,6 +1777,8 @@
     },
     {
         "name": "Sh2-149",
+        "alt_names": [],
+        "search_names": [],
         "ra": 344101,
         "dec": 58534,
         "diameter": 1,
@@ -1491,6 +1789,8 @@
     },
     {
         "name": "Sh2-150",
+        "alt_names": [],
+        "search_names": [],
         "ra": 337799,
         "dec": 65114,
         "diameter": 40,
@@ -1501,6 +1801,8 @@
     },
     {
         "name": "Sh2-151",
+        "alt_names": [],
+        "search_names": [],
         "ra": 345763,
         "dec": 57072,
         "diameter": 20,
@@ -1511,6 +1813,8 @@
     },
     {
         "name": "Sh2-152",
+        "alt_names": [],
+        "search_names": [],
         "ra": 344657,
         "dec": 58786,
         "diameter": 2,
@@ -1521,6 +1825,8 @@
     },
     {
         "name": "Sh2-153",
+        "alt_names": [],
+        "search_names": [],
         "ra": 344809,
         "dec": 58736,
         "diameter": 5,
@@ -1531,6 +1837,8 @@
     },
     {
         "name": "Sh2-154",
+        "alt_names": [],
+        "search_names": [],
         "ra": 342852,
         "dec": 61181,
         "diameter": 60,
@@ -1541,6 +1849,8 @@
     },
     {
         "name": "Sh2-155",
+        "alt_names": [],
+        "search_names": [],
         "ra": 344182,
         "dec": 62618,
         "diameter": 60,
@@ -1551,6 +1861,8 @@
     },
     {
         "name": "Sh2-156",
+        "alt_names": [],
+        "search_names": [],
         "ra": 346293,
         "dec": 60256,
         "diameter": 2,
@@ -1561,6 +1873,8 @@
     },
     {
         "name": "Sh2-157",
+        "alt_names": [],
+        "search_names": [],
         "ra": 349014,
         "dec": 60045,
         "diameter": 90,
@@ -1571,6 +1885,8 @@
     },
     {
         "name": "Sh2-158",
+        "alt_names": [],
+        "search_names": [],
         "ra": 348417,
         "dec": 61511,
         "diameter": 10,
@@ -1581,6 +1897,8 @@
     },
     {
         "name": "Sh2-159",
+        "alt_names": [],
+        "search_names": [],
         "ra": 348929,
         "dec": 61145,
         "diameter": 7,
@@ -1591,6 +1909,8 @@
     },
     {
         "name": "Sh2-160",
+        "alt_names": [],
+        "search_names": [],
         "ra": 346448,
         "dec": 64673,
         "diameter": 80,
@@ -1601,6 +1921,8 @@
     },
     {
         "name": "Sh2-161",
+        "alt_names": [],
+        "search_names": [],
         "ra": 348872,
         "dec": 61862,
         "diameter": 55,
@@ -1611,6 +1933,8 @@
     },
     {
         "name": "Sh2-162",
+        "alt_names": [],
+        "search_names": [],
         "ra": 350175,
         "dec": 61198,
         "diameter": 40,
@@ -1621,6 +1945,8 @@
     },
     {
         "name": "Sh2-163",
+        "alt_names": [],
+        "search_names": [],
         "ra": 353331,
         "dec": 60786,
         "diameter": 10,
@@ -1631,6 +1957,8 @@
     },
     {
         "name": "Sh2-164",
+        "alt_names": [],
+        "search_names": [],
         "ra": 354606,
         "dec": 59970,
         "diameter": 3,
@@ -1641,6 +1969,8 @@
     },
     {
         "name": "Sh2-165",
+        "alt_names": [],
+        "search_names": [],
         "ra": 354954,
         "dec": 61937,
         "diameter": 10,
@@ -1651,6 +1981,8 @@
     },
     {
         "name": "Sh2-166",
+        "alt_names": [],
+        "search_names": [],
         "ra": 355543,
         "dec": 60971,
         "diameter": 10,
@@ -1661,6 +1993,8 @@
     },
     {
         "name": "Sh2-167",
+        "alt_names": [],
+        "search_names": [],
         "ra": 353843,
         "dec": 64853,
         "diameter": 2,
@@ -1671,6 +2005,8 @@
     },
     {
         "name": "Sh2-168",
+        "alt_names": [],
+        "search_names": [],
         "ra": 358265,
         "dec": 60473,
         "diameter": 7,
@@ -1681,6 +2017,8 @@
     },
     {
         "name": "Sh2-169",
+        "alt_names": [],
+        "search_names": [],
         "ra": 358494,
         "dec": 60373,
         "diameter": 5,
@@ -1691,6 +2029,8 @@
     },
     {
         "name": "Sh2-170",
+        "alt_names": [],
+        "search_names": [],
         "ra": 426,
         "dec": 64623,
         "diameter": 20,
@@ -1701,16 +2041,20 @@
     },
     {
         "name": "Sh2-171",
+        "alt_names": [],
+        "search_names": [],
         "ra": 1167,
         "dec": 67157,
         "diameter": 180,
         "form": 3,
         "bright": 3,
-        "description": "クエスチョンマーク星雲",
+        "description": "",
         "link": ""
     },
     {
         "name": "Sh2-172",
+        "alt_names": [],
+        "search_names": [],
         "ra": 3887,
         "dec": 61256,
         "diameter": 1,
@@ -1721,6 +2065,8 @@
     },
     {
         "name": "Sh2-173",
+        "alt_names": [],
+        "search_names": [],
         "ra": 5465,
         "dec": 61738,
         "diameter": 30,
@@ -1731,6 +2077,8 @@
     },
     {
         "name": "Sh2-174",
+        "alt_names": [],
+        "search_names": [],
         "ra": 356704,
         "dec": 80939,
         "diameter": 10,
@@ -1741,6 +2089,8 @@
     },
     {
         "name": "Sh2-175",
+        "alt_names": [],
+        "search_names": [],
         "ra": 6829,
         "dec": 64704,
         "diameter": 2,
@@ -1751,6 +2101,8 @@
     },
     {
         "name": "Sh2-176",
+        "alt_names": [],
+        "search_names": [],
         "ra": 7913,
         "dec": 57286,
         "diameter": 10,
@@ -1761,6 +2113,8 @@
     },
     {
         "name": "Sh2-177",
+        "alt_names": [],
+        "search_names": [],
         "ra": 7887,
         "dec": 62469,
         "diameter": 40,
@@ -1771,6 +2125,8 @@
     },
     {
         "name": "Sh2-178",
+        "alt_names": [],
+        "search_names": [],
         "ra": 334734,
         "dec": 87761,
         "diameter": 420,
@@ -1781,6 +2137,8 @@
     },
     {
         "name": "Sh2-179",
+        "alt_names": [],
+        "search_names": [],
         "ra": 10105,
         "dec": 62866,
         "diameter": 1,
@@ -1791,6 +2149,8 @@
     },
     {
         "name": "Sh2-180",
+        "alt_names": [],
+        "search_names": [],
         "ra": 12194,
         "dec": 62929,
         "diameter": 15,
@@ -1801,6 +2161,8 @@
     },
     {
         "name": "Sh2-181",
+        "alt_names": [],
+        "search_names": [],
         "ra": 12319,
         "dec": 65212,
         "diameter": 15,
@@ -1811,6 +2173,8 @@
     },
     {
         "name": "Sh2-182",
+        "alt_names": [],
+        "search_names": [],
         "ra": 12569,
         "dec": 64745,
         "diameter": 2,
@@ -1821,6 +2185,8 @@
     },
     {
         "name": "Sh2-183",
+        "alt_names": [],
+        "search_names": [],
         "ra": 13499,
         "dec": 65710,
         "diameter": 35,
@@ -1831,6 +2197,8 @@
     },
     {
         "name": "Sh2-184",
+        "alt_names": [],
+        "search_names": [],
         "ra": 13211,
         "dec": 56610,
         "diameter": 40,
@@ -1841,6 +2209,8 @@
     },
     {
         "name": "Sh2-185",
+        "alt_names": [],
+        "search_names": [],
         "ra": 15000,
         "dec": 60990,
         "diameter": 120,
@@ -1851,6 +2221,8 @@
     },
     {
         "name": "Sh2-186",
+        "alt_names": [],
+        "search_names": [],
         "ra": 17212,
         "dec": 63134,
         "diameter": 1,
@@ -1861,6 +2233,8 @@
     },
     {
         "name": "Sh2-187",
+        "alt_names": [],
+        "search_names": [],
         "ra": 20782,
         "dec": 61856,
         "diameter": 10,
@@ -1871,6 +2245,8 @@
     },
     {
         "name": "Sh2-188",
+        "alt_names": [],
+        "search_names": [],
         "ra": 22663,
         "dec": 58367,
         "diameter": 9,
@@ -1881,6 +2257,8 @@
     },
     {
         "name": "Sh2-189",
+        "alt_names": [],
+        "search_names": [],
         "ra": 33035,
         "dec": 64172,
         "diameter": 2,
@@ -1891,6 +2269,8 @@
     },
     {
         "name": "Sh2-190",
+        "alt_names": [],
+        "search_names": [],
         "ra": 38346,
         "dec": 61442,
         "diameter": 150,
@@ -1901,6 +2281,8 @@
     },
     {
         "name": "Sh2-191",
+        "alt_names": [],
+        "search_names": [],
         "ra": 39163,
         "dec": 59637,
         "diameter": 2,
@@ -1911,6 +2293,8 @@
     },
     {
         "name": "Sh2-192",
+        "alt_names": [],
+        "search_names": [],
         "ra": 41808,
         "dec": 61988,
         "diameter": 1,
@@ -1921,6 +2305,8 @@
     },
     {
         "name": "Sh2-193",
+        "alt_names": [],
+        "search_names": [],
         "ra": 41885,
         "dec": 62004,
         "diameter": 2,
@@ -1931,6 +2317,8 @@
     },
     {
         "name": "Sh2-194",
+        "alt_names": [],
+        "search_names": [],
         "ra": 41832,
         "dec": 61938,
         "diameter": 2,
@@ -1941,6 +2329,8 @@
     },
     {
         "name": "Sh2-195",
+        "alt_names": [],
+        "search_names": [],
         "ra": 40024,
         "dec": 59649,
         "diameter": 3,
@@ -1951,6 +2341,8 @@
     },
     {
         "name": "Sh2-196",
+        "alt_names": [],
+        "search_names": [],
         "ra": 42829,
         "dec": 62231,
         "diameter": 4,
@@ -1961,6 +2353,8 @@
     },
     {
         "name": "Sh2-197",
+        "alt_names": [],
+        "search_names": [],
         "ra": 40480,
         "dec": 59646,
         "diameter": 5,
@@ -1971,6 +2365,8 @@
     },
     {
         "name": "Sh2-198",
+        "alt_names": [],
+        "search_names": [],
         "ra": 42507,
         "dec": 59700,
         "diameter": 9,
@@ -1981,6 +2377,8 @@
     },
     {
         "name": "Sh2-199",
+        "alt_names": [],
+        "search_names": [],
         "ra": 43639,
         "dec": 60409,
         "diameter": 120,
@@ -1991,6 +2389,8 @@
     },
     {
         "name": "Sh2-200",
+        "alt_names": [],
+        "search_names": [],
         "ra": 47687,
         "dec": 62815,
         "diameter": 6,
@@ -2001,6 +2401,8 @@
     },
     {
         "name": "Sh2-201",
+        "alt_names": [],
+        "search_names": [],
         "ra": 45793,
         "dec": 60478,
         "diameter": 5,
@@ -2011,6 +2413,8 @@
     },
     {
         "name": "Sh2-202",
+        "alt_names": [],
+        "search_names": [],
         "ra": 49714,
         "dec": 59634,
         "diameter": 170,
@@ -2021,6 +2425,8 @@
     },
     {
         "name": "Sh2-203",
+        "alt_names": [],
+        "search_names": [],
         "ra": 50503,
         "dec": 54878,
         "diameter": 45,
@@ -2031,6 +2437,8 @@
     },
     {
         "name": "Sh2-204",
+        "alt_names": [],
+        "search_names": [],
         "ra": 58940,
         "dec": 57429,
         "diameter": 40,
@@ -2041,6 +2449,8 @@
     },
     {
         "name": "Sh2-205",
+        "alt_names": [],
+        "search_names": [],
         "ra": 59033,
         "dec": 53194,
         "diameter": 120,
@@ -2051,6 +2461,8 @@
     },
     {
         "name": "Sh2-206",
+        "alt_names": [],
+        "search_names": [],
         "ra": 60804,
         "dec": 51329,
         "diameter": 50,
@@ -2061,6 +2473,8 @@
     },
     {
         "name": "Sh2-207",
+        "alt_names": [],
+        "search_names": [],
         "ra": 65020,
         "dec": 53144,
         "diameter": 4,
@@ -2071,6 +2485,8 @@
     },
     {
         "name": "Sh2-208",
+        "alt_names": [],
+        "search_names": [],
         "ra": 64941,
         "dec": 52978,
         "diameter": 1,
@@ -2081,6 +2497,8 @@
     },
     {
         "name": "Sh2-209",
+        "alt_names": [],
+        "search_names": [],
         "ra": 62762,
         "dec": 51163,
         "diameter": 14,
@@ -2091,6 +2509,8 @@
     },
     {
         "name": "Sh2-210",
+        "alt_names": [],
+        "search_names": [],
         "ra": 67746,
         "dec": 52553,
         "diameter": 20,
@@ -2101,6 +2521,8 @@
     },
     {
         "name": "Sh2-211",
+        "alt_names": [],
+        "search_names": [],
         "ra": 69241,
         "dec": 50939,
         "diameter": 2,
@@ -2111,6 +2533,8 @@
     },
     {
         "name": "Sh2-212",
+        "alt_names": [],
+        "search_names": [],
         "ra": 70157,
         "dec": 50381,
         "diameter": 5,
@@ -2121,6 +2545,8 @@
     },
     {
         "name": "Sh2-213",
+        "alt_names": [],
+        "search_names": [],
         "ra": 65178,
         "dec": 44925,
         "diameter": 1,
@@ -2131,6 +2557,8 @@
     },
     {
         "name": "Sh2-214",
+        "alt_names": [],
+        "search_names": [],
         "ra": 65395,
         "dec": 44373,
         "diameter": 4,
@@ -2141,6 +2569,8 @@
     },
     {
         "name": "Sh2-215",
+        "alt_names": [],
+        "search_names": [],
         "ra": 64387,
         "dec": 42615,
         "diameter": 2,
@@ -2151,6 +2581,8 @@
     },
     {
         "name": "Sh2-216",
+        "alt_names": [],
+        "search_names": [],
         "ra": 71237,
         "dec": 46821,
         "diameter": 80,
@@ -2161,6 +2593,8 @@
     },
     {
         "name": "Sh2-217",
+        "alt_names": [],
+        "search_names": [],
         "ra": 74697,
         "dec": 48006,
         "diameter": 9,
@@ -2171,6 +2605,8 @@
     },
     {
         "name": "Sh2-218",
+        "alt_names": [],
+        "search_names": [],
         "ra": 85318,
         "dec": 52188,
         "diameter": 70,
@@ -2181,6 +2617,8 @@
     },
     {
         "name": "Sh2-219",
+        "alt_names": [],
+        "search_names": [],
         "ra": 74033,
         "dec": 47395,
         "diameter": 3,
@@ -2191,6 +2629,8 @@
     },
     {
         "name": "Sh2-220",
+        "alt_names": [],
+        "search_names": [],
         "ra": 60159,
         "dec": 36617,
         "diameter": 320,
@@ -2201,6 +2641,8 @@
     },
     {
         "name": "Sh2-221",
+        "alt_names": [],
+        "search_names": [],
         "ra": 75416,
         "dec": 46349,
         "diameter": 120,
@@ -2211,6 +2653,8 @@
     },
     {
         "name": "Sh2-222",
+        "alt_names": [],
+        "search_names": [],
         "ra": 67541,
         "dec": 35270,
         "diameter": 6,
@@ -2221,6 +2665,8 @@
     },
     {
         "name": "Sh2-223",
+        "alt_names": [],
+        "search_names": [],
         "ra": 79299,
         "dec": 42212,
         "diameter": 70,
@@ -2231,6 +2677,8 @@
     },
     {
         "name": "Sh2-224",
+        "alt_names": [],
+        "search_names": [],
         "ra": 81817,
         "dec": 42971,
         "diameter": 30,
@@ -2241,6 +2689,8 @@
     },
     {
         "name": "Sh2-225",
+        "alt_names": [],
+        "search_names": [],
         "ra": 81751,
         "dec": 40621,
         "diameter": 10,
@@ -2251,6 +2701,8 @@
     },
     {
         "name": "Sh2-226",
+        "alt_names": [],
+        "search_names": [],
         "ra": 77778,
         "dec": 37993,
         "diameter": 3,
@@ -2261,6 +2713,8 @@
     },
     {
         "name": "Sh2-227",
+        "alt_names": [],
+        "search_names": [],
         "ra": 79972,
         "dec": 38955,
         "diameter": 20,
@@ -2271,6 +2725,8 @@
     },
     {
         "name": "Sh2-228",
+        "alt_names": [],
+        "search_names": [],
         "ra": 78396,
         "dec": 37453,
         "diameter": 8,
@@ -2281,6 +2737,8 @@
     },
     {
         "name": "Sh2-229",
+        "alt_names": ["勾玉星雲"],
+        "search_names": ["まがたませいうん"],
         "ra": 79078,
         "dec": 34463,
         "diameter": 65,
@@ -2291,6 +2749,8 @@
     },
     {
         "name": "Sh2-230",
+        "alt_names": [],
+        "search_names": [],
         "ra": 80626,
         "dec": 34132,
         "diameter": 300,
@@ -2301,6 +2761,8 @@
     },
     {
         "name": "Sh2-231",
+        "alt_names": [],
+        "search_names": [],
         "ra": 84831,
         "dec": 35925,
         "diameter": 12,
@@ -2311,6 +2773,8 @@
     },
     {
         "name": "Sh2-232",
+        "alt_names": [],
+        "search_names": [],
         "ra": 85610,
         "dec": 36201,
         "diameter": 40,
@@ -2321,6 +2785,8 @@
     },
     {
         "name": "Sh2-233",
+        "alt_names": [],
+        "search_names": [],
         "ra": 84679,
         "dec": 35793,
         "diameter": 2,
@@ -2331,6 +2797,8 @@
     },
     {
         "name": "Sh2-234",
+        "alt_names": [],
+        "search_names": [],
         "ra": 82032,
         "dec": 34435,
         "diameter": 12,
@@ -2341,6 +2809,8 @@
     },
     {
         "name": "Sh2-235",
+        "alt_names": [],
+        "search_names": [],
         "ra": 85255,
         "dec": 35854,
         "diameter": 10,
@@ -2351,6 +2821,8 @@
     },
     {
         "name": "Sh2-236",
+        "alt_names": [],
+        "search_names": [],
         "ra": 80640,
         "dec": 33365,
         "diameter": 55,
@@ -2361,6 +2833,8 @@
     },
     {
         "name": "Sh2-237",
+        "alt_names": [],
+        "search_names": [],
         "ra": 82855,
         "dec": 34277,
         "diameter": 7,
@@ -2371,6 +2845,8 @@
     },
     {
         "name": "Sh2-238",
+        "alt_names": [],
+        "search_names": [],
         "ra": 65458,
         "dec": 19538,
         "diameter": 1,
@@ -2381,6 +2857,8 @@
     },
     {
         "name": "Sh2-239",
+        "alt_names": [],
+        "search_names": [],
         "ra": 67822,
         "dec": 18117,
         "diameter": 5,
@@ -2391,16 +2869,20 @@
     },
     {
         "name": "Sh2-240",
+        "alt_names": [],
+        "search_names": [],
         "ra": 85251,
         "dec": 28104,
         "diameter": 180,
         "form": 1,
         "bright": 2,
-        "description": "スパゲッティ星雲",
+        "description": "",
         "link": ""
     },
     {
         "name": "Sh2-241",
+        "alt_names": [],
+        "search_names": [],
         "ra": 91030,
         "dec": 30248,
         "diameter": 10,
@@ -2411,6 +2893,8 @@
     },
     {
         "name": "Sh2-242",
+        "alt_names": [],
+        "search_names": [],
         "ra": 87963,
         "dec": 27011,
         "diameter": 7,
@@ -2421,6 +2905,8 @@
     },
     {
         "name": "Sh2-243",
+        "alt_names": [],
+        "search_names": [],
         "ra": 84843,
         "dec": 23291,
         "diameter": 6,
@@ -2431,6 +2917,8 @@
     },
     {
         "name": "Sh2-244",
+        "alt_names": [],
+        "search_names": [],
         "ra": 83628,
         "dec": 21952,
         "diameter": 5,
@@ -2441,6 +2929,8 @@
     },
     {
         "name": "Sh2-245",
+        "alt_names": [],
+        "search_names": [],
         "ra": 60639,
         "dec": 4128,
         "diameter": 720,
@@ -2451,6 +2941,8 @@
     },
     {
         "name": "Sh2-246",
+        "alt_names": [],
+        "search_names": [],
         "ra": 75539,
         "dec": 14096,
         "diameter": 65,
@@ -2461,6 +2953,8 @@
     },
     {
         "name": "Sh2-247",
+        "alt_names": [],
+        "search_names": [],
         "ra": 92126,
         "dec": 21620,
         "diameter": 9,
@@ -2471,6 +2965,8 @@
     },
     {
         "name": "Sh2-248",
+        "alt_names": [],
+        "search_names": [],
         "ra": 94160,
         "dec": 22500,
         "diameter": 50,
@@ -2481,6 +2977,8 @@
     },
     {
         "name": "Sh2-249",
+        "alt_names": [],
+        "search_names": [],
         "ra": 95242,
         "dec": 23090,
         "diameter": 80,
@@ -2491,6 +2989,8 @@
     },
     {
         "name": "Sh2-250",
+        "alt_names": [],
+        "search_names": [],
         "ra": 70047,
         "dec": 7363,
         "diameter": 10,
@@ -2501,6 +3001,8 @@
     },
     {
         "name": "Sh2-251",
+        "alt_names": [],
+        "search_names": [],
         "ra": 68207,
         "dec": 5863,
         "diameter": 35,
@@ -2511,6 +3013,8 @@
     },
     {
         "name": "Sh2-252",
+        "alt_names": [],
+        "search_names": [],
         "ra": 92413,
         "dec": 20500,
         "diameter": 40,
@@ -2521,6 +3025,8 @@
     },
     {
         "name": "Sh2-253",
+        "alt_names": [],
+        "search_names": [],
         "ra": 96432,
         "dec": 20028,
         "diameter": 5,
@@ -2531,6 +3037,8 @@
     },
     {
         "name": "Sh2-254",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93086,
         "dec": 18044,
         "diameter": 11,
@@ -2541,6 +3049,8 @@
     },
     {
         "name": "Sh2-255",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93286,
         "dec": 17975,
         "diameter": 3,
@@ -2551,6 +3061,8 @@
     },
     {
         "name": "Sh2-256",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93160,
         "dec": 17943,
         "diameter": 1,
@@ -2561,6 +3073,8 @@
     },
     {
         "name": "Sh2-257",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93211,
         "dec": 17976,
         "diameter": 3,
@@ -2571,6 +3085,8 @@
     },
     {
         "name": "Sh2-258",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93385,
         "dec": 17924,
         "diameter": 1,
@@ -2581,6 +3097,8 @@
     },
     {
         "name": "Sh2-259",
+        "alt_names": [],
+        "search_names": [],
         "ra": 92905,
         "dec": 17445,
         "diameter": 2,
@@ -2591,6 +3109,8 @@
     },
     {
         "name": "Sh2-260",
+        "alt_names": [],
+        "search_names": [],
         "ra": 73782,
         "dec": 5662,
         "diameter": 22,
@@ -2601,6 +3121,8 @@
     },
     {
         "name": "Sh2-261",
+        "alt_names": [],
+        "search_names": [],
         "ra": 92238,
         "dec": 15802,
         "diameter": 45,
@@ -2611,6 +3133,8 @@
     },
     {
         "name": "Sh2-262",
+        "alt_names": [],
+        "search_names": [],
         "ra": 76688,
         "dec": 6168,
         "diameter": 20,
@@ -2621,6 +3145,8 @@
     },
     {
         "name": "Sh2-263",
+        "alt_names": [],
+        "search_names": [],
         "ra": 80436,
         "dec": 8399,
         "diameter": 22,
@@ -2631,6 +3157,8 @@
     },
     {
         "name": "Sh2-264",
+        "alt_names": [],
+        "search_names": [],
         "ra": 83802,
         "dec": 9933,
         "diameter": 390,
@@ -2641,6 +3169,8 @@
     },
     {
         "name": "Sh2-265",
+        "alt_names": [],
+        "search_names": [],
         "ra": 79651,
         "dec": 7440,
         "diameter": 70,
@@ -2651,6 +3181,8 @@
     },
     {
         "name": "Sh2-266",
+        "alt_names": [],
+        "search_names": [],
         "ra": 94707,
         "dec": 15278,
         "diameter": 1,
@@ -2661,6 +3193,8 @@
     },
     {
         "name": "Sh2-267",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93971,
         "dec": 14268,
         "diameter": 4,
@@ -2671,6 +3205,8 @@
     },
     {
         "name": "Sh2-268",
+        "alt_names": [],
+        "search_names": [],
         "ra": 92563,
         "dec": 13332,
         "diameter": 60,
@@ -2681,6 +3217,8 @@
     },
     {
         "name": "Sh2-269",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93642,
         "dec": 13822,
         "diameter": 4,
@@ -2691,6 +3229,8 @@
     },
     {
         "name": "Sh2-270",
+        "alt_names": [],
+        "search_names": [],
         "ra": 92557,
         "dec": 12815,
         "diameter": 1,
@@ -2701,6 +3241,8 @@
     },
     {
         "name": "Sh2-271",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93727,
         "dec": 12354,
         "diameter": 2,
@@ -2711,6 +3253,8 @@
     },
     {
         "name": "Sh2-272",
+        "alt_names": [],
+        "search_names": [],
         "ra": 93752,
         "dec": 12337,
         "diameter": 1,
@@ -2721,6 +3265,8 @@
     },
     {
         "name": "Sh2-273",
+        "alt_names": [],
+        "search_names": [],
         "ra": 100201,
         "dec": 9908,
         "diameter": 250,
@@ -2731,6 +3277,8 @@
     },
     {
         "name": "Sh2-274",
+        "alt_names": [],
+        "search_names": [],
         "ra": 112279,
         "dec": 13262,
         "diameter": 8,
@@ -2741,6 +3289,8 @@
     },
     {
         "name": "Sh2-275",
+        "alt_names": [],
+        "search_names": [],
         "ra": 97928,
         "dec": 4930,
         "diameter": 100,
@@ -2751,6 +3301,8 @@
     },
     {
         "name": "Sh2-276",
+        "alt_names": ["バーナードループ"],
+        "search_names": [],
         "ra": 81867,
         "dec": -3965,
         "diameter": 1200,
@@ -2761,6 +3313,8 @@
     },
     {
         "name": "Sh2-277",
+        "alt_names": [],
+        "search_names": [],
         "ra": 85181,
         "dec": -2447,
         "diameter": 120,
@@ -2771,6 +3325,8 @@
     },
     {
         "name": "Sh2-278",
+        "alt_names": [],
+        "search_names": [],
         "ra": 79951,
         "dec": -5664,
         "diameter": 50,
@@ -2781,6 +3337,8 @@
     },
     {
         "name": "Sh2-279",
+        "alt_names": [],
+        "search_names": [],
         "ra": 83834,
         "dec": -4801,
         "diameter": 20,
@@ -2791,6 +3349,8 @@
     },
     {
         "name": "Sh2-280",
+        "alt_names": [],
+        "search_names": [],
         "ra": 98580,
         "dec": 2540,
         "diameter": 40,
@@ -2801,6 +3361,8 @@
     },
     {
         "name": "Sh2-281",
+        "alt_names": [],
+        "search_names": [],
         "ra": 83727,
         "dec": -5467,
         "diameter": 60,
@@ -2811,6 +3373,8 @@
     },
     {
         "name": "Sh2-282",
+        "alt_names": [],
+        "search_names": [],
         "ra": 99496,
         "dec": 1514,
         "diameter": 35,
@@ -2821,6 +3385,8 @@
     },
     {
         "name": "Sh2-283",
+        "alt_names": [],
+        "search_names": [],
         "ra": 99663,
         "dec": 713,
         "diameter": 3,
@@ -2831,6 +3397,8 @@
     },
     {
         "name": "Sh2-284",
+        "alt_names": [],
+        "search_names": [],
         "ra": 101258,
         "dec": 231,
         "diameter": 80,
@@ -2841,6 +3409,8 @@
     },
     {
         "name": "Sh2-285",
+        "alt_names": [],
+        "search_names": [],
         "ra": 103801,
         "dec": -510,
         "diameter": 1,
@@ -2851,6 +3421,8 @@
     },
     {
         "name": "Sh2-286",
+        "alt_names": [],
+        "search_names": [],
         "ra": 103638,
         "dec": -4509,
         "diameter": 6,
@@ -2861,6 +3433,8 @@
     },
     {
         "name": "Sh2-287",
+        "alt_names": [],
+        "search_names": [],
         "ra": 104885,
         "dec": -4804,
         "diameter": 12,
@@ -2871,6 +3445,8 @@
     },
     {
         "name": "Sh2-288",
+        "alt_names": [],
+        "search_names": [],
         "ra": 107140,
         "dec": -4308,
         "diameter": 1,
@@ -2881,6 +3457,8 @@
     },
     {
         "name": "Sh2-289",
+        "alt_names": [],
+        "search_names": [],
         "ra": 101485,
         "dec": -7338,
         "diameter": 11,
@@ -2891,6 +3469,8 @@
     },
     {
         "name": "Sh2-290",
+        "alt_names": [],
+        "search_names": [],
         "ra": 133545,
         "dec": 8921,
         "diameter": 17,
@@ -2901,6 +3481,8 @@
     },
     {
         "name": "Sh2-291",
+        "alt_names": [],
+        "search_names": [],
         "ra": 103854,
         "dec": -8028,
         "diameter": 8,
@@ -2911,6 +3493,8 @@
     },
     {
         "name": "Sh2-292",
+        "alt_names": [],
+        "search_names": [],
         "ra": 106107,
         "dec": -10449,
         "diameter": 21,
@@ -2921,6 +3505,8 @@
     },
     {
         "name": "Sh2-293",
+        "alt_names": [],
+        "search_names": [],
         "ra": 105448,
         "dec": -11309,
         "diameter": 11,
@@ -2931,6 +3517,8 @@
     },
     {
         "name": "Sh2-294",
+        "alt_names": [],
+        "search_names": [],
         "ra": 109143,
         "dec": -9444,
         "diameter": 7,
@@ -2941,6 +3529,8 @@
     },
     {
         "name": "Sh2-295",
+        "alt_names": [],
+        "search_names": [],
         "ra": 105672,
         "dec": -11462,
         "diameter": 8,
@@ -2951,6 +3541,8 @@
     },
     {
         "name": "Sh2-296",
+        "alt_names": [],
+        "search_names": [],
         "ra": 106450,
         "dec": -11219,
         "diameter": 200,
@@ -2961,6 +3553,8 @@
     },
     {
         "name": "Sh2-297",
+        "alt_names": [],
+        "search_names": [],
         "ra": 106314,
         "dec": -12334,
         "diameter": 7,
@@ -2971,6 +3565,8 @@
     },
     {
         "name": "Sh2-298",
+        "alt_names": [],
+        "search_names": [],
         "ra": 109658,
         "dec": -13199,
         "diameter": 22,
@@ -2981,6 +3577,8 @@
     },
     {
         "name": "Sh2-299",
+        "alt_names": [],
+        "search_names": [],
         "ra": 112665,
         "dec": -15293,
         "diameter": 1,
@@ -2991,6 +3589,8 @@
     },
     {
         "name": "Sh2-300",
+        "alt_names": [],
+        "search_names": [],
         "ra": 112764,
         "dec": -15410,
         "diameter": 3,
@@ -3001,6 +3601,8 @@
     },
     {
         "name": "Sh2-301",
+        "alt_names": [],
+        "search_names": [],
         "ra": 107453,
         "dec": -18479,
         "diameter": 9,
@@ -3011,6 +3613,8 @@
     },
     {
         "name": "Sh2-302",
+        "alt_names": [],
+        "search_names": [],
         "ra": 112924,
         "dec": -16979,
         "diameter": 21,
@@ -3021,6 +3625,8 @@
     },
     {
         "name": "Sh2-303",
+        "alt_names": [],
+        "search_names": [],
         "ra": 103507,
         "dec": -22425,
         "diameter": 90,
@@ -3031,6 +3637,8 @@
     },
     {
         "name": "Sh2-304",
+        "alt_names": [],
+        "search_names": [],
         "ra": 100860,
         "dec": -24133,
         "diameter": 200,
@@ -3041,6 +3649,8 @@
     },
     {
         "name": "Sh2-305",
+        "alt_names": [],
+        "search_names": [],
         "ra": 112533,
         "dec": -18525,
         "diameter": 4,
@@ -3051,6 +3661,8 @@
     },
     {
         "name": "Sh2-306",
+        "alt_names": [],
+        "search_names": [],
         "ra": 112652,
         "dec": -19110,
         "diameter": 30,
@@ -3061,6 +3673,8 @@
     },
     {
         "name": "Sh2-307",
+        "alt_names": [],
+        "search_names": [],
         "ra": 113883,
         "dec": -18754,
         "diameter": 6,
@@ -3071,16 +3685,20 @@
     },
     {
         "name": "Sh2-308",
+        "alt_names": ["イルカの頭星雲", "ミルクポット星雲"],
+        "search_names": ["いるかのあたませいうん", "ミルクポットせいうん"],
         "ra": 103540,
         "dec": -23942,
         "diameter": 35,
         "form": 3,
         "bright": 2,
-        "description": "ミルクポット星雲",
+        "description": "",
         "link": ""
     },
     {
         "name": "Sh2-309",
+        "alt_names": [],
+        "search_names": [],
         "ra": 113025,
         "dec": -19430,
         "diameter": 12,
@@ -3091,6 +3709,8 @@
     },
     {
         "name": "Sh2-310",
+        "alt_names": [],
+        "search_names": [],
         "ra": 108264,
         "dec": -24586,
         "diameter": 480,
@@ -3101,6 +3721,8 @@
     },
     {
         "name": "Sh2-311",
+        "alt_names": [],
+        "search_names": [],
         "ra": 118086,
         "dec": -26441,
         "diameter": 45,
@@ -3111,6 +3733,8 @@
     },
     {
         "name": "Sh2-312",
+        "alt_names": [],
+        "search_names": [],
         "ra": 134790,
         "dec": -25688,
         "diameter": 720,
@@ -3121,6 +3745,8 @@
     },
     {
         "name": "Sh2-313",
+        "alt_names": [],
+        "search_names": [],
         "ra": 193381,
         "dec": -22860,
         "diameter": 12,

@@ -104,13 +104,21 @@ export class NGCObject extends CelestialObject {
     }
 }
 export class SharplessObject extends CelestialObject {
-    constructor(name, coordinates, diameter, form, bright, description, link) {
+    constructor(name, alt_names, search_names, coordinates, diameter, form, bright, description, link) {
         super(name, coordinates, undefined, 'Nb');
+        this.alt_names = alt_names;
+        this.search_names = search_names;
         this.diameter = diameter;
         this.form = form;
         this.bright = bright;
         this.description = description;
         this.link = link;
+    }
+    getAltNames() {
+        return this.alt_names;
+    }
+    getSearchNames() {
+        return this.search_names;
     }
     getDiameter() {
         return this.diameter;
