@@ -378,7 +378,7 @@ export class SearchController {
                     }
                 }
                 else if (matchSharplessStart.some(sharpless => sharpless.title === result.title)) {
-                    const object = matchSharplessData.find(sharpless => sharpless.getName() === result.title);
+                    const object = matchSharplessData.find(sharpless => result.title.startsWith(sharpless.getName()));
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));
@@ -387,7 +387,7 @@ export class SearchController {
                     }
                 }
                 else if (matchSharplessInclude.some(sharpless => sharpless.title === result.title)) {
-                    const object = matchSharplessData.find(sharpless => sharpless.getName() === result.title);
+                    const object = matchSharplessData.find(sharpless => result.title.includes(sharpless.getName()));
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));
