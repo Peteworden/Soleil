@@ -77,77 +77,147 @@ export class SearchController {
             return;
         // 検索結果をクリア
         container.innerHTML = '';
-        const matchPlanetsStart = [];
-        const matchPlanetsInclude = [];
+        const startResults = [];
+        const includeResults = [];
         if (SolarSystemDataManager.getAllObjects()) {
             for (const planet of SolarSystemDataManager.getAllObjects()) {
-                const param = { title: planet.jpnName, position: { ra: planet.raDec.ra, dec: planet.raDec.dec } };
-                if (this.normalizeText(planet.jpnName).includes(query)) {
-                    matchPlanetsInclude.push(param);
+                const result = {
+                    type: 'planet',
+                    title: `${planet.jpnName} (${planet.engName})`,
+                    coordinates: { ra: planet.raDec.ra, dec: planet.raDec.dec },
+                    data: planet
+                };
+                if (this.normalizeText(planet.jpnName).startsWith(query) ||
+                    this.normalizeText(planet.hiraganaName).startsWith(query) ||
+                    this.normalizeText(planet.engName).startsWith(query)) {
+                    startResults.push(result);
                 }
-                else if (this.normalizeText(planet.jpnName).startsWith(query)) {
-                    matchPlanetsStart.push(param);
-                }
-                else if (this.normalizeText(planet.hiraganaName).startsWith(query)) {
-                    matchPlanetsStart.push(param);
-                }
-                else if (this.normalizeText(planet.hiraganaName).includes(query)) {
-                    matchPlanetsInclude.push(param);
-                }
-                else if (this.normalizeText(planet.engName).startsWith(query)) {
-                    matchPlanetsStart.push(param);
-                }
-                else if (this.normalizeText(planet.engName).includes(query)) {
-                    matchPlanetsInclude.push(param);
+                else if (this.normalizeText(planet.jpnName).includes(query) ||
+                    this.normalizeText(planet.hiraganaName).includes(query) ||
+                    this.normalizeText(planet.engName).includes(query)) {
+                    includeResults.push(result);
                 }
             }
         }
         // queryで始まるものと始まらないが含むものを分ける
-        const matchConstellationsStart = [];
-        const matchConstellationsInclude = [];
         if (DataStore.constellationData) {
             for (const constellation of DataStore.constellationData) {
                 const jpnName = this.kanaToHira(constellation.JPNname);
                 const iauName = constellation.IAUname.toLowerCase();
-                if (jpnName.startsWith(query) || iauName.startsWith(query)) {
-                    matchConstellationsStart.push({ title: `${constellation.JPNname} (${constellation.IAUname})`, position: { ra: constellation.ra, dec: constellation.dec } });
+                const abbr = constellation.abbr.toLowerCase();
+                if (jpnName.startsWith(query) || iauName.startsWith(query) || abbr.startsWith(query)) {
+                    startResults.push({
+                        type: 'constellation',
+                        title: `${constellation.JPNname} (${constellation.IAUname})`,
+                        coordinates: { ra: constellation.ra, dec: constellation.dec },
+                        data: constellation
+                    });
                 }
-                else if (jpnName.includes(query) || iauName.includes(query)) {
-                    matchConstellationsInclude.push({ title: `${constellation.JPNname} (${constellation.IAUname})`, position: { ra: constellation.ra, dec: constellation.dec } });
+                else if (jpnName.includes(query) || iauName.includes(query) || abbr.includes(query)) {
+                    includeResults.push({
+                        type: 'constellation',
+                        title: `${constellation.JPNname} (${constellation.IAUname})`,
+                        coordinates: { ra: constellation.ra, dec: constellation.dec },
+                        data: constellation
+                    });
                 }
             }
         }
-        const matchMessierStart = [];
-        const matchMessierInclude = [];
         if (DataStore.messierData) {
             // start
-            // 「数字のみ」「m+数字」のときのみ検索
-            if ((query[0] === 'm' && this.isInteger(query.slice(1))) || this.isInteger(query)) {
+            let queryAsMessier = '';
+            let queryAsNGC = '';
+            let queryAsIC = '';
+            let queryAsSharpless = '';
+            if (this.isInteger(query)) {
                 const queryNumber = this.isInteger(query) ? query : query.slice(1);
-                for (const messier of DataStore.messierData) {
-                    if (messier.getNumberChar() === queryNumber) {
-                        if (messier.getAltName().length > 0) {
-                            matchMessierStart.push({
-                                title: `${messier.getName()} (${messier.getAltName().join(', ')})`,
-                                position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec }
-                            });
-                        }
-                        else {
-                            matchMessierStart.push({
-                                title: messier.getName(),
-                                position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec }
-                            });
-                        }
-                        break;
+                queryAsMessier = `m${queryNumber}`;
+                queryAsNGC = `ngc${queryNumber}`;
+                queryAsIC = `ic${queryNumber}`;
+                queryAsSharpless = `sh2-${queryNumber}`;
+            }
+            else if (query.startsWith('m') && this.isInteger(query.slice(1))) {
+                queryAsMessier = query;
+            }
+            else if (query.startsWith('ngc') && this.isInteger(query.slice(3))) {
+                queryAsNGC = query;
+            }
+            else if (query.startsWith('ic') && this.isInteger(query.slice(2))) {
+                queryAsIC = query;
+            }
+            else if (query.startsWith('sh2-') && this.isInteger(query.slice(4))) {
+                queryAsSharpless = query;
+            }
+            for (const messier of DataStore.messierData) {
+                if (messier.getName().length == 0)
+                    continue;
+                let hitThisMessier = false;
+                let result = {
+                    type: 'messier',
+                    title: messier.getName(),
+                    coordinates: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec },
+                    data: messier
+                };
+                if (messier.getOtherNames() && messier.getOtherNames().length > 0 && messier.getOtherNames()[0].length > 0) {
+                    result.title = `${messier.getName()} (${messier.getOtherNames()[0]})`;
+                }
+                if (queryAsMessier.length > 0) {
+                    // 'm+数字'または数字のみのとき
+                    if (messier.getName().toLowerCase() == queryAsMessier) {
+                        startResults.push(result);
                     }
                 }
-            }
-            // include
-            for (const messier of DataStore.messierData) {
-                if (messier.getAltName().length > 0) {
-                    for (const altName of messier.getAltName()) {
-                        if (this.normalizeText(altName).includes(query)) {
-                            matchMessierInclude.push({ title: `${messier.getName()} (${altName})`, position: { ra: messier.getCoordinates().ra, dec: messier.getCoordinates().dec } });
+                else if (messier.getOtherNames() || messier.getSearchKeys()) {
+                    const otherNames = messier.getOtherNames() ? messier.getOtherNames().map(name => this.normalizeText(name)) : [];
+                    const searchKeys = messier.getSearchKeys() ? messier.getSearchKeys().map(name => this.normalizeText(name)) : [];
+                    if (queryAsNGC.length > 0 || queryAsIC.length > 0 || queryAsSharpless.length > 0) {
+                        // 'ngc+数字'または'ic+数字'または'sh2-数字'または数字のみのとき
+                        for (const otherName of otherNames) {
+                            const normalizedOtherName = this.normalizeText(otherName);
+                            if (normalizedOtherName == queryAsNGC ||
+                                normalizedOtherName == queryAsIC ||
+                                normalizedOtherName == queryAsSharpless) {
+                                startResults.push(result);
+                                hitThisMessier = true;
+                            }
+                        }
+                        if (hitThisMessier) {
+                            continue;
+                        }
+                        for (const searchKey of searchKeys) {
+                            const normalizedSearchKey = this.normalizeText(searchKey);
+                            if (normalizedSearchKey == queryAsNGC ||
+                                normalizedSearchKey == queryAsIC ||
+                                normalizedSearchKey == queryAsSharpless) {
+                                startResults.push(result);
+                            }
+                        }
+                    }
+                    else { // 数字が含まれないとき
+                        for (const otherName of otherNames) {
+                            if (otherName.startsWith(query)) {
+                                startResults.push(result);
+                                hitThisMessier = true;
+                                break;
+                            }
+                            else if (otherName.includes(query)) {
+                                includeResults.push(result);
+                                hitThisMessier = true;
+                                break;
+                            }
+                        }
+                        if (hitThisMessier) {
+                            continue;
+                        }
+                        for (const searchKey of searchKeys) {
+                            if (searchKey.startsWith(query)) {
+                                startResults.push(result);
+                                break;
+                            }
+                            else if (searchKey.includes(query)) {
+                                includeResults.push(result);
+                                break;
+                            }
                         }
                     }
                 }
@@ -156,23 +226,98 @@ export class SearchController {
         else {
             console.log('No Messier data found');
         }
-        const matchRecStart = [];
-        const matchRecInclude = [];
         if (DataStore.recData) {
+            let queryAsNGC = '';
+            let queryAsIC = '';
+            let queryAsSharpless = '';
+            if (this.isInteger(query)) {
+                const queryNumber = this.isInteger(query) ? query : query.slice(1);
+                queryAsNGC = `ngc${queryNumber}`;
+                queryAsIC = `ic${queryNumber}`;
+                queryAsSharpless = `sh2-${queryNumber}`;
+            }
+            else if (query.startsWith('ngc') && this.isInteger(query.slice(3))) {
+                queryAsNGC = query;
+            }
+            else if (query.startsWith('ic') && this.isInteger(query.slice(2))) {
+                queryAsIC = query;
+            }
+            else if (query.startsWith('sh2-') && this.isInteger(query.slice(4))) {
+                queryAsSharpless = query;
+            }
             for (const rec of DataStore.recData) {
-                if (this.normalizeText(rec.getName()).startsWith(query)) {
-                    matchRecStart.push({ title: rec.getName(), position: { ra: rec.getCoordinates().ra, dec: rec.getCoordinates().dec } });
+                if (rec.getName().length == 0)
+                    continue;
+                let hitThisRec = false;
+                const result = {
+                    type: 'rec',
+                    title: rec.getName(),
+                    coordinates: { ra: rec.getCoordinates().ra, dec: rec.getCoordinates().dec },
+                    data: rec
+                };
+                if (rec.getOtherNames() && rec.getOtherNames().length > 0 && rec.getOtherNames()[0].length > 0) {
+                    result.title = `${rec.getName()} (${rec.getOtherNames()[0]})`;
+                }
+                if (queryAsNGC.length > 0 || queryAsIC.length > 0 || queryAsSharpless.length > 0) {
+                    if (rec.getName().toLowerCase() == queryAsNGC || rec.getName().toLowerCase() == queryAsIC || rec.getName().toLowerCase() == queryAsSharpless) {
+                        startResults.push(result);
+                        continue;
+                    }
+                }
+                else if (this.normalizeText(rec.getName()).startsWith(query)) {
+                    startResults.push(result);
+                    continue;
                 }
                 else if (this.normalizeText(rec.getName()).includes(query)) {
-                    matchRecInclude.push({ title: rec.getName(), position: { ra: rec.getCoordinates().ra, dec: rec.getCoordinates().dec } });
+                    includeResults.push(result);
+                    continue;
                 }
-                if (rec.getAltName().length > 0) {
-                    for (const altName of rec.getAltName()) {
-                        if (this.normalizeText(altName).includes(query)) {
-                            matchRecInclude.push({ title: `${rec.getName()} (${altName})`, position: { ra: rec.getCoordinates().ra, dec: rec.getCoordinates().dec } });
+                if (rec.getOtherNames() || rec.getSearchKeys()) {
+                    const otherNames = rec.getOtherNames() ? rec.getOtherNames().map(name => this.normalizeText(name)) : [];
+                    const searchKeys = rec.getSearchKeys() ? rec.getSearchKeys().map(name => this.normalizeText(name)) : [];
+                    if (queryAsNGC.length > 0 || queryAsIC.length > 0 || queryAsSharpless.length > 0) {
+                        // 'ngc+数字'または'ic+数字'または'sh2-数字'または数字のみのとき
+                        for (const otherName of otherNames) {
+                            if (otherName.startsWith(query)) {
+                                startResults.push(result);
+                                hitThisRec = true;
+                            }
                         }
-                        else if (this.normalizeText(altName).startsWith(query)) {
-                            matchRecStart.push({ title: `${rec.getName()} (${altName})`, position: { ra: rec.getCoordinates().ra, dec: rec.getCoordinates().dec } });
+                        if (hitThisRec) {
+                            continue;
+                        }
+                        for (const searchKey of searchKeys) {
+                            if (searchKey.startsWith(query)) {
+                                startResults.push(result);
+                            }
+                        }
+                    }
+                    else {
+                        // 数字が含まれないとき
+                        for (const otherName of otherNames) {
+                            if (otherName.startsWith(query)) {
+                                startResults.push(result);
+                                hitThisRec = true;
+                                break;
+                            }
+                            else if (otherName.includes(query)) {
+                                includeResults.push(result);
+                                hitThisRec = true;
+                                break;
+                            }
+                        }
+                        if (hitThisRec) {
+                            continue;
+                        }
+                        for (const searchKey of searchKeys) {
+                            if (searchKey.startsWith(query)) {
+                                startResults.push(result);
+                                break;
+                            }
+                            else if (searchKey.includes(query)) {
+                                includeResults.push(result);
+                                break;
+                            }
                         }
                     }
                 }
@@ -181,141 +326,118 @@ export class SearchController {
         else {
             console.log('No REC data found');
         }
-        const matchNgc = [];
-        const matchNgcData = [];
         if (DataStore.ngcData) {
-            let catalogName = '';
-            let queryNumber = '0';
+            let queryAsNGC = '';
             if (this.isInteger(query)) {
-                queryNumber = query;
+                queryAsNGC = `ngc${query}`;
             }
             else if (query.slice(0, 3) === 'ngc') {
-                catalogName = 'NGC';
-                queryNumber = query.slice(3);
+                queryAsNGC = query;
             }
-            else if (query.slice(0, 2) === 'ic') {
-                catalogName = 'IC';
-                queryNumber = query.slice(2);
-            }
-            if (queryNumber !== '0') {
-                const mayInclude = `(${catalogName}${queryNumber})`;
+            if (queryAsNGC.length > 0 &&
+                !startResults.some(result => this.normalizeText(result.title).includes(queryAsNGC)) &&
+                !includeResults.some(result => this.normalizeText(result.title).includes(queryAsNGC))) {
                 for (const ngc of DataStore.ngcData) {
-                    if (catalogName !== '' && ngc.getCatalog() !== catalogName) {
-                        continue;
-                    }
-                    if (ngc.getNumberChar() === queryNumber &&
-                        !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
-                        !matchMessierStart.some(messier => messier.title.includes(mayInclude)) &&
-                        !matchMessierInclude.some(messier => messier.title.includes(mayInclude)) &&
-                        !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
-                        !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
-                        matchNgc.push({ title: `${ngc.getCatalog()}${ngc.getNumber()}`, position: { ra: ngc.getCoordinates().ra, dec: ngc.getCoordinates().dec } });
-                        matchNgcData.push(ngc);
+                    if (ngc.getName().toLowerCase() == queryAsNGC) {
+                        ;
+                        startResults.push({
+                            type: 'ngc',
+                            title: ngc.getName(),
+                            coordinates: { ra: ngc.getCoordinates().ra, dec: ngc.getCoordinates().dec },
+                            data: ngc
+                        });
                         break;
                     }
                 }
             }
         }
         else {
-            console.log('No NGC/IC data found');
+            console.log('No NGC data found');
         }
-        const matchSharplessStart = [];
-        const matchSharplessInclude = [];
-        const matchSharplessData = [];
-        let matchSharplessFound = false;
-        if (DataStore.sharplessData) {
-            let catalogName = '';
-            let queryNumber = '0';
+        if (DataStore.icData) {
+            let queryAsIC = '';
             if (this.isInteger(query)) {
-                catalogName = 'Sh2-';
-                queryNumber = query;
+                queryAsIC = `ic${query}`;
+            }
+            else if (query.slice(0, 2) === 'ic') {
+                queryAsIC = query;
+            }
+            if (queryAsIC.length > 0 &&
+                !startResults.some(result => result.title.includes(queryAsIC)) &&
+                !includeResults.some(result => result.title.includes(queryAsIC))) {
+                for (const ic of DataStore.icData) {
+                    if (ic.getName().toLowerCase() == queryAsIC) {
+                        startResults.push({
+                            type: 'ic',
+                            title: ic.getName(),
+                            coordinates: { ra: ic.getCoordinates().ra, dec: ic.getCoordinates().dec },
+                            data: ic
+                        });
+                        continue;
+                    }
+                }
+            }
+        }
+        else {
+            console.log('No IC data found');
+        }
+        if (DataStore.sharplessData) {
+            let queryAsSharpless = '';
+            if (this.isInteger(query)) {
+                queryAsSharpless = `sh2-${query}`;
             }
             else if (query.startsWith('sh2-') && this.isInteger(query.slice(4))) {
-                catalogName = 'Sh2-';
-                queryNumber = query.slice(4);
+                queryAsSharpless = query;
             }
-            else if (query.startsWith('sh2') && this.isInteger(query.slice(3))) {
-                catalogName = 'Sh2-';
-                queryNumber = query.slice(3);
-            }
-            else if (query.startsWith('sh') && this.isInteger(query.slice(2))) {
-                catalogName = 'Sh2-';
-                queryNumber = query.slice(2);
-            }
-            else if (query.startsWith('s') && this.isInteger(query.slice(1))) {
-                catalogName = 'Sh2-';
-                queryNumber = query.slice(1);
-            }
-            if (queryNumber !== '0') {
-                const mayInclude = `${catalogName}${queryNumber}`;
+            if (queryAsSharpless.length > 0 &&
+                !startResults.some(result => result.title.includes(queryAsSharpless)) &&
+                !includeResults.some(result => result.title.includes(queryAsSharpless))) {
                 for (const sharpless of DataStore.sharplessData) {
-                    if (sharpless.getName() === mayInclude &&
-                        !matchRecStart.some(rec => rec.title.includes(mayInclude)) &&
-                        !matchRecInclude.some(rec => rec.title.includes(mayInclude))) {
-                        if (sharpless.getAltNames().length > 0) {
-                            matchSharplessStart.push({
-                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
-                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
-                            });
-                        }
-                        else {
-                            matchSharplessStart.push({
-                                title: sharpless.getName(),
-                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
-                            });
-                        }
-                        matchSharplessData.push(sharpless);
-                        matchSharplessFound = true;
-                        break;
+                    let result = {
+                        type: 'sh2',
+                        title: sharpless.getName(),
+                        coordinates: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec },
+                        data: sharpless
+                    };
+                    if (sharpless.getAltNames().length > 0) {
+                        result.title = `${sharpless.getName()} (${sharpless.getAltNames()[0]})`;
+                    }
+                    if (sharpless.getName().toLowerCase() === queryAsSharpless) {
+                        startResults.push(result);
+                        continue;
                     }
                 }
             }
             else {
                 for (const sharpless of DataStore.sharplessData) {
-                    const alt_names = sharpless.getAltNames();
-                    const search_names = sharpless.getSearchNames();
+                    let result = {
+                        type: 'sh2',
+                        title: sharpless.getName(),
+                        coordinates: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec },
+                        data: sharpless
+                    };
+                    if (sharpless.getAltNames().length > 0) {
+                        result.title = `${sharpless.getName()} (${sharpless.getAltNames()[0]})`;
+                    }
+                    const alt_names = sharpless.getAltNames().map(name => this.normalizeText(name));
+                    const search_names = sharpless.getSearchNames().map(name => this.normalizeText(name));
                     for (const alt_name of alt_names) {
                         if (this.normalizeText(alt_name).includes(query)) {
-                            matchSharplessInclude.push({
-                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
-                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
-                            });
-                            matchSharplessData.push(sharpless);
-                            matchSharplessFound = true;
+                            includeResults.push(result);
+                            break;
                         }
-                        else if (this.normalizeText(alt_name).startsWith(query)) {
-                            matchSharplessStart.push({
-                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
-                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
-                            });
-                            matchSharplessData.push(sharpless);
-                            matchSharplessFound = true;
-                        }
-                        if (matchSharplessFound) {
+                        else if (alt_name.startsWith(query)) {
+                            startResults.push(result);
                             break;
                         }
                     }
-                    if (matchSharplessFound) {
-                        continue;
-                    }
                     for (const search_name of search_names) {
                         if (this.normalizeText(search_name).includes(query)) {
-                            matchSharplessInclude.push({
-                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
-                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
-                            });
-                            matchSharplessData.push(sharpless);
-                            matchSharplessFound = true;
+                            includeResults.push(result);
+                            break;
                         }
-                        else if (this.normalizeText(search_name).startsWith(query)) {
-                            matchSharplessStart.push({
-                                title: `${sharpless.getName()} (${sharpless.getAltNames().join(', ')})`,
-                                position: { ra: sharpless.getCoordinates().ra, dec: sharpless.getCoordinates().dec }
-                            });
-                            matchSharplessData.push(sharpless);
-                            matchSharplessFound = true;
-                        }
-                        if (matchSharplessFound) {
+                        else if (search_name.startsWith(query)) {
+                            startResults.push(result);
                             break;
                         }
                     }
@@ -325,51 +447,44 @@ export class SearchController {
         else {
             console.log('No Sharpless data found');
         }
-        const matchStarNamesStart = [];
-        const matchStarNamesInclude = [];
         if (DataStore.starNames) {
             for (const starName of DataStore.starNames) {
+                let result = {
+                    type: 'starName',
+                    title: starName.jpnName ? `${starName.jpnName} (${starName.name})` : starName.name,
+                    coordinates: { ra: starName.ra, dec: starName.dec },
+                    data: starName
+                };
                 if (this.normalizeText(starName.name).startsWith(query)) {
-                    matchStarNamesStart.push({ title: starName.name, position: { ra: starName.ra, dec: starName.dec } });
+                    startResults.push(result);
                 }
                 else if (this.normalizeText(starName.name).includes(query)) {
-                    matchStarNamesInclude.push({ title: starName.name, position: { ra: starName.ra, dec: starName.dec } });
+                    includeResults.push(result);
                 }
                 if (starName.jpnName) {
                     if (this.normalizeText(starName.jpnName).startsWith(query)) {
-                        matchStarNamesStart.push({ title: starName.jpnName, position: { ra: starName.ra, dec: starName.dec } });
+                        startResults.push(result);
                     }
                     else if (this.normalizeText(starName.jpnName).includes(query)) {
-                        matchStarNamesInclude.push({ title: starName.jpnName, position: { ra: starName.ra, dec: starName.dec } });
+                        includeResults.push(result);
                     }
                 }
             }
         }
         // クエリにマッチする結果をフィルタリング
         const allResults = [
-            ...matchPlanetsStart,
-            ...matchConstellationsStart,
-            ...matchMessierStart,
-            ...matchRecStart,
-            ...matchNgc,
-            ...matchSharplessStart,
-            ...matchStarNamesStart,
-            ...matchPlanetsInclude,
-            ...matchConstellationsInclude,
-            ...matchMessierInclude,
-            ...matchRecInclude,
-            ...matchSharplessInclude,
-            ...matchStarNamesInclude
+            ...startResults,
+            ...includeResults
         ];
         allResults.forEach((result) => {
             const button = document.createElement('button');
             button.className = 'suggestionButton';
             button.textContent = result.title;
-            const epoch = (matchPlanetsStart.some(planet => planet.title === result.title) || matchPlanetsInclude.some(planet => planet.title === result.title)) ? 'current' : 'j2000';
+            const epoch = result.type === 'planet' ? 'current' : 'j2000';
             button.addEventListener('click', async () => {
                 // NGC/IC/Sh2 の場合はそれだけ出しておく
-                if (matchNgc.some(ngc => ngc.title === result.title)) {
-                    const object = matchNgcData.find(ngc => ngc.getName() === result.title);
+                if (result.type === 'ngc' || result.type === 'ic') {
+                    const object = result.data;
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));
@@ -377,17 +492,8 @@ export class SearchController {
                         catch (_) { }
                     }
                 }
-                else if (matchSharplessStart.some(sharpless => sharpless.title === result.title)) {
-                    const object = matchSharplessData.find(sharpless => result.title.startsWith(sharpless.getName()));
-                    if (object) {
-                        try {
-                            sessionStorage.setItem('tempTarget', JSON.stringify(object));
-                        }
-                        catch (_) { }
-                    }
-                }
-                else if (matchSharplessInclude.some(sharpless => sharpless.title === result.title)) {
-                    const object = matchSharplessData.find(sharpless => result.title.includes(sharpless.getName()));
+                else if (result.type === 'sh2') {
+                    const object = result.data;
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));
@@ -401,7 +507,7 @@ export class SearchController {
                     }
                     catch (_) { }
                 }
-                await this.selectSearchResult(result.position, epoch);
+                await this.selectSearchResult(result.coordinates, epoch);
             });
             button.classList.add('suggestionButton');
             container.appendChild(button);
@@ -506,13 +612,13 @@ export class SearchController {
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 const query = e.target.value;
-                this.performSearch(query);
+                this.performSearch(this.normalizeText(query));
             });
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const query = searchInput.value;
                     if (query.length > 0) {
-                        this.performSearch(query);
+                        this.performSearch(this.normalizeText(query));
                     }
                 }
             });

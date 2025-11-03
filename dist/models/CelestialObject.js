@@ -28,9 +28,10 @@ export class HipStar extends CelestialObject {
     }
 }
 export class MessierObject extends CelestialObject {
-    constructor(name, alt_name, coordinates, magnitude, type, image_url, image_credit, overlay, description, wiki) {
+    constructor(name, otherNames, searchKeys, coordinates, magnitude, type, image_url, image_credit, overlay, description, wiki) {
         super(name, coordinates, magnitude, type);
-        this.alt_name = alt_name;
+        this.otherNames = otherNames;
+        this.searchKeys = searchKeys;
         this.image_url = image_url;
         this.image_credit = image_credit;
         if (overlay) {
@@ -51,8 +52,11 @@ export class MessierObject extends CelestialObject {
     getNumberChar() {
         return this.name.replace('M', '');
     }
-    getAltName() {
-        return this.alt_name;
+    getOtherNames() {
+        return this.otherNames;
+    }
+    getSearchKeys() {
+        return this.searchKeys;
     }
     getTypeName() {
         return this.type || '';
@@ -79,8 +83,25 @@ export class MessierObject extends CelestialObject {
     }
 }
 export class NGCObject extends CelestialObject {
-    constructor(name, coordinates, magnitude, type) {
+    constructor(name, coordinates, magnitude, type, otherNames, searchKeys, description) {
         super(name, coordinates, magnitude, type);
+        this.otherNames = otherNames;
+        this.searchKeys = searchKeys;
+        this.description = description;
+    }
+    setOtherNames(otherNames) {
+        this.otherNames = otherNames;
+    }
+    setSearchKeys(searchKeys) {
+        this.searchKeys = searchKeys;
+    }
+    setDescription(description) {
+        this.description = description;
+    }
+    setSpecialInfo(otherNames, searchKeys, description) {
+        this.otherNames = otherNames;
+        this.searchKeys = searchKeys;
+        this.description = description;
     }
     getName() {
         return this.name;
@@ -101,6 +122,18 @@ export class NGCObject extends CelestialObject {
     }
     getNumberChar() {
         return this.name.replace(this.getCatalog(), '');
+    }
+    getOtherNames() {
+        return this.otherNames;
+    }
+    getSearchKeys() {
+        return this.searchKeys;
+    }
+    getDescription() {
+        return this.description;
+    }
+    static fromJson(json) {
+        return new NGCObject(json.name, { ra: json.coordinates.ra, dec: json.coordinates.dec }, json.magnitude, json.type, json.otherNames, json.searchKeys, json.description);
     }
 }
 export class SharplessObject extends CelestialObject {
@@ -134,6 +167,9 @@ export class SharplessObject extends CelestialObject {
     }
     getLink() {
         return this.link;
+    }
+    static fromJson(json) {
+        return new SharplessObject(json.name, json.alt_names, json.search_names, { ra: json.coordinates.ra, dec: json.coordinates.dec }, json.diameter, json.form, json.bright, json.description, json.link);
     }
 }
 //# sourceMappingURL=CelestialObject.js.map

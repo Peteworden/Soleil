@@ -300,7 +300,7 @@ export class UserObjectController {
                 this.clearError('mag', magnitudeInput);
             }
             // MessierObjectの作成（必要なプロパティを追加）
-            const recObject = new MessierObject(name, altnames, { ra: ra, dec: dec }, mag, type, null, // image_url
+            const recObject = new MessierObject(name, altnames, altnames, { ra: ra, dec: dec }, mag, type, null, // image_url
             null, // image_credit
             null, // overlay
             description, null // wiki

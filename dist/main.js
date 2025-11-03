@@ -469,6 +469,7 @@ export async function main() {
         let messierData = [];
         let recData = [];
         let ngcData = [];
+        let icData = [];
         let sharplessData = [];
         let starNames = [];
         let milkyWayData = [];
@@ -502,7 +503,7 @@ export async function main() {
             renderer.drawBayerDesignations(brightStars, AstronomicalCalculator.limitingMagnitude(config));
             renderer.drawMessier(messierData);
             renderer.drawRec(DataStore.getRecData());
-            renderer.drawNGC(ngcData);
+            renderer.drawNGC(ngcData, icData);
             renderer.drawSharpless(sharplessData);
             renderer.drawTempTarget(tempTarget);
             renderer.writeConstellationNames(constellationData);
@@ -560,6 +561,7 @@ export async function main() {
                     DataLoader.loadConstellationBoundariesData(),
                     DataLoader.loadHIPData()
                 ]);
+                DataStore.hipStars = hipStars;
                 DataStore.constellationData = constellationData;
                 DataStore.constellationBoundariesData = constellationBoundariesData;
                 document.getElementById('loadingtext').innerHTML = 'loading 3/14';
@@ -575,6 +577,7 @@ export async function main() {
                     DataLoader.loadMilkyWayData(),
                 ]);
                 DataStore.messierData = messierData;
+                DataStore.starNames = starNames;
                 DataStore.recData = recData;
                 document.getElementById('loadingtext').innerHTML = 'loading 8/14';
                 renderAll();
@@ -589,11 +592,14 @@ export async function main() {
                 ]);
                 document.getElementById('loadingtext').innerHTML = 'loading 10/14';
                 renderAll();
-                [ngcData, brightStars, sharplessData] = await Promise.all([
+                [[ngcData, icData], brightStars, sharplessData] = await Promise.all([
                     DataLoader.loadNGCData(),
                     DataLoader.loadBrightStars(),
                     DataLoader.loadSharplessData()
                 ]);
+                DataStore.ngcData = ngcData;
+                DataStore.icData = icData;
+                DataStore.sharplessData = sharplessData;
                 document.getElementById('loadingtext').innerHTML = 'loading 12/14';
                 renderAll();
                 // imageCacheの更新
@@ -633,10 +639,6 @@ export async function main() {
                 ]);
                 document.getElementById('loadingtext').innerHTML = '';
                 renderAll();
-                DataStore.hipStars = hipStars;
-                DataStore.ngcData = ngcData;
-                DataStore.sharplessData = sharplessData;
-                DataStore.starNames = starNames;
             }
             catch (error) {
                 console.error('データの読み込みに失敗しました:', error);

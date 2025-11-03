@@ -113,7 +113,7 @@ export class DataLoader {
         const data = await this.fetchJson('data/messier.json');
         const messier = [];
         for (const object of data) {
-            messier.push(new MessierObject(object.name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
+            messier.push(new MessierObject(object.name, object.alt_name, object.alt_name, { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
         return messier;
     }
@@ -132,7 +132,7 @@ export class DataLoader {
                 ra = +object.ra;
                 dec = +object.dec;
             }
-            rec.push(new MessierObject(object.name, object.alt_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
+            rec.push(new MessierObject(object.name, object.alt_name, object.search_name, { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
         }
         console.log(`${rec.length} recommended objects`);
         const userObjects = localStorage.getItem('userObject');
@@ -142,7 +142,7 @@ export class DataLoader {
                 for (const item of userObjectsData.userRecs) {
                     const object = item.content;
                     if (object) {
-                        rec.push(new MessierObject(object.name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
+                        rec.push(new MessierObject(object.name, object.alt_name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
                         null, //object.image_credit || null,
                         null, //object.overlay || undefined,
                         object.description, null //object.wiki || null
@@ -160,14 +160,33 @@ export class DataLoader {
     }
     // NGC天体データの読み込み
     static async loadNGCData() {
-        const data = (await this.fetchText('data/ngc.txt')).split(',');
-        const ngcCount = data.length / 5;
+        const ngcData = (await this.fetchText('data/ngc.txt')).split(',');
+        const ngcCount = ngcData.length / 4;
         const ngc = new Array(ngcCount);
-        for (let i = 0; i < data.length; i += 5) {
-            ngc[i / 5] = new NGCObject(data[i], { ra: +data[i + 1], dec: +data[i + 2] }, +data[i + 3], data[i + 4]);
+        for (let i = 0; i < ngcData.length; i += 4) {
+            ngc[i / 4] = new NGCObject(`NGC${i / 4 + 1}`, { ra: +ngcData[i] * 0.01, dec: +ngcData[i + 1] * 0.01 }, +ngcData[i + 2] * 0.1, ngcData[i + 3], null, null, null);
         }
-        console.log(`${ngc.length} NGC and IC objects`);
-        return ngc;
+        console.log(`${ngc.length} NGC objects`);
+        const icData = (await this.fetchText('data/ic.txt')).split(',');
+        const icCount = icData.length / 4;
+        const ic = new Array(icCount);
+        for (let i = 0; i < icData.length; i += 4) {
+            ic[i / 4] = new NGCObject(`IC${i / 4 + 1}`, { ra: +icData[i] * 0.01, dec: +icData[i + 1] * 0.01 }, +icData[i + 2] * 0.1, icData[i + 3], null, null, null);
+        }
+        console.log(`${ic.length} IC objects`);
+        const specialNgcIcData = await this.fetchJson('data/special_ngc_ic.json');
+        for (const object of specialNgcIcData) {
+            // ngcのその天体の情報を書き換える
+            if (object.name.startsWith('NGC')) {
+                const number = parseInt(object.name.replace('NGC', ''));
+                ngc[number - 1].setSpecialInfo(object.other_names, object.search_keys, object.description);
+            }
+            else if (object.name.startsWith('IC')) {
+                const number = parseInt(object.name.replace('IC', ''));
+                ic[number - 1].setSpecialInfo(object.other_names, object.search_keys, object.description);
+            }
+        }
+        return [ngc, ic];
     }
     // https://heasarc.gsfc.nasa.gov/db-perl/W3Browse/w3table.pl?tablehead=name%3Dhiiregion&Action=More+Options
     static async loadSharplessData() {

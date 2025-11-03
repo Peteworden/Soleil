@@ -48,6 +48,7 @@ DataStore.constellationBoundariesData = [];
 DataStore.messierData = [];
 DataStore.recData = [];
 DataStore.ngcData = [];
+DataStore.icData = [];
 DataStore.sharplessData = [];
 DataStore.starNames = [];
 //# sourceMappingURL=DataStore.js.map

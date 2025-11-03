@@ -1,5 +1,5 @@
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { CelestialObject, HipStar, MessierObject } from '../models/CelestialObject.js';
+import { HipStar, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
@@ -59,8 +59,6 @@ export class CanvasRenderer {
     drawObject(object, category, nameCorner) {
         if (!object.getName() || object.getName() == '')
             return;
-        console.log(object);
-        console.log(typeof object);
         const coordsJ2000 = object.getCoordinates();
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
@@ -76,8 +74,6 @@ export class CanvasRenderer {
             y: y,
             data: object
         });
-        console.log(object);
-        console.log(typeof object);
         let markFlag = true;
         if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay().width < 2.0 * 30.0 / this.canvas.width) {
             markFlag = false;
@@ -226,10 +222,11 @@ export class CanvasRenderer {
             return;
         this.drawJsonObject(recObjects, 'rec');
     }
-    drawNGC(ngcObjects) {
+    drawNGC(ngcObjects, icObjects) {
         if (!this.config.displaySettings.showNGC)
             return;
         this.drawJsonObject(ngcObjects, 'ngc', 'bottom-right');
+        this.drawJsonObject(icObjects, 'ngc', 'bottom-left');
     }
     drawSharpless(sharplessObjects) {
         if (!this.config.displaySettings.showSharpless)
@@ -239,15 +236,18 @@ export class CanvasRenderer {
     drawTempTarget(tempTarget) {
         if (!tempTarget)
             return;
-        const tempTargetJson = JSON.parse(tempTarget);
-        const tempTargetObject = new CelestialObject(tempTargetJson.name, tempTargetJson.coordinates, tempTargetJson.magnitude, tempTargetJson.type);
-        if (tempTargetObject) {
-            if (tempTargetObject.getName().startsWith('NGC')) {
-                this.drawJsonObject([tempTargetObject], 'ngc', 'bottom-right');
-            }
-            else if (tempTargetObject.getName().startsWith('Sh2-')) {
-                this.drawJsonObject([tempTargetObject], 'sharpless');
-            }
+        const tempTargetObject = JSON.parse(tempTarget);
+        if (tempTargetObject.name.startsWith('NGC')) {
+            const tempNGC = NGCObject.fromJson(tempTargetObject);
+            this.drawJsonObject([tempNGC], 'ngc', 'bottom-right');
+        }
+        else if (tempTargetObject.name.startsWith('IC')) {
+            const tempIC = NGCObject.fromJson(tempTargetObject);
+            this.drawJsonObject([tempIC], 'ngc', 'bottom-left');
+        }
+        else if (tempTargetObject.name.startsWith('Sh2')) {
+            const tempSh2 = SharplessObject.fromJson(tempTargetObject);
+            this.drawJsonObject([tempSh2], 'sh2');
         }
     }
     drawSolarSystemObjects() {
