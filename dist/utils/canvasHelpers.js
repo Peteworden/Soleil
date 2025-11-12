@@ -231,12 +231,12 @@ export function getBetaRange(lstLat, fieldOfViewRA, fieldOfViewDec, centerRA, ce
     let maxBeta = 90;
     let minBeta = -90;
     if (mode == 'AEP') {
-        maxBeta = Math.min(90, Math.max(centerDec + fieldOfViewDec / 2, coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).dec));
-        minBeta = Math.max(-90, Math.min(centerDec - fieldOfViewDec / 2, coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).dec));
+        maxBeta = Math.min(90, Math.max(centerDec + fieldOfViewDec / 2, coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).dec));
+        minBeta = Math.max(-90, Math.min(centerDec - fieldOfViewDec / 2, coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).dec));
     }
     else if (mode == 'view') {
-        maxBeta = Math.min(90, Math.max(centerAlt + fieldOfViewDec / 2, coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).alt));
-        minBeta = Math.max(-90, Math.min(centerAlt - fieldOfViewDec / 2, coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).alt));
+        maxBeta = Math.min(90, Math.max(centerAlt + fieldOfViewDec / 2, coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).alt));
+        minBeta = Math.max(-90, Math.min(centerAlt - fieldOfViewDec / 2, coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).alt));
     }
     else {
         return [0, 0];

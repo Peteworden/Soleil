@@ -1,5 +1,6 @@
 import { AstronomicalCalculator } from "./calculations.js";
 import { CoordinateConverter } from "./coordinates.js";
+// import { DataStore } from "../models/DataStore.js";
 import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新

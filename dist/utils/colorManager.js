@@ -12,6 +12,7 @@ export const colorTheme = {
         orange: 'orange',
         // グリッド・レティクル
         grid: 'grey',
+        gridEquatorialLine: 'rgba(150, 50, 50, 1)',
         reticle: 'grey',
         // 恒星
         star: '#ffffff',
@@ -49,6 +50,7 @@ export const colorTheme = {
         orange: 'rgb(248, 173, 69)',
         // グリッド・レティクル
         grid: 'rgba(50, 50, 50, 1)',
+        gridEquatorialLine: 'rgba(100, 0, 0, 1)',
         reticle: 'rgb(200, 150, 150)',
         // 恒星
         star: 'rgb(204, 102, 102)',

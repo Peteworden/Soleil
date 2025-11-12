@@ -4,7 +4,9 @@ import { CoordinateConverter } from '../utils/coordinates.js';
 import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
+// import { formatTextForCanvas, formatBayerDesignation } from '../utils/textFormatter.js';
 import { getColorManager } from '../utils/colorManager.js';
+// import { StarsProgram } from './webgl/programs/starsProgram.js';
 import { starSize_0mag, getStarSize, getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from '../utils/canvasHelpers.js';
 export class CanvasRenderer {
     constructor(canvas, config) {
@@ -846,8 +848,8 @@ export class CanvasRenderer {
         const beta = mode == 'AEP' ? centerDec : centerAlt;
         const [alphaInterval, betaInterval, alphaCalcInterval, betaCalcInterval] = getGridIntervals(fieldOfViewRA, fieldOfViewDec, alpha, beta);
         const [minBeta, maxBeta] = getBetaRange(lstLat, fieldOfViewRA, fieldOfViewDec, centerRA, centerDec, centerAz, centerAlt, mode, this.coordinateConverter, this.orientationData);
-        const minBetaLineIdx = Math.ceil(minBeta / betaInterval);
-        const maxBetaLineIdx = Math.floor(maxBeta / betaInterval);
+        const minBetaLineIdx = Math.floor(minBeta / betaInterval);
+        const maxBetaLineIdx = Math.ceil(maxBeta / betaInterval);
         const minBetaCalcIdx = Math.floor(minBeta / betaCalcInterval);
         const maxBetaCalcIdx = Math.ceil(maxBeta / betaCalcInterval);
         this.ctx.strokeStyle = this.colorManager.getColor('grid');
@@ -863,6 +865,9 @@ export class CanvasRenderer {
                 newLine = true;
                 b = i * betaInterval;
                 this.ctx.lineWidth = getGridLineWidth(b);
+                if (mode == 'AEP' && b == 0.0) {
+                    this.ctx.strokeStyle = this.colorManager.getColor('gridEquatorialLine');
+                }
                 this.ctx.beginPath();
                 for (j = 0; j <= 360 / alphaCalcInterval; j++) {
                     a = j * alphaCalcInterval;
@@ -880,6 +885,9 @@ export class CanvasRenderer {
                     newLine = false;
                 }
                 this.ctx.stroke();
+                if (mode == 'AEP' && b == 0.0) {
+                    this.ctx.strokeStyle = this.colorManager.getColor('grid');
+                }
             }
             // 縦の線
             this.ctx.lineWidth = 1;
@@ -910,6 +918,9 @@ export class CanvasRenderer {
                 newLine = true;
                 b = i * betaInterval;
                 this.ctx.lineWidth = getGridLineWidth(b);
+                if (mode == 'AEP' && b == 0.0) {
+                    this.ctx.strokeStyle = this.colorManager.getColor('gridEquatorialLine');
+                }
                 this.ctx.beginPath();
                 for (j = 0; j <= 360 / alphaCalcInterval; j++) {
                     a = j * alphaCalcInterval;
@@ -927,6 +938,9 @@ export class CanvasRenderer {
                     newLine = false;
                 }
                 this.ctx.stroke();
+                if (mode == 'AEP' && b == 0.0) {
+                    this.ctx.strokeStyle = this.colorManager.getColor('grid');
+                }
             }
             // 縦の線
             this.ctx.lineWidth = 1;
@@ -961,6 +975,9 @@ export class CanvasRenderer {
                 newLine = true;
                 b = i * betaInterval;
                 this.ctx.lineWidth = getGridLineWidth(b);
+                if (mode == 'AEP' && b == 0.0) {
+                    this.ctx.strokeStyle = this.colorManager.getColor('gridEquatorialLine');
+                }
                 this.ctx.beginPath();
                 for (j = -maxAlphaCalcIdx; j <= maxAlphaCalcIdx; j++) {
                     a = alpha + j * alphaCalcInterval;
@@ -978,6 +995,9 @@ export class CanvasRenderer {
                     newLine = false;
                 }
                 this.ctx.stroke();
+                if (mode == 'AEP' && b == 0.0) {
+                    this.ctx.strokeStyle = this.colorManager.getColor('grid');
+                }
             }
             // 縦の線
             this.ctx.lineWidth = 1;
@@ -1002,151 +1022,6 @@ export class CanvasRenderer {
                 this.ctx.stroke();
             }
         }
-        // if (this.config.displaySettings.mode == 'view') {
-        //     const minAlt = Math.max(
-        //         -90,
-        //         Math.min(
-        //             this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).alt,
-        //             centerAlt - fieldOfViewDec / 2
-        //         )
-        //     );
-        //     const maxAlt = Math.min(
-        //         90,
-        //         Math.max(
-        //             this.coordinateConverter.screenRaDecToHorizontal_View({ ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }).alt,
-        //             centerAlt + fieldOfViewDec / 2
-        //         )
-        //     );
-        //     const altGridCalcIv = Math.min(fieldOfViewRA, fieldOfViewDec) / 40;
-        //     const azGridCalcIv = Math.min(altGridCalcIv / Math.max(Math.cos(centerAlt*Math.PI/180), 0.1), 8); //天頂、天底付近で発散するため
-        //     const gridIvChoices = [0.5, 1, 2, 5, 10, 30, 45];
-        //     this.ctx.lineWidth = 1;
-        //     let altGridIv = 45;
-        //     for (i = 0; i < gridIvChoices.length; i++) {
-        //         if (gridIvChoices[i] > Math.min(fieldOfViewDec, fieldOfViewRA) / 6) {
-        //             altGridIv = gridIvChoices[i];
-        //             break;
-        //         }
-        //     }
-        //     let azGridIv = 45;
-        //     for (i=0; i<gridIvChoices.length; i++) {
-        //         if (gridIvChoices[i] > altGridIv / Math.cos(centerAlt*Math.PI/180)) {
-        //             azGridIv = gridIvChoices[i];
-        //             break;
-        //         }
-        //     }
-        //     let az, alt, screenRA0, screenDec0;
-        //     if (maxAlt == 90) { // 天頂を含むとき
-        //         for (i = Math.floor(minAlt/altGridIv); i < Math.ceil(90/altGridIv); i++) {
-        //             alt = i * altGridIv;
-        //             if (alt == 0) this.ctx.lineWidth = 3;
-        //             else this.ctx.lineWidth = 1;
-        //             this.ctx.beginPath();
-        //             for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
-        //                 az = j * azGridCalcIv;
-        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //             }
-        //             this.ctx.stroke();
-        //         }
-        //         this.ctx.lineWidth = 1;
-        //         for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
-        //             az = i * azGridIv;
-        //             for (j = 0; j < Math.ceil(90 / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-        //                 alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //             }
-        //             this.ctx.stroke();
-        //         }
-        //     } else if (minAlt == -90) { // 天底を含むとき
-        //         // 等高度線
-        //         for (i = Math.floor(-90 / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
-        //             alt = i * altGridIv;
-        //             if (alt == 0) this.ctx.lineWidth = 3;
-        //             else this.ctx.lineWidth = 1;
-        //             this.ctx.beginPath();
-        //             for (j = 0; j < 360 / azGridCalcIv + 1; j++) {
-        //                 az = j * azGridCalcIv;
-        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //             }
-        //             this.ctx.stroke();
-        //         }
-        //         this.ctx.lineWidth = 1;
-        //         // 等方位線
-        //         for (i = 0; i < Math.ceil(360 / azGridIv); i++) {
-        //             az = i * azGridIv;
-        //             for (j = 0; j < Math.ceil((maxAlt + 90) / altGridCalcIv) + 1; j++) {
-        //                 alt = -90 + j * altGridCalcIv;
-        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //             }
-        //             this.ctx.stroke();
-        //         }
-        //     } else {
-        //         const azRange = Math.max(
-        //             (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec:  fieldOfViewDec / 2 }).az - centerAz + 360) % 360,
-        //             (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: 0                   }).az - centerAz + 360) % 360,
-        //             (this.coordinateConverter.screenRaDecToHorizontal_View({ ra: -fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }).az - centerAz + 360) % 360
-        //         );
-        //         for (i = Math.floor(minAlt / altGridIv); i < Math.ceil(maxAlt / altGridIv); i++) {
-        //             alt = i * altGridIv;
-        //             if (alt == 0) {
-        //                 this.ctx.lineWidth = 3;
-        //             } else {
-        //                 this.ctx.lineWidth = 1;
-        //             }
-        //             this.ctx.beginPath();
-        //             for (j = 0; j < 2 * azRange / azGridCalcIv + 1; j++) {
-        //                 az = centerAz - azRange + j * azGridCalcIv;
-        //                 [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //             }
-        //             this.ctx.stroke();
-        //         }
-        //         this.ctx.lineWidth = 1;
-        //         if (centerAz - azRange < 0) {
-        //             for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
-        //                 az = i * azGridIv;
-        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //                 }
-        //                 this.ctx.stroke();
-        //             }
-        //             for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
-        //                 az = i * azGridIv;
-        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //                 }
-        //                 this.ctx.stroke();
-        //             }
-        //         } else if (centerAz + azRange > 360) {
-        //             for (i = 0; i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
-        //                 az = i * azGridIv;
-        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //                 }
-        //                 this.ctx.stroke();
-        //             }
-        //             for (i = Math.floor((centerAz - azRange + 360) / azGridIv); i < Math.ceil(360 / azGridIv); i++) {
-        //                 az = i * azGridIv;
-        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //                 }
-        //                 this.ctx.stroke();
-        //             }
-        //         } else {
-        //             for (i = Math.floor((centerAz - azRange) / azGridIv); i < Math.ceil((centerAz + azRange) / azGridIv); i++) {
-        //                 az = i * azGridIv;
-        //                 for (j = 0; j < Math.ceil(maxAlt / altGridCalcIv) - Math.floor(minAlt / altGridCalcIv) + 1; j++) {
-        //                     alt = (Math.floor(minAlt / altGridCalcIv) + j) * altGridCalcIv;
-        //                     [screenRA0, screenDec0] = this.drawHorizontalLine(j, az, alt, screenRA0, screenDec0);
-        //                 }
-        //                 this.ctx.stroke();
-        //             }
-        //         }
-        //     }
-        //     this.ctx.stroke();
         if (mode == 'view') {
             const directions = ["北", "北東", "東", "南東", "南", "南西", "西", "北西"];
             this.ctx.textAlign = 'center';
