@@ -73,11 +73,11 @@ export function getAreaCandidatesFromEdge(edgeRA, edgeDec, np, sp) {
     }
     if (np) {
         ra0Dec.push(85);
-        ra0Dec.filter(dec => dec <= 85);
+        ra0Dec = ra0Dec.filter(dec => dec <= 85);
     }
     if (sp) {
         ra0Dec.push(-85);
-        ra0Dec.filter(dec => dec >= -85);
+        ra0Dec = ra0Dec.filter(dec => dec >= -85);
     }
     ra0Dec.sort((a, b) => a - b);
     for (let i = 0; i < ra0Dec.length; i += 2) {
@@ -145,6 +145,7 @@ export function getAreaCandidatesFromEdge(edgeRA, edgeDec, np, sp) {
             }
         }
         else {
+            // console.log(dec, intersections.length, intersections);
             for (let i = 0; i < intersections.length - 1; i += 2) {
                 const startRA = Math.max(intersections[i], 0);
                 const endRA = Math.min(intersections[i + 1], 359.9);
@@ -167,10 +168,10 @@ export function getAreaCandidates(lstLat, viewState, jd, mode, coordinateConvert
     const decWidth = viewState.fieldOfViewDec * 0.5 + 1.0;
     const currentNorthPoleJ2000 = coordinateConverter.precessionEquatorial({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
     const currentSouthPoleJ2000 = coordinateConverter.precessionEquatorial({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
-    const northPoleScreenRaDec = coordinateConverter.equatorialToScreenRaDec_AEP(currentNorthPoleJ2000, { ra: viewState.centerRA, dec: viewState.centerDec });
-    const southPoleScreenRaDec = coordinateConverter.equatorialToScreenRaDec_AEP(currentSouthPoleJ2000, { ra: viewState.centerRA, dec: viewState.centerDec });
-    const npIsIn = Math.abs(northPoleScreenRaDec.ra) < raWidth && Math.abs(northPoleScreenRaDec.dec) < decWidth;
-    const spIsIn = Math.abs(southPoleScreenRaDec.ra) < raWidth && Math.abs(southPoleScreenRaDec.dec) < decWidth;
+    const npScreenRaDec = coordinateConverter.equatorialToScrenRaDec(currentNorthPoleJ2000, mode, lstLat, viewState, undefined);
+    const spScreenRaDec = coordinateConverter.equatorialToScrenRaDec(currentSouthPoleJ2000, mode, lstLat, viewState, undefined);
+    const npIsIn = Math.abs(npScreenRaDec.ra) < raWidth + 3.0 && Math.abs(npScreenRaDec.dec) < decWidth + 3.0;
+    const spIsIn = Math.abs(spScreenRaDec.ra) < raWidth + 3.0 && Math.abs(spScreenRaDec.dec) < decWidth + 3.0;
     let screenRa = -raWidth;
     let screenDec = decWidth;
     let dscreenRa = 0.0;

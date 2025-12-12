@@ -307,6 +307,20 @@ export class CoordinateConverter {
     //     const result = new Float64Array(memory.buffer, resultPtr, n * 2);
     //     return new Float64Array(result);
     // }
+    equatorialToScrenRaDec(raDec, mode, lstLat, viewState, orientationData) {
+        if (mode == 'AEP') {
+            return this.equatorialToScreenRaDec_AEP(raDec, { ra: viewState.centerRA, dec: viewState.centerDec });
+        }
+        else if (mode == 'view') {
+            const horizontal = this.equatorialToHorizontal(lstLat, raDec);
+            return this.horizontalToScreenRaDec_View(horizontal, { az: viewState.centerAz, alt: viewState.centerAlt });
+        }
+        else if (['live', 'ar'].includes(mode) && orientationData) {
+            const horizontal = this.equatorialToHorizontal(lstLat, raDec);
+            return this.horizontalToScreenRaDec_Live(horizontal, orientationData);
+        }
+        return { ra: 0, dec: 0 };
+    }
     // 赤道座標からスクリーン座標への変換、判定
     // すべてのモードに対応
     equatorialToScreenXYifin(raDec, config, force = false, orientationData) {

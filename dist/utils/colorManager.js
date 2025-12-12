@@ -24,7 +24,7 @@ export const colorTheme = {
         solarSystem: 'rgb(255, 219, 88)',
         moonShade: '#333333',
         solarSystemMotion: '#AAFFAA',
-        dso: 'orange',
+        dso: 'rgb(214, 139, 0)',
         // その他
         poleMark: 'orange',
         cameraView: 'rgba(255, 255, 0, 0.1)',
@@ -116,7 +116,7 @@ export class ColorManager {
      * @returns 恒星の色
      */
     getStarColor(bv) {
-        if (bv === undefined || bv === 100) {
+        if (bv == null || bv === 100 || Number.isNaN(bv) || !Number.isFinite(bv)) {
             return this.getColor('star');
         }
         // B-V値を適切な範囲に制限
@@ -147,7 +147,7 @@ export class ColorManager {
             g = Math.round(g * 0.4);
             b = Math.round(b * 0.4);
         }
-        return `rgba(${r}, ${g}, ${b}, 1)`;
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
     /**
      * 透明度付きの色を取得
@@ -183,6 +183,47 @@ export class ColorManager {
      */
     getSatelliteColor(illuminated) {
         return illuminated ? this.getColor('satelliteIlluminated') : this.getColor('satelliteShadow');
+    }
+    /**
+     * 色文字列をRGB値にパース
+     * @param color 色文字列（rgb(r, g, b)）
+     * @returns RGB値の配列 [r, g, b]
+     */
+    parseRgbToList(color) {
+        if (color.startsWith('rgba')) {
+            const r = parseInt(color.slice(5, 7), 16);
+            const g = parseInt(color.slice(8, 10), 16);
+            const b = parseInt(color.slice(11, 13), 16);
+            return [r, g, b];
+        }
+        else if (color.startsWith('rgb')) {
+            const r = parseInt(color.slice(4, 6), 16);
+            const g = parseInt(color.slice(7, 9), 16);
+            const b = parseInt(color.slice(10, 12), 16);
+            return [r, g, b];
+        }
+        else if (color.startsWith('#')) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            return [r, g, b];
+        }
+        return [0, 0, 0];
+    }
+    /**
+     * 2つの色をブレンド
+     * @param colorA 色A
+     * @param colorB 色B
+     * @param ratioB 色Bの比率（0.0-1.0）。0.3なら色Aが70%、色Bが30%
+     * @returns ブレンドされた色（rgb形式）
+     */
+    blendColors(colorA, colorB, ratioB) {
+        const colorBList = this.parseRgbToList(colorB);
+        const r = Math.round(colorA[0] * (1 - ratioB) + colorBList[0] * ratioB);
+        const g = Math.round(colorA[1] * (1 - ratioB) + colorBList[1] * ratioB);
+        const b = Math.round(colorA[2] * (1 - ratioB) + colorBList[2] * ratioB);
+        // console.log(colorA, r, ratioB);
+        return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
     }
 }
 // グローバルな色管理インスタンス

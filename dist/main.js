@@ -16,6 +16,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2025-12-13T00:00:00', title: '星の表示を改善', text: '暗い星の透明度を設定したり、明るい星に滲みを付けたりしました。どうでしょう。' },
     { time: '2025-10-29T04:00:00', title: 'シャープレスカタログを追加', text: 'シャープレスカタログに含まれる313のHII領域を追加しました。' },
     { time: '2025-10-26T13:20:00', title: '天の川', text: '天の川の輪郭を作りました。あと、ちょっと前にバイエル符号とフラムスティード番号も出るようにしています。' },
     { time: '2025-10-06T22:45:00', title: '等級設定を追加', text: '星が多すぎると思われるかもしれないので、限界等級の設定を等級スライドバーの下に作りました。' },
@@ -653,6 +654,7 @@ export async function main() {
         UserObjectController.init();
         setupButtonEvents();
         setupResizeHandler();
+        setupVisibilityHandler(renderAll, canvas, renderer);
         document.getElementById('loadingtext').innerHTML = '';
         // お知らせポップアップの表示チェック
         showNewsPopupIfNeeded();
@@ -1073,6 +1075,38 @@ function setupButtonEvents() {
 function setupResizeHandler() {
     window.addEventListener('resize', handleResize);
     handleResize(); // 初期実行
+}
+function setupVisibilityHandler(renderAll, canvas, renderer) {
+    // タブが非アクティブ/アクティブになったときの処理
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            // タブが再び表示されたとき
+            console.log('Tab became visible, checking canvas context...');
+            // Canvasのコンテキストが有効か確認
+            try {
+                const testCtx = canvas.getContext('2d');
+                if (!testCtx) {
+                    console.warn('Canvas context lost, attempting to restore...');
+                    // コンテキストが失われた場合、レンダラーを再初期化する必要がある
+                    // ただし、これは通常発生しないので、まずはレンダリングを再実行してみる
+                }
+                // レンダリングを再実行
+                setTimeout(() => {
+                    renderAll();
+                }, 100); // 少し遅延させて、ブラウザが完全に復帰してからレンダリング
+            }
+            catch (error) {
+                console.error('Error checking canvas context:', error);
+            }
+        }
+    });
+    // ページがフォーカスされたときも同様に処理（モバイルブラウザで重要）
+    window.addEventListener('focus', () => {
+        console.log('Window focused, re-rendering...');
+        setTimeout(() => {
+            renderAll();
+        }, 100);
+    });
 }
 function showNewsPopupIfNeeded() {
     const now = new Date();
