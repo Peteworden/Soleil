@@ -543,6 +543,17 @@
         "description": "小マゼラン銀河。視直径約5°"
     },
     {
+        "name": "U Gem",
+        "alt_name": [
+            ""
+        ],
+        "ra": "7 55 05",
+        "dec": "22 00.1",
+        "vmag": "14",
+        "class": "SS",
+        "description": ""
+    },
+    {
         "name": "",
         "alt_name": [
             ""
