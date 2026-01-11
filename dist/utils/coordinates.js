@@ -6,12 +6,6 @@ const epsilon = 0.4090926;
 const cosEpsl = Math.cos(epsilon);
 const sinEpsl = Math.sin(epsilon);
 export class CoordinateConverter {
-    // private hipRaPtr: any;
-    // private hipDecPtr: any;
-    // private hipResultPtr: any;
-    // private twoNumsPtr: any;
-    // private prevCount: number = 0;
-    // private wasm: any | null = null;
     constructor() {
         // グローバルなconfigから緯度経度を取得
         const globalConfig = window.config;
@@ -355,65 +349,6 @@ export class CoordinateConverter {
             return [false, [0, 0]];
         }
     }
-    // async equatorialToScreenRaDecWasm(
-    //     lstLat: LstLat, mode: string, viewState: ViewState, canvas: CanvasSize,
-    //     raArray: Float64Array, decArray: Float64Array
-    // ): Promise<Float64Array> {
-    //     console.time("wasm");
-    //     const modeNum = mode == 'AEP' ? 0 : mode == 'view' ? 1 : 2;
-    //     const wasm = await this.getWasm();
-    //     let memory = wasm.memory as WebAssembly.Memory;
-    //     const n = raArray.length;
-    //     if (!this.hipRaPtr || this.prevCount < n) {
-    //         if (this.hipRaPtr) {
-    //             wasm.free(this.hipRaPtr);
-    //             wasm.free(this.hipDecPtr);
-    //             wasm.free(this.hipResultPtr);
-    //         }
-    //         this.hipRaPtr = wasm.allocF64Array(n);
-    //         this.hipDecPtr = wasm.allocF64Array(n);
-    //         this.hipResultPtr = wasm.allocF64Array(n * 2);
-    //         this.prevCount = n;
-    //         memory = wasm.memory as WebAssembly.Memory;
-    //     }
-    //     new Float64Array(memory.buffer, this.hipRaPtr, n).set(raArray);
-    //     new Float64Array(memory.buffer, this.hipDecPtr, n).set(decArray);
-    //     wasm.wasmEquatorialToScreenRaDec(
-    //         lstLat.lst, lstLat.lat, modeNum, 
-    //         viewState.centerRA, viewState.centerDec, viewState.centerAz, viewState.centerAlt, 
-    //         this.hipRaPtr, this.hipDecPtr, n, this.hipResultPtr
-    //     );
-    //     // Ensure the pointer is valid and within bounds
-    //     if (this.hipResultPtr + (n * 2 * 8) > memory.buffer.byteLength) {
-    //         console.error('Invalid pointer or insufficient memory', this.hipResultPtr, n * 2 * 8, memory.buffer.byteLength);
-    //         throw new Error('Invalid WASM memory allocation');
-    //     }
-    //     const result = new Float64Array(memory.buffer, this.hipResultPtr, n * 2);
-    //     console.timeEnd("wasm");
-    //     return result;
-    // }
-    // async equatorialToScreenRaDecWasmSingle(
-    //     lstLat: LstLat, mode: string, viewState: ViewState, canvas: CanvasSize,
-    //     ra: number, dec: number
-    // ): Promise<EquatorialCoordinates> {
-    //     // console.time("wasm");
-    //     const modeNum = mode == 'AEP' ? 0 : mode == 'view' ? 1 : 2;
-    //     const wasm = await this.getWasm();
-    //     let memory = wasm.memory as WebAssembly.Memory;
-    //     if (!this.twoNumsPtr) {
-    //         this.twoNumsPtr = wasm.allocF64Array(2);
-    //         memory = wasm.memory as WebAssembly.Memory;
-    //     }
-    //     wasm.wasmEquatorialToScreenRaDecSingle(
-    //         lstLat.lst, lstLat.lat, modeNum, 
-    //         viewState.centerRA, viewState.centerDec, viewState.centerAz, viewState.centerAlt, 
-    //         ra, dec, this.twoNumsPtr
-    //     );
-    //     // console.timeEnd("wasm");
-    //     const sra = new Float64Array(memory.buffer, this.twoNumsPtr, 2)[0];
-    //     const sdec = new Float64Array(memory.buffer, this.twoNumsPtr, 2)[1];
-    //     return { ra: sra, dec: sdec};
-    // }
     // 赤道座標からある方向を中心とした正距方位図法への変換
     equatorialToScreenRaDec_AEP(coords, center) {
         const ra = coords.ra * DEG_TO_RAD;

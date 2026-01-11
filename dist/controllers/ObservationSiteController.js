@@ -390,6 +390,13 @@ ObservationSiteController.predefinedSites = {
         longitude: 137.63,
         timezone: 9
     },
+    "札幌": {
+        observerPlanet: '地球',
+        name: '札幌',
+        latitude: 43.06,
+        longitude: 141.35,
+        timezone: 9
+    },
     "仙台": {
         observerPlanet: '地球',
         name: '仙台',
@@ -404,11 +411,11 @@ ObservationSiteController.predefinedSites = {
         longitude: 139.76,
         timezone: 9
     },
-    "大阪": {
+    "福岡": {
         observerPlanet: '地球',
-        name: '大阪',
-        latitude: 34.70,
-        longitude: 135.50,
+        name: '福岡',
+        latitude: 33.61,
+        longitude: 130.42,
         timezone: 9
     },
     "石垣島": {

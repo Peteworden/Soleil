@@ -470,7 +470,7 @@ export class CanvasRenderer {
         this.ctx.beginPath();
         if (k < 0.5) {
             this.ctx.fillStyle = this.colorManager.getColor('yellow');
-            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.arc(x, y, radius, p - Math.PI, p);
             this.ctx.fill();
             this.ctx.fillStyle = this.colorManager.getColor('moonShade');
             this.ctx.beginPath();
@@ -480,8 +480,7 @@ export class CanvasRenderer {
         }
         else {
             this.ctx.fillStyle = this.colorManager.getColor('moonShade');
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius, p - Math.PI, p);
+            this.ctx.arc(x, y, radius, p, p + Math.PI);
             this.ctx.fill();
             this.ctx.fillStyle = this.colorManager.getColor('yellow');
             this.ctx.beginPath();

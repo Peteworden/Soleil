@@ -13,7 +13,7 @@ export function getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
     }
 }
 export function areaNumber(ra, dec) {
-    return Math.floor(360 * Math.floor(dec + 90) + Math.floor(ra));
+    return 360 * Math.floor(dec + 90) + Math.floor(ra);
 }
 export function areaNumberRange(ra1, ra2, dec) {
     const startArea = areaNumber(ra1, dec);
@@ -128,7 +128,7 @@ export function getAreaCandidatesFromEdge(edgeRA, edgeDec, np, sp) {
     for (let dec = (sp ? -85 : Math.floor(Dec_min)); dec <= (np ? 84 : Math.floor(Dec_max)); dec++) {
         const intersections = allIntersections[dec + 90].intersections;
         intersections.sort((a, b) => a - b);
-        let count = 0;
+        // let count = 0;
         // 交点のペアで領域を決定
         if (intersections.length === 0) {
             // この場合はないはずだがある
@@ -152,7 +152,7 @@ export function getAreaCandidatesFromEdge(edgeRA, edgeDec, np, sp) {
                 if (startRA < endRA) {
                     raRanges.push([startRA, endRA, dec]);
                     candidateAreas.push(areaNumberRange(startRA, endRA, dec));
-                    count++;
+                    // count++;
                 }
             }
         }

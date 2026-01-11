@@ -179,17 +179,17 @@ export class SearchController {
                                 normalizedOtherName == queryAsSharpless) {
                                 startResults.push(result);
                                 hitThisMessier = true;
+                                break;
                             }
                         }
-                        if (hitThisMessier) {
-                            continue;
-                        }
-                        for (const searchKey of searchKeys) {
-                            const normalizedSearchKey = this.normalizeText(searchKey);
-                            if (normalizedSearchKey == queryAsNGC ||
-                                normalizedSearchKey == queryAsIC ||
-                                normalizedSearchKey == queryAsSharpless) {
-                                startResults.push(result);
+                        if (!hitThisMessier) {
+                            for (const searchKey of searchKeys) {
+                                const normalizedSearchKey = this.normalizeText(searchKey);
+                                if (normalizedSearchKey == queryAsNGC ||
+                                    normalizedSearchKey == queryAsIC ||
+                                    normalizedSearchKey == queryAsSharpless) {
+                                    startResults.push(result);
+                                }
                             }
                         }
                     }
