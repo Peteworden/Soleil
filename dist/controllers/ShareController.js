@@ -14,6 +14,7 @@ export class ShareController {
             const mm = ShareController.pad(t.minute, 2);
             const ss = ShareController.pad(t.second, 2);
             const time = `${y}${m}${d}-${hh}${mm}${ss}`;
+            const fov = ShareController.roundTo(config.viewState.fieldOfViewRA, 2);
             const url = new URL(window.location.href);
             url.search = '';
             url.searchParams.set('ra', String(ra));
@@ -21,6 +22,7 @@ export class ShareController {
             url.searchParams.set('lat', String(lat));
             url.searchParams.set('lon', String(lon));
             url.searchParams.set('time', time);
+            url.searchParams.set('fov', String(fov));
             const shareUrl = url.toString();
             const onSuccess = () => {
                 console.log('URL copied to clipboard');
@@ -41,6 +43,7 @@ export class ShareController {
             console.error('copyShareUrl error', e);
         }
     }
+    // 
     static roundTo(value, digits) {
         const p = Math.pow(10, digits);
         return Math.round(value * p) / p;

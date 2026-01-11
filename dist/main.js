@@ -149,11 +149,13 @@ function initializeConfig(noLoad = false) {
     const latParam = params.get('lat');
     const lonParam = params.get('lon');
     const timeParam = params.get('time'); // YYYYMMDD-HHMM.M （JST）
+    const fovParam = params.get('fov');
     let raOverride = null;
     let decOverride = null;
     let latOverride = null;
     let lonOverride = null;
     let timeOverride = null;
+    let fovOverride = null;
     if (raParam != null) {
         const raParsed = parseFloat(raParam);
         if (!Number.isNaN(raParsed)) {
@@ -200,6 +202,12 @@ function initializeConfig(noLoad = false) {
             }
         }
     }
+    if (fovParam != null) {
+        const fovParsed = parseFloat(fovParam);
+        if (!Number.isNaN(fovParsed)) {
+            fovOverride = Math.max(1, Math.min(180, fovParsed));
+        }
+    }
     if (noLoad) {
         const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
         const converter = new CoordinateConverter();
@@ -212,6 +220,9 @@ function initializeConfig(noLoad = false) {
             const centerEquatorial = converter.horizontalToEquatorial({ lst: siderealTime, lat: observationSite.latitude }, { az: viewState.centerAz, alt: viewState.centerAlt });
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
+        }
+        if (fovOverride != null) {
+            viewState.fieldOfViewRA = fovOverride;
         }
         viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
         return {
@@ -248,6 +259,9 @@ function initializeConfig(noLoad = false) {
     }
     if (decOverride != null) {
         viewState.centerDec = decOverride;
+    }
+    if (fovOverride != null) {
+        viewState.fieldOfViewRA = fovOverride;
     }
     viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
     if (savedSettingsObject && savedSettingsObject.observationSite) {
