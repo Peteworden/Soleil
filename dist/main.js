@@ -16,6 +16,8 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2026-01-12T20:00:00', title: '恒星情報', text: '恒星をタップ・クリックすることで、座標と等級を見れます。ついでに、謎の縦長になってる問題が解決しました。' },
+    { time: '2026-01-11T22:00:00', title: '視野の共有', text: 'リンクで共有したときに視野も同じになるようにしました。' },
     { time: '2025-12-13T00:00:00', title: '星の表示を改善', text: '暗い星の透明度を設定したり、明るい星に滲みを付けたりしました。どうでしょう。' },
     { time: '2025-10-29T04:00:00', title: 'シャープレスカタログを追加', text: 'シャープレスカタログに含まれる313のHII領域を追加しました。' },
     { time: '2025-10-26T13:20:00', title: '天の川', text: '天の川の輪郭を作りました。あと、ちょっと前にバイエル符号とフラムスティード番号も出るようにしています。' },
