@@ -60,6 +60,10 @@ export class InteractionController {
                 if (starInfoElement && starInfoElement.style.display === 'block') {
                     starInfoElement.style.display = 'none';
                 }
+                const starMarkerElement = document.getElementById('starMarker');
+                if (starMarkerElement && starMarkerElement.style.display === 'block') {
+                    starMarkerElement.style.display = 'none';
+                }
             }
             const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             // ポインターの座標を更新

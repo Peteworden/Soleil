@@ -1613,6 +1613,65 @@ h1, p {
     opacity: 1;
 }
 
+/* 星の位置を示すマーカー */
+.starMarker {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    pointer-events: none;
+    z-index: 99;
+    transform: translate(-50%, -50%);
+    background: transparent;
+    border: none;
+}
+
+.starMarker-cross {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 24px;
+    height: 24px;
+}
+
+.starMarker-line {
+    position: absolute;
+    background-color: #cccc00;
+    box-shadow: 0 0 2px rgba(204, 204, 0, 0.6);
+}
+
+.starMarker-line-top {
+    width: 2px;
+    height: 8px;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+.starMarker-line-bottom {
+    width: 2px;
+    height: 8px;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+}
+
+.starMarker-line-left {
+    width: 8px;
+    height: 2px;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.starMarker-line-right {
+    width: 8px;
+    height: 2px;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
 .ar-video {
     position: fixed;
     top: 0;

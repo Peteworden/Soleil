@@ -609,6 +609,13 @@ export class ObjectInfoController {
         starInfoElement.style.left = `${starInfo.x + offsetX}px`;
         starInfoElement.style.top = `${starInfo.y + offsetY}px`;
         starInfoElement.style.display = 'block';
+        // 星の位置にマーカーを表示
+        const starMarkerElement = document.getElementById('starMarker');
+        if (starMarkerElement) {
+            starMarkerElement.style.left = `${starInfo.x}px`;
+            starMarkerElement.style.top = `${starInfo.y}px`;
+            starMarkerElement.style.display = 'block';
+        }
     }
     /**
      * 天体情報ウィンドウを閉じる
@@ -621,6 +628,11 @@ export class ObjectInfoController {
         const starInfoElement = document.getElementById('starInfo');
         if (starInfoElement) {
             starInfoElement.style.display = 'none';
+        }
+        // 星のマーカーも非表示にする
+        const starMarkerElement = document.getElementById('starMarker');
+        if (starMarkerElement) {
+            starMarkerElement.style.display = 'none';
         }
     }
     /**
