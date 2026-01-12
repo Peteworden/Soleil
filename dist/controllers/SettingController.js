@@ -138,6 +138,7 @@ export class SettingController {
         const gridCheck = get('gridCheck');
         const reticleCheck = get('reticleCheck');
         const objectInfoCheck = get('objectInfoCheck');
+        const starInfoCheck = get('starInfoCheck');
         const usedStarSelect = get('usedStarSelect');
         const starNameSelect = get('starName');
         const bayerFSCheck = get('bayerFSCheck');
@@ -151,7 +152,7 @@ export class SettingController {
         const cameraSelect = get('camera');
         const equinoxSelect = get('equinox');
         if (modeSelect && gridCheck && magLimitSlider && usedStarSelect && darkMode &&
-            reticleCheck && objectInfoCheck && starNameSelect && bayerFSCheck &&
+            reticleCheck && objectInfoCheck && starInfoCheck && starNameSelect && bayerFSCheck &&
             constellationNameCheck && constellationLineCheck &&
             planetCheck && messierCheck && recCheck && ngcCheck && sharplessCheck &&
             cameraSelect && equinoxSelect) {
@@ -165,6 +166,7 @@ export class SettingController {
                     showGrid: gridCheck.checked,
                     showReticle: reticleCheck.checked,
                     showObjectInfo: objectInfoCheck.checked,
+                    showStarInfo: starInfoCheck.checked,
                     usedStar: usedStarSelect.value,
                     showStarNames: starNameSelect.value,
                     showBayerFS: bayerFSCheck.checked,
@@ -322,6 +324,7 @@ export class SettingController {
         apply.checkbox(get('gridCheck'), ds.showGrid);
         apply.checkbox(get('reticleCheck'), ds.showReticle);
         apply.checkbox(get('objectInfoCheck'), ds.showObjectInfo);
+        apply.checkbox(get('starInfoCheck'), ds.showStarInfo);
         apply.checkbox(get('messierCheck'), ds.showMessiers);
         apply.checkbox(get('recCheck'), ds.showRecs);
         apply.checkbox(get('ngcCheck'), ds.showNGC);

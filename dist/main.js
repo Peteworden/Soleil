@@ -84,6 +84,7 @@ function initializeConfig(noLoad = false) {
         showGrid: true,
         showReticle: true,
         showObjectInfo: true,
+        showStarInfo: true,
         usedStar: 'to12',
         showStarNames: 'to2',
         showBayerFS: true,
@@ -499,6 +500,7 @@ export async function main() {
         function renderAll() {
             const time000 = performance.now();
             renderer.clearObjectInfomation();
+            renderer.clearStarInfoInfomation();
             renderer.clear();
             const tempTarget = getTempTarget();
             renderer.drawGrid();
@@ -869,6 +871,14 @@ function setupButtonEvents() {
     const closeObjectInfoBtn = document.getElementById('closeObjectInfo');
     if (closeObjectInfoBtn) {
         closeObjectInfoBtn.addEventListener('click', () => {
+            ObjectInfoController.closeObjectInfo();
+        });
+    }
+    // 星情報を閉じるボタン
+    const closeStarInfoBtn = document.getElementById('closeStarInfo');
+    if (closeStarInfoBtn) {
+        closeStarInfoBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
             ObjectInfoController.closeObjectInfo();
         });
     }

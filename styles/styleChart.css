@@ -6,6 +6,8 @@
     --muted-color: #aaaaaa;    /* 補助色 */
     --accent-color: #0077cc;   /* ボタンなどのアクセント */
     --card-bg: rgba(255,255,255,0.03); /* カードなどの背景（半透明） */
+    --switch-on-bg: #4CAF50;
+    --switch-off-bg: rgba(255, 255, 255, 0.2);
     --border-color: rgba(255,255,255,0.08);
     --setting-bg-color: linear-gradient(135deg, #1a1a2e, #16213e);
     --select-focus-bg: #60a5fa;
@@ -19,6 +21,8 @@
     --muted-color: rgba(200, 100, 100, 0.8);
     --accent-color: #bb2222;   /* ダークでのアクセント（赤寄り） */
     --card-bg: rgba(255,255,255,0.02);
+    --switch-on-bg: rgba(255, 255, 255, 0.2);
+    --switch-off-bg: rgba(255, 255, 255, 0.02);
     --border-color: rgba(255,255,255,0.04);
     --setting-bg-color: linear-gradient(135deg, #0a0a1a, #09091c);
     --select-focus-bg: #2a2a2a;
@@ -925,7 +929,7 @@ select option, select optgroup {
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: var(--card-bg);
+    background-color: var(--switch-off-bg);
     transition: .4s;
     border-radius: 12px;
 }
@@ -939,7 +943,7 @@ select option, select optgroup {
     border-radius: 50%;
 }
 input:checked + .slider {
-    background-color: #4CAF50;
+    background-color: var(--switch-on-bg);
 }
 input:checked + .slider:before {
     transform: translateX(16px);
@@ -947,12 +951,12 @@ input:checked + .slider:before {
 
 /* ダークモード時の設定画面内のスイッチ */
 .dark-mode .setting .slider {
-    background-color: var(--card-bg);
+    background-color: var(--switch-off-bg);
     border: 1px solid #444;
 }
 
 .dark-mode .setting input:checked + .slider {
-    background-color: var(--card-bg);
+    background-color: var(--switch-on-bg);
 }
 
 .showBtn {
@@ -1386,6 +1390,15 @@ input:checked + .slider:before {
     background-color: rgba(255, 255, 255, 0.1);
 }
 
+/* ダークモードでもライトテーマと同じ背景色を維持 */
+.dark-mode .suggestionButton {
+    background-color: transparent;
+}
+
+.dark-mode .suggestionButton:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
 #closeSearch {
     position: absolute;
     top: 10px;
@@ -1552,6 +1565,52 @@ h1, p {
     margin-top: 15px;
     padding-top: 15px;
     border-top: 1px solid #666;
+}
+
+.starInfo {
+    position: fixed;
+    background-color: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #ffffff;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 4px 6px;
+    padding-right: 20px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 100;
+    pointer-events: auto;
+    backdrop-filter: blur(3px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.closeStarInfo {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+    z-index: 101;
+}
+
+.closeStarInfo:hover {
+    opacity: 1;
 }
 
 .ar-video {

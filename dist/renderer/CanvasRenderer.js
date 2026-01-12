@@ -18,6 +18,7 @@ export class CanvasRenderer {
         this.gaiaDataCache2 = null;
         this.gaiaDataCache3 = null;
         this.objectInfomation = [];
+        this.starInfoInfomation = [];
         this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
         this.gaiaSprites = new Map();
         this.canvas = canvas;
@@ -589,66 +590,72 @@ export class CanvasRenderer {
         const blurRadii = [0.2, 0.6, 0.9, 1.2];
         const colorRatios = [0.4, 0.8, 1.0, 1.0];
         const opacities = ['ff', 'ff', 'bf', '40'];
-        for (const star of cachedStars) {
-            if (star.getMagnitude() > limitingMagnitude)
-                continue;
-            const coords = star.getCoordinates();
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-            if (!screenXY[0])
-                continue;
-            const [x, y] = screenXY[1];
-            const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
-            const starColor = this.getStarColor(star.getBv());
-            if (starSize > 10) {
-                // 中心が白、外側が赤のグラデーション
-                const originalFilter = this.ctx.filter;
-                this.ctx.filter = `blur(${starSize * 0.2}px)`;
-                const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, starSize);
-                gradient.addColorStop(0.2, this.colorManager.getColor('star'));
-                gradient.addColorStop(1, starColor);
-                this.ctx.beginPath();
-                this.ctx.fillStyle = gradient;
-                this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.filter = originalFilter;
+        if (this.config.displaySettings.showStarInfo) {
+            for (const star of cachedStars) {
+                if (star.getMagnitude() > limitingMagnitude)
+                    continue;
+                const coords = star.getCoordinates();
+                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
+                if (!screenXY[0])
+                    continue;
+                this.starInfoInfomation.push({
+                    type: 'hipStar',
+                    x: screenXY[1][0],
+                    y: screenXY[1][1],
+                    data: star
+                });
+                this.drawHipStar(star, screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColorRGB);
             }
-            else if (star.getMagnitude() < 2 || starSize > 5) {
-                // 半透明の円を重ねる
-                for (let i = blurRadii.length - 1; i >= 0; i--) {
-                    const color = this.colorManager.blendColors(starColorRGB, starColor, colorRatios[i]);
-                    this.ctx.beginPath();
-                    this.ctx.fillStyle = `${color}${opacities[i]}`;
-                    this.ctx.arc(x, y, starSize * blurRadii[i], 0, Math.PI * 2);
-                    this.ctx.fill();
-                }
-                // this.ctx.beginPath();
-                // this.ctx.fillStyle = `${this.getStarColor(star.getBv()!)}80`;
-                // this.ctx.arc(x, y, starSize*1.2, 0, Math.PI * 2);
-                // this.ctx.fill();
-                // this.ctx.beginPath();
-                // this.ctx.fillStyle = `${this.getStarColor(star.getBv()!)}`;
-                // this.ctx.arc(x, y, starSize*0.9, 0, Math.PI * 2);
-                // this.ctx.fill();
-                // this.ctx.beginPath();
-                // this.ctx.fillStyle = this.colorManager.getColor('star');
-                // this.ctx.arc(x, y, starSize*0.3, 0, Math.PI * 2);
-                // this.ctx.fill();
+        }
+        else {
+            for (const star of cachedStars) {
+                if (star.getMagnitude() > limitingMagnitude)
+                    continue;
+                const coords = star.getCoordinates();
+                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
+                if (!screenXY[0])
+                    continue;
+                this.drawHipStar(star, screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColorRGB);
             }
-            else {
-                if (star.getMagnitude() > limitMagnitudeForWhiten - 2.0) {
-                    this.ctx.fillStyle = this.colorManager.blendColors(starColorRGB, starColor, (limitMagnitudeForWhiten - star.getMagnitude()) / 6.0);
-                    // this.ctx.fillStyle = this.getStarColor(star.getBv()!);
-                }
-                else {
-                    this.ctx.fillStyle = starColor;
-                }
+        }
+    }
+    drawHipStar(star, [x, y], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColorRGB) {
+        const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
+        const starColor = this.getStarColor(star.getBv());
+        if (starSize > 10) {
+            // 中心が白、外側が赤のグラデーション
+            const originalFilter = this.ctx.filter;
+            this.ctx.filter = `blur(${starSize * 0.2}px)`;
+            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, starSize);
+            gradient.addColorStop(0.2, this.colorManager.getColor('star'));
+            gradient.addColorStop(1, starColor);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = gradient;
+            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.filter = originalFilter;
+        }
+        else if (star.getMagnitude() < 2 || starSize > 5) {
+            // 半透明の円を重ねる
+            for (let i = blurRadii.length - 1; i >= 0; i--) {
+                const color = this.colorManager.blendColors(starColorRGB, starColor, colorRatios[i]);
                 this.ctx.beginPath();
-                this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+                this.ctx.fillStyle = `${color}${opacities[i]}`;
+                this.ctx.arc(x, y, starSize * blurRadii[i], 0, Math.PI * 2);
                 this.ctx.fill();
             }
         }
-        // console.timeEnd('drawHipSta
-        // rs2');
+        else {
+            if (star.getMagnitude() > limitMagnitudeForWhiten - 2.0) {
+                this.ctx.fillStyle = this.colorManager.blendColors(starColorRGB, starColor, (limitMagnitudeForWhiten - star.getMagnitude()) / 6.0);
+            }
+            else {
+                this.ctx.fillStyle = starColor;
+            }
+            this.ctx.beginPath();
+            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
     }
     writeStarNames(starNames) {
         if (starNames.length == 0)
@@ -677,6 +684,7 @@ export class CanvasRenderer {
         else if (showStarNames == 'to2') {
             tierLimit = 2;
         }
+        this.ctx.font = `14px serif`;
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = this.colorManager.getColor('text');
@@ -693,7 +701,6 @@ export class CanvasRenderer {
             if (!screenXY[0])
                 continue;
             const [x, y] = screenXY[1];
-            this.ctx.font = `${Math.max(10, 13 - 1 * starName.tier)}px serif`;
             if (starName.jpnName) {
                 this.ctx.fillText(starName.jpnName, x + 2, y - 2);
             }
@@ -784,60 +791,103 @@ export class CanvasRenderer {
         let count1 = 0;
         let count2 = 0;
         let count3 = 0;
-        for (const area of areas) {
-            for (let unit = area[0]; unit < area[1] + 1; unit++) {
-                const raInt = unit % 360;
-                const decInt = Math.floor(unit / 360) - 90;
-                const st = gaiaHelpData[unit];
-                const fi = gaiaHelpData[unit + 1];
-                // バッチ処理で座標変換を最適化
-                for (let i = st; i < fi; i++) {
-                    count1++;
-                    const data = gaiaData[i];
-                    const mag = data[2];
-                    if (mag >= limitingMagnitude)
-                        continue;
-                    count2++;
-                    const ra = raInt + data[0];
-                    const dec = decInt + data[1];
-                    const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
-                    const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
-                    if (!screenXY[0])
-                        continue;
-                    count3++;
-                    const [x, y] = screenXY[1];
-                    const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize);
-                    if (mag > limitingMagnitude - 3.0) {
-                        this.ctx.fillStyle = `${faintFillStyle}${Math.round(255 - (mag - limitingMagnitude + 3.0) * 30).toString(16)}`;
+        if (this.config.displaySettings.showStarInfo) {
+            for (const area of areas) {
+                for (let unit = area[0]; unit < area[1] + 1; unit++) {
+                    const raInt = unit % 360;
+                    const decInt = Math.floor(unit / 360) - 90;
+                    const st = gaiaHelpData[unit];
+                    const fi = gaiaHelpData[unit + 1];
+                    // バッチ処理で座標変換を最適化
+                    for (let i = st; i < fi; i++) {
+                        count1++;
+                        const data = gaiaData[i];
+                        const mag = data[2];
+                        if (mag >= limitingMagnitude)
+                            continue;
+                        count2++;
+                        const ra = raInt + data[0];
+                        const dec = decInt + data[1];
+                        const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
+                        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+                        if (!screenXY[0])
+                            continue;
+                        count3++;
+                        this.starInfoInfomation.push({
+                            type: 'gaiaStar',
+                            x: screenXY[1][0],
+                            y: screenXY[1][1],
+                            data: {
+                                raJ2000: ra,
+                                decJ2000: dec,
+                                raApparent: coords.ra,
+                                decApparent: coords.dec,
+                                mag: mag
+                            }
+                        });
+                        this.drawGaiaStar(screenXY[1], mag, limitingMagnitude, zeroMagSize, faintFillStyle, brightFillStyle);
                     }
-                    else {
-                        this.ctx.fillStyle = brightFillStyle;
+                }
+            }
+        }
+        else {
+            for (const area of areas) {
+                for (let unit = area[0]; unit < area[1] + 1; unit++) {
+                    const raInt = unit % 360;
+                    const decInt = Math.floor(unit / 360) - 90;
+                    const st = gaiaHelpData[unit];
+                    const fi = gaiaHelpData[unit + 1];
+                    // バッチ処理で座標変換を最適化
+                    for (let i = st; i < fi; i++) {
+                        count1++;
+                        const data = gaiaData[i];
+                        const mag = data[2];
+                        if (mag >= limitingMagnitude)
+                            continue;
+                        count2++;
+                        const ra = raInt + data[0];
+                        const dec = decInt + data[1];
+                        const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
+                        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
+                        if (!screenXY[0])
+                            continue;
+                        count3++;
+                        this.drawGaiaStar(screenXY[1], mag, limitingMagnitude, zeroMagSize, faintFillStyle, brightFillStyle);
                     }
-                    if (starSize < 2.0) {
-                        this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
-                    }
-                    else {
-                        this.ctx.moveTo(x, y);
-                        this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-                    }
-                    // spriteは遅くはならないがあんまり変わらない
-                    // if (starSize < 2.0) {
-                    //     this.ctx.fillRect(x - starSize*0.7, y - starSize*0.7, starSize*1.4, starSize*1.4);
-                    // } else {
-                    //     const sprite = this.getGaiaSprite(starSize);
-                    //     if (sprite) {
-                    //         this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
-                    //     } else {
-                    //         // console.log("No sprite:", starSize);
-                    //         this.ctx.moveTo(x, y);
-                    //         this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-                    //     }
-                    // }
                 }
             }
         }
         this.ctx.fill();
         // console.log(`${magBrightest}: inArea: ${count1} magOK: ${count2} drawn: ${count3}`);
+    }
+    drawGaiaStar([x, y], mag, limitingMagnitude, zeroMagSize, faintFillStyle, brightFillStyle) {
+        const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize);
+        if (mag > limitingMagnitude - 3.0) {
+            this.ctx.fillStyle = `${faintFillStyle}${Math.round(255 - (mag - limitingMagnitude + 3.0) * 30).toString(16)}`;
+        }
+        else {
+            this.ctx.fillStyle = brightFillStyle;
+        }
+        if (starSize < 2.0) {
+            this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
+        }
+        else {
+            this.ctx.moveTo(x, y);
+            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+        }
+        // spriteは遅くはならないがあんまり変わらない
+        // if (starSize < 2.0) {
+        //     this.ctx.fillRect(x - starSize*0.7, y - starSize*0.7, starSize*1.4, starSize*1.4);
+        // } else {
+        //     const sprite = this.getGaiaSprite(starSize);
+        //     if (sprite) {
+        //         this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+        //     } else {
+        //         // console.log("No sprite:", starSize);
+        //         this.ctx.moveTo(x, y);
+        //         this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+        //     }
+        // }
     }
     // グリッドを描画
     drawGrid() {
@@ -1426,11 +1476,17 @@ export class CanvasRenderer {
     clearObjectInfomation() {
         this.objectInfomation = [];
     }
+    clearStarInfoInfomation() {
+        this.starInfoInfomation = [];
+    }
     /**
      * 画面内に表示されている天体のリストを取得
      */
     getVisibleObjects() {
         return this.objectInfomation;
+    }
+    getStarInfoInfomation() {
+        return this.starInfoInfomation;
     }
 }
 //# sourceMappingURL=CanvasRenderer.js.map

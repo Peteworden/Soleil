@@ -167,7 +167,7 @@ export class CoordinateConverter {
     }
     radeg2hm(ra_deg) {
         let h = Math.floor(ra_deg / 15);
-        let m = Math.round((ra_deg - 15 * Math.floor(ra_deg / 15)) * 40);
+        let m = Math.round((ra_deg - 15 * h) * 40);
         if (m == 600) {
             m = 0.0;
             if (h == 23)
@@ -180,6 +180,23 @@ export class CoordinateConverter {
         }
         return [h, m];
     }
+    radeg2hms(ra_deg) {
+        let h = Math.floor(ra_deg / 15);
+        let m = Math.floor((ra_deg - 15 * h) * 4);
+        let s = Math.round(((ra_deg - 15 * h) * 4 - m) * 60);
+        if (s == 60) {
+            s = 0;
+            m += 1;
+        }
+        if (m == 60) {
+            m = 0;
+            h += 1;
+        }
+        if (h == 24) {
+            h = 0;
+        }
+        return [h, m, s];
+    }
     decdeg2dm(dec_deg) {
         let d, m;
         const sign = dec_deg >= 0 ? '+' : '-';
@@ -191,6 +208,18 @@ export class CoordinateConverter {
             d += 1;
         }
         return [sign, d, m];
+    }
+    decdeg2dm2(dec_deg) {
+        let d, m;
+        const sign = dec_deg >= 0 ? '+' : '-';
+        const decAbs = Math.abs(dec_deg);
+        d = Math.floor(decAbs);
+        m = Math.round((decAbs - d) * 600);
+        if (m == 600) {
+            m = 0;
+            d += 1;
+        }
+        return [sign, d, m / 10.0];
     }
     // 赤道座標から直交座標への変換
     equatorialToCartesian(coords, distance = 1) {

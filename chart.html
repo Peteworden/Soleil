@@ -416,7 +416,7 @@
                         </label>
                     </div>
                     <div class="switch-row">
-                        <label class="switch-text">Sharpless天体:</label>
+                        <label class="switch-text">Sh-2天体:</label>
                         <label class="switch">
                             <input type="checkbox" id="sharplessCheck">
                             <span class="slider round"></span>
@@ -444,6 +444,13 @@
                         <label class="switch-text">バイエル符号・フラムスティード番号表示:</label>
                         <label class="switch">
                             <input type="checkbox" id="bayerFSCheck" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="switch-row">
+                        <label class="switch-text">クリックで恒星情報:</label>
+                        <label class="switch">
+                            <input type="checkbox" id="starInfoCheck" checked>
                             <span class="slider round"></span>
                         </label>
                     </div>
@@ -635,6 +642,16 @@
         <div id="objectInfoName"></div>
         <div id="objectInfoImage"></div>
         <div id="objectInfoText"></div>
+    </div>
+
+    <!-- 恒星情報画面 -->
+    <div id="starInfo" class="starInfo" style="display: none;">
+        <button id="closeStarInfo" class="closeStarInfo" type="button">&times;</button>
+        <div id="starInfoRA2000"></div>
+        <div id="starInfoDec2000"></div>
+        <div id="starInfoRAapparent"></div>
+        <div id="starInfoDecapparent"></div>
+        <div id="starInfoMagnitude"></div>
     </div>
 
     <!-- スライダー -->

@@ -54,6 +54,10 @@ export class InteractionController {
         };
         this.onPointerMove = (e) => {
             e.preventDefault();
+            const starInfoElement = document.getElementById('starInfo');
+            if (starInfoElement && starInfoElement.style.display === 'block') {
+                starInfoElement.style.display = 'none';
+            }
             const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             // ポインターの座標を更新
             // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
@@ -188,8 +192,33 @@ export class InteractionController {
                         const rect = this.canvas.getBoundingClientRect();
                         const canvasX = e.clientX - rect.left;
                         const canvasY = e.clientY - rect.top;
-                        // 天体情報を表示
-                        ObjectInfoController.showObjectInfo(canvasX, canvasY);
+                        // starInfoが表示されている場合、クリックした場所がstarInfoの外側なら閉じる
+                        const objectInfoElement = document.getElementById('objectInfo');
+                        let isClickOutsideObjectInfo = false;
+                        const starInfoElement = document.getElementById('starInfo');
+                        let isClickOutsideStarInfo = false;
+                        if (objectInfoElement && objectInfoElement.style.display === 'block') {
+                            const objectInfoRect = objectInfoElement.getBoundingClientRect();
+                            const clickX = e.clientX;
+                            const clickY = e.clientY;
+                            if (clickX < objectInfoRect.left || clickX > objectInfoRect.right ||
+                                clickY < objectInfoRect.top || clickY > objectInfoRect.bottom) {
+                                isClickOutsideObjectInfo = true;
+                                ObjectInfoController.closeObjectInfo();
+                            }
+                        }
+                        else if (starInfoElement && starInfoElement.style.display === 'block') {
+                            const starInfoRect = starInfoElement.getBoundingClientRect();
+                            const clickX = e.clientX;
+                            const clickY = e.clientY;
+                            // クリックした場所がstarInfoの外側かチェック
+                            if (clickX < starInfoRect.left || clickX > starInfoRect.right ||
+                                clickY < starInfoRect.top || clickY > starInfoRect.bottom) {
+                                isClickOutsideStarInfo = true;
+                                ObjectInfoController.closeObjectInfo();
+                            }
+                        }
+                        ObjectInfoController.showObjectInfo(canvasX, canvasY, isClickOutsideStarInfo);
                     }
                 }
                 this.isDragging = false;
@@ -199,7 +228,7 @@ export class InteractionController {
                 this.pointerPositions.delete(e.pointerId);
                 this.canvas.releasePointerCapture(e.pointerId);
                 if (e.pointerType === 'mouse') {
-                    this.canvas.style.cursor = 'grab';
+                    this.canvas.style.cursor = 'default';
                     this.canvas.removeEventListener('pointermove', this.onPointerMove);
                 }
                 else if (e.pointerType === 'touch') {

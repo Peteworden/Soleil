@@ -5,13 +5,22 @@ export class ObjectInfoController {
     /**
      * クリックされた位置から最寄りの天体を見つけて情報を表示
      */
-    static showObjectInfo(x, y) {
+    static showObjectInfo(x, y, closeIfNotFound = false) {
         const nearestObject = this.findNearestObject(x, y);
         if (nearestObject && nearestObject.distance <= this.CLICK_THRESHOLD) {
-            this.displayObjectInfo(nearestObject);
+            if (nearestObject.type == 'hipStar' || nearestObject.type == 'gaiaStar') {
+                this.displayStarInfo(nearestObject);
+            }
+            else {
+                this.displayObjectInfo(nearestObject);
+            }
         }
         else {
             console.log('近くに天体が見つかりませんでした');
+            // 新しい天体が見つからない場合で、closeIfNotFoundがtrueの場合のみ閉じる
+            if (closeIfNotFound) {
+                this.closeObjectInfo();
+            }
         }
     }
     /**
@@ -25,21 +34,53 @@ export class ObjectInfoController {
             return null;
         }
         const visibleObjects = canvasRenderer.getVisibleObjects();
+        const starInfoList = canvasRenderer.getStarInfoInfomation();
         let nearestObject = null;
         let nearestDistance = Infinity;
         // 画面内の天体から最寄りのものを探す
-        for (const obj of visibleObjects) {
-            const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
-                nearestObject = {
-                    name: obj.name,
-                    type: obj.type,
-                    x: obj.x,
-                    y: obj.y,
-                    distance: distance,
-                    data: obj.data
-                };
+        if (window.config.displaySettings.showStarInfo) {
+            for (const obj of visibleObjects) {
+                const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestObject = {
+                        name: obj.name,
+                        type: obj.type,
+                        x: obj.x,
+                        y: obj.y,
+                        distance: distance,
+                        data: obj.data
+                    };
+                }
+            }
+            for (const starInfo of starInfoList) {
+                const distance = Math.sqrt((x - starInfo.x) ** 2 + (y - starInfo.y) ** 2);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestObject = {
+                        type: starInfo.type,
+                        x: starInfo.x,
+                        y: starInfo.y,
+                        distance: distance,
+                        data: starInfo.data
+                    };
+                }
+            }
+        }
+        else {
+            for (const obj of visibleObjects) {
+                const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
+                if (distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestObject = {
+                        name: obj.name,
+                        type: obj.type,
+                        x: obj.x,
+                        y: obj.y,
+                        distance: distance,
+                        data: obj.data
+                    };
+                }
             }
         }
         return nearestObject;
@@ -526,6 +567,49 @@ export class ObjectInfoController {
         objectInfoTextElement.innerHTML = infoText;
         return;
     }
+    static displayStarInfo(starInfo) {
+        const starInfoElement = document.getElementById('starInfo');
+        const starInfoRA2000Element = document.getElementById('starInfoRA2000');
+        const starInfoDec2000Element = document.getElementById('starInfoDec2000');
+        const starInfoRAapparentElement = document.getElementById('starInfoRAapparent');
+        const starInfoDecapparentElement = document.getElementById('starInfoDecapparent');
+        const starInfoMagnitudeElement = document.getElementById('starInfoMagnitude');
+        if (!starInfoElement || !starInfoRA2000Element || !starInfoDec2000Element || !starInfoRAapparentElement || !starInfoDecapparentElement || !starInfoMagnitudeElement) {
+            console.warn('Star info elements not found');
+            return;
+        }
+        if (starInfo.type == 'hipStar') {
+            const coord = starInfo.data.getCoordinates();
+            const jd = window.config.displayTime.jd;
+            const coordJ2000 = this.coordinateConverter.precessionEquatorial(coord, undefined, jd, 'j2000');
+            const raJ2000HMS = this.coordinateConverter.radeg2hms(coordJ2000.ra);
+            const decJ2000DM = this.coordinateConverter.decdeg2dm2(coordJ2000.dec);
+            const raApparentHMS = this.coordinateConverter.radeg2hms(coord.ra);
+            const decApparentDM = this.coordinateConverter.decdeg2dm2(coord.dec);
+            starInfoRA2000Element.textContent = `RA(J2000): ${raJ2000HMS[0]}h ${raJ2000HMS[1]}m ${raJ2000HMS[2]}s`;
+            starInfoDec2000Element.textContent = `Dec(J2000): ${decJ2000DM[0]}${decJ2000DM[1]}° ${decJ2000DM[2].toFixed(1)}'`;
+            starInfoRAapparentElement.textContent = `RA(apparent): ${raApparentHMS[0]}h ${raApparentHMS[1]}m ${raApparentHMS[2]}s`;
+            starInfoDecapparentElement.textContent = `Dec(apparent): ${decApparentDM[0]}${decApparentDM[1]}° ${decApparentDM[2].toFixed(1)}'`;
+            starInfoMagnitudeElement.textContent = `mag: ${starInfo.data.getMagnitude().toFixed(1)}`;
+        }
+        else if (starInfo.type == 'gaiaStar') {
+            const raJ2000HMS = this.coordinateConverter.radeg2hms(starInfo.data.raJ2000);
+            const decJ2000DM = this.coordinateConverter.decdeg2dm2(starInfo.data.decJ2000);
+            const raApparentHMS = this.coordinateConverter.radeg2hms(starInfo.data.raApparent);
+            const decApparentDM = this.coordinateConverter.decdeg2dm2(starInfo.data.decApparent);
+            starInfoRA2000Element.textContent = `RA(J2000): ${raJ2000HMS[0]}h ${raJ2000HMS[1]}m ${raJ2000HMS[2]}s`;
+            starInfoDec2000Element.textContent = `Dec(J2000): ${decJ2000DM[0]}${decJ2000DM[1]}° ${decJ2000DM[2].toFixed(1)}'`;
+            starInfoRAapparentElement.textContent = `RA(apparent): ${raApparentHMS[0]}h ${raApparentHMS[1]}m ${raApparentHMS[2]}s`;
+            starInfoDecapparentElement.textContent = `Dec(apparent): ${decApparentDM[0]}${decApparentDM[1]}° ${decApparentDM[2].toFixed(1)}'`;
+            starInfoMagnitudeElement.textContent = `mag: ${starInfo.data.mag.toFixed(1)}`;
+        }
+        // 星の位置の近くに表示（オフセットを追加）
+        const offsetX = 15; // 星の右側に表示
+        const offsetY = -10; // 星の上側に表示
+        starInfoElement.style.left = `${starInfo.x + offsetX}px`;
+        starInfoElement.style.top = `${starInfo.y + offsetY}px`;
+        starInfoElement.style.display = 'block';
+    }
     /**
      * 天体情報ウィンドウを閉じる
      */
@@ -533,6 +617,10 @@ export class ObjectInfoController {
         const objectInfoElement = document.getElementById('objectInfo');
         if (objectInfoElement) {
             objectInfoElement.style.display = 'none';
+        }
+        const starInfoElement = document.getElementById('starInfo');
+        if (starInfoElement) {
+            starInfoElement.style.display = 'none';
         }
     }
     /**
