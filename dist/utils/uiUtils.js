@@ -218,10 +218,23 @@ export function updateCanvasSize() {
     else {
         globalConfig.viewState.fieldOfViewRA = globalConfig.viewState.fieldOfViewDec * width / height;
     }
-    // rendererのcanvasサイズも更新
+    // rendererのcanvasサイズも更新（実際の表示サイズに合わせる）
     if (renderer.canvas) {
-        renderer.canvas.width = width;
-        renderer.canvas.height = height;
+        const rect = renderer.canvas.getBoundingClientRect();
+        const actualWidth = Math.round(rect.width);
+        const actualHeight = Math.round(rect.height);
+        renderer.canvas.width = actualWidth;
+        renderer.canvas.height = actualHeight;
+        // configも実際のサイズに更新
+        globalConfig.canvasSize.width = actualWidth;
+        globalConfig.canvasSize.height = actualHeight;
+        // 視野角も更新
+        if (actualWidth > actualHeight) {
+            globalConfig.viewState.fieldOfViewDec = globalConfig.viewState.fieldOfViewRA * actualHeight / actualWidth;
+        }
+        else {
+            globalConfig.viewState.fieldOfViewRA = globalConfig.viewState.fieldOfViewDec * actualWidth / actualHeight;
+        }
     }
     // rendererのupdateOptionsを呼び出して設定を更新
     if (renderer.updateOptions) {

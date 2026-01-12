@@ -638,17 +638,22 @@ export class ObjectInfoController {
         // 星の位置の近くに表示（オフセットを追加）
         const offsetX = 15; // 星の右側に表示
         const offsetY = -10; // 星の上側に表示
-        // Canvas座標を画面座標に変換（デバイスピクセル比を考慮）
-        const screenPos = this.canvasToScreen(starInfo.x, starInfo.y);
-        // 星の位置の近くに表示
-        starInfoElement.style.left = `${screenPos.screenX + offsetX}px`;
-        starInfoElement.style.top = `${screenPos.screenY + offsetY}px`;
+        // Canvasの論理サイズと表示サイズが一致するように設定されているため、
+        // 座標変換は不要。canvasの位置を取得して、そのまま使用
+        const canvas = document.querySelector('canvas');
+        let canvasRect = { left: 0, top: 0 };
+        if (canvas) {
+            canvasRect = canvas.getBoundingClientRect();
+        }
+        // 星の位置の近くに表示（canvas座標をそのまま使用）
+        starInfoElement.style.left = `${starInfo.x + canvasRect.left + offsetX}px`;
+        starInfoElement.style.top = `${starInfo.y + canvasRect.top + offsetY}px`;
         starInfoElement.style.display = 'block';
         // 星の位置にマーカーを表示
         const starMarkerElement = document.getElementById('starMarker');
         if (starMarkerElement) {
-            starMarkerElement.style.left = `${screenPos.screenX}px`;
-            starMarkerElement.style.top = `${screenPos.screenY}px`;
+            starMarkerElement.style.left = `${starInfo.x + canvasRect.left}px`;
+            starMarkerElement.style.top = `${starInfo.y + canvasRect.top}px`;
             starMarkerElement.style.display = 'block';
         }
     }

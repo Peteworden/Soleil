@@ -199,8 +199,6 @@ export class InteractionController {
                         const rect = this.canvas.getBoundingClientRect();
                         const canvasX = e.clientX - rect.left;
                         const canvasY = e.clientY - rect.top;
-                        const scaleX = this.canvas.width / rect.width;
-                        const scaleY = this.canvas.height / rect.height;
                         // starInfoが表示されている場合、クリックした場所がstarInfoの外側なら閉じる
                         const objectInfoElement = document.getElementById('objectInfo');
                         let isClickOutsideObjectInfo = false;
@@ -227,7 +225,7 @@ export class InteractionController {
                                 ObjectInfoController.closeObjectInfo();
                             }
                         }
-                        ObjectInfoController.showObjectInfo(canvasX * scaleX, canvasY * scaleY, isClickOutsideStarInfo);
+                        ObjectInfoController.showObjectInfo(canvasX, canvasY, isClickOutsideStarInfo);
                     }
                 }
                 this.isDragging = false;
