@@ -1265,4 +1265,23 @@ function showNewsPopupIfNeeded() {
         }, 500);
     }
 }
+/**
+ * デバッグ情報をタイトルバーの右端に表示
+ * @param text 表示するテキスト
+ */
+window.setDebugInfo = (text) => {
+    const debugInfoElement = document.getElementById('debugInfo');
+    if (debugInfoElement) {
+        debugInfoElement.textContent = text;
+    }
+};
+/**
+ * デバッグ情報をクリア
+ */
+window.clearDebugInfo = () => {
+    const debugInfoElement = document.getElementById('debugInfo');
+    if (debugInfoElement) {
+        debugInfoElement.textContent = '';
+    }
+};
 //# sourceMappingURL=main.js.map
