@@ -264,6 +264,20 @@ input[type="file"] {
     transform: none;
 }
 
+/* 設定画面などが開いたときにobjectInfoとstarInfoを非表示 */
+.subwindow-open .objectInfo,
+.subwindow-open .starInfo,
+.subwindow-open .starMarker {
+    display: none !important;
+}
+
+/* 検索画面が開いたときもobjectInfoとstarInfoを非表示 */
+.search-open .objectInfo,
+.search-open .starInfo,
+.search-open .starMarker {
+    display: none !important;
+}
+
 .search-open .main-screen-button:not(.search-button) {
     opacity: 0.3;
     pointer-events: none;

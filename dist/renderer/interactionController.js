@@ -225,7 +225,7 @@ export class InteractionController {
                                 ObjectInfoController.closeObjectInfo();
                             }
                         }
-                        ObjectInfoController.showObjectInfo(canvasX, canvasY, isClickOutsideStarInfo);
+                        ObjectInfoController.showObjectInfo(canvasX, canvasY, isClickOutsideStarInfo, e.clientX, e.clientY);
                     }
                 }
                 this.isDragging = false;

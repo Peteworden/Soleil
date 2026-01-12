@@ -1,6 +1,7 @@
 import { DataStore } from '../models/DataStore.js';
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
+import { ObjectInfoController } from './ObjectInfoController.js';
 export class SearchController {
     static openSearch() {
         const searchDiv = document.getElementById('search');
@@ -540,6 +541,8 @@ export class SearchController {
         if (!renderAll)
             return;
         const coordinateConverter = new CoordinateConverter();
+        // 検索結果が選択された時にobjectInfoとstarInfoを非表示
+        ObjectInfoController.closeObjectInfo();
         let position = position0;
         if (epoch === 'j2000') {
             position = coordinateConverter.precessionEquatorial(position0, undefined, 'j2000', config.displayTime.jd);
