@@ -5,11 +5,11 @@ export class ObjectInfoController {
     /**
      * クリックされた位置から最寄りの天体を見つけて情報を表示
      */
-    static showObjectInfo(x, y, closeIfNotFound = false, clientX, clientY) {
+    static showObjectInfo(x, y, closeIfNotFound = false) {
         const nearestObject = this.findNearestObject(x, y);
         if (nearestObject && nearestObject.distance <= this.CLICK_THRESHOLD) {
             if (nearestObject.type == 'hipStar' || nearestObject.type == 'gaiaStar') {
-                this.displayStarInfo(nearestObject, clientX, clientY);
+                this.displayStarInfo(nearestObject);
             }
             else {
                 this.displayObjectInfo(nearestObject);
@@ -567,7 +567,39 @@ export class ObjectInfoController {
         objectInfoTextElement.innerHTML = infoText;
         return;
     }
-    static displayStarInfo(starInfo, clientX, clientY) {
+    /**
+     * Canvas座標を画面座標に変換（デバイスピクセル比を考慮）
+     */
+    static canvasToScreen(canvasX, canvasY) {
+        const canvas = document.querySelector('canvas');
+        if (!canvas) {
+            return { screenX: canvasX, screenY: canvasY };
+        }
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = rect.width / canvas.width;
+        const scaleY = rect.height / canvas.height;
+        return {
+            screenX: rect.left + canvasX * scaleX,
+            screenY: rect.top + canvasY * scaleY
+        };
+    }
+    /**
+     * 画面座標をCanvas座標に変換（デバイスピクセル比を考慮）
+     */
+    static screenToCanvas(screenX, screenY) {
+        const canvas = document.querySelector('canvas');
+        if (!canvas) {
+            return { canvasX: screenX, canvasY: screenY };
+        }
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = rect.width / canvas.width;
+        const scaleY = rect.height / canvas.height;
+        return {
+            canvasX: (screenX - rect.left) / scaleX,
+            canvasY: (screenY - rect.top) / scaleY
+        };
+    }
+    static displayStarInfo(starInfo) {
         const starInfoElement = document.getElementById('starInfo');
         const starInfoRA2000Element = document.getElementById('starInfoRA2000');
         const starInfoDec2000Element = document.getElementById('starInfoDec2000');
@@ -606,57 +638,19 @@ export class ObjectInfoController {
         // 星の位置の近くに表示（オフセットを追加）
         const offsetX = 15; // 星の右側に表示
         const offsetY = -10; // 星の上側に表示
-        // スマホでのずれを修正：実際のクリック位置と星の位置の差を計算
-        if (clientX !== undefined && clientY !== undefined) {
-            const canvas = document.querySelector('canvas');
-            if (canvas) {
-                const canvasRect = canvas.getBoundingClientRect();
-                // クリック位置をキャンバス座標に変換
-                const clickCanvasX = clientX - canvasRect.left;
-                const clickCanvasY = clientY - canvasRect.top;
-                // クリック位置と星の位置の差を計算（これがずれの補正値）
-                const deltaX = clickCanvasX - starInfo.x;
-                const deltaY = clickCanvasY - starInfo.y;
-                // 星の位置に補正値を加えて表示位置を計算
-                starInfoElement.style.left = `${clientX - deltaX + offsetX}px`;
-                starInfoElement.style.top = `${clientY - deltaY + offsetY}px`;
-                // マーカーは星の実際の位置に表示（補正値を考慮）
-                const starMarkerElement = document.getElementById('starMarker');
-                if (starMarkerElement) {
-                    starMarkerElement.style.left = `${clientX - deltaX}px`;
-                    starMarkerElement.style.top = `${clientY - deltaY}px`;
-                    starMarkerElement.style.display = 'block';
-                }
-            }
-            else {
-                // フォールバック：従来の方法
-                starInfoElement.style.left = `${clientX + offsetX}px`;
-                starInfoElement.style.top = `${clientY + offsetY}px`;
-                const starMarkerElement = document.getElementById('starMarker');
-                if (starMarkerElement) {
-                    starMarkerElement.style.left = `${clientX}px`;
-                    starMarkerElement.style.top = `${clientY}px`;
-                    starMarkerElement.style.display = 'block';
-                }
-            }
-        }
-        else {
-            // フォールバック：従来の方法
-            const canvas = document.querySelector('canvas');
-            let canvasRect = { left: 0, top: 0 };
-            if (canvas) {
-                canvasRect = canvas.getBoundingClientRect();
-            }
-            starInfoElement.style.left = `${starInfo.x + canvasRect.left + offsetX}px`;
-            starInfoElement.style.top = `${starInfo.y + canvasRect.top + offsetY}px`;
-            const starMarkerElement = document.getElementById('starMarker');
-            if (starMarkerElement) {
-                starMarkerElement.style.left = `${starInfo.x + canvasRect.left}px`;
-                starMarkerElement.style.top = `${starInfo.y + canvasRect.top}px`;
-                starMarkerElement.style.display = 'block';
-            }
-        }
+        // Canvas座標を画面座標に変換（デバイスピクセル比を考慮）
+        const screenPos = this.canvasToScreen(starInfo.x, starInfo.y);
+        // 星の位置の近くに表示
+        starInfoElement.style.left = `${screenPos.screenX + offsetX}px`;
+        starInfoElement.style.top = `${screenPos.screenY + offsetY}px`;
         starInfoElement.style.display = 'block';
+        // 星の位置にマーカーを表示
+        const starMarkerElement = document.getElementById('starMarker');
+        if (starMarkerElement) {
+            starMarkerElement.style.left = `${screenPos.screenX}px`;
+            starMarkerElement.style.top = `${screenPos.screenY}px`;
+            starMarkerElement.style.display = 'block';
+        }
     }
     /**
      * 天体情報ウィンドウを閉じる
