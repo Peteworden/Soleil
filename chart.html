@@ -25,9 +25,19 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/Soleil/service-worker.js').then(() => {
-                    console.log('Service Worker registered');
-                });
+                // HTTPSまたはlocalhostの場合のみService Workerを登録
+                const isSecure = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                if (isSecure) {
+                    // パスを相対パスに変更（ローカル開発に対応）
+                    const swPath = location.pathname.includes('/Soleil/') ? '/Soleil/service-worker.js' : './service-worker.js';
+                    navigator.serviceWorker.register(swPath).then(() => {
+                        console.log('Service Worker registered');
+                    }).catch((error) => {
+                        console.warn('Service Worker registration failed:', error);
+                    });
+                } else {
+                    console.log('Service Worker skipped (HTTP on non-localhost)');
+                }
             });
         }
 
@@ -93,6 +103,7 @@
             <li><a href="PeteHOME.html">HOME</a></li>
             <li><a href="chart_js.html">旧バージョン</a></li>
             <div id="loadingtext">Loading...</div>
+            <li class="debug-info" id="debugInfo" style="display: none;"></li>
         </ul>
     </div>
 
