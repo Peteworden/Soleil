@@ -603,17 +603,23 @@ export class ObjectInfoController {
             starInfoDecapparentElement.textContent = `Dec(apparent): ${decApparentDM[0]}${decApparentDM[1]}° ${decApparentDM[2].toFixed(1)}'`;
             starInfoMagnitudeElement.textContent = `mag: ${starInfo.data.mag.toFixed(1)}`;
         }
+        // キャンバスの実際の位置を取得（スマホでのスクロール位置を考慮）
+        const canvas = document.querySelector('canvas');
+        let canvasRect = { left: 0, top: 0 };
+        if (canvas) {
+            canvasRect = canvas.getBoundingClientRect();
+        }
         // 星の位置の近くに表示（オフセットを追加）
         const offsetX = 15; // 星の右側に表示
         const offsetY = -10; // 星の上側に表示
-        starInfoElement.style.left = `${starInfo.x + offsetX}px`;
-        starInfoElement.style.top = `${starInfo.y + offsetY}px`;
+        starInfoElement.style.left = `${starInfo.x + canvasRect.left + offsetX}px`;
+        starInfoElement.style.top = `${starInfo.y + canvasRect.top + offsetY}px`;
         starInfoElement.style.display = 'block';
         // 星の位置にマーカーを表示
         const starMarkerElement = document.getElementById('starMarker');
         if (starMarkerElement) {
-            starMarkerElement.style.left = `${starInfo.x}px`;
-            starMarkerElement.style.top = `${starInfo.y}px`;
+            starMarkerElement.style.left = `${starInfo.x + canvasRect.left}px`;
+            starMarkerElement.style.top = `${starInfo.y + canvasRect.top}px`;
             starMarkerElement.style.display = 'block';
         }
     }
