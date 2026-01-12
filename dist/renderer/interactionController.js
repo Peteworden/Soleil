@@ -54,9 +54,12 @@ export class InteractionController {
         };
         this.onPointerMove = (e) => {
             e.preventDefault();
-            const starInfoElement = document.getElementById('starInfo');
-            if (starInfoElement && starInfoElement.style.display === 'block') {
-                starInfoElement.style.display = 'none';
+            // ドラッグ中のみstarInfoを非表示にする（スマホでのタッチ時の誤動作を防ぐ）
+            if (this.isDragging) {
+                const starInfoElement = document.getElementById('starInfo');
+                if (starInfoElement && starInfoElement.style.display === 'block') {
+                    starInfoElement.style.display = 'none';
+                }
             }
             const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             // ポインターの座標を更新
