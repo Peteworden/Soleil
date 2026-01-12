@@ -657,8 +657,6 @@ export class ObjectInfoController {
         // 星の位置を表示座標に変換
         const screenX = canvasRect.left + starInfo.x * scaleX;
         const screenY = canvasRect.top + starInfo.y * scaleY;
-        // デバッグ情報を表示
-        window.setDebugInfo(`C:${canvasLogicalWidth}x${canvasLogicalHeight} D:${Math.round(canvasDisplayWidth)}x${Math.round(canvasDisplayHeight)} S:${scaleX.toFixed(2)}x${scaleY.toFixed(2)}`);
         // 星の位置の近くに表示
         starInfoElement.style.left = `${screenX + offsetX}px`;
         starInfoElement.style.top = `${screenY + offsetY}px`;
