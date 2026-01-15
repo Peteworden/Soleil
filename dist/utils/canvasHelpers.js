@@ -1,5 +1,5 @@
 export function starSize_0mag(fieldOfViewRA, fieldOfViewDec) {
-    return Math.max(200.0 / (Math.min(fieldOfViewRA, fieldOfViewDec) + 15), 2.0);
+    return Math.max(200.0 / (Math.min(fieldOfViewRA, fieldOfViewDec) + 15), 3.0);
 }
 export function getStarSize(magnitude, limitingMagnitude, starSize_0mag) {
     if (magnitude > limitingMagnitude) {

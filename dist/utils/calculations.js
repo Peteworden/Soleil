@@ -120,7 +120,7 @@ export class AstronomicalCalculator {
         const key1 = config.viewState.starSizeKey1;
         const key2 = config.viewState.starSizeKey2;
         const usedStar = config.displaySettings.usedStar;
-        let lm = Math.min(12.0, Math.max(3.0, key1 - key2 * Math.log(Math.min(config.viewState.fieldOfViewRA, config.viewState.fieldOfViewDec) * 0.5)));
+        let lm = Math.min(12.0, Math.max(3.0, key1 - key2 * 0.5 * Math.log(config.viewState.fieldOfViewRA * config.viewState.fieldOfViewDec)));
         if (usedStar == 'noStar') {
             lm = -2.0;
         }

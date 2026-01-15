@@ -55,7 +55,7 @@ export class InteractionController {
         this.onPointerMove = (e) => {
             e.preventDefault();
             // ドラッグ中のみstarInfoを非表示にする（スマホでのタッチ時の誤動作を防ぐ）
-            if (this.isDragging) {
+            if (this.isDragging || this.isPinch) {
                 const starInfoElement = document.getElementById('starInfo');
                 if (starInfoElement && starInfoElement.style.display === 'block') {
                     starInfoElement.style.display = 'none';
@@ -266,6 +266,14 @@ export class InteractionController {
             let scale = 1 - e.deltaY * this.zoomSensitivity;
             if (!scale || scale == Infinity || scale == 0)
                 return;
+            const starInfoElement = document.getElementById('starInfo');
+            if (starInfoElement && starInfoElement.style.display === 'block') {
+                starInfoElement.style.display = 'none';
+            }
+            const starMarkerElement = document.getElementById('starMarker');
+            if (starMarkerElement && starMarkerElement.style.display === 'block') {
+                starMarkerElement.style.display = 'none';
+            }
             if (this.canvas.width < this.canvas.height) {
                 scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 180.0);
             }

@@ -173,6 +173,28 @@ export class ColorManager {
         if (color.startsWith('rgb')) {
             return color.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
         }
+        // 名前付きカラー（'orange', 'red', 'yellow'など）の場合は、RGB値に変換してからrgbaに変換
+        // 一時的なcanvas要素を使ってブラウザの色解析機能を利用
+        const canvas = document.createElement('canvas');
+        canvas.width = 1;
+        canvas.height = 1;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            ctx.fillStyle = color;
+            const computedColor = ctx.fillStyle;
+            // 名前付きカラーがRGB値に変換された場合、それをrgbaに変換
+            if (computedColor.startsWith('rgb')) {
+                return computedColor.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+            }
+            // hex形式に変換された場合
+            if (computedColor.startsWith('#')) {
+                const hex = computedColor.slice(1);
+                const r = parseInt(hex.slice(0, 2), 16);
+                const g = parseInt(hex.slice(2, 4), 16);
+                const b = parseInt(hex.slice(4, 6), 16);
+                return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+            }
+        }
         // その他の場合はそのまま返す
         return color;
     }

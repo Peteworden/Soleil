@@ -86,7 +86,7 @@ function initializeConfig(noLoad = false) {
         showGrid: true,
         showReticle: true,
         showObjectInfo: true,
-        showStarInfo: true,
+        showStarInfo: false,
         usedStar: 'to12',
         showStarNames: 'to2',
         showBayerFS: true,
