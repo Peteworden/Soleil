@@ -275,10 +275,10 @@ export class InteractionController {
                 starMarkerElement.style.display = 'none';
             }
             if (this.canvas.width < this.canvas.height) {
-                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 180.0);
+                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 270.0);
             }
             else {
-                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 180.0);
+                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 270.0);
             }
             const x = e.clientX - this.canvas.offsetLeft - this.canvas.width / 2;
             const y = e.clientY - this.canvas.offsetTop - this.canvas.height / 2;
