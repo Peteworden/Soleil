@@ -164,10 +164,10 @@ export class InteractionController {
                 if (!scale || scale == Infinity)
                     return;
                 if (this.canvas.width < this.canvas.height) {
-                    scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 180.0);
+                    scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 270.0);
                 }
                 else {
-                    scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 180.0);
+                    scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 270.0);
                 }
                 // ズーム前のピンチ中心のスクリーンRaDec
                 const pinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(pinchX, pinchY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
