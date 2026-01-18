@@ -176,10 +176,12 @@ export function getAreaCandidates(lstLat, viewState, jd, mode, coordinateConvert
     let screenDec = decWidth;
     let dscreenRa = 0.0;
     let dscreenDec = 0.0;
+    // 天球全体が見えるときの処理はごまかしているかも
     //右上から左上
     while (screenRa < raWidth) {
         addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        dscreenRa = 0.3 * Math.cos(coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined).dec * Math.PI / 180);
+        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
+        dscreenRa = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
         screenRa += dscreenRa;
     }
     //左上から左下
@@ -187,7 +189,8 @@ export function getAreaCandidates(lstLat, viewState, jd, mode, coordinateConvert
     screenDec = decWidth;
     while (screenDec > -decWidth) {
         addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        dscreenDec = 0.3 * Math.cos(coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined).dec * Math.PI / 180);
+        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
+        dscreenDec = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
         screenDec -= dscreenDec;
     }
     //左下から右下
@@ -195,7 +198,8 @@ export function getAreaCandidates(lstLat, viewState, jd, mode, coordinateConvert
     screenDec = -decWidth;
     while (screenRa > -raWidth) {
         addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        dscreenRa = 0.3 * Math.cos(coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined).dec * Math.PI / 180);
+        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
+        dscreenRa = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
         screenRa -= dscreenRa;
     }
     //右下から右上
@@ -203,7 +207,8 @@ export function getAreaCandidates(lstLat, viewState, jd, mode, coordinateConvert
     screenDec = -decWidth;
     while (screenDec < decWidth) {
         addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        dscreenDec = 0.3 * Math.cos(coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined).dec * Math.PI / 180);
+        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
+        dscreenDec = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
         screenDec += dscreenDec;
     }
     return getAreaCandidatesFromEdge(edgeRA, edgeDec, npIsIn, spIsIn);

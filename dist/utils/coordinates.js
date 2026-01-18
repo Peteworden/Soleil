@@ -638,8 +638,8 @@ export class CoordinateConverter {
     }
     // ------------------------------スクリーンXYからの変換------------------------------
     // スクリーン座標からスクリーンRaDecへの変換
-    screenXYToScreenRaDec(x, y, canvas) {
-        const fieldOfView = this.getCurrentFieldOfView();
+    screenXYToScreenRaDec(x, y, fieldOfView, canvas) {
+        // const fieldOfView = this.getCurrentFieldOfView();
         const ra = (0.5 - x / canvas.width) * fieldOfView.ra;
         const dec = (0.5 - y / canvas.height) * fieldOfView.dec;
         return { ra, dec };

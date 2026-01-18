@@ -16,6 +16,8 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2026-01-18T22:42:00', title: '拡大・縮小の範囲を拡大', text: 'ご意見フォームでいただいた意見を反映し、これまでより広い範囲を表示できるようにしました。バグがあったら教えてください。' },
+    { time: '2026-01-18T22:40:00', title: '移動・拡大縮小の改善', text: '指の位置にある星があまり変わらないように、また極付近や天頂付近を触ったときに変なぐるぐるが発生しないようにしました。' },
     { time: '2026-01-12T20:00:00', title: '恒星情報', text: '恒星をタップ・クリックすることで、座標と等級を見れます。ついでに、謎の縦長になってる問題が解決しました。' },
     { time: '2026-01-11T22:00:00', title: '視野の共有', text: 'リンクで共有したときに視野も同じになるようにしました。' },
     { time: '2025-12-13T00:00:00', title: '星の表示を改善', text: '暗い星の透明度を設定したり、明るい星に滲みを付けたりしました。どうでしょう。' },

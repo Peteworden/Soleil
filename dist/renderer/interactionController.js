@@ -90,22 +90,48 @@ export class InteractionController {
                 // ポインターの座標を更新
                 this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 this.lastDragTime = now;
-                // ピクセル数に掛けると角度になる
-                const moveScale = this.viewState.fieldOfViewRA / this.canvas.width;
+                // 前回のポインター位置のスクリーン座標（キャンバス左上からの座標）
+                const lastPointerX = this.lastX - this.canvas.offsetLeft;
+                const lastPointerY = this.lastY - this.canvas.offsetTop;
+                // 現在のポインター位置のスクリーン座標
+                const currentPointerX = e.clientX - this.canvas.offsetLeft;
+                const currentPointerY = e.clientY - this.canvas.offsetTop;
+                // 前回のポインター位置のスクリーンRaDec
+                const lastScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(lastPointerX, lastPointerY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
                 if (this.displaySettings.mode == 'AEP') {
-                    const dcenterRA = Math.max(-5, Math.min(5, deltaX * moveScale / Math.cos(this.viewState.centerDec * Math.PI / 180)));
-                    const dcenterDec = deltaY * moveScale;
-                    this.viewState.centerRA = ((this.viewState.centerRA + dcenterRA) % 360 + 360) % 360;
-                    this.viewState.centerDec = Math.min(Math.max(this.viewState.centerDec + dcenterDec, -90), 90);
+                    // 前回のポインター位置の赤道座標
+                    const lastEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(lastScreenRaDec);
+                    // 北極/南極付近の場合は従来の方式（数値的に不安定になるため）
+                    // const isNearPole = Math.abs(this.viewState.centerDec) > 85 || Math.abs(lastEquatorial.dec) > 85;
+                    const isNearPole = false;
+                    if (!isNearPole) {
+                        // 現在のポインター位置のスクリーンRaDec
+                        const currentScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(currentPointerX, currentPointerY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
+                        // 現在のポインター位置の赤道座標
+                        const currentEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(currentScreenRaDec);
+                        // ポインター位置の天球座標が保たれるように中心座標を調整
+                        this.viewState.centerRA = ((lastEquatorial.ra + this.viewState.centerRA - currentEquatorial.ra) % 360 + 360) % 360;
+                        this.viewState.centerDec = Math.max(-90, Math.min(90, lastEquatorial.dec + this.viewState.centerDec - currentEquatorial.dec));
+                    }
                     const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: this.viewState.centerRA, dec: this.viewState.centerDec });
                     this.viewState.centerAz = centerHorizontal.az;
                     this.viewState.centerAlt = centerHorizontal.alt;
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    const dcenterAz = -Math.max(-5, Math.min(5, deltaX * moveScale / Math.cos(this.viewState.centerAlt * Math.PI / 180)));
-                    const dcenterAlt = deltaY * moveScale;
-                    this.viewState.centerAz = ((this.viewState.centerAz + dcenterAz) % 360 + 360) % 360;
-                    this.viewState.centerAlt = Math.min(Math.max(this.viewState.centerAlt + dcenterAlt, -90), 90);
+                    // 前回のポインター位置の地平座標
+                    const lastHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(lastScreenRaDec);
+                    // 天頂/天底付近の場合は従来の方式（数値的に不安定になるため）
+                    // const isNearZenith = Math.abs(this.viewState.centerAlt) > 85 || Math.abs(lastHorizontal.alt) > 85;
+                    const isNearZenith = false;
+                    if (!isNearZenith) {
+                        // 現在のポインター位置のスクリーンRaDec
+                        const currentScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(currentPointerX, currentPointerY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
+                        // 現在のポインター位置の地平座標
+                        const currentHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(currentScreenRaDec);
+                        // ポインター位置の天球座標が保たれるように中心座標を調整
+                        this.viewState.centerAz = ((lastHorizontal.az + this.viewState.centerAz - currentHorizontal.az) % 360 + 360) % 360;
+                        this.viewState.centerAlt = Math.max(-90, Math.min(90, lastHorizontal.alt + this.viewState.centerAlt - currentHorizontal.alt));
+                    }
                     const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt });
                     this.viewState.centerRA = centerEquatorial.ra;
                     this.viewState.centerDec = centerEquatorial.dec;
@@ -130,9 +156,9 @@ export class InteractionController {
                     this.baseDistance = distance;
                 if (distance == 0)
                     return;
-                //原点で0, 右に行くと正、上に行くと正
-                const x3 = (x1 + x2) / 2 - this.canvas.offsetLeft - this.canvas.width / 2;
-                const y3 = (y1 + y2) / 2 - this.canvas.offsetTop - this.canvas.height / 2;
+                // ピンチ中心点のスクリーン座標（キャンバス左上からの座標）
+                const pinchX = (x1 + x2) / 2 - this.canvas.offsetLeft;
+                const pinchY = (y1 + y2) / 2 - this.canvas.offsetTop;
                 // 1より大きければ拡大、小さければ縮小
                 let scale = distance / this.baseDistance;
                 if (!scale || scale == Infinity)
@@ -143,27 +169,45 @@ export class InteractionController {
                 else {
                     scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 180.0);
                 }
-                this.viewState.fieldOfViewRA /= scale;
-                this.viewState.fieldOfViewDec /= scale;
+                // ズーム前のピンチ中心のスクリーンRaDec
+                const pinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(pinchX, pinchY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
                 if (this.displaySettings.mode == 'AEP') {
-                    const pinchScreenRA = -this.viewState.fieldOfViewRA * x3 / this.canvas.width;
-                    const pinchScreenDec = -this.viewState.fieldOfViewDec * y3 / this.canvas.height;
-                    const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: pinchScreenRA * (1 - 1 / scale), dec: pinchScreenDec * (1 - 1 / scale) });
-                    this.viewState.centerRA = pinchEquatorial.ra;
-                    this.viewState.centerDec = pinchEquatorial.dec;
-                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: pinchEquatorial.ra, dec: pinchEquatorial.dec });
-                    this.viewState.centerAz = centerHorizontal.az;
-                    this.viewState.centerAlt = centerHorizontal.alt;
+                    // ズーム前のピンチ中心の赤道座標を保存
+                    const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(pinchScreenRaDec);
+                    // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
+                    const isNearPole = Math.abs(this.viewState.centerDec) > 85 || Math.abs(pinchEquatorial.dec) > 85;
+                    // ズームを適用
+                    this.viewState.fieldOfViewRA /= scale;
+                    this.viewState.fieldOfViewDec /= scale;
+                    if (!isNearPole) {
+                        const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(pinchX, pinchY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
+                        const newPinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(newPinchScreenRaDec);
+                        this.viewState.centerRA = ((pinchEquatorial.ra + this.viewState.centerRA - newPinchEquatorial.ra) % 360 + 360) % 360;
+                        this.viewState.centerDec = Math.max(-90, Math.min(90, pinchEquatorial.dec + this.viewState.centerDec - newPinchEquatorial.dec));
+                        const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: this.viewState.centerRA, dec: this.viewState.centerDec });
+                        this.viewState.centerAz = centerHorizontal.az;
+                        this.viewState.centerAlt = centerHorizontal.alt;
+                    }
                 }
                 else if (this.displaySettings.mode == 'view') {
-                    const pinchScreenAz = -this.viewState.fieldOfViewRA * x3 / this.canvas.width;
-                    const pinchScreenAlt = -this.viewState.fieldOfViewDec * y3 / this.canvas.height;
-                    const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: pinchScreenAz * (1 - 1 / scale), dec: pinchScreenAlt * (1 - 1 / scale) });
-                    this.viewState.centerAz = pinchHorizontal.az;
-                    this.viewState.centerAlt = pinchHorizontal.alt;
-                    const pinchEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: pinchHorizontal.az, alt: pinchHorizontal.alt });
-                    this.viewState.centerRA = pinchEquatorial.ra;
-                    this.viewState.centerDec = pinchEquatorial.dec;
+                    // ズーム前のピンチ中心の地平座標を保存
+                    const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(pinchScreenRaDec);
+                    // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
+                    const isNearZenith = Math.abs(this.viewState.centerAlt) > 85 || Math.abs(pinchHorizontal.alt) > 85;
+                    // ズームを適用
+                    this.viewState.fieldOfViewRA /= scale;
+                    this.viewState.fieldOfViewDec /= scale;
+                    if (!isNearZenith) {
+                        // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
+                        const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(pinchX, pinchY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
+                        // 新しい中心座標でのピンチした位置での地平座標
+                        const newPinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(newPinchScreenRaDec);
+                        this.viewState.centerAz = ((pinchHorizontal.az + this.viewState.centerAz - newPinchHorizontal.az) % 360 + 360) % 360;
+                        this.viewState.centerAlt = Math.max(-90, Math.min(90, pinchHorizontal.alt + this.viewState.centerAlt - newPinchHorizontal.alt));
+                        const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt });
+                        this.viewState.centerRA = centerEquatorial.ra;
+                        this.viewState.centerDec = centerEquatorial.dec;
+                    }
                 }
                 this.baseDistance = distance;
             }
@@ -280,30 +324,49 @@ export class InteractionController {
             else {
                 scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 270.0);
             }
-            const x = e.clientX - this.canvas.offsetLeft - this.canvas.width / 2;
-            const y = e.clientY - this.canvas.offsetTop - this.canvas.height / 2;
-            this.viewState.fieldOfViewRA /= scale;
-            this.viewState.fieldOfViewDec /= scale;
-            const pinchScreenRA = -this.viewState.fieldOfViewRA * x / this.canvas.width;
-            const pinchScreenDec = -this.viewState.fieldOfViewDec * y / this.canvas.height;
-            const centerNewScreenRA = pinchScreenRA * (1 - 1 / scale);
-            const centerNewScreenDec = pinchScreenDec * (1 - 1 / scale);
+            // マウス位置のスクリーン座標（中心からのオフセット）
+            const mouseX = e.clientX - this.canvas.offsetLeft;
+            const mouseY = e.clientY - this.canvas.offsetTop;
+            // ズーム前のマウス位置のスクリーンRaDec
+            const mouseScreenRADec = this.coordinateConverter.screenXYToScreenRaDec(mouseX, mouseY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
             const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             if (this.displaySettings.mode == 'AEP') {
-                const centerNewEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP({ ra: centerNewScreenRA, dec: centerNewScreenDec });
-                this.viewState.centerRA = centerNewEquatorial.ra;
-                this.viewState.centerDec = centerNewEquatorial.dec;
-                const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: centerNewEquatorial.ra, dec: centerNewEquatorial.dec });
-                this.viewState.centerAz = centerHorizontal.az;
-                this.viewState.centerAlt = centerHorizontal.alt;
+                // ズーム前のマウス位置の赤道座標を保存
+                const mouseEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(mouseScreenRADec);
+                // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
+                const isNearPole = Math.abs(this.viewState.centerDec) > 85 || Math.abs(mouseEquatorial.dec) > 85;
+                // ズームを適用
+                this.viewState.fieldOfViewRA /= scale;
+                this.viewState.fieldOfViewDec /= scale;
+                if (!isNearPole) {
+                    const newMouseScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(mouseX, mouseY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
+                    const newMouseEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(newMouseScreenRaDec);
+                    this.viewState.centerRA = ((mouseEquatorial.ra + this.viewState.centerRA - newMouseEquatorial.ra) % 360 + 360) % 360;
+                    this.viewState.centerDec = Math.max(-90, Math.min(90, mouseEquatorial.dec + this.viewState.centerDec - newMouseEquatorial.dec));
+                    const centerHorizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, { ra: this.viewState.centerRA, dec: this.viewState.centerDec });
+                    this.viewState.centerAz = centerHorizontal.az;
+                    this.viewState.centerAlt = centerHorizontal.alt;
+                }
             }
             else if (this.displaySettings.mode == 'view') {
-                const centerNewHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View({ ra: centerNewScreenRA, dec: centerNewScreenDec });
-                this.viewState.centerAz = centerNewHorizontal.az;
-                this.viewState.centerAlt = centerNewHorizontal.alt;
-                const centerNewEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: centerNewHorizontal.az, alt: centerNewHorizontal.alt });
-                this.viewState.centerRA = centerNewEquatorial.ra;
-                this.viewState.centerDec = centerNewEquatorial.dec;
+                // ズーム前のマウス位置の地平座標を保存
+                const mouseHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(mouseScreenRADec);
+                // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
+                const isNearZenith = Math.abs(this.viewState.centerAlt) > 85 || Math.abs(mouseHorizontal.alt) > 85;
+                // ズームを適用
+                this.viewState.fieldOfViewRA /= scale;
+                this.viewState.fieldOfViewDec /= scale;
+                if (!isNearZenith) {
+                    // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
+                    const newMouseScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(mouseX, mouseY, { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, this.canvas);
+                    // 新しい中心座標でのマウス位置での地平座標
+                    const newMouseHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(newMouseScreenRaDec);
+                    this.viewState.centerAz = ((mouseHorizontal.az + this.viewState.centerAz - newMouseHorizontal.az) % 360 + 360) % 360;
+                    this.viewState.centerAlt = Math.max(-90, Math.min(90, mouseHorizontal.alt + this.viewState.centerAlt - newMouseHorizontal.alt));
+                    const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt });
+                    this.viewState.centerRA = centerEquatorial.ra;
+                    this.viewState.centerDec = centerEquatorial.dec;
+                }
             }
             // URLのクエリを一度だけ削除（軽量）
             clearUrlSearchOnce();

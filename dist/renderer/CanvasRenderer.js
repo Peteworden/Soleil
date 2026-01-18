@@ -931,7 +931,7 @@ export class CanvasRenderer {
                     this.ctx.strokeStyle = this.colorManager.getColor('gridEquatorialLine');
                 }
                 this.ctx.beginPath();
-                for (j = 0; j <= 360 / alphaCalcInterval; j++) {
+                for (j = 0; j <= 360 / alphaCalcInterval + 1; j++) {
                     a = j * alphaCalcInterval;
                     if (mode == 'AEP') {
                         [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
@@ -984,7 +984,7 @@ export class CanvasRenderer {
                     this.ctx.strokeStyle = this.colorManager.getColor('gridEquatorialLine');
                 }
                 this.ctx.beginPath();
-                for (j = 0; j <= 360 / alphaCalcInterval; j++) {
+                for (j = 0; j <= 360 / alphaCalcInterval + 1; j++) {
                     a = j * alphaCalcInterval;
                     if (mode == 'AEP') {
                         [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
@@ -1106,24 +1106,7 @@ export class CanvasRenderer {
             }
         }
     }
-    drawHorizontalLine(j, az, alt, screenRA0, screenDec0) {
-        const mode = this.config.displaySettings.mode;
-        const centerHorizontal = { az: this.config.viewState.centerAz, alt: this.config.viewState.centerAlt };
-        const { ra: screenRA1, dec: screenDec1 } = this.coordinateConverter.horizontalToScreenRaDec({ az: az, alt: alt }, mode, centerHorizontal, this.orientationData);
-        const semiWidthRA = this.config.viewState.fieldOfViewRA / 2;
-        const semiWidthDec = this.config.viewState.fieldOfViewDec / 2;
-        if (j > 0) {
-            if (screenRA0 === undefined || screenDec0 === undefined)
-                return [screenRA1, screenDec1];
-            if ((Math.abs(screenRA0) < semiWidthRA && Math.abs(screenDec0) < semiWidthDec) ||
-                (Math.abs(screenRA1) < semiWidthRA && Math.abs(screenDec1) < semiWidthDec)) {
-                const [x1, y1] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA0, dec: screenDec0 }, this.config.canvasSize, this.config.viewState);
-                const [x2, y2] = this.coordinateConverter.screenRaDecToScreenXY({ ra: screenRA1, dec: screenDec1 }, this.config.canvasSize, this.config.viewState);
-                this.ctx.moveTo(x1, y1);
-                this.ctx.lineTo(x2, y2);
-            }
-        }
-        return [screenRA1, screenDec1];
+    drawEquatorialLine() {
     }
     drawPoleMark() {
         const minFov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
