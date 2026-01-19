@@ -245,7 +245,7 @@ export class InteractionController {
                         const clickY = e.clientY;
                         const canvasX = (clickX - rect.left) * this.canvas.width / rect.width;
                         const canvasY = (clickY - rect.top) * this.canvas.height / rect.height;
-                        window.setDebugInfo(`${this.canvas.width} ${this.canvas.height} ${rect.width} ${rect.height}`);
+                        // CSSの設定とmainのおかげでthis.canvas.width/heightとrec.width/heightはほぼ一致する
                         // starInfoが表示されている場合、クリックした場所がstarInfoの外側なら閉じる
                         const objectInfoElement = document.getElementById('objectInfo');
                         let isClickOutsideObjectInfo = false;
