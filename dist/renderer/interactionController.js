@@ -241,8 +241,11 @@ export class InteractionController {
                     if (clickDuration < 300 && moveDistance < 10) {
                         // キャンバス座標に変換
                         const rect = this.canvas.getBoundingClientRect();
-                        const canvasX = e.clientX - rect.left;
-                        const canvasY = e.clientY - rect.top;
+                        const clickX = e.clientX;
+                        const clickY = e.clientY;
+                        const canvasX = (clickX - rect.left) * this.canvas.width / rect.width;
+                        const canvasY = (clickY - rect.top) * this.canvas.height / rect.height;
+                        window.setDebugInfo(`${this.canvas.width} ${this.canvas.height} ${rect.width} ${rect.height}`);
                         // starInfoが表示されている場合、クリックした場所がstarInfoの外側なら閉じる
                         const objectInfoElement = document.getElementById('objectInfo');
                         let isClickOutsideObjectInfo = false;
@@ -250,8 +253,6 @@ export class InteractionController {
                         let isClickOutsideStarInfo = false;
                         if (objectInfoElement && objectInfoElement.style.display === 'block') {
                             const objectInfoRect = objectInfoElement.getBoundingClientRect();
-                            const clickX = e.clientX;
-                            const clickY = e.clientY;
                             if (clickX < objectInfoRect.left || clickX > objectInfoRect.right ||
                                 clickY < objectInfoRect.top || clickY > objectInfoRect.bottom) {
                                 isClickOutsideObjectInfo = true;
@@ -260,8 +261,6 @@ export class InteractionController {
                         }
                         else if (starInfoElement && starInfoElement.style.display === 'block') {
                             const starInfoRect = starInfoElement.getBoundingClientRect();
-                            const clickX = e.clientX;
-                            const clickY = e.clientY;
                             // クリックした場所がstarInfoの外側かチェック
                             if (clickX < starInfoRect.left || clickX > starInfoRect.right ||
                                 clickY < starInfoRect.top || clickY > starInfoRect.bottom) {
