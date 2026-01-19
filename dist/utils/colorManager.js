@@ -116,7 +116,11 @@ export class ColorManager {
      * @returns 恒星の色
      */
     getStarColor(bv) {
+        if (bv == null) {
+            return this.getColor('star');
+        }
         if (bv == null || bv == 100 || Number.isNaN(bv) || !Number.isFinite(bv)) {
+            console.log(bv);
             return this.getColor('star');
         }
         // B-V値を適切な範囲に制限

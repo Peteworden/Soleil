@@ -628,22 +628,20 @@ export class CanvasRenderer {
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
         if (starSize > 3) {
             let bv = star.getBv();
-            if (bv.toFixed(1) == "NaN") {
-                console.log(star);
+            let bv10Str = "null";
+            if (bv != null) {
+                bv10Str = Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString();
             }
-            if (bv != -10) {
-                bv = Math.max(-0.4, Math.min(2.0, bv));
-            }
-            const sprite = this.getHipStarSprite(starSize, bv);
+            const sprite = this.getHipStarSprite(starSize, bv10Str);
             if (sprite) {
-                // this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
-                // return;
+                this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+                return;
             }
             else {
-                console.log(starSize.toFixed(1), bv.toFixed(1));
-                // const off = this.createHipStarSprite(starSize, star.getBv()!, this.colorManager.getColor('star'), 2.5);
-                // this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
-                // return;
+                console.log(starSize.toFixed(1), bv10Str);
+                const off = this.createHipStarSprite(starSize, star.getBv(), this.colorManager.getColor('star'), 2.5);
+                this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
+                return;
             }
         }
         // === スプライト描画ここまで ===
@@ -1456,15 +1454,17 @@ export class CanvasRenderer {
         this.hipStarSprites.clear();
         const baseColor = this.colorManager.getColor('star');
         // サイズ範囲: 3〜20px (0.5px刻み)
+        const haloMultiplier = 2.5; // ハローの広がり倍率
         for (let size = 3; size <= 20; size += 1) {
             for (let bv = -0.4; bv <= 2.0; bv += 0.1) {
-                // ハローのマージンを加えたキャンバスサイズ
-                const haloMultiplier = 2.5; // ハローの広がり倍率
                 const off = this.createHipStarSprite(size, bv, baseColor, haloMultiplier);
                 const key = `${size}-${Math.round(bv * 10)}`;
-                // console.log(key);
                 this.hipStarSprites.set(key, off);
             }
+            // bv = null
+            const off = this.createHipStarSprite(size, null, baseColor, haloMultiplier);
+            const key = `${size}-null`;
+            this.hipStarSprites.set(key, off);
         }
         console.log(`HIP star sprites created: ${this.hipStarSprites.size} sprites`);
     }
@@ -1492,17 +1492,16 @@ export class CanvasRenderer {
     /**
      * HIP星用のスプライトを取得
      */
-    getHipStarSprite(size, bv) {
+    getHipStarSprite(size, bv10) {
         // サイズを整数に丸める
-        const roundedSize = Math.min(20, Math.max(3, Math.round(size)));
+        const roundedSize = Math.round(size);
         // console.log(`${roundedSize}-${Math.round(bv * 10)}`);
-        return this.hipStarSprites.get(`${roundedSize}-${Math.round(bv * 10)}`) || null;
+        return this.hipStarSprites.get(`${roundedSize}-${bv10}`) || null;
     }
     // 描画オプションを更新
     // timeSliderが動いたときに呼び出される
     // this.configはコンストラクタの宣言により自動で更新されるので、この関数はなくせるかも
     updateOptions(options) {
-        ;
         const globalConfig = window.config;
         if (globalConfig) {
             if (this.config !== globalConfig) {
