@@ -626,44 +626,44 @@ export class CanvasRenderer {
         const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
         const starColor = this.getStarColor(star.getBv());
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
-        if (starSize > 3) {
-            const sprite = this.getHipStarSprite(starSize, Math.max(-0.4, Math.min(2.0, star.getBv())));
-            if (sprite) {
-                this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
-                return;
+        // if (starSize > 3) {
+        //     let bv = star.getBv()!;
+        //     if (bv != -10) {
+        //         bv = Math.max(-0.4, Math.min(2.0, bv))
+        //     }
+        //     const sprite = this.getHipStarSprite(starSize, bv);
+        //     if (sprite) {
+        //         this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+        //         return;
+        //     } else {
+        //         const off = this.createHipStarSprite(starSize, star.getBv()!, this.colorManager.getColor('star'), 2.5);
+        //         this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
+        //         return;
+        //     }
+        // }
+        // === スプライト描画ここまで ===
+        if (starSize > 10) {
+            // 中心が白、外側が星の色のグラデーション
+            const originalFilter = this.ctx.filter;
+            this.ctx.filter = `blur(${starSize * 0.2}px)`;
+            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, starSize);
+            gradient.addColorStop(0.2, this.colorManager.getColor('star'));
+            gradient.addColorStop(1, starColor);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = gradient;
+            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+            this.ctx.fill();
+            this.ctx.filter = originalFilter;
+        }
+        else if (star.getMagnitude() < 2 || starSize > 5) {
+            // 半透明の円を重ねる
+            for (let i = blurRadii.length - 1; i >= 0; i--) {
+                const color = this.colorManager.blendColors(starColorRGB, starColor, colorRatios[i]);
+                this.ctx.beginPath();
+                this.ctx.fillStyle = `${color}${opacities[i]}`;
+                this.ctx.arc(x, y, starSize * blurRadii[i], 0, Math.PI * 2);
+                this.ctx.fill();
             }
-            else {
-                const off = this.createHipStarSprite(starSize, star.getBv(), this.colorManager.getColor('star'), 2.5);
-                this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
-                return;
-            }
-            // }
-            // === スプライト描画ここまで ===
-            // if (starSize > 10) {
-            //     // 中心が白、外側が星の色のグラデーション
-            //     const originalFilter = this.ctx.filter;
-            //     this.ctx.filter = `blur(${starSize * 0.2}px)`;
-            //     const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, starSize);
-            //     gradient.addColorStop(0.2, this.colorManager.getColor('star'));
-            //     gradient.addColorStop(1, starColor);
-            //     this.ctx.beginPath();
-            //     this.ctx.fillStyle = gradient;
-            //     this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-            //     this.ctx.fill();
-            //     this.ctx.filter = originalFilter;
-            // } else if (star.getMagnitude()! < 2 || starSize > 5) {
-            //     // 半透明の円を重ねる
-            //     for (let i = blurRadii.length - 1; i >= 0; i--) {
-            //         const color = this.colorManager.blendColors(
-            //             starColorRGB,
-            //             starColor,
-            //             colorRatios[i]
-            //         );
-            //         this.ctx.beginPath();
-            //         this.ctx.fillStyle = `${color}${opacities[i]}`;
-            //         this.ctx.arc(x, y, starSize * blurRadii[i], 0, Math.PI * 2);
-            //         this.ctx.fill();
-            //     }
         }
         else {
             // 小さい星：シンプルな円で描画
