@@ -63,9 +63,16 @@ export class DataLoader {
                 ra: hipData[i] * 0.001,
                 dec: hipData[i + 1] * 0.001
             };
-            hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
-            hipData[i + 3] * 0.1 // bv
-            );
+            // bv == nullのときは[i+3]には1000が入っている
+            if (hipData[i + 3] != 1000) {
+                hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
+                hipData[i + 3] * 0.1 // bv
+                );
+            }
+            else {
+                hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
+                null);
+            }
         }
         console.log('Hipparcos', hips.length, "stars");
         return hips;

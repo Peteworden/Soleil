@@ -626,21 +626,26 @@ export class CanvasRenderer {
         const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
         const starColor = this.getStarColor(star.getBv());
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
-        // if (starSize > 3) {
-        //     let bv = star.getBv()!;
-        //     if (bv != -10) {
-        //         bv = Math.max(-0.4, Math.min(2.0, bv))
-        //     }
-        //     const sprite = this.getHipStarSprite(starSize, bv);
-        //     if (sprite) {
-        //         this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
-        //         return;
-        //     } else {
-        //         const off = this.createHipStarSprite(starSize, star.getBv()!, this.colorManager.getColor('star'), 2.5);
-        //         this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
-        //         return;
-        //     }
-        // }
+        if (starSize > 3) {
+            let bv = star.getBv();
+            if (bv.toFixed(1) == "NaN") {
+                console.log(star);
+            }
+            if (bv != -10) {
+                bv = Math.max(-0.4, Math.min(2.0, bv));
+            }
+            const sprite = this.getHipStarSprite(starSize, bv);
+            if (sprite) {
+                // this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+                // return;
+            }
+            else {
+                console.log(starSize.toFixed(1), bv.toFixed(1));
+                // const off = this.createHipStarSprite(starSize, star.getBv()!, this.colorManager.getColor('star'), 2.5);
+                // this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
+                // return;
+            }
+        }
         // === スプライト描画ここまで ===
         if (starSize > 10) {
             // 中心が白、外側が星の色のグラデーション
@@ -1456,7 +1461,8 @@ export class CanvasRenderer {
                 // ハローのマージンを加えたキャンバスサイズ
                 const haloMultiplier = 2.5; // ハローの広がり倍率
                 const off = this.createHipStarSprite(size, bv, baseColor, haloMultiplier);
-                const key = `${size}-${bv}`;
+                const key = `${size}-${Math.round(bv * 10)}`;
+                // console.log(key);
                 this.hipStarSprites.set(key, off);
             }
         }
@@ -1489,7 +1495,8 @@ export class CanvasRenderer {
     getHipStarSprite(size, bv) {
         // サイズを整数に丸める
         const roundedSize = Math.min(20, Math.max(3, Math.round(size)));
-        return this.hipStarSprites.get(`${roundedSize}-${bv}`) || null;
+        // console.log(`${roundedSize}-${Math.round(bv * 10)}`);
+        return this.hipStarSprites.get(`${roundedSize}-${Math.round(bv * 10)}`) || null;
     }
     // 描画オプションを更新
     // timeSliderが動いたときに呼び出される

@@ -21,7 +21,7 @@ export class CelestialObject {
 export class HipStar extends CelestialObject {
     constructor(coordinates, magnitude, bv) {
         super('', { ra: coordinates.ra, dec: coordinates.dec }, magnitude, 'hipStar');
-        this.bv = bv;
+        this.bv = bv || null;
     }
     getBv() {
         return this.bv;
