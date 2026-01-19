@@ -463,8 +463,6 @@ export async function main() {
             throw new Error('Canvas element not found');
         }
         // Canvasの論理サイズを実際の表示サイズに合わせる（スマホでのずれを防ぐ）
-        // 一度DOMに追加された後でないとgetBoundingClientRect()が正しく動作しないため、
-        // 少し遅延させてから実際のサイズを取得
         const updateCanvasLogicalSize = () => {
             const rect = canvas.getBoundingClientRect();
             const actualWidth = Math.round(rect.width);
@@ -485,16 +483,33 @@ export async function main() {
                 console.log(`Canvas論理サイズを実際の表示サイズに合わせました: ${actualWidth}x${actualHeight}`);
             }
         };
-        // 初期設定（DOMが完全に読み込まれた後）
-        if (document.readyState === 'complete') {
-            updateCanvasLogicalSize();
+        // 初期設定: getBoundingClientRect()を使って正確なサイズを取得
+        // canvasはDOMに存在するので、すぐに呼べる
+        {
+            const rect = canvas.getBoundingClientRect();
+            const actualWidth = Math.round(rect.width);
+            const actualHeight = Math.round(rect.height);
+            // 有効な値が取れた場合のみ使用（0の場合はwindow.innerWidth/Heightにフォールバック）
+            if (actualWidth > 0 && actualHeight > 0) {
+                canvas.width = actualWidth;
+                canvas.height = actualHeight;
+                config.canvasSize.width = actualWidth;
+                config.canvasSize.height = actualHeight;
+                // 視野角も更新
+                config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * actualHeight / actualWidth;
+                console.log(`Canvas初期サイズ: ${actualWidth}x${actualHeight}`);
+            }
+            else {
+                // フォールバック
+                canvas.width = config.canvasSize.width;
+                canvas.height = config.canvasSize.height;
+                console.log(`Canvas初期サイズ(フォールバック): ${config.canvasSize.width}x${config.canvasSize.height}`);
+            }
         }
-        else {
+        // DOMが完全に読み込まれた後にも再度確認（CSSが完全に適用された状態で）
+        if (document.readyState !== 'complete') {
             window.addEventListener('load', updateCanvasLogicalSize);
         }
-        // 初期値として設定（後で更新される）
-        canvas.width = config.canvasSize.width;
-        canvas.height = config.canvasSize.height;
         // レンダラーの作成（URLパラメータ renderer=webgl で切替。例: ?renderer=webgl）
         // const params = new URLSearchParams(location.search);
         // const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
