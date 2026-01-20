@@ -9,7 +9,7 @@ import { UserObjectController } from './controllers/UserObjectController.js';
 import { DataStore } from './models/DataStore.js';
 import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
-import { InteractionController } from "./renderer/interactionController.js";
+import { InteractionController } from "./controllers/interactionController.js";
 import { AstronomicalCalculator } from './utils/calculations.js';
 import { CoordinateConverter } from './utils/coordinates.js';
 import { DataLoader } from './utils/DataLoader.js';
@@ -548,8 +548,8 @@ export async function main() {
         let renderCount = 0;
         function renderAll() {
             const time000 = performance.now();
-            renderer.clearObjectInfomation();
-            renderer.clearStarInfoInfomation();
+            renderer.clearObjectInformation();
+            renderer.clearStarInformation();
             renderer.clear();
             const tempTarget = getTempTarget();
             renderer.drawGrid();

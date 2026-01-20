@@ -34,7 +34,7 @@ export class ObjectInfoController {
             return null;
         }
         const visibleObjects = canvasRenderer.getVisibleObjects();
-        const starInfoList = canvasRenderer.getStarInfoInfomation();
+        const starInfoList = canvasRenderer.getStarInformation();
         let nearestObject = null;
         let nearestDistance = Infinity;
         // 画面内の天体から最寄りのものを探す

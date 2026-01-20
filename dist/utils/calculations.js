@@ -132,5 +132,11 @@ export class AstronomicalCalculator {
         }
         return lm;
     }
+    static unclipedLimitingMagnitude(viewState) {
+        const key1 = viewState.starSizeKey1;
+        const key2 = viewState.starSizeKey2;
+        let lm = key1 - key2 * 0.5 * Math.log(viewState.fieldOfViewRA * viewState.fieldOfViewDec);
+        return lm;
+    }
 }
 //# sourceMappingURL=calculations.js.map
