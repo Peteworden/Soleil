@@ -9,7 +9,9 @@ export class GaiaStarRenderer {
         this.areaCandidates = areaCandidates;
         this.orientationData = orientationData;
         this.precessionCache = null;
+        this.gaiaStarSprites = new Map();
         console.log("GaiaStarRenderer constructor");
+        this.createGaiaStarSprites();
     }
     drawGaiaStars(gaiaData, gaiaHelpData, magBrightest, starInformation) {
         if (this.config.displaySettings.usedStar == 'noStar')
@@ -115,20 +117,92 @@ export class GaiaStarRenderer {
     }
     drawGaiaStar([x, y], mag, limitingMagnitude, unclipedLimitingMagnitude, zeroMagSize, faintFillStyle, brightFillStyle) {
         const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize);
-        if (mag > unclipedLimitingMagnitude - 3.0) {
-            const opacity = Math.round(255 - (mag - unclipedLimitingMagnitude + 3.0) * 30);
-            this.ctx.fillStyle = `${faintFillStyle}${opacity.toString(16)}`;
+        // if (mag > unclipedLimitingMagnitude - 3.0) {
+        //     const opacity = Math.round(255 - (mag - unclipedLimitingMagnitude + 3.0) * 30);
+        //     this.ctx.fillStyle = `${faintFillStyle}${opacity.toString(16)}`;
+        // } else {
+        //     this.ctx.fillStyle = brightFillStyle;
+        // }
+        // if (starSize < 2.0) {
+        //     this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
+        // } else {
+        //     this.ctx.moveTo(x, y);
+        //     this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+        // }
+        if (starSize > 2) {
+            const sprite = this.getGaiaStarSprite(starSize);
+            if (sprite) {
+                this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+                return;
+            }
+            else {
+                console.log(starSize);
+                const off = this.createGaiaStarSprite(starSize, brightFillStyle, 2.5);
+                this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
+                return;
+            }
         }
         else {
-            this.ctx.fillStyle = brightFillStyle;
+            if (mag > unclipedLimitingMagnitude - 3.0) {
+                const opacity = Math.round(255 - (mag - unclipedLimitingMagnitude + 3.0) * 30);
+                this.ctx.fillStyle = `${faintFillStyle}${opacity.toString(16)}`;
+            }
+            else {
+                this.ctx.fillStyle = brightFillStyle;
+            }
+            if (starSize < 2.0) {
+                this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
+            }
+            else {
+                this.ctx.moveTo(x, y);
+                this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+            }
         }
-        if (starSize < 2.0) {
-            this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
+    }
+    /**
+     * Gaia星用のスプライトを事前生成する
+     * サイズ別にハロー付きの星を描画し、キャッシュしておく
+     */
+    createGaiaStarSprites() {
+        this.gaiaStarSprites.clear();
+        const baseColor = this.colorManager.getColor('star');
+        // サイズ範囲: 3〜20px (0.5px刻み)
+        const haloMultiplier = 2.0; // ハローの広がり倍率
+        for (let size = 2; size <= 20; size += 1) {
+            const off = this.createGaiaStarSprite(size, baseColor, haloMultiplier);
+            const key = `${size}`;
+            this.gaiaStarSprites.set(key, off);
         }
-        else {
-            this.ctx.moveTo(x, y);
-            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-        }
+        console.log(`Gaia star sprites created: ${this.gaiaStarSprites.size} sprites`);
+    }
+    createGaiaStarSprite(size, color, haloMultiplier) {
+        const canvasSize = Math.ceil(size * haloMultiplier * 2) + 2;
+        const center = canvasSize / 2;
+        const off = document.createElement('canvas');
+        off.width = canvasSize;
+        off.height = canvasSize;
+        const ctx = off.getContext('2d');
+        // グラデーションでハロー付きの星を描画
+        const gradient = ctx.createRadialGradient(center, center, 0, center, center, size * haloMultiplier);
+        gradient.addColorStop(0, color);
+        gradient.addColorStop(0.15, color);
+        gradient.addColorStop(0.35, `${color}aa`);
+        gradient.addColorStop(0.6, `${color}44`);
+        gradient.addColorStop(1, 'transparent');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(center, center, size * haloMultiplier, 0, Math.PI * 2);
+        ctx.fill();
+        return off;
+    }
+    /**
+     * Gaia星用のスプライトを取得
+     */
+    getGaiaStarSprite(size) {
+        // サイズを整数に丸める
+        const roundedSize = Math.round(size);
+        // console.log(`${roundedSize}-${Math.round(bv * 10)}`);
+        return this.gaiaStarSprites.get(`${roundedSize}`) || null;
     }
 }
 //# sourceMappingURL=GaiaStarRenderer.js.map

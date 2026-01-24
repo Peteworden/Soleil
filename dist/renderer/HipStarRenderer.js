@@ -82,7 +82,7 @@ export class HipStarRenderer {
         const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
         // const starColor = this.colorManager.getStarColor(star.getBv()!);
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
-        if (starSize > 3) {
+        if (starSize > 2) {
             // return;
             let bv = star.getBv();
             let bv10Str = "null";
@@ -208,8 +208,8 @@ export class HipStarRenderer {
         this.hipStarSprites.clear();
         const baseColor = this.colorManager.getColor('star');
         // サイズ範囲: 3〜20px (0.5px刻み)
-        const haloMultiplier = 2.5; // ハローの広がり倍率
-        for (let size = 3; size <= 20; size += 1) {
+        const haloMultiplier = 2.0; // ハローの広がり倍率
+        for (let size = 2; size <= 20; size += 1) {
             for (let bv = -4; bv <= 20; bv += 1) {
                 const off = this.createHipStarSprite(size, bv * 0.1, baseColor, haloMultiplier);
                 const key = `${size}-${Math.round(bv)}`;
