@@ -13,6 +13,7 @@ export class HipStarRenderer {
         this.hipStarsColors = [];
         this.hipStarSprites = new Map();
         console.log("StarRenderer constructor");
+        this.hipStarsColors = [];
         this.createHipStarSprites();
     }
     async drawHipStars(hipStars, starInformation) {
