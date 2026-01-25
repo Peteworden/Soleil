@@ -47,35 +47,35 @@ export const colorTheme = {
         text: 'rgb(200, 150, 150)',
         textSecondary: 'gray',
         yellow: 'rgb(197, 197, 4)',
-        orange: 'rgb(248, 173, 69)',
+        orange: 'rgb(160, 110, 45)',
         // グリッド・レティクル
         grid: 'rgba(50, 50, 50, 1)',
         gridEquatorialLine: 'rgba(100, 0, 0, 1)',
         reticle: 'rgb(200, 150, 150)',
         // 恒星
-        star: 'rgb(204, 102, 102)',
+        star: '#CC6666',
         starName: 'rgb(200, 150, 150)',
         // 星座
         constellationLine: 'rgba(48, 127, 127, 0.8)',
         constellationName: 'rgb(200, 150, 150)',
         // 天体
-        solarSystem: 'rgb(248, 173, 69)',
+        solarSystem: 'rgb(160, 110, 45)',
         moonShade: '#222222',
         solarSystemMotion: 'rgb(64, 136, 64)',
-        dso: 'rgb(248, 173, 69)',
+        dso: 'rgb(160, 110, 45)',
         // その他
-        poleMark: 'rgb(248, 173, 69)',
-        cameraView: 'rgba(248, 173, 69, 0.1)',
+        poleMark: 'rgb(160, 110, 45)',
+        cameraView: 'rgba(160, 110, 45, 0.1)',
         tempTarget: 'red',
-        satellite: 'rgb(248, 173, 69)',
-        satelliteIlluminated: 'rgb(248, 173, 69)',
+        satellite: 'rgb(160, 110, 45)',
+        satelliteIlluminated: 'rgb(160, 110, 45)',
         satelliteShadow: 'rgb(100, 100, 100)',
         // UI要素
         border: 'rgb(200, 150, 150)',
         button: 'rgba(200, 150, 150, 0.1)',
         buttonHover: 'rgba(200, 150, 150, 0.2)',
         error: 'rgb(204, 102, 102)',
-        warning: 'rgb(248, 173, 69)',
+        warning: 'rgb(160, 110, 45)',
         success: 'rgb(64, 136, 64)',
         info: 'rgb(64, 136, 64)'
     }
@@ -117,10 +117,6 @@ export class ColorManager {
      */
     getStarColor(bv) {
         if (bv == null) {
-            return this.getColor('star');
-        }
-        if (bv == null || bv == 100 || Number.isNaN(bv) || !Number.isFinite(bv)) {
-            console.log(bv);
             return this.getColor('star');
         }
         // B-V値を適切な範囲に制限

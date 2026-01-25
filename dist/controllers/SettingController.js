@@ -474,6 +474,8 @@ export class SettingController {
             }
         });
         window.renderer.updateColorManager();
+        window.renderer.hipStarRenderer.createHipStarSprites();
+        window.renderer.gaiaStarRenderer.createGaiaStarSprites();
     }
 }
 //# sourceMappingURL=SettingController.js.map

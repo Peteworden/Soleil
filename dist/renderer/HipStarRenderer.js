@@ -220,7 +220,7 @@ export class HipStarRenderer {
             const key = `${size}-null`;
             this.hipStarSprites.set(key, off);
         }
-        console.log(`HIP star sprites created: ${this.hipStarSprites.size} sprites`);
+        // console.log(`HIP star sprites created: ${this.hipStarSprites.size} sprites`);
     }
     createHipStarSprite(size, bv, baseColor, haloMultiplier) {
         const color = this.colorManager.getStarColor(bv);

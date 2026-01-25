@@ -1,6 +1,7 @@
 import { CoordinateConverter } from "../utils/coordinates.js";
 import { MessierObject, SharplessObject } from "../models/CelestialObject.js";
 import { Asteroid, Planet } from "../models/SolarSystemObjects.js";
+import { getColorManager } from "../utils/colorManager.js";
 export class ObjectInfoController {
     /**
      * クリックされた位置から最寄りの天体を見つけて情報を表示
@@ -661,6 +662,7 @@ export class ObjectInfoController {
         starInfoElement.style.left = `${screenX + offsetX}px`;
         starInfoElement.style.top = `${screenY + offsetY}px`;
         starInfoElement.style.display = 'block';
+        starInfoElement.style.color = this.colorManager.getColor('text');
         // 星の位置にマーカーを表示
         const starMarkerElement = document.getElementById('starMarker');
         if (starMarkerElement) {
@@ -742,4 +744,5 @@ export class ObjectInfoController {
 }
 ObjectInfoController.coordinateConverter = new CoordinateConverter();
 ObjectInfoController.CLICK_THRESHOLD = 50; // クリック判定の閾値（ピクセル）
+ObjectInfoController.colorManager = getColorManager();
 //# sourceMappingURL=ObjectInfoController.js.map

@@ -173,7 +173,7 @@ export class GaiaStarRenderer {
             const key = `${size}`;
             this.gaiaStarSprites.set(key, off);
         }
-        console.log(`Gaia star sprites created: ${this.gaiaStarSprites.size} sprites`);
+        // console.log(`Gaia star sprites created: ${this.gaiaStarSprites.size} sprites`);
     }
     createGaiaStarSprite(size, color, haloMultiplier) {
         const canvasSize = Math.ceil(size * haloMultiplier * 2) + 2;
