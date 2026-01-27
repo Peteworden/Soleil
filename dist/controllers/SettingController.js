@@ -124,11 +124,9 @@ export class SettingController {
                     longitude: longitude,
                     timezone: 9
                 };
-                console.log(window.config.viewState.centerRA, window.config.viewState.centerDec);
                 updateConfig({
                     observationSite: observationSite
                 });
-                console.log(window.config.viewState.centerRA, window.config.viewState.centerDec);
             }
         }
         // 表示設定を読み取り
@@ -474,8 +472,8 @@ export class SettingController {
             }
         });
         window.renderer.updateColorManager();
-        window.renderer.hipStarRenderer.createHipStarSprites();
-        window.renderer.gaiaStarRenderer.createGaiaStarSprites();
+        window.renderer.hipStarRenderer.initialize();
+        window.renderer.gaiaStarRenderer.initialize();
     }
 }
 //# sourceMappingURL=SettingController.js.map

@@ -12,7 +12,9 @@ export class HipStarRenderer {
         this.hipStarsCache = null;
         this.hipStarsColors = [];
         this.hipStarSprites = new Map();
-        console.log("StarRenderer constructor");
+        this.initialize();
+    }
+    initialize() {
         this.hipStarsColors = [];
         this.createHipStarSprites();
     }

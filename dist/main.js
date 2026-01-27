@@ -401,7 +401,7 @@ export function updateConfig(newConfig) {
             viewState: config.viewState
         });
     }
-    console.log('updateConfig called');
+    // console.log('updateConfig called');
     window.renderAll();
 }
 function resetAll() {
@@ -1102,6 +1102,9 @@ function setupButtonEvents() {
             viewState: viewState
         });
     });
+    // document.getElementById('dark')?.addEventListener('change', function () {
+    //     SettingController.toggleDarkMode();
+    // });
     document.getElementById('cameraTiltSlider')?.addEventListener('input', function () {
         window.renderAll();
     });

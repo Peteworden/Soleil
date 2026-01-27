@@ -11,6 +11,8 @@ export class GaiaStarRenderer {
         this.precessionCache = null;
         this.gaiaStarSprites = new Map();
         console.log("GaiaStarRenderer constructor");
+    }
+    initialize() {
         this.createGaiaStarSprites();
     }
     drawGaiaStars(gaiaData, gaiaHelpData, magBrightest, starInformation) {

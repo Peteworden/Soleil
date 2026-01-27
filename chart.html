@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <title>ぴーとの星図</title>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="description" content="指やマウスで直感的に操作できる、12.0等級までのモバイル星図です。12.0等級までの恒星、惑星、メシエ天体などを豊富に収録しており、検索機能や設定項目も充実しています。">
+    <meta name="description"
+        content="指やマウスで直感的に操作できる、12.0等級までのモバイル星図です。12.0等級までの恒星、惑星、メシエ天体などを豊富に収録しており、検索機能や設定項目も充実しています。">
     <meta name="theme-color" content="#000000">
     <meta name="msapplication-TileColor" content="#000000">
     <link rel="stylesheet" href="styles/styleChart.css?v=251007-1223">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-VG4YXL3M6E"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -52,12 +55,13 @@
 
         // Google tag (gtag.js) 
         window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
+        function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
 
         gtag('config', 'G-VG4YXL3M6E');
     </script>
 </head>
+
 <body>
     <!-- 新機能お知らせポップアップ -->
     <div id="newsPopup" class="news-popup" style="display: none;">
@@ -95,19 +99,21 @@
     </div>
 
     <!-- <img id="welcomeImage" class="welcomeImage" src="images/welcome0928.jpg"> -->
-    
+
     <!-- タイトルバー -->
     <div class="title" id="title">
         <ul>
-            <li><h3 id="titleText">星図</h3></li>
+            <li>
+                <h3 id="titleText">星図</h3>
+            </li>
             <li><a href="PeteHOME.html">HOME</a></li>
-            <li><a href="chart_js.html">旧バージョン</a></li>
+            <!-- <li><a href="chart_js.html">旧バージョン</a></li> -->
             <div id="loadingtext">Loading...</div>
             <li class="debug-info" id="debugInfo"></li>
         </ul>
     </div>
 
-<!--
+    <!--
         <p><span style="color: orange;">星図を開いてからバージョンを変えたい場合は、リロードするか、画面左上にリンクがある「HOME」を経由してください。</span></p>
         <p>旧バージョンにしかない機能（ほとんどは今後新バージョンにも実装予定）</p>
         <ul>
@@ -201,7 +207,7 @@
 
                     <div class="setting-row">
                         <label>時刻:</label>
-                        <input type="datetime-local" id="dtl" name="dtl" value=""/>
+                        <input type="datetime-local" id="dtl" name="dtl" value="" />
                         <button id="dtlNow" type="button">現在時刻</button>
                     </div>
 
@@ -221,7 +227,7 @@
                             <option value="azalt">方位・高度固定</option>
                         </select>
                     </div>
-                    
+
                     <div class="setting-row">
                         <label>視点:</label>
                         <select id="observer_planet">
@@ -247,7 +253,8 @@
                         <div class="help-popup-content">
                             <div class="help-popup-header">
                                 <h4>視点</h4>
-                                <button id="closeObserverPlanetHelp" class="help-popup-close" type="button">&times;</button>
+                                <button id="closeObserverPlanetHelp" class="help-popup-close"
+                                    type="button">&times;</button>
                             </div>
                             <div class="help-popup-body">
                                 <p>観測者がいる天体を選びます。地球以外の視点は、「表示設定」->「表示モード」を「赤道座標系」にしているときに選択できます。</p>
@@ -293,7 +300,8 @@
                     <p class="donation-text">
                         現在は星図に関する費用はゼロですが、将来的にはオフラインで使えるようにスマホアプリ化なども検討しており、それには費用がかかります。
                         でも広告は入れたくないので、もしよければPayPayなどで個人的に寄付いただけるととても嬉しいです。
-                        ほしい機能や特典の提案、星図の不具合があれば、<a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">ご意見フォーム</a>からお願いします。
+                        ほしい機能や特典の提案、星図の不具合があれば、<a href="https://forms.gle/m4v7RbdWMANbt5s28"
+                            target="_blank">ご意見フォーム</a>からお願いします。
                     </p>
                 </div>
 
@@ -324,7 +332,9 @@
                                 <ul>
                                     <li><strong>赤道座標系:</strong> 一般的な星図や天体写真と同じく、天の北極が上になった表示。赤道儀での導入にも便利。</li>
                                     <li><strong>プラネタリウム:</strong> 観測地や時刻に合わせ、実際の空と同じ向きで表示します。地球上の視点にのみ対応しています。</li>
-                                    <li><strong>スマホに合わせる:</strong> スマートフォンの向きや傾きに応じて表示します。iPhoneやiPadではデバイスの向きの使用許可が必要です。デバイスを8の字に動かすと精度が上がります。画面の回転はオフにしてください。パソコンでは使用できません。</li>
+                                    <li><strong>スマホに合わせる:</strong>
+                                        スマートフォンの向きや傾きに応じて表示します。iPhoneやiPadではデバイスの向きの使用許可が必要です。デバイスを8の字に動かすと精度が上がります。画面の回転はオフにしてください。パソコンでは使用できません。
+                                    </li>
                                     <li><strong>風景と重ねる:</strong> カメラの映像と星図を重ねて表示します。注意点は「スマホに合わせる」と同じです。</li>
                                 </ul>
                             </div>
@@ -334,7 +344,8 @@
                     <!-- デバイスオリエンテーション許可ボタン（iPhone用） -->
                     <div class="setting-row" id="orientationPermissionRow" style="display: none;">
                         <label>デバイスの向き:</label>
-                        <button id="orientationPermissionBtn" type="button" style="background-color: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
+                        <button id="orientationPermissionBtn" type="button"
+                            style="background-color: #4CAF50; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">
                             デバイスの向きの使用を許可
                         </button>
                     </div>
@@ -403,7 +414,7 @@
                         </label>
                     </div>
 
-                    
+
                     <h5>星雲・星団など</h5>
                     <div class="switch-row">
                         <label class="switch-text">メシエ天体:</label>
@@ -514,7 +525,8 @@
                             <div class="help-popup-content">
                                 <div class="help-popup-header">
                                     <h4>初期設定</h4>
-                                    <button id="closeDefaultConfigPopup" class="help-popup-close" type="button">&times;</button>
+                                    <button id="closeDefaultConfigPopup" class="help-popup-close"
+                                        type="button">&times;</button>
                                 </div>
                                 <div class="help-popup-body">
                                     <div id="defaultConfig"></div>
@@ -563,21 +575,31 @@
             <h3>memo</h3>
             <button id="closeDescription" type="button">閉じる</button>
         </div>
-        
+
         <div class="description-content">
             <!-- 関連リンク -->
             <div class="description-section">
                 <h4>🔗 関連リンク</h4>
                 <ul>
-                    <li><strong>ご意見フォーム:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">ご意見フォーム</a></li>
-                    <li><strong>画像提供:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank">バグ報告フォーム</a></li>
-                    <li><strong>木星の衛星:</strong> <a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館</a></li>
-                    <li><strong>土星の衛星:</strong> <a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPE</a></li>
-                    <li><strong>Heavens-Above:</strong> <a href="https://www.heavens-above.com/" target="_blank">Heavens-Above</a></li>
-                    <li><strong>ぴーとの部屋（トップ）:</strong> <a href="https://peteworden.github.io/Soleil/PeteHOME.html" target="_blank">トップ</a></li>
-                    <li><strong>もっと細かい星図を作成:</strong> <a href="https://peteworden.github.io/Soleil/gaiaChart.html" target="_blank">Gaia Archiveのデータから星図を作る</a></li>
-                    <li><strong>簡易水準器:</strong> <a href="https://peteworden.github.io/Soleil/level.html" target="_blank">簡易水準器</a></li>
-                    <li><strong>ソースコード・データソース:</strong> <a href="https://github.com/Peteworden/Soleil" target="_blank">GitHub</a></li>
+                    <li><strong>ご意見フォーム:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28"
+                            target="_blank">ご意見フォーム</a></li>
+                    <li><strong>画像提供:</strong> <a href="https://forms.gle/m4v7RbdWMANbt5s28"
+                            target="_blank">バグ報告フォーム</a></li>
+                    <li><strong>木星の衛星:</strong> <a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/"
+                            target="_blank">名古屋市科学館</a></li>
+                    <li><strong>土星の衛星:</strong> <a
+                            href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html"
+                            target="_blank">SKY & TELESCOPE</a></li>
+                    <li><strong>Heavens-Above:</strong> <a href="https://www.heavens-above.com/"
+                            target="_blank">Heavens-Above</a></li>
+                    <li><strong>ぴーとの部屋（トップ）:</strong> <a href="https://peteworden.github.io/Soleil/PeteHOME.html"
+                            target="_blank">トップ</a></li>
+                    <li><strong>もっと細かい星図を作成:</strong> <a href="https://peteworden.github.io/Soleil/gaiaChart.html"
+                            target="_blank">Gaia Archiveのデータから星図を作る</a></li>
+                    <li><strong>簡易水準器:</strong> <a href="https://peteworden.github.io/Soleil/level.html"
+                            target="_blank">簡易水準器</a></li>
+                    <li><strong>ソースコード・データソース:</strong> <a href="https://github.com/Peteworden/Soleil"
+                            target="_blank">GitHub</a></li>
                 </ul>
             </div>
 
@@ -667,7 +689,7 @@
         <div id="starInfoDecapparent"></div>
         <div id="starInfoMagnitude"></div>
     </div>
-    
+
     <!-- 星の位置を示すマーカー -->
     <div id="starMarker" class="starMarker" style="display: none;">
         <div class="starMarker-cross">
@@ -681,8 +703,39 @@
         <div id="cameraTiltSliderDiv" class="cameraTiltSliderDiv" style="display: none;">
             <input type="range" id="cameraTiltSlider" class="cameraTiltSlider" min="-120" max="120" step="1">
         </div>
-        <div id="timeSliderDiv" class="timeSliderDiv">
-            <input type="range" id="timeSlider" class="timeSlider" min="0" max="10" step="0.00964"">
+        <div id="timeControl" class="time-control">
+            <!-- ヘッダー（常時表示） -->
+            <div class="time-control-header" id="timeControlHeader">
+                <span id="timeDisplayCompact">--</span>
+                <button id="timeNowBtn" class="time-btn-icon" type="button" title="現在時刻">NOW</button>
+                <button id="timeControlToggle" class="time-btn-icon" type="button" title="展開">▲</button>
+            </div>
+
+            <!-- 展開部分（折りたたみ可能） -->
+            <div class="time-control-body" id="timeControlBody" style="display: none;">
+                <!-- ステップ選択 -->
+                <div class="time-step-selector">
+                    <button class="time-step-btn active" data-step="1" type="button">1分</button>
+                    <button class="time-step-btn" data-step="10" type="button">10分</button>
+                    <button class="time-step-btn" data-step="60" type="button">1時間</button>
+                    <button class="time-step-btn" data-step="1440" type="button">1日</button>
+                    <button class="time-step-btn" data-step="43200" type="button">1ヶ月</button>
+                </div>
+
+                <!-- スライダーと矢印ボタン -->
+                <div class="time-slider-row">
+                    <button id="timePrevBtn" class="time-nav-btn" type="button" title="戻る">◀</button>
+                    <input type="range" id="timeSlider" class="time-slider">
+                    <button id="timeNextBtn" class="time-nav-btn" type="button" title="進む">▶</button>
+                </div>
+
+                <!-- クイックアクション -->
+                <div class="time-quick-actions">
+                    <button id="timeSunriseBtn" class="time-action-btn" type="button">🌅 6:00</button>
+                    <button id="timeSunsetBtn" class="time-action-btn" type="button">🌙 18:00</button>
+                    <button id="timePlayBtn" class="time-action-btn" type="button">▶ 再生</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -707,9 +760,12 @@
             </div>
         </div>
         <div class="add-object-typeSelect-button-div">
-            <button id="userObject-elliptic-button" class="add-object-typeSelect-button" type="button">太陽系天体（楕円軌道）を追加</button>
-            <button id="userObject-parabolic-button" class="add-object-typeSelect-button" type="button">太陽系天体（放物線軌道）を追加</button>
-            <button id="userObject-hyperbolic-button" class="add-object-typeSelect-button" type="button">太陽系天体（双曲線軌道）を追加</button>
+            <button id="userObject-elliptic-button" class="add-object-typeSelect-button"
+                type="button">太陽系天体（楕円軌道）を追加</button>
+            <button id="userObject-parabolic-button" class="add-object-typeSelect-button"
+                type="button">太陽系天体（放物線軌道）を追加</button>
+            <button id="userObject-hyperbolic-button" class="add-object-typeSelect-button"
+                type="button">太陽系天体（双曲線軌道）を追加</button>
         </div>
         <div id="userObject-finish-manage" class="userObject-finish-manage">完了</div>
     </div>
@@ -720,8 +776,10 @@
         <h3 class="add-object-title">星雲・星団を追加</h3>
         <h5 class="userObject-note">*がついているものは必須項目です。</h5>
         <ul class="userObject-elements">
-            <li><label>名前*</label><input type="text" id="userObject-rec-name" class="short-text" placeholder="触角銀河"></li>
-            <li><label>読み・別名（検索用。複数あるときはコンマ区切り。カタカナの読みは不要）</label><textarea id="userObject-rec-altname" class="long-text" placeholder="しょっかくぎんが,アンテナぎんが,NGC4038"></textarea></li>
+            <li><label>名前*</label><input type="text" id="userObject-rec-name" class="short-text" placeholder="触角銀河">
+            </li>
+            <li><label>読み・別名（検索用。複数あるときはコンマ区切り。カタカナの読みは不要）</label><textarea id="userObject-rec-altname"
+                    class="long-text" placeholder="しょっかくぎんが,アンテナぎんが,NGC4038"></textarea></li>
             <li><label>種類</label>
                 <select id="userObject-rec-type">
                     <option value="Gx">銀河</option>
@@ -738,10 +796,13 @@
                     <option value="?">その他</option>
                 </select>
             </li>
-            <li><label>赤経(J2000.0)*</label><input type="text" id="userObject-rec-ra" class="short-text" placeholder="12 01.9 or 180.475"></li>
-            <li><label>赤緯(J2000.0)*</label><input type="text" id="userObject-rec-dec" class="short-text" placeholder="-18 52 or -18.867"></li>
+            <li><label>赤経(J2000.0)*</label><input type="text" id="userObject-rec-ra" class="short-text"
+                    placeholder="12 01.9 or 180.475"></li>
+            <li><label>赤緯(J2000.0)*</label><input type="text" id="userObject-rec-dec" class="short-text"
+                    placeholder="-18 52 or -18.867"></li>
             <li><label>等級</label><input type="text" id="userObject-rec-mag" class="short-text" placeholder="11"></li>
-            <li><label>説明</label><textarea id="userObject-rec-description" class="long-text" placeholder="アンテナ銀河とも呼ばれる。触角は南北に0.4°ぐらい伸びてるけどけっこう暗そう"></textarea></li>
+            <li><label>説明</label><textarea id="userObject-rec-description" class="long-text"
+                    placeholder="アンテナ銀河とも呼ばれる。触角は南北に0.4°ぐらい伸びてるけどけっこう暗そう"></textarea></li>
         </ul>
         <button id="userObject-rec-add-button" class="userObject-add-button" type="button">保存</button>
     </div>
@@ -758,25 +819,38 @@
                     <option value="comet">彗星</option>
                 </select>
             </li>
-            <li><label>日本語名*</label><input type="text" id="userObject-elliptic-jpnName" class="short-text" placeholder="リュウグウ"></li>
-            <li><label>ふりがな</label><input type="text" id="userObject-elliptic-hiraganaName" class="short-text" placeholder="りゅうぐう"></li>
-            <li><label>英語名</label><input type="text" id="userObject-elliptic-engName" class="short-text" placeholder="Ryugu"></li>
+            <li><label>日本語名*</label><input type="text" id="userObject-elliptic-jpnName" class="short-text"
+                    placeholder="リュウグウ"></li>
+            <li><label>ふりがな</label><input type="text" id="userObject-elliptic-hiraganaName" class="short-text"
+                    placeholder="りゅうぐう"></li>
+            <li><label>英語名</label><input type="text" id="userObject-elliptic-engName" class="short-text"
+                    placeholder="Ryugu"></li>
             <li><label>元期の形式</label>
                 <select id="userObject-elliptic-epochType">
                     <option value="ymd">年月日</option>
                     <option value="jd">ユリウス日</option>
                 </select>
             </li>
-            <li><label>元期(TT, 年月日)</label><input type="text" id="userObject-elliptic-ymd" class="short-text" placeholder="2025-05-05.0"></li>
-            <li><label>元期(TT, ユリウス日)</label><input type="text" id="userObject-elliptic-jd" class="short-text" placeholder="2460800.5"></li>
-            <li><label>軌道長半径 a [au]*</label><input type="text" id="userObject-elliptic-a" class="short-text" placeholder="1.19096"></li>
-            <li><label>離心率 e*</label><input type="text" id="userObject-elliptic-e" class="short-text" placeholder="0.19105"></li>
-            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-elliptic-i" class="short-text" placeholder="5.8667"></li>
-            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-elliptic-node" class="short-text" placeholder="251.2939"></li>
-            <li><label>近日点引数 ω, peri [°]*</label><input type="text" id="userObject-elliptic-peri" class="short-text" placeholder="211.6098"></li>
-            <li><label>元期の平均近点角 M0 [°]*</label><input type="text" id="userObject-elliptic-m0" class="short-text" placeholder="118.9955"></li>
-            <li><label>絶対等級 H </label><input type="text" id="userObject-elliptic-h" class="short-text" placeholder="19.55"></li>
-            <li><label>G</label><input type="text" id="userObject-elliptic-g" class="short-text" placeholder="0.15" value="0.15"></li>
+            <li><label>元期(TT, 年月日)</label><input type="text" id="userObject-elliptic-ymd" class="short-text"
+                    placeholder="2025-05-05.0"></li>
+            <li><label>元期(TT, ユリウス日)</label><input type="text" id="userObject-elliptic-jd" class="short-text"
+                    placeholder="2460800.5"></li>
+            <li><label>軌道長半径 a [au]*</label><input type="text" id="userObject-elliptic-a" class="short-text"
+                    placeholder="1.19096"></li>
+            <li><label>離心率 e*</label><input type="text" id="userObject-elliptic-e" class="short-text"
+                    placeholder="0.19105"></li>
+            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-elliptic-i" class="short-text"
+                    placeholder="5.8667"></li>
+            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-elliptic-node" class="short-text"
+                    placeholder="251.2939"></li>
+            <li><label>近日点引数 ω, peri [°]*</label><input type="text" id="userObject-elliptic-peri" class="short-text"
+                    placeholder="211.6098"></li>
+            <li><label>元期の平均近点角 M0 [°]*</label><input type="text" id="userObject-elliptic-m0" class="short-text"
+                    placeholder="118.9955"></li>
+            <li><label>絶対等級 H </label><input type="text" id="userObject-elliptic-h" class="short-text"
+                    placeholder="19.55"></li>
+            <li><label>G</label><input type="text" id="userObject-elliptic-g" class="short-text" placeholder="0.15"
+                    value="0.15"></li>
         </ul>
         <button id="userObject-elliptic-add-button" class="userObject-add-button" type="button">保存</button>
     </div>
@@ -787,21 +861,30 @@
         <h3 class="add-object-title">放物線軌道の天体を追加</h3>
         <h5 class="userObject-note">*がついているものは必須項目です。</h5>
         <ul class="userObject-elements">
-            <li><label>日本語名*</label><input type="text" id="userObject-parabolic-jpnName" class="short-text" placeholder="ヘール・ボップ彗星"></li>
-            <li><label>ふりがな</label><input type="text" id="userObject-parabolic-hiraganaName" class="short-text" placeholder="へーるぼっぷすいせい"></li>
-            <li><label>英語名</label><input type="text" id="userObject-parabolic-engName" class="short-text" placeholder="Hale-Bopp"></li>
+            <li><label>日本語名*</label><input type="text" id="userObject-parabolic-jpnName" class="short-text"
+                    placeholder="ヘール・ボップ彗星"></li>
+            <li><label>ふりがな</label><input type="text" id="userObject-parabolic-hiraganaName" class="short-text"
+                    placeholder="へーるぼっぷすいせい"></li>
+            <li><label>英語名</label><input type="text" id="userObject-parabolic-engName" class="short-text"
+                    placeholder="Hale-Bopp"></li>
             <li><label>近日点通過日時の形式</label>
                 <select id="userObject-parabolic-epochType">
                     <option value="ymd">年月日</option>
                     <option value="jd">ユリウス日</option>
                 </select>
             </li>
-            <li><label>近日点通過日時(TT, 年月日)</label><input type="text" id="userObject-parabolic-ymd" class="short-text" placeholder="1997-03-29.6"></li>
-            <li><label>近日点通過日時(TT, ユリウス日)</label><input type="text" id="userObject-parabolic-jd" class="short-text" placeholder="2450537.1"></li>
-            <li><label>近日点距離 q [au]*</label><input type="text" id="userObject-parabolic-q" class="short-text" placeholder="0.89054"></li>
-            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-parabolic-i" class="short-text" placeholder="89.2876"></li>
-            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-parabolic-node" class="short-text" placeholder="282.7334"></li>
-            <li><label>近日点引数 ω, peri [°]*</label><input type="text" id="userObject-parabolic-peri" class="short-text" placeholder="130.4147"></li>
+            <li><label>近日点通過日時(TT, 年月日)</label><input type="text" id="userObject-parabolic-ymd" class="short-text"
+                    placeholder="1997-03-29.6"></li>
+            <li><label>近日点通過日時(TT, ユリウス日)</label><input type="text" id="userObject-parabolic-jd" class="short-text"
+                    placeholder="2450537.1"></li>
+            <li><label>近日点距離 q [au]*</label><input type="text" id="userObject-parabolic-q" class="short-text"
+                    placeholder="0.89054"></li>
+            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-parabolic-i" class="short-text"
+                    placeholder="89.2876"></li>
+            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-parabolic-node" class="short-text"
+                    placeholder="282.7334"></li>
+            <li><label>近日点引数 ω, peri [°]*</label><input type="text" id="userObject-parabolic-peri" class="short-text"
+                    placeholder="130.4147"></li>
         </ul>
         <button id="userObject-parabolic-add-button" class="userObject-add-button" type="button">保存</button>
     </div>
@@ -812,20 +895,28 @@
         <h3 class="add-object-title">双曲線軌道の天体を追加</h3>
         <h5 class="userObject-note">*がついているものは必須項目です。</h5>
         <ul class="userObject-elements">
-            <li><label>名前*</label><input type="text" id="userObject-hyperbolic-jpnName" class="short-text" placeholder="'Oumuamua"></li>
-            <li><label>読み・別名（検索用）</label><textarea id="userObject-hyperbolic-altname" class="long-text" placeholder="A/2017 U1"></textarea></li>
+            <li><label>名前*</label><input type="text" id="userObject-hyperbolic-jpnName" class="short-text"
+                    placeholder="'Oumuamua"></li>
+            <li><label>読み・別名（検索用）</label><textarea id="userObject-hyperbolic-altname" class="long-text"
+                    placeholder="A/2017 U1"></textarea></li>
             <li><label>近日点通過日時の形式</label>
                 <select id="userObject-hyperbolic-epochType">
                     <option value="ymd">年月日</option>
                     <option value="jd">ユリウス日</option>
                 </select>
             </li>
-            <li><label>近日点通過日時(TT, 年月日)</label><input type="text" id="userObject-hyperbolic-ymd" class="short-text" placeholder="2017-09-09.5"></li>
-            <li><label>近日点通過日時(TT, ユリウス日)</label><input type="text" id="userObject-hyperbolic-jd" class="short-text" placeholder="2458006.0"></li>
-            <li><label>近日点距離 q [au]*</label><input type="text" id="userObject-hyperbolic-q" class="short-text" placeholder="0.25591"></li>
-            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-hyperbolic-i" class="short-text" placeholder="122.7417"></li>
-            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-hyperbolic-node" class="short-text" placeholder="24.5969"></li>
-            <li><label>近日点引数 ω, peri [°]*</label><input type="text" id="userObject-hyperbolic-peri" class="short-text" placeholder="241.8105"></li>
+            <li><label>近日点通過日時(TT, 年月日)</label><input type="text" id="userObject-hyperbolic-ymd" class="short-text"
+                    placeholder="2017-09-09.5"></li>
+            <li><label>近日点通過日時(TT, ユリウス日)</label><input type="text" id="userObject-hyperbolic-jd" class="short-text"
+                    placeholder="2458006.0"></li>
+            <li><label>近日点距離 q [au]*</label><input type="text" id="userObject-hyperbolic-q" class="short-text"
+                    placeholder="0.25591"></li>
+            <li><label>軌道傾斜角 i [°]*</label><input type="text" id="userObject-hyperbolic-i" class="short-text"
+                    placeholder="122.7417"></li>
+            <li><label>昇交点黄経 Ω, node [°]*</label><input type="text" id="userObject-hyperbolic-node" class="short-text"
+                    placeholder="24.5969"></li>
+            <li><label>近日点引数 ω, peri [°]*</label><input type="text" id="userObject-hyperbolic-peri" class="short-text"
+                    placeholder="241.8105"></li>
         </ul>
         <button id="userObject-hyperbolic-add-button" class="userObject-add-button" type="button">保存</button>
     </div>
@@ -853,5 +944,6 @@
         import { main } from './dist/main.js?v=251017-2230';
         window.addEventListener('DOMContentLoaded', main);
     </script>
-    </body>
+</body>
+
 </html>

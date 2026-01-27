@@ -3,7 +3,12 @@ import { CoordinateConverter } from "../utils/coordinates.js";
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 export class TimeController {
     static initialize() {
-        this.setupTimeSlider();
+        // 既に初期化済みの場合はスキップ（表示更新のみ）
+        if (this.isInitialized) {
+            this.updateSliderValue();
+            return;
+        }
+        this.setupTimeControl();
         const dtlInput = document.getElementById('dtl');
         const realTime = document.getElementById('realTime');
         if (dtlInput && realTime) {
@@ -11,46 +16,262 @@ export class TimeController {
                 realTime.value = 'off';
             });
         }
+        this.isInitialized = true;
     }
-    static setupTimeSlider() {
-        this.timeSliderDiv = document.getElementById('timeSliderDiv');
-        if (!this.timeSliderDiv)
+    static setupTimeControl() {
+        this.timeControl = document.getElementById('timeControl');
+        if (!this.timeControl)
             return;
         this.timeSlider = document.getElementById('timeSlider');
         if (!this.timeSlider)
             return;
-        // スライダーの初期値を設定
         const config = window.config;
         if (config && config.displayTime.realTime === 'off') {
-            this.timeSliderDiv.style.display = 'block';
-            // 現在のJDから前後1時間の範囲を設定
-            const currentJd = config.displayTime.jd;
-            const minJd = currentJd - 1.0 / 24.0; // 1時間前
-            const maxJd = currentJd + 1.0 / 24.0; // 1時間後
-            // step値を先に設定
-            const stepValue = 1.0 / 1440.0;
-            this.timeSlider.step = String(stepValue);
-            // min, maxを設定
-            this.timeSlider.min = String(minJd);
-            this.timeSlider.max = String(maxJd);
-            // step値に合わせて値を調整してから設定
-            const adjustedJd = parseFloat(this.timeSlider.min) + Math.round((currentJd - parseFloat(this.timeSlider.min)) / stepValue) * stepValue;
-            this.timeSlider.value = String(adjustedJd);
+            this.timeControl.style.display = 'block';
+            this.sliderBaseJd = config.displayTime.jd;
+            this.initSliderRange();
         }
         else {
-            this.timeSliderDiv.style.display = 'none';
-            // this.timeSlider.style.display = 'none';
+            this.timeControl.style.display = 'none';
         }
-        // イベントリスナーを設定
+        // スライダーイベント
         this.timeSlider.addEventListener('input', (e) => {
+            this.isDragging = true;
             this.handleSliderInput(e);
         });
-        // controlPanelの可視性を初期化
+        this.timeSlider.addEventListener('change', (e) => {
+            this.isDragging = false;
+            // ドラッグ終了後、基準点を更新
+            const config = window.config;
+            if (config) {
+                this.sliderBaseJd = config.displayTime.jd;
+                this.initSliderRange();
+            }
+        });
+        // 折りたたみトグル
+        const toggleBtn = document.getElementById('timeControlToggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', (e) => {
+                console.log(`toggleBtn clicked: ${e}`);
+                e.preventDefault();
+                e.stopPropagation();
+                this.toggleExpand();
+            });
+        }
+        // NOWボタン
+        const nowBtn = document.getElementById('timeNowBtn');
+        if (nowBtn) {
+            nowBtn.addEventListener('click', () => this.setToCurrentTime());
+        }
+        // 矢印ボタン
+        const prevBtn = document.getElementById('timePrevBtn');
+        const nextBtn = document.getElementById('timeNextBtn');
+        if (prevBtn)
+            prevBtn.addEventListener('click', () => this.stepBackward());
+        if (nextBtn)
+            nextBtn.addEventListener('click', () => this.stepForward());
+        // ステップ選択ボタン
+        const stepBtns = document.querySelectorAll('.time-step-btn');
+        stepBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const target = e.target;
+                const step = parseInt(target.dataset.step || '1');
+                this.setStep(step);
+                // アクティブ状態を更新
+                stepBtns.forEach(b => b.classList.remove('active'));
+                target.classList.add('active');
+            });
+        });
+        // 日の出・日没ボタン
+        const sunriseBtn = document.getElementById('timeSunriseBtn');
+        const sunsetBtn = document.getElementById('timeSunsetBtn');
+        if (sunriseBtn)
+            sunriseBtn.addEventListener('click', () => this.jumpToSunrise());
+        if (sunsetBtn)
+            sunsetBtn.addEventListener('click', () => this.jumpToSunset());
+        // 再生ボタン
+        const playBtn = document.getElementById('timePlayBtn');
+        if (playBtn)
+            playBtn.addEventListener('click', () => this.togglePlay());
+        // 時刻表示を更新
+        this.updateTimeDisplay();
         this.updateControlPanelVisibility();
     }
-    static async handleSliderInput(event) {
-        const target = event.target;
-        const jd = parseFloat(target.value); // JDの値を直接取得
+    // 折りたたみの切り替え
+    static toggleExpand() {
+        const body = document.getElementById('timeControlBody');
+        const toggle = document.getElementById('timeControlToggle');
+        if (body && toggle) {
+            this.isExpanded = !this.isExpanded;
+            body.style.display = this.isExpanded ? 'block' : 'none';
+            // ▲で開く、▼で閉じる
+            toggle.textContent = this.isExpanded ? '▼' : '▲';
+            console.log(`toggleExpand: ${this.isExpanded}`);
+        }
+    }
+    // ステップ設定
+    static setStep(minutes) {
+        this.currentStepMinutes = minutes;
+        const config = window.config;
+        if (config) {
+            this.sliderBaseJd = config.displayTime.jd;
+        }
+        this.initSliderRange();
+    }
+    // スライダー範囲を初期化（基準点を使用）
+    static initSliderRange() {
+        if (!this.timeSlider)
+            return;
+        const stepJd = this.currentStepMinutes / 1440.0;
+        // ステップに応じた範囲を設定
+        let rangeMultiplier;
+        if (this.currentStepMinutes <= 1) {
+            rangeMultiplier = 60; // ±1時間
+        }
+        else if (this.currentStepMinutes <= 10) {
+            rangeMultiplier = 360; // ±6時間
+        }
+        else if (this.currentStepMinutes <= 60) {
+            rangeMultiplier = 1440; // ±1日
+        }
+        else if (this.currentStepMinutes <= 1440) {
+            rangeMultiplier = 1440 * 30; // ±30日
+        }
+        else {
+            rangeMultiplier = 1440 * 365; // ±1年
+        }
+        const rangeJd = rangeMultiplier / 1440.0;
+        const minJd = this.sliderBaseJd - rangeJd;
+        const maxJd = this.sliderBaseJd + rangeJd;
+        this.timeSlider.step = String(stepJd);
+        this.timeSlider.min = String(minJd);
+        this.timeSlider.max = String(maxJd);
+        this.timeSlider.value = String(this.sliderBaseJd);
+    }
+    // 時刻表示を更新
+    static updateTimeDisplay() {
+        const display = document.getElementById('timeDisplayCompact');
+        if (!display)
+            return;
+        const config = window.config;
+        if (!config)
+            return;
+        const dt = config.displayTime;
+        display.textContent = `${dt.month}/${dt.day} ${String(dt.hour).padStart(2, '0')}:${String(dt.minute).padStart(2, '0')}`;
+    }
+    // 一歩進む
+    static stepForward() {
+        const config = window.config;
+        if (!config)
+            return;
+        const jdStep = this.currentStepMinutes / 1440.0;
+        this.setTimeWithoutSliderReset(config.displayTime.jd + jdStep);
+    }
+    // 一歩戻る
+    static stepBackward() {
+        const config = window.config;
+        if (!config)
+            return;
+        const jdStep = this.currentStepMinutes / 1440.0;
+        this.setTimeWithoutSliderReset(config.displayTime.jd - jdStep);
+    }
+    // 日の出（6時）にジャンプ
+    static jumpToSunrise() {
+        const config = window.config;
+        if (!config)
+            return;
+        const dt = config.displayTime;
+        let targetHour = 6;
+        let year = dt.year;
+        let month = dt.month;
+        let day = dt.day;
+        // 現在6時以降なら翌日の6時
+        if (dt.hour >= 6) {
+            const date = new Date(year, month - 1, day + 1);
+            year = date.getFullYear();
+            month = date.getMonth() + 1;
+            day = date.getDate();
+        }
+        const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(year, month, day, targetHour, 0, 0);
+        this.setTime(jd);
+    }
+    // 日没（18時）にジャンプ
+    static jumpToSunset() {
+        const config = window.config;
+        if (!config)
+            return;
+        const dt = config.displayTime;
+        let targetHour = 18;
+        let year = dt.year;
+        let month = dt.month;
+        let day = dt.day;
+        // 現在18時以降なら翌日の18時
+        if (dt.hour >= 18) {
+            const date = new Date(year, month - 1, day + 1);
+            year = date.getFullYear();
+            month = date.getMonth() + 1;
+            day = date.getDate();
+        }
+        const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(year, month, day, targetHour, 0, 0);
+        this.setTime(jd);
+    }
+    // 再生の切り替え
+    static togglePlay() {
+        if (this.isPlaying) {
+            this.stopPlay();
+        }
+        else {
+            this.startPlay();
+        }
+    }
+    // 再生開始
+    static startPlay() {
+        this.isPlaying = true;
+        const playBtn = document.getElementById('timePlayBtn');
+        if (playBtn) {
+            playBtn.textContent = '⏸ 停止';
+            playBtn.classList.add('playing');
+        }
+        // 100msごとに時刻を進める
+        this.playIntervalId = window.setInterval(() => {
+            this.stepForward();
+        }, 100);
+    }
+    // 再生停止
+    static stopPlay() {
+        this.isPlaying = false;
+        const playBtn = document.getElementById('timePlayBtn');
+        if (playBtn) {
+            playBtn.textContent = '▶ 再生';
+            playBtn.classList.remove('playing');
+        }
+        if (this.playIntervalId !== null) {
+            clearInterval(this.playIntervalId);
+            this.playIntervalId = null;
+        }
+        // 停止時に基準点を更新
+        const config = window.config;
+        if (config) {
+            this.sliderBaseJd = config.displayTime.jd;
+            this.initSliderRange();
+        }
+    }
+    // 時刻を設定（スライダー範囲もリセット）
+    static setTime(jd) {
+        this.setTimeInternal(jd);
+        this.sliderBaseJd = jd;
+        this.initSliderRange();
+    }
+    // 時刻を設定（スライダー範囲はリセットしない - 矢印・再生用）
+    static setTimeWithoutSliderReset(jd) {
+        this.setTimeInternal(jd);
+        // スライダーの値だけ更新
+        if (this.timeSlider) {
+            this.timeSlider.value = String(jd);
+        }
+    }
+    // 内部の時刻設定処理
+    static setTimeInternal(jd) {
         const config = window.config;
         if (!config)
             return;
@@ -77,7 +298,7 @@ export class TimeController {
                 minute: targetJd.minute,
                 second: targetJd.second,
                 jd: jd,
-                realTime: 'off' // 手動設定時はリアルタイムをオフにする
+                realTime: 'off'
             },
             siderealTime: AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude || 135)
         };
@@ -85,106 +306,91 @@ export class TimeController {
         if (updateConfig) {
             updateConfig(newConfig);
         }
-        // ★ スライダー操作時に全天体データを更新
         SolarSystemDataManager.updateAllData(jd, config.observationSite);
+        this.updateTimeDisplay();
         const renderAll = window.renderAll;
         if (renderAll) {
             renderAll();
         }
     }
+    static handleSliderInput(event) {
+        const target = event.target;
+        const jd = parseFloat(target.value);
+        // スライダー操作中は範囲をリセットしない
+        this.setTimeInternal(jd);
+    }
     static setToCurrentTime() {
         const config = window.config;
         if (!config)
             return;
-        const jd = AstronomicalCalculator.calculateCurrentJdTT();
-        const targetJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
-        const updateConfig = window.updateConfig;
-        if (updateConfig) {
-            updateConfig({
-                displayTime: {
-                    year: targetJd.year,
-                    month: targetJd.month,
-                    day: targetJd.day,
-                    hour: targetJd.hour,
-                    minute: targetJd.minute,
-                    second: targetJd.second,
-                    jd: jd,
-                    realTime: 'on' // 現在時刻に設定時はリアルタイムをオンにする
-                }
-            });
+        // 再生中なら停止
+        if (this.isPlaying) {
+            this.stopPlay();
         }
-        this.updateSliderValue();
+        const jd = AstronomicalCalculator.calculateCurrentJdTT();
+        this.setTime(jd);
     }
     static updateSliderValue() {
-        if (!this.timeSliderDiv)
+        if (!this.timeControl)
             return;
         if (!this.timeSlider)
             return;
         const config = window.config;
         if (!config)
             return;
-        // リアルタイムモードの場合はスライダーを非表示
+        // リアルタイムモードの場合は非表示
         if (config.displayTime.realTime != 'off') {
-            this.timeSliderDiv.style.display = 'none';
+            this.timeControl.style.display = 'none';
             this.updateControlPanelVisibility();
             return;
         }
-        // 手動モードの場合はスライダーを表示して値を更新
-        this.timeSliderDiv.style.display = 'block';
-        const currentJd = config.displayTime.jd;
-        const minJd = currentJd - 1.0 / 24.0; // 1時間前
-        const maxJd = currentJd + 1.0 / 24.0; // 1時間後
-        // step値に合わせて値を調整
-        const stepValue = 1.0 / 1440.0;
-        const adjustedJd = Math.round(currentJd / stepValue) * stepValue;
-        this.timeSlider.min = String(minJd);
-        this.timeSlider.max = String(maxJd);
-        this.timeSlider.value = String(adjustedJd);
+        this.timeControl.style.display = 'block';
+        this.sliderBaseJd = config.displayTime.jd;
+        this.initSliderRange();
+        this.updateTimeDisplay();
         this.updateControlPanelVisibility();
     }
-    // controlPanelの可視性を更新するメソッド
     static updateControlPanelVisibility() {
         const controlPanel = document.getElementById('controlPanel');
         if (!controlPanel)
             return;
         const cameraTiltSliderDiv = document.getElementById('cameraTiltSliderDiv');
-        // すべてのスライダーが非表示かチェック
-        const allSlidersHidden = (!this.timeSliderDiv || this.timeSliderDiv.style.display === 'none') &&
+        const allHidden = (!this.timeControl || this.timeControl.style.display === 'none') &&
             (!cameraTiltSliderDiv || cameraTiltSliderDiv.style.display === 'none');
-        // すべてのスライダーが非表示の場合はcontrolPanelも非表示にする
-        if (allSlidersHidden) {
+        if (allHidden) {
             controlPanel.style.display = 'none';
         }
         else {
             controlPanel.style.display = 'block';
         }
     }
-    // 外部から呼び出せるメソッド
     static updateSlider() {
         this.updateSliderValue();
     }
-    // configの変更を監視してスライダーを更新
     static onConfigUpdate() {
-        // this.updateSliderValue();
+        this.updateTimeDisplay();
     }
-    // リアルタイムモードの切り替え
     static toggleRealTime(mode) {
         const config = window.config;
         if (!config)
             return;
+        // 再生中なら停止
+        if (this.isPlaying) {
+            this.stopPlay();
+        }
         if (mode === 'radec') {
             if (this.intervalId !== null) {
                 clearInterval(this.intervalId);
                 this.intervalId = null;
             }
-            this.intervalId = setInterval(this.realtimeRadec, 500);
+            this.intervalId = window.setInterval(this.realtimeRadec, 500);
         }
         else if (mode === 'azalt') {
             if (this.intervalId !== null) {
                 clearInterval(this.intervalId);
                 this.intervalId = null;
             }
-            this.intervalId = setInterval(this.realtimeAzalt, 500);
+            this.intervalId = window.setInterval(this.realtimeAzalt, 500);
         }
         else {
             if (this.intervalId !== null) {
@@ -268,7 +474,17 @@ export class TimeController {
         }
     }
 }
-TimeController.timeSliderDiv = null;
+TimeController.timeControl = null;
 TimeController.timeSlider = null;
 TimeController.intervalId = null;
+// 新機能用プロパティ
+TimeController.currentStepMinutes = 1;
+TimeController.isPlaying = false;
+TimeController.playIntervalId = null;
+TimeController.isExpanded = false;
+// スライダー基準点（スライダー操作中は更新しない）
+TimeController.sliderBaseJd = 0;
+TimeController.isDragging = false;
+// 初期化済みフラグ（イベントリスナーの重複登録を防止）
+TimeController.isInitialized = false;
 //# sourceMappingURL=TimeController.js.map
