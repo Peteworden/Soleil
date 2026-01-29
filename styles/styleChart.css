@@ -210,6 +210,11 @@ input[type='range']::-moz-range-thumb {
     width: 50px;
 }
 
+/* スマホ用タイトルバー右側ボタン（PC時は非表示） */
+.title-right-buttons-mobile {
+    display: none;
+}
+
 /* デバッグ情報表示 */
 .title ul li.debug-info {
     margin-left: auto;
@@ -666,7 +671,8 @@ img {
     }
 
     .info-display .info-row {
-        flex-direction: column;
+        flex-direction: row;
+        white-space: nowrap;
         margin: 1px 0;
     }
 
@@ -681,6 +687,29 @@ img {
     .title ul li h3 {
         font-size: 14px;
         margin: 0px 2px 0px 10px;
+    }
+
+    /* スマホ用タイトルバー右側ボタン */
+    .title-right-buttons-mobile {
+        display: flex;
+        position: absolute;
+        right: 5px;
+        top: 50%;
+        transform: translateY(-50%);
+        gap: 5px;
+    }
+
+    .title-right-buttons-mobile .main-screen-button {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
+        border: none;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
     }
 
     /* スマホ用ボタンドック */

@@ -16,6 +16,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2026-01-29T15:00:00', title: '日時設定の改善', text: '星図の下の方に日時調節エリアを追加し、スライドバーで調節できる範囲やステップの種類を増やしました。' },
     { time: '2026-01-25T03:00:00', title: '恒星の表示を改善', text: '描画速度を維持しつつも、恒星の表示がとてもよくなりました。' },
     { time: '2026-01-18T22:42:00', title: '拡大・縮小の範囲を拡大', text: 'ご意見フォームでいただいた意見を反映し、これまでより広い範囲を表示できるようにしました。バグがあったら教えてください。' },
     { time: '2026-01-18T22:40:00', title: '移動・拡大縮小の改善', text: '指の位置にある星があまり変わらないように、また極付近や天頂付近を触ったときに変なぐるぐるが発生しないようにしました。' },
