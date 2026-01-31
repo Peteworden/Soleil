@@ -228,6 +228,7 @@ if 'ra' not in st.session_state:
     st.session_state.star_number = 0
     st.session_state.density = np.empty((0, 0))
     st.session_state.fig = None
+    st.session_state.time_ut = datetime.now(timezone(timedelta(hours=0))).strftime('%Y-%m-%d %H:%M:%S')
     # 最後に描画したときの設定（表示用）
     st.session_state.last_ra_center = None
     st.session_state.last_dec_center = None
@@ -410,6 +411,7 @@ def get_horizons_position(planet_name, epoch):
     elif planet_name.lower() in ['saturn', '土星']:
         planet_name = 699
     
+    print(planet_name, epoch)
     ans = Horizons(id=planet_name, location='500', epochs=f"'{epoch}'").ephemerides()
     return ans['RA'][0], ans['DEC'][0], ans['targetname'][0]
 
@@ -491,15 +493,14 @@ elif mode == t("mode_solar"):
     planet_name = st.sidebar.text_input(t("object_name"), "Pluto")
     
     # 現在時刻をデフォルトに
-    default_time = datetime.now(timezone(timedelta(hours=0))).strftime('%Y-%m-%d %H:%M:%S')
-    time_input = st.sidebar.text_input(t("time_ut"), default_time)
+    time_input = st.sidebar.text_input(t("time_ut"), st.session_state.time_ut, key="time_ut")
     
     st.sidebar.markdown(t("input_example"))
     
     if st.sidebar.button(t("get_coord"), type="primary", key="set_horizons"):
         try:
             with st.spinner(t("fetching_horizons")):
-                ra, dec, target = get_horizons_position(planet_name, time_input)
+                ra, dec, target = get_horizons_position(planet_name, st.session_state.time_ut)
                 st.session_state.ra_center = float(ra)
                 st.session_state.dec_center = float(dec)
                 st.sidebar.success(f"{target}{t('coord_obtained')}")
