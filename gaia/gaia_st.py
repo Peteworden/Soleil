@@ -393,7 +393,6 @@ def get_horizons_position(planet_name, epoch):
 
 # サイドバー
 st.sidebar.title(t("sidebar_title"))
-st.caption(t("wifi_recommended"))
 
 # 言語切り替え（JP/EN）
 selected_lang = st.sidebar.radio(
@@ -519,7 +518,7 @@ st.sidebar.caption(t("size_formula"))
 
 # メインエリア
 st.title(t("main_title"))
-st.info(t("wifi_recommended"))
+st.caption(t("wifi_recommended"))
 
 # 設定が変わったかチェック
 settings_changed = (
@@ -772,7 +771,11 @@ st.markdown(f"""
 <div style='text-align: center; color: #666;'>
     <p>Gaia Archive Chart - Streamlit ver.</p>
     <p>Author: Peteworden (<a href='https://github.com/Peteworden' target='_blank'>GitHub</a>)</p>
-    <p>{t("footer_star")}: <a href='https://gea.esac.esa.int/archive/' target='_blank'>Gaia Archive</a> (European Space Agency)</p>
+    <p>
+        {t("footer_star")}: 
+        <a href='https://gea.esac.esa.int/archive/' target='_blank'>Gaia Archive</a>
+        (ESA, <a href='https://creativecommons.org/licenses/by-nc/3.0/igo/' target='_blank'>CC BY-NC 3.0 IGO</a>)
+    </p>
     <p>{t("footer_solar")}: <a href='https://ssd.jpl.nasa.gov/horizons/' target='_blank'>Horizons System</a> (Jet Propulsion Laboratory)</p>
 </div>
 """, unsafe_allow_html=True)
