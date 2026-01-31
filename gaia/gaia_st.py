@@ -22,7 +22,7 @@ import io
 
 # ページ設定
 st.set_page_config(
-    page_title="Gaia Archive Chart",
+    page_title="Pete's Gaia Star Chart",
     page_icon="⭐",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -52,7 +52,7 @@ inject_ga()
 # 言語辞書
 TEXTS = {
     "ja": {
-        "sidebar_title": "⭐ Gaia Archive Chart",
+        "sidebar_title": "⭐ Pete's Gaia Star Chart",
         "mode_select": "モード選択",
         "mode_custom": "座標を指定",
         "mode_preset": "天体を選択",
@@ -84,7 +84,7 @@ TEXTS = {
         "estimated_stars": "推定星数: 約 {count} 星",
         "star_size_coeff": "星サイズパラメータ",
         "size_formula": "サイズ = a × (限界等級 - 等級)^b + c",
-        "main_title": "🌟 Gaia Archive Chart",
+        "main_title": "🌟 Pete's Gaia Star Chart",
         "fov": "視野",
         "draw_chart": "🎨 星図を描画",
         "redraw_chart": "🔄 再描画（データ再取得）",
@@ -107,7 +107,7 @@ TEXTS = {
         "save_image": "💾 画像を保存",
     },
     "en": {
-        "sidebar_title": "⭐ Gaia Archive Chart",
+        "sidebar_title": "⭐ Pete's Gaia Star Chart",
         "mode_select": "Mode",
         "mode_custom": "Specify coordinates",
         "mode_preset": "Select object",
@@ -139,7 +139,7 @@ TEXTS = {
         "estimated_stars": "Estimated: about {count} stars",
         "star_size_coeff": "Star Size Parameters",
         "size_formula": "Size = a × (limit mag - mag)^b + c",
-        "main_title": "🌟 Gaia Archive Chart",
+        "main_title": "🌟 Pete's Gaia Star Chart",
         "fov": "Field of View",
         "draw_chart": "🎨 Draw star chart",
         "redraw_chart": "🔄 Redraw (refetch data)",
