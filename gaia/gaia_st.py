@@ -27,6 +27,27 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Google Analyticsの埋め込み関数
+def inject_ga():
+    # 自分の測定IDに書き換えてください
+    GA_ID = "G-195DTNNGE6"
+    
+    ga_code = f"""
+    <script async src="https://www.googletagmanager.com/gtag/js?id={GA_ID}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){{dataLayer.push(arguments);}}
+        gtag('js', new Date());
+        gtag('config', '{GA_ID}');
+    </script>
+    """
+    
+    # iframeとしてHTMLを埋め込む（height=0で隠す）
+    components.html(ga_code, height=0, width=0)
+
+# 実行
+inject_ga()
+
 # 言語辞書
 TEXTS = {
     "ja": {
@@ -518,7 +539,7 @@ st.sidebar.caption(t("size_formula"))
 
 # メインエリア
 st.title(t("main_title"))
-st.caption(t("wifi_recommended"))
+# st.caption(t("wifi_recommended"))
 
 # 設定が変わったかチェック
 settings_changed = (
