@@ -17,6 +17,7 @@ import numpy as np
 from datetime import datetime, timedelta, timezone
 import json
 import os
+import io
 
 # ページ設定
 st.set_page_config(
@@ -80,6 +81,8 @@ TEXTS = {
         "footer_star": "恒星データ",
         "footer_solar": "太陽系天体データ",
         "language": "言語 / Language",
+        "wifi_recommended": "📶 Wi-Fi環境での利用をおすすめします。",
+        "save_image": "💾 画像を保存",
     },
     "en": {
         "sidebar_title": "⭐ Gaia Archive Chart",
@@ -133,6 +136,8 @@ TEXTS = {
         "footer_star": "Star data",
         "footer_solar": "Solar system data",
         "language": "言語 / Language",
+        "wifi_recommended": "📶 Wi-Fi recommended",
+        "save_image": "💾 Save image",
     }
 }
 
@@ -169,6 +174,15 @@ st.markdown("""
         border: 1px solid #4a5568;
     }
     .stButton > button:hover {
+        background-color: #4a5568;
+        border-color: #718096;
+    }
+    .stDownloadButton > button {
+        background-color: #2d3748;
+        color: #e2e8f0;
+        border: 1px solid #4a5568;
+    }
+    .stDownloadButton > button:hover {
         background-color: #4a5568;
         border-color: #718096;
     }
@@ -313,7 +327,7 @@ def fetch_gaia_data(ra_center, dec_center, ra_width, dec_width, mag_limit):
     dec_center = parse_dec_to_deg(dec_center)
     """Gaia Archiveからデータを取得"""
     query = f"""
-    SELECT designation, ra, dec, phot_g_mean_mag, parallax
+    SELECT DESIGNATION, ra, dec, phot_g_mean_mag, parallax
     FROM gaiadr3.gaia_source 
     WHERE 1=CONTAINS(POINT('ICRS', ra, dec), BOX('ICRS', {ra_center}, {dec_center}, {ra_width}, {dec_width}))
     AND phot_g_mean_mag < {mag_limit}
@@ -379,6 +393,7 @@ def get_horizons_position(planet_name, epoch):
 
 # サイドバー
 st.sidebar.title(t("sidebar_title"))
+st.caption(t("wifi_recommended"))
 
 # 言語切り替え（JP/EN）
 selected_lang = st.sidebar.radio(
@@ -439,7 +454,7 @@ elif mode == t("mode_preset"):
     # st.sidebar.markdown("---")
     messier_num = st.sidebar.number_input(t("messier_num"), min_value=1, max_value=110, value=13)
     if st.sidebar.button(t("set_messier"), type="primary", key="set_messier"):
-        messier_path = os.path.join(os.path.dirname(__file__), 'messier.json')
+        messier_path = os.path.join(os.path.dirname(__file__), '..', 'data', 'messier.json')
         if os.path.exists(messier_path):
             with open(messier_path, 'r', encoding='utf-8') as f:
                 messier_data = json.load(f)
@@ -504,6 +519,7 @@ st.sidebar.caption(t("size_formula"))
 
 # メインエリア
 st.title(t("main_title"))
+st.info(t("wifi_recommended"))
 
 # 設定が変わったかチェック
 settings_changed = (
@@ -644,7 +660,7 @@ if st.session_state.is_fetching and not st.session_state.awaiting_confirmation:
                 st.info(t("fetch_cancelled"))
                 st.rerun()
             
-            designation = result['designation'].data
+            designation = result['DESIGNATION'].data
             ra = result['ra'].data
             dec = result['dec'].data
             mag = result['phot_g_mean_mag'].data
@@ -724,6 +740,18 @@ if st.session_state.star_number > 0 and st.session_state.last_ra_center is not N
         filtered_ra, filtered_dec, filtered_mag
     )
     st.pyplot(fig)
+    
+    # 画像保存ボタン
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', dpi=150, facecolor='black', bbox_inches='tight')
+    buf.seek(0)
+    st.download_button(
+        label=t("save_image"),
+        data=buf,
+        file_name="chart.png",
+        mime="image/png",
+        type="primary"
+    )
     plt.close(fig)
     
     # 星のデータテーブル（フィルタリング後のデータ）
