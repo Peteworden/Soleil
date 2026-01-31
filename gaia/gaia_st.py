@@ -644,7 +644,7 @@ if st.session_state.is_fetching and not st.session_state.awaiting_confirmation:
                 st.info(t("fetch_cancelled"))
                 st.rerun()
             
-            designation = result['DESIGNATION'].data
+            designation = result['designation'].data
             ra = result['ra'].data
             dec = result['dec'].data
             mag = result['phot_g_mean_mag'].data
