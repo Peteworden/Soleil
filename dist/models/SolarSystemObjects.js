@@ -1,4 +1,3 @@
-import { CoordinateConverter } from '../utils/coordinates.js';
 import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
 // import { EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements, PlanetOrbitalElements, SolarObjectType } from '../types/solarObjects.js';
 import { DataStore } from './DataStore.js';
@@ -220,8 +219,7 @@ export class SolarSystemDataManager {
         const latitude = window.config.observationSite.latitude;
         const siderealTime = window.config.siderealTime;
         const lstLat = { lst: siderealTime, lat: latitude };
-        const coordinateConverter = new CoordinateConverter();
-        const sunAltitude = coordinateConverter.equatorialToHorizontal(lstLat, sunRaDec).alt;
+        const sunAltitude = sunRaDec.toAzAlt(lstLat).alt;
         let twilight = '';
         if (sunAltitude > -0.84) {
             twilight = '昼';

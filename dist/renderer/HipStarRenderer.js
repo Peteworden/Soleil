@@ -43,6 +43,9 @@ export class HipStarRenderer {
         if (this.hipStarsColors.length == 0) {
             this.hipStarsColors = this.getHipStarsColors(hipStars);
         }
+        const mode = this.config.displaySettings.mode;
+        const canvasSize = this.config.canvasSize;
+        const viewState = this.config.viewState;
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
         const limitMagnitudeForWhiten = Math.max(limitingMagnitude, 7.0);
         const blurRadii = [0.2, 0.6, 0.9, 1.2];
@@ -55,6 +58,9 @@ export class HipStarRenderer {
                     continue;
                 const coords = star.getCoordinates();
                 const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
+                // const coords0 = star.getCoordinates();
+                // const coords = new RaDec(coords0.ra, coords0.dec);
+                // const screenXY = coords.toCanvasXYifin(mode, canvasSize, viewState, lstLat);
                 if (!screenXY[0])
                     continue;
                 const color = this.hipStarsColors[i];
@@ -62,9 +68,12 @@ export class HipStarRenderer {
                     type: 'hipStar',
                     x: screenXY[1][0],
                     y: screenXY[1][1],
+                    // x: screenXY[1].x,
+                    // y: screenXY[1].y,
                     data: star
                 });
                 this.drawHipStar(star, screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                // this.drawHipStar(star, screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
             }
         }
         else {
@@ -74,14 +83,20 @@ export class HipStarRenderer {
                     continue;
                 const coords = star.getCoordinates();
                 const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
+                // const coords0 = star.getCoordinates();
+                // const coords = new RaDec(coords0.ra, coords0.dec);
+                // const screenXY = coords.toCanvasXYifin(mode, canvasSize, viewState, lstLat);
                 if (!screenXY[0])
                     continue;
                 const color = this.hipStarsColors[i];
                 this.drawHipStar(star, screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                // this.drawHipStar(star, screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
             }
         }
     }
-    drawHipStar(star, [x, y], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColor, starColorRGB) {
+    drawHipStar(star, [x, y], 
+    // star: HipStar, xy: {x: number, y: number},
+    limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColor, starColorRGB) {
         const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
         // const starColor = this.colorManager.getStarColor(star.getBv()!);
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
@@ -92,9 +107,6 @@ export class HipStarRenderer {
             if (bv != null) {
                 bv10Str = Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString();
             }
-            // if (star.getMagnitude()! < 0) {
-            //     console.log(star.getMagnitude()!, starSize.toFixed(1), bv10Str);
-            // }
             const sprite = this.getHipStarSprite(starSize, bv10Str);
             if (sprite) {
                 this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);

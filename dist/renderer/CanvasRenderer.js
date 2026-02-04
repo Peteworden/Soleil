@@ -1,20 +1,18 @@
-import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
+import { NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
-import { AstronomicalCalculator } from '../utils/calculations.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
-import { SolarSystemPositionCalculator } from '../utils/SolarSystemPositionCalculator.js';
 // import { formatTextForCanvas, formatBayerDesignation } from '../utils/textFormatter.js';
 import { getColorManager } from '../utils/colorManager.js';
 // import { StarsProgram } from './webgl/programs/starsProgram.js';
-import { starSize_0mag, getStarSize, getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from '../utils/canvasHelpers.js';
+import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from '../utils/canvasHelpers.js';
 import { HipStarRenderer } from './HipStarRenderer.js';
 import { GaiaStarRenderer } from './GaiaStarRenderer.js';
+import { SolarSystemRenderer } from './SolarSystemRenderer.js';
+import { DSORenderer } from './DSORenderer.js';
+import { AzAlt, RaDec } from '../utils/coordinates/index.js';
 export class CanvasRenderer {
-    // private hipStarSprites: Map<string, HTMLCanvasElement> = new Map();
-    // private gaiaSprites: Map<number, HTMLCanvasElement> = new Map();
     constructor(canvas, config) {
-        this.imageCache = {};
+        // private imageCache: { [key: string]: HTMLImageElement } = {};
         this.areaCandidatesCache = null;
         this.precessionCache = null;
         this.objectInformation = [];
@@ -47,172 +45,28 @@ export class CanvasRenderer {
         });
         // 色管理システムを初期化
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
+        this.solarSystemRenderer = new SolarSystemRenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
         this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.coordinateConverter, this.colorManager, this.orientationData);
         this.gaiaStarRenderer = new GaiaStarRenderer(this.ctx, this.config, this.coordinateConverter, this.colorManager, this.areaCandidates, this.orientationData);
+        this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
     }
     // imageCacheを設定
     setImageCache(imageCache) {
-        this.imageCache = imageCache;
+        // this.imageCache = imageCache;
+        this.dsoRenderer.setImageCache(imageCache);
     }
     // 描画をクリア
     clear() {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
-    // 天体を描画
-    drawObject(object, category, nameCorner) {
-        if (!object.getName() || object.getName() == '')
-            return;
-        const coordsJ2000 = object.getCoordinates();
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
-        const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-        if (!screenXY[0])
-            return;
-        const [x, y] = screenXY[1];
-        const type = object.getType();
-        this.objectInformation.push({
-            name: object.getName(),
-            type: category,
-            x: x,
-            y: y,
-            data: object
-        });
-        let markFlag = true;
-        if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay().width < 2.0 * 30.0 / this.canvas.width) {
-            markFlag = false;
-        }
-        this.ctx.font = '12px Arial';
-        this.ctx.fillStyle = this.colorManager.getColor('dso');
-        this.ctx.strokeStyle = this.colorManager.getColor('dso');
-        this.ctx.lineWidth = 1;
-        /*
-        Gx       Galaxy 銀河
-        OC       Open star cluster 散開星団
-        Gb       Globular star cluster, usually in the Milky Way Galaxy 球状星団
-        Nb       Bright emission or reflection nebula 散光星雲、超新星残骸
-        Pl       Planetary nebula 惑星状星雲
-        C+N      Cluster associated with nebulosity
-        Ast      Asterism or group of a few stars
-        Kt       Knot or nebulous region in an external galaxy
-        TS       Triple star    (was *** in the CDS table version)
-        DS       Double star    (was ** in the CDS version)
-        SS       Single star    (was * in the CDS version)
-        ?        Uncertain type or may not exist
-        U        Unidentified at the place given, or type unknown (was blank in CDS v.)
-        -        Object called nonexistent in the RNGC (Sulentic and Tifft 1973)
-        PD       Photographic plate defect
-        */
-        this.ctx.beginPath();
-        if (nameCorner == 'bottom-right') {
-            this.ctx.textAlign = 'left';
-            this.ctx.textBaseline = 'top';
-            this.ctx.fillText(object.getName(), x, y);
-        }
-        else {
-            this.ctx.textAlign = 'left';
-            this.ctx.textBaseline = 'bottom';
-            this.ctx.fillText(object.getName(), x, y);
-        }
-        if (type === 'Gx') { // Galaxy, 楕円
-            this.ctx.ellipse(x, y, 6, 3, 0, 0, Math.PI * 2);
-            this.ctx.stroke();
-            // this.ctx.fillText(object.getName(), x+5, y-5);
-        }
-        else if (['OC', 'C+N', 'Ast'].includes(type || '')) { // Open Cluster, 上三角形
-            this.ctx.moveTo(x, y - 6);
-            this.ctx.lineTo(x + 4, y + 3);
-            this.ctx.lineTo(x - 4, y + 3);
-            this.ctx.lineTo(x, y - 6);
-            this.ctx.stroke();
-            // this.ctx.fillText(object.getName(), x+5, y-5);
-        }
-        else if (type == 'Gb') { // Globular Cluster, 円
-            this.ctx.arc(x, y, 4, 0, Math.PI * 2);
-            this.ctx.stroke();
-            // this.ctx.fillText(object.getName(), x+5, y-5);
-        }
-        else if (['Nb', 'Pl', 'Kt'].includes(type || '')) { // Nebula, 正方形
-            if (markFlag) {
-                this.ctx.moveTo(x, y - 6);
-                this.ctx.lineTo(x + 6, y);
-                this.ctx.lineTo(x, y + 6);
-                this.ctx.lineTo(x - 6, y);
-                this.ctx.lineTo(x, y - 6);
-                this.ctx.stroke();
-            }
-            // this.ctx.fillText(object.getName(), x+5, y-5);
-        }
-        else if (['DS', 'TS', 'SS'].includes(type || '')) { // Star, 星
-            const a = Math.PI / 5;
-            const b = 6;
-            const c = 3;
-            this.ctx.moveTo(x, y - b);
-            this.ctx.lineTo(x + c * Math.sin(a), y - c * Math.cos(a));
-            this.ctx.lineTo(x + b * Math.sin(2 * a), y - b * Math.cos(2 * a));
-            this.ctx.lineTo(x + c * Math.sin(3 * a), y - c * Math.cos(3 * a));
-            this.ctx.lineTo(x + b * Math.sin(4 * a), y - b * Math.cos(4 * a));
-            this.ctx.lineTo(x + c * Math.sin(5 * a), y - c * Math.cos(5 * a));
-            this.ctx.lineTo(x + b * Math.sin(6 * a), y - b * Math.cos(6 * a));
-            this.ctx.lineTo(x + c * Math.sin(7 * a), y - c * Math.cos(7 * a));
-            this.ctx.lineTo(x + b * Math.sin(8 * a), y - b * Math.cos(8 * a));
-            this.ctx.lineTo(x + c * Math.sin(9 * a), y - c * Math.cos(9 * a));
-            this.ctx.lineTo(x, y - b);
-            this.ctx.stroke();
-            // this.ctx.fillText(object.getName(), x+5, y-5);
-        }
-        else { // ×印
-            this.ctx.moveTo(x - 4, y - 4);
-            this.ctx.lineTo(x + 4, y + 4);
-            this.ctx.moveTo(x + 4, y - 4);
-            this.ctx.lineTo(x - 4, y + 4);
-            this.ctx.stroke();
-            // this.ctx.fillText(object.getName(), x+5, y-5);
-        }
-        if (object instanceof MessierObject &&
-            ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
-            object.getName() in this.imageCache &&
-            object.getOverlay() !== null &&
-            window.config.viewState.fieldOfViewRA < 20) {
-            const img = this.imageCache[object.getName()];
-            // 画像が正常に読み込まれているかチェック
-            if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
-                this.drawOverlay(object.getName(), coords, object.getOverlay(), x, y, this.config.displaySettings.mode);
-            }
-            else if (!img.complete) {
-                // 画像がまだ読み込み中の場合
-                img.onload = () => {
-                    // 読み込み完了後も再度チェック
-                    if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-                        this.drawOverlay(object.getName(), coords, object.getOverlay(), x, y, this.config.displaySettings.mode);
-                    }
-                };
-                img.onerror = () => {
-                    console.warn(`Failed to load image for ${object.getName()}`);
-                };
-            }
-        }
-    }
-    drawOverlay(name, coords, overlay, x, y, mode) {
-        this.ctx.save();
-        const overlaySize = overlay.width * this.canvas.width / this.config.viewState.fieldOfViewRA;
-        this.ctx.globalAlpha = overlay.opacity;
-        if (mode == 'AEP') {
-            this.ctx.drawImage(this.imageCache[name], x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
-        }
-        else if (mode == 'view') {
-            this.ctx.translate(x, y);
-            const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.config, true, this.orientationData);
-            const rotation = Math.atan2(oneDegNorthXY[1][0] - x, -oneDegNorthXY[1][1] + y);
-            this.ctx.rotate(rotation);
-            this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
-        }
-        this.ctx.restore();
+    drawObject(object, category, objectInformation, nameCorner) {
+        this.dsoRenderer.drawDSOObject(object, category, objectInformation, nameCorner);
     }
     drawJsonObject(objects, category, nameCorner) {
         if (objects.length == 0)
             return;
         for (const object of objects) {
-            this.drawObject(object, category, nameCorner);
+            this.drawObject(object, category, this.objectInformation, nameCorner);
         }
     }
     drawMessier(messierObjects) {
@@ -254,314 +108,7 @@ export class CanvasRenderer {
         }
     }
     drawSolarSystemObjects() {
-        if (!this.config.displaySettings.showPlanets)
-            return;
-        const objects = SolarSystemDataManager.getAllObjects();
-        if (objects.length == 0)
-            return;
-        const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
-        const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
-        this.ctx.fillStyle = 'white';
-        for (const object of objects) {
-            if (object.getType() === 'sun') {
-                this.drawSun(object);
-            }
-            else if (object.getType() === 'moon') {
-                this.drawMoon(object, objects.find(obj => obj.getType() === 'sun'));
-            }
-            else if (object.getType() === 'planet') {
-                this.drawPlanet(object, limitingMagnitude, zeroMagSize);
-            }
-            else if (object.getType() === 'asteroid') {
-                this.drawMinorObject(object, limitingMagnitude, zeroMagSize);
-            }
-            else if (object.getType() === 'comet') {
-                this.drawMinorObject(object, limitingMagnitude, zeroMagSize);
-            }
-        }
-        this.drawPlanetMotion();
-    }
-    drawPlanetMotion() {
-        if (this.config.planetMotion.planet.length == 0)
-            return;
-        const duration = this.config.planetMotion.duration;
-        const interval = this.config.planetMotion.interval;
-        const timeDisplayStep = this.config.planetMotion.timeDisplayStep;
-        const timeDisplayContent = this.config.planetMotion.timeDisplayContent;
-        const halfCount = Math.floor(duration / interval);
-        const minJd = this.config.displayTime.jd - halfCount * interval;
-        const maxJd = this.config.displayTime.jd + halfCount * interval;
-        const objectsBaseData = SolarSystemDataManager.getAllObjects();
-        for (const planet of this.config.planetMotion.planet) {
-            if (planet == this.config.observationSite.observerPlanet)
-                continue;
-            const jds = [];
-            const timeLabels = [];
-            const ras = [];
-            const decs = [];
-            const xys = [];
-            const distances = [];
-            for (let jd = minJd; jd <= maxJd; jd += interval) {
-                if (jd == this.config.displayTime.jd)
-                    continue;
-                const objectData = SolarSystemPositionCalculator.oneObjectData(objectsBaseData, planet, jd, this.config.observationSite);
-                if (objectData) {
-                    jds.push(jd);
-                    const ymdhms = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
-                    timeLabels.push(formatTime(ymdhms, timeDisplayContent));
-                    const coords = objectData.getRaDec();
-                    ras.push(coords.ra);
-                    decs.push(coords.dec);
-                    const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, true, this.orientationData);
-                    xys.push(screenXY[1]);
-                    distances.push(objectData.getDistance());
-                }
-            }
-            this.ctx.font = '14px serif';
-            this.ctx.strokeStyle = this.colorManager.getColor('solarSystemMotion');
-            this.ctx.fillStyle = this.colorManager.getColor('orange');
-            this.ctx.textAlign = 'left';
-            this.ctx.beginPath();
-            for (let i = 0; i < jds.length; i++) {
-                this.ctx.moveTo(xys[i][0] - 3, xys[i][1] - 3);
-                this.ctx.lineTo(xys[i][0] + 3, xys[i][1] + 3);
-                this.ctx.moveTo(xys[i][0] - 3, xys[i][1] + 3);
-                this.ctx.lineTo(xys[i][0] + 3, xys[i][1] - 3);
-            }
-            this.ctx.stroke();
-            for (let i = timeDisplayStep; i < halfCount; i += timeDisplayStep) {
-                let idx = halfCount - i - 1;
-                if ((xys[idx + 1][1] - xys[idx][1]) * (xys[idx + 1][0] - xys[idx][0]) < 0) { // 軌跡が左上-右下
-                    this.ctx.textBaseline = 'top';
-                }
-                else { // 軌跡が左下-右上
-                    this.ctx.textBaseline = 'bottom';
-                }
-                this.ctx.fillText(timeLabels[idx], xys[idx][0], xys[idx][1]);
-                idx = halfCount + i;
-                if (idx + 1 < jds.length) {
-                    if ((xys[idx + 1][1] - xys[idx][1]) * (xys[idx + 1][0] - xys[idx][0]) < 0) { // 軌跡が左上-右下
-                        this.ctx.textBaseline = 'top';
-                    }
-                    else { // 軌跡が左下-右上
-                        this.ctx.textBaseline = 'bottom';
-                    }
-                }
-                this.ctx.fillText(timeLabels[idx], xys[idx][0], xys[idx][1]);
-            }
-        }
-        function formatTime(ymdhms, format) {
-            const y = ymdhms.year;
-            const m = ymdhms.month;
-            const d = ymdhms.day;
-            const h = ymdhms.hour;
-            const mi = ymdhms.minute;
-            const s = ymdhms.second;
-            if (format == 'ym') {
-                return `${y}/${m}/${d}`;
-            }
-            else if (format == 'md') {
-                return `${m}/${d}`;
-            }
-            else if (format == 'mdh') {
-                return `${m}/${d} ${h}時`;
-            }
-            else if (format == 'hm') {
-                return `${h}:${mi}`;
-            }
-            return `${y}/${m}/${d} ${h}:${mi}:${s}`;
-        }
-    }
-    drawSun(sun) {
-        const siderealTime = this.config.siderealTime;
-        const coords = sun.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-        if (!screenXY[0])
-            return;
-        const [x, y] = screenXY[1];
-        this.objectInformation.push({
-            name: sun.getJapaneseName(),
-            type: 'sun',
-            x: x,
-            y: y,
-            data: sun
-        });
-        const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fieldOfViewRA, 13);
-        this.ctx.font = '15px serif';
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'bottom';
-        this.ctx.fillStyle = this.colorManager.getColor('yellow');
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.fillText(sun.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
-    }
-    drawPlanet(planet, limitingMagnitude, zeroMagSize) {
-        this.ctx.font = '15px serif';
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'bottom';
-        const coords = planet.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-        if (!screenXY[0])
-            return;
-        const [x, y] = screenXY[1];
-        this.objectInformation.push({
-            name: planet.getJapaneseName(),
-            type: 'planet',
-            x: x,
-            y: y,
-            data: planet
-        });
-        const radius = Math.max(getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
-        this.ctx.beginPath();
-        this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
-        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-        this.ctx.fill();
-        const dxy = Math.max(2, 0.8 * radius);
-        this.ctx.fillText(planet.getJapaneseName(), x + dxy, y - dxy);
-    }
-    drawMoon(moon, sun) {
-        if (this.config.observationSite.observerPlanet !== '地球')
-            return;
-        // console.log(this.config.viewState.fieldOfViewRA == (window as any).config.viewState.fieldOfViewRA);
-        const { ra: sunRaDeg, dec: sunDecDeg } = sun.getRaDec();
-        const { ra: moonRaDeg, dec: moonDecDeg } = moon.getRaDec();
-        const sunRaRad = sunRaDeg * Math.PI / 180;
-        const sunDecRad = sunDecDeg * Math.PI / 180;
-        const moonRaRad = moonRaDeg * Math.PI / 180;
-        const moonDecRad = moonDecDeg * Math.PI / 180;
-        const moonDist = moon.getDistance();
-        const angRadius = 0.259 / (moonDist / 384400);
-        const pxRadius0 = this.canvas.width * angRadius / this.config.viewState.fieldOfViewRA;
-        const radius = Math.max(pxRadius0, 13);
-        const scale = radius / pxRadius0; // 実際の視半径より何倍に見せているか
-        const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
-        const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
-        let p, RA1, Dec1;
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: moonRaDeg, dec: moonDecDeg }, this.config, false, this.orientationData);
-        if (!screenXY[0])
-            return;
-        const [x, y] = screenXY[1];
-        this.objectInformation.push({
-            name: moon.getJapaneseName(),
-            type: 'moon',
-            x: x,
-            y: y,
-            data: moon
-        });
-        if (this.config.displaySettings.mode == 'EtP') {
-            p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
-        }
-        else if (['AEP', 'view', 'live'].includes(this.config.displaySettings.mode)) {
-            p = Math.atan2(Math.cos(sunDecRad) * Math.sin(moonRaRad - sunRaRad), -Math.sin(moonDecRad) * Math.cos(sunDecRad) * Math.cos(moonRaRad - sunRaRad) + Math.cos(moonDecRad) * Math.sin(sunDecRad));
-            // console.log(p * 180/Math.PI);
-            RA1 = (moonRaDeg - 0.2 * Math.cos(p) / Math.cos(moonDecRad));
-            Dec1 = (moonDecDeg - 0.2 * Math.sin(p));
-            const screenXY1 = this.coordinateConverter.equatorialToScreenXYifin({ ra: RA1, dec: Dec1 }, this.config, true, this.orientationData);
-            const [x1, y1] = screenXY1[1];
-            p = Math.atan2(y1 - y, x1 - x);
-        }
-        else {
-            return;
-        }
-        this.ctx.font = '15px serif';
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'bottom';
-        this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
-        if (k < 0.5) {
-            this.ctx.fillStyle = this.colorManager.getColor('yellow');
-            this.ctx.arc(x, y, radius, p - Math.PI, p);
-            this.ctx.fill();
-            this.ctx.fillStyle = this.colorManager.getColor('moonShade');
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius, p, p + Math.PI);
-            this.ctx.ellipse(x, y, radius, radius * (1 - 2 * k), p - Math.PI, 0, Math.PI);
-            this.ctx.fill();
-        }
-        else {
-            this.ctx.fillStyle = this.colorManager.getColor('moonShade');
-            this.ctx.arc(x, y, radius, p, p + Math.PI);
-            this.ctx.fill();
-            this.ctx.fillStyle = this.colorManager.getColor('yellow');
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius, p - Math.PI, p);
-            this.ctx.ellipse(x, y, radius, radius * (2 * k - 1), p, 0, Math.PI);
-            this.ctx.fill();
-        }
-        // 簡易月食表現（本影・半影の重なりを描画）
-        // 利用可能な月の黄経・黄緯（moon.lon_moon, moon.lat_moon）と太陽の黄経（lon_sun）を使う
-        try {
-            const penumbraRadiusDeg = 1.25 * 384400 / moonDist; // 半影半径（度）
-            const umbraRadiusDeg = 0.75 * 384400 / moonDist; // 
-            const penumbraPx = (penumbraRadiusDeg / angRadius) * radius;
-            const umbraPx = (umbraRadiusDeg / angRadius) * radius;
-            // 影の向き（画面上で太陽反対方向）
-            const shadowCenterFromEarthCenter = this.coordinateConverter.equatorialToCartesian({ ra: (sunRaDeg + 180) % 360, dec: -sunDecDeg }, moonDist);
-            const obsLat = this.config.observationSite.latitude * Math.PI / 180;
-            const siderealTime = this.config.siderealTime;
-            const shadowCenterXYZFromObserver = {
-                x: shadowCenterFromEarthCenter.x - Math.cos(obsLat) * Math.cos(siderealTime) * 6378.14,
-                y: shadowCenterFromEarthCenter.y - Math.cos(obsLat) * Math.sin(siderealTime) * 6378.14,
-                z: shadowCenterFromEarthCenter.z - Math.sin(obsLat) * 6378.14
-            };
-            const shadowCenterRaDecFromObserver = this.coordinateConverter.cartesianToEquatorial(shadowCenterXYZFromObserver);
-            const shadowCenterXY = this.coordinateConverter.equatorialToScreenXYifin(shadowCenterRaDecFromObserver, this.config, true, this.orientationData);
-            const [sx0, sy0] = shadowCenterXY[1];
-            const sx = x + (sx0 - x) * scale;
-            const sy = y + (sy0 - y) * scale;
-            const angDistanceDeg = this.coordinateConverter.angularDistanceEquatorial(shadowCenterRaDecFromObserver, { ra: moonRaDeg, dec: moonDecDeg });
-            const drawEarthShadow = (red, green, blue, alpha, shadowRadius) => {
-                this.ctx.save();
-                this.ctx.beginPath();
-                this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-                this.ctx.clip();
-                this.ctx.beginPath();
-                this.ctx.fillStyle = `rgba(${red}, ${green}, ${blue}, ${alpha.toFixed(3)})`;
-                this.ctx.arc(sx, sy, shadowRadius, 0, Math.PI * 2);
-                this.ctx.fill();
-                this.ctx.restore();
-            };
-            // 半影（淡い影）
-            if (angDistanceDeg < penumbraRadiusDeg + angRadius) {
-                const penAlpha = Math.min(0.5, Math.max(0.20, (penumbraRadiusDeg - angDistanceDeg) / penumbraRadiusDeg * 0.5));
-                drawEarthShadow(0, 0, 0, penAlpha, penumbraPx);
-                // 本影（濃い影、赤銅色）
-                if (angDistanceDeg < umbraRadiusDeg + angRadius) {
-                    const umbAlpha = Math.min(0.9, Math.max(0.7, (umbraRadiusDeg - angDistanceDeg) / umbraRadiusDeg * 0.9));
-                    drawEarthShadow(120, 20, 20, umbAlpha, umbraPx);
-                }
-            }
-        }
-        catch (e) {
-            // 影データが取得できない等の場合は何もしない
-        }
-        this.ctx.fillStyle = 'yellow';
-        this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
-    }
-    drawMinorObject(minorObject, limitingMagnitude, zeroMagSize) {
-        this.ctx.font = '12px serif';
-        this.ctx.textAlign = 'left';
-        this.ctx.textBaseline = 'bottom';
-        const coords = minorObject.getRaDec();
-        const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-        if (!screenXY[0])
-            return;
-        const [x, y] = screenXY[1];
-        this.objectInformation.push({
-            name: minorObject.getJapaneseName(),
-            type: 'asteroidComet',
-            x: x,
-            y: y,
-            data: minorObject
-        });
-        const magnitude = Math.min(minorObject.getMagnitude() ?? 11.5, limitingMagnitude) - 1;
-        const radius = Math.max(getStarSize(magnitude, limitingMagnitude, zeroMagSize), 1);
-        this.ctx.beginPath();
-        this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
-        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.fillText(minorObject.getJapaneseName(), x + 2, y - 2);
+        this.solarSystemRenderer.drawSolarSystemObjects(this.objectInformation);
     }
     async drawHipStars(hipStars) {
         this.hipStarRenderer.drawHipStars(hipStars, this.starInformation);
@@ -605,11 +152,11 @@ export class CanvasRenderer {
                 continue;
             if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) > tier_range[starName.tier - 1])
                 continue;
-            const coords = this.coordinateConverter.precessionEquatorial({ ra: starName.ra, dec: starName.dec }, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-            if (!screenXY[0])
+            const coords = new RaDec(starName.ra, starName.dec).precess(precessionAngle);
+            const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            if (!canvasXY[0])
                 continue;
-            const [x, y] = screenXY[1];
+            const { x, y } = canvasXY[1];
             if (starName.jpnName) {
                 this.ctx.fillText(starName.jpnName, x + 2, y - 2);
             }
@@ -640,11 +187,11 @@ export class CanvasRenderer {
         for (const bayerStar of bayerData) {
             if (!bayerStar.coordinates)
                 continue;
-            const coords = this.coordinateConverter.precessionEquatorial(bayerStar.coordinates, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-            if (!screenXY[0])
+            const coords = new RaDec(bayerStar.coordinates.ra, bayerStar.coordinates.dec).precess(precessionAngle);
+            const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            if (!canvasXY[0])
                 continue;
-            const [x, y] = screenXY[1];
+            const { x, y } = canvasXY[1];
             // ベイヤー記号を表示（既にフォーマット済み）
             if (bayerStar.bayer && bayerStar.flam) {
                 this.ctx.fillText(`${bayerStar.bayer} (${bayerStar.flam})`, x + 5, y + 5);
@@ -707,10 +254,10 @@ export class CanvasRenderer {
                 for (j = 0; j <= 360 / alphaCalcInterval + 1; j++) {
                     a = j * alphaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                        [ifin, { x, y }] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     else if (mode == 'view') {
-                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                        [ifin, { x, y }] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -732,10 +279,10 @@ export class CanvasRenderer {
                 for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
                     b = j * betaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                        [ifin, { x, y }] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     else if (mode == 'view') {
-                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                        [ifin, { x, y }] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -760,10 +307,10 @@ export class CanvasRenderer {
                 for (j = 0; j <= 360 / alphaCalcInterval + 1; j++) {
                     a = j * alphaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                        [ifin, { x, y }] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     else if (mode == 'view') {
-                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                        [ifin, { x, y }] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -785,10 +332,10 @@ export class CanvasRenderer {
                 for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
                     b = j * betaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                        [ifin, { x, y }] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     else if (mode == 'view') {
-                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                        [ifin, { x, y }] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -817,10 +364,10 @@ export class CanvasRenderer {
                 for (j = -maxAlphaCalcIdx; j <= maxAlphaCalcIdx; j++) {
                     a = alpha + j * alphaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                        [ifin, { x, y }] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     else if (mode == 'view') {
-                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                        [ifin, { x, y }] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -842,10 +389,10 @@ export class CanvasRenderer {
                 for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
                     b = j * betaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: a, dec: b }, this.config, true);
+                        [ifin, { x, y }] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     else if (mode == 'view') {
-                        [ifin, [x, y]] = this.coordinateConverter.horizontalToScreenXYifin({ az: a, alt: b }, this.config, true);
+                        [ifin, { x, y }] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -865,11 +412,11 @@ export class CanvasRenderer {
             this.ctx.fillStyle = this.colorManager.getColor('text');
             for (i = 0; i < 360; i += 45) {
                 const direction = directions[i / 45];
-                const directionEquatorial = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: i, alt: 0 });
-                const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial, this.config, false, this.orientationData);
+                const directionRaDec = new AzAlt(i, 0).toRaDec(lstLat);
+                const [ifin, { x, y }] = directionRaDec.toCanvasXYifin(this.config, this.orientationData);
                 if (ifin) {
-                    const directionEquatorial2 = this.coordinateConverter.horizontalToEquatorial(lstLat, { az: i + 1, alt: 0 });
-                    const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(directionEquatorial2, this.config, false, this.orientationData);
+                    const directionRaDec2 = new AzAlt(i + 1, 0).toRaDec(lstLat);
+                    const [ifin2, { x: x2, y: y2 }] = directionRaDec2.toCanvasXYifin(this.config, this.orientationData, true);
                     this.ctx.save();
                     this.ctx.translate(x, y);
                     this.ctx.rotate(Math.atan2(y2 - y, x2 - x));
@@ -945,12 +492,10 @@ export class CanvasRenderer {
         this.ctx.beginPath();
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
-                const coords1J2000 = { ra: line[0], dec: line[1] };
-                const coords1 = this.coordinateConverter.precessionEquatorial(coords1J2000, precessionAngle);
-                const coords2J2000 = { ra: line[2], dec: line[3] };
-                const coords2 = this.coordinateConverter.precessionEquatorial(coords2J2000, precessionAngle);
-                const [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true, this.orientationData);
-                const [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true, this.orientationData);
+                const coords1 = new RaDec(line[0], line[1]).precess(precessionAngle);
+                const coords2 = new RaDec(line[2], line[3]).precess(precessionAngle);
+                const [ifin1, { x: x1, y: y1 }] = coords1.toCanvasXYifin(this.config, this.orientationData, true);
+                const [ifin2, { x: x2, y: y2 }] = coords2.toCanvasXYifin(this.config, this.orientationData, true);
                 if (this.coordinateConverter.shouldDrawLine(x1, y1, x2, y2, this.config.canvasSize, maxLengthSquared)) {
                     this.ctx.moveTo(x1, y1);
                     this.ctx.lineTo(x2, y2);
@@ -971,12 +516,11 @@ export class CanvasRenderer {
         const siderealTime = window.config.siderealTime;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', window.config.displayTime.jd);
         for (const constellation of constellations) {
-            const coordsJ2000 = { ra: constellation.ra, dec: constellation.dec };
-            const coords = this.coordinateConverter.precessionEquatorial(coordsJ2000, precessionAngle);
-            const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-            if (!screenXY[0])
+            const coords = new RaDec(constellation.ra, constellation.dec).precess(precessionAngle);
+            const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            if (!canvasXY[0])
                 continue;
-            const [x, y] = screenXY[1];
+            const { x, y } = canvasXY[1];
             this.objectInformation.push({
                 name: constellation.JPNname + '座',
                 type: 'constellation',
@@ -1056,8 +600,11 @@ export class CanvasRenderer {
             return;
         const ifins = [];
         const screenXYs = [];
+        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         for (let i = 0; i < milkyWay.length; i++) {
-            const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: milkyWay[i][0], dec: milkyWay[i][1] }, this.config, true, this.orientationData);
+            const coords = new RaDec(milkyWay[i][0], milkyWay[i][1]).precess(precessionAngle);
+            const [ifin, { x, y }] = coords.toCanvasXYifin(this.config, this.orientationData, true);
+            // const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: milkyWay[i][0], dec: milkyWay[i][1] }, this.config, true, this.orientationData);
             ifins.push(ifin);
             screenXYs.push([x, y]);
         }
@@ -1080,9 +627,6 @@ export class CanvasRenderer {
         this.ctx.stroke();
         // this.ctx.fill();
         this.ctx.setLineDash([]);
-    }
-    getStarColor(bv) {
-        return this.colorManager.getStarColor(bv);
     }
     areaCandidates() {
         // キャッシュをチェック（設定が変更されていない場合）

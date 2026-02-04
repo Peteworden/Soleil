@@ -1,10 +1,90 @@
 import { DataStore } from '../models/DataStore.js';
 // import { loadWasm } from './wasmLoader.js';
+import { asindeg, acosdeg } from './mathUtils.js';
 const DEG_TO_RAD = Math.PI / 180;
 const RAD_TO_DEG = 180 / Math.PI;
 const epsilon = 0.4090926;
 const cosEpsl = Math.cos(epsilon);
 const sinEpsl = Math.sin(epsilon);
+class RaDec {
+    constructor(ra, dec) {
+        this.ra = ra;
+        this.dec = dec;
+    }
+    toRad() {
+        return { ra: this.ra * DEG_TO_RAD, dec: this.dec * DEG_TO_RAD };
+    }
+    toHmDm() {
+        let rah = Math.floor(this.ra / 15);
+        let ram = Math.round((this.ra - 15 * rah) * 40);
+        if (ram == 600) {
+            ram = 0.0;
+            if (rah == 23)
+                rah = 0;
+            else
+                rah += 1;
+        }
+        else {
+            ram = ram / 10;
+        }
+        const raStr = `${rah}h ${ram}m`;
+        return { ra: raStr, dec: raStr };
+    }
+    radeg2hms(ra_deg) {
+        let h = Math.floor(ra_deg / 15);
+        let m = Math.floor((ra_deg - 15 * h) * 4);
+        let s = Math.round(((ra_deg - 15 * h) * 4 - m) * 60);
+        if (s == 60) {
+            s = 0;
+            m += 1;
+        }
+        if (m == 60) {
+            m = 0;
+            h += 1;
+        }
+        if (h == 24) {
+            h = 0;
+        }
+        return [h, m, s];
+    }
+    toCartesian(distance = 1) {
+        const { ra, dec } = this.toRad();
+        return {
+            x: distance * Math.cos(dec) * Math.cos(ra),
+            y: distance * Math.cos(dec) * Math.sin(ra),
+            z: distance * Math.sin(dec)
+        };
+    }
+    toAzAlt(lstLat) {
+        const { ra, dec } = this.toRad();
+        const lat = lstLat.lat * DEG_TO_RAD;
+        const hourAngle = lstLat.lst - ra;
+        const sinDec = Math.sin(dec);
+        const cosDec = Math.cos(dec);
+        const sinLat = Math.sin(lat);
+        const cosLat = Math.cos(lat);
+        const sinHourAngle = Math.sin(hourAngle);
+        const cosHourAngle = Math.cos(hourAngle);
+        const x = cosLat * sinDec - sinLat * cosDec * cosHourAngle;
+        const y = -cosDec * sinHourAngle;
+        const z = sinLat * sinDec + cosLat * cosDec * cosHourAngle;
+        const az = (Math.atan2(y, x) * RAD_TO_DEG + 360) % 360;
+        const alt = asindeg(z);
+        return new AzAlt(az, alt);
+    }
+}
+class AzAlt {
+    constructor(az, alt) {
+        this.az = az;
+        this.alt = alt;
+    }
+    toRad() {
+        return { az: this.az * DEG_TO_RAD, alt: this.alt * DEG_TO_RAD };
+    }
+    toRaDec() {
+        return new RaDec(this.az * RAD_TO_DEG, this.alt * RAD_TO_DEG);
+    }
+}
 export class CoordinateConverter {
     constructor() {
         // グローバルなconfigから緯度経度を取得
@@ -89,38 +169,26 @@ export class CoordinateConverter {
             dec: this.fieldOfViewDec
         };
     }
-    asinrad(a) {
-        if (a > 1)
-            return Math.PI / 2;
-        else if (a < -1)
-            return -Math.PI / 2;
-        else
-            return Math.asin(a);
-    }
-    acosrad(a) {
-        if (a > 1)
-            return 0;
-        else if (a < -1)
-            return Math.PI;
-        else
-            return Math.acos(a);
-    }
-    asindeg(a) {
-        if (a > 1)
-            return 90;
-        else if (a < -1)
-            return -90;
-        else
-            return Math.asin(a) * RAD_TO_DEG;
-    }
-    acosdeg(a) {
-        if (a > 1)
-            return 0;
-        else if (a < -1)
-            return 180;
-        else
-            return Math.acos(a) * RAD_TO_DEG;
-    }
+    // asinrad(a: number): number {
+    //     if (a > 1) return Math.PI / 2;
+    //     else if (a < -1) return -Math.PI / 2;
+    //     else return Math.asin(a);
+    // }
+    // acosrad(a: number): number {
+    //     if (a > 1) return 0;
+    //     else if (a < -1) return Math.PI;
+    //     else return Math.acos(a);
+    // }
+    // asindeg(a: number): number {
+    //     if (a > 1) return 90;
+    //     else if (a < -1) return -90;
+    //     else return Math.asin(a) * RAD_TO_DEG;
+    // }
+    // acosdeg(a: number): number {
+    //     if (a > 1) return 0;
+    //     else if (a < -1) return 180;
+    //     else return Math.acos(a) * RAD_TO_DEG;
+    // }
     rotateX(coords, angle) {
         const sin = Math.sin(angle);
         const cos = Math.cos(angle);
@@ -234,7 +302,7 @@ export class CoordinateConverter {
     // 直交座標から赤道座標への変換
     cartesianToEquatorial(coords) {
         const distance = Math.sqrt(coords.x * coords.x + coords.y * coords.y + coords.z * coords.z);
-        const dec = this.asindeg(coords.z / distance);
+        const dec = asindeg(coords.z / distance);
         const ra = Math.atan2(coords.y, coords.x) * RAD_TO_DEG;
         return { ra: (ra + 360) % 360, dec: dec };
     }
@@ -300,22 +368,24 @@ export class CoordinateConverter {
     // ------------------------------赤道座標からの変換------------------------------
     // 赤道座標から地平座標への変換
     equatorialToHorizontal(lstLat, coords) {
-        const ra = coords.ra * DEG_TO_RAD;
-        const dec = coords.dec * DEG_TO_RAD;
-        const lat = lstLat.lat * DEG_TO_RAD;
-        const hourAngle = lstLat.lst - ra;
-        const sinDec = Math.sin(dec);
-        const cosDec = Math.cos(dec);
-        const sinLat = Math.sin(lat);
-        const cosLat = Math.cos(lat);
-        const sinHourAngle = Math.sin(hourAngle);
-        const cosHourAngle = Math.cos(hourAngle);
-        const x = cosLat * sinDec - sinLat * cosDec * cosHourAngle;
-        const y = -cosDec * sinHourAngle;
-        const z = sinLat * sinDec + cosLat * cosDec * cosHourAngle;
-        const az = (Math.atan2(y, x) * RAD_TO_DEG + 360) % 360;
-        const alt = this.asindeg(z);
-        return { az, alt };
+        // const ra = coords.ra * DEG_TO_RAD;
+        // const dec = coords.dec * DEG_TO_RAD;
+        // const lat = lstLat.lat * DEG_TO_RAD;
+        // const hourAngle = lstLat.lst - ra;
+        // const sinDec = Math.sin(dec);
+        // const cosDec = Math.cos(dec);
+        // const sinLat = Math.sin(lat);
+        // const cosLat = Math.cos(lat);
+        // const sinHourAngle = Math.sin(hourAngle);
+        // const cosHourAngle = Math.cos(hourAngle);
+        // const x =  cosLat * sinDec - sinLat * cosDec * cosHourAngle;
+        // const y = -cosDec * sinHourAngle;
+        // const z =  sinLat * sinDec + cosLat * cosDec * cosHourAngle;
+        // const az = (Math.atan2(y, x) * RAD_TO_DEG + 360) % 360;
+        // const alt = asindeg(z);
+        // return {az, alt};
+        const radec = new RaDec(coords.ra, coords.dec);
+        return radec.toAzAlt(lstLat);
     }
     // async equatorialToHorizontalWasm(lstLat: LstLat, raArray: Float64Array, decArray: Float64Array): Promise<Float64Array> {
     //     const wasm = await loadWasm();
@@ -392,7 +462,7 @@ export class CoordinateConverter {
         const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
         const b = cosDec * Math.sin(ra_diff);
         const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
-        const r = this.acosdeg(c); //中心からの角距離, deg
+        const r = acosdeg(c); //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRA = r * Math.sin(thetaSH);
         const scrDec = -r * Math.cos(thetaSH);
@@ -441,7 +511,7 @@ export class CoordinateConverter {
         const y = -cosAlt * sinAz;
         const z = cosLat * cosAlt * cosAz + sinLat * sinAlt;
         const ra = ((lstLat.lst + Math.atan2(-y, -x)) * RAD_TO_DEG + 360) % 360;
-        const dec = this.asindeg(z);
+        const dec = asindeg(z);
         return { ra, dec };
     }
     horizontalToScreenRaDec(coords, mode, center, orientationData) {
@@ -476,7 +546,7 @@ export class CoordinateConverter {
         const b = cosAlt * sinAzDiff;
         const c = cosCenterAlt * cosAlt * cosAzDiff + sinCenterAlt * sinAlt;
         // const {x: a, y: b, z: c} = this.rotateY({x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt}, -Math.PI / 2 + centerAltRad);
-        const r = this.acosdeg(c); //中心からの角距離, deg
+        const r = acosdeg(c); //中心からの角距離, deg
         const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
         const scrRa = r * Math.sin(thetaSH);
         const scrDec = -r * Math.cos(thetaSH);
@@ -497,7 +567,7 @@ export class CoordinateConverter {
             return { ra: 0, dec: 0 };
         }
         else {
-            const b = this.acosdeg(-z);
+            const b = acosdeg(-z);
             const scrRA = -b * x / Math.sqrt(x * x + y * y);
             const scrDec = b * y / Math.sqrt(x * x + y * y);
             return { ra: scrRA, dec: scrDec };
@@ -562,7 +632,7 @@ export class CoordinateConverter {
             const a = sinDec * sinR * cosThetaSH + cosDec * cosR;
             const b = sinR * sinThetaSH;
             const c = -cosDec * sinR * cosThetaSH + sinDec * cosR;
-            const dec = this.asindeg(c);
+            const dec = asindeg(c);
             const ra = ((Math.atan2(b, a) * RAD_TO_DEG + center.ra) % 360 + 360) % 360;
             return { ra, dec };
         }
@@ -587,7 +657,7 @@ export class CoordinateConverter {
             const abc1 = this.rotateY({ x: sinR * cosThetaSH, y: sinR * sinThetaSH, z: cosR }, Math.PI / 2 - centerAlt_rad);
             const abc2 = this.rotateZ(abc1, -center.az * DEG_TO_RAD);
             const { x: a, y: b, z: c } = abc2;
-            const alt = this.asindeg(c);
+            const alt = asindeg(c);
             const az = ((Math.atan2(-b, a) * RAD_TO_DEG) % 360 + 360) % 360;
             return { az, alt };
         }
@@ -603,7 +673,7 @@ export class CoordinateConverter {
         const y0 = Math.sin(r) * Math.sin(theta);
         const z0 = -Math.cos(r);
         const { x, y, z } = this.rotateZ(this.rotateX(this.rotateY({ x: x0, y: y0, z: z0 }, gamma), beta), alpha);
-        const alt = this.asindeg(z);
+        const alt = asindeg(z);
         const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
         return { az, alt };
     }
@@ -695,7 +765,7 @@ export class CoordinateConverter {
         const dec1 = coords1.dec * DEG_TO_RAD;
         const ra2 = coords2.ra * DEG_TO_RAD;
         const dec2 = coords2.dec * DEG_TO_RAD;
-        return this.acosdeg(Math.cos(dec1) * Math.cos(dec2) * Math.cos(ra1 - ra2) + Math.sin(dec1) * Math.sin(dec2));
+        return acosdeg(Math.cos(dec1) * Math.cos(dec2) * Math.cos(ra1 - ra2) + Math.sin(dec1) * Math.sin(dec2));
     }
 }
 //# sourceMappingURL=coordinates.js.map

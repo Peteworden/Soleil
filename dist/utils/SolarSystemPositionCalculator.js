@@ -1,31 +1,13 @@
 import { Moon, isPlanet, isSun, isMinorObject, isMoon, isOrbitalObject } from '../models/SolarSystemObjects.js';
 import { CoordinateConverter } from './coordinates.js';
-const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
-const epsilon = 0.4090926;
-const cosEpsl = Math.cos(epsilon);
-const sinEpsl = Math.sin(epsilon);
+import { COS_EPSL, DEG_TO_RAD, RAD_TO_DEG, SIN_EPSL } from './constants.js';
+import { acosdeg, acosrad } from './mathUtils.js';
+import { Cartesian, RaDec } from './coordinates/index.js';
 /**
  * 太陽系天体の位置計算クラス
  * 位置計算、座標変換、等級計算に特化
  */
 export class SolarSystemPositionCalculator {
-    static acosdeg(a) {
-        if (a > 1)
-            return 0;
-        else if (a < -1)
-            return 180;
-        else
-            return Math.acos(a) * RAD_TO_DEG;
-    }
-    static acosrad(a) {
-        if (a > 1)
-            return 0;
-        else if (a < -1)
-            return Math.PI;
-        else
-            return Math.acos(a);
-    }
     /**
      * 観測地の天体を設定
      */
@@ -56,26 +38,17 @@ export class SolarSystemPositionCalculator {
             return;
         }
         // すべての太陽系天体の日心直交座標を計算
+        // 月のみ地球から見た赤経・赤緯も計算、xyzが地球基準になる
         objects.forEach(obj => {
-            // 原点は太陽
-            // 月のみ地球から見た赤経・赤緯も計算、xyzが地球基準になる
-            if (isMoon(obj)) {
-                const sun = objects.find(obj => isSun(obj));
-                if (sun) {
-                    this.calculateXYZ(obj, jd, sun);
-                }
-                //月のxyzに地球のxyzを加算
-                const earth = objects.find(obj => isPlanet(obj) && obj.jpnName === "地球");
-                if (earth) {
-                    obj.xyz.x += earth.xyz.x;
-                    obj.xyz.y += earth.xyz.y;
-                    obj.xyz.z += earth.xyz.z;
-                }
-            }
-            else {
-                this.calculateXYZ(obj, jd);
-            }
+            this.calculateXYZ(obj, jd);
         });
+        const moon = objects.find(obj => isMoon(obj));
+        const earth = objects.find(obj => isPlanet(obj) && obj.jpnName === "地球");
+        if (moon && earth) {
+            moon.xyz.x += earth.xyz.x;
+            moon.xyz.y += earth.xyz.y;
+            moon.xyz.z += earth.xyz.z;
+        }
         // 全天体の位置と等級を更新
         objects.forEach(obj => {
             this.updateObjectData(obj, jd, observerPlanetObject.xyz);
@@ -87,121 +60,79 @@ export class SolarSystemPositionCalculator {
             console.warn('天体データがありません');
             return undefined;
         }
-        // 元のオブジェクトの型を保持するディープコピーを作成
-        const objects = objects0.map(obj => this.deepCopySolarSystemObject(obj));
-        const obj = objects.find(obj => obj.jpnName === objName);
-        if (!obj) {
+        let target;
+        if (objects0.find(obj => obj.jpnName === objName)) {
+            target = this.deepCopySolarSystemObject(objects0.find(obj => obj.jpnName === objName));
+        }
+        else {
             console.warn(`天体「${objName}」が見つかりません`);
             return undefined;
         }
-        const observerPlanetObject = objects.find(obj => obj.jpnName === observationSite.observerPlanet);
-        if (!observerPlanetObject) {
-            console.warn(`観測地の惑星「${observationSite.observerPlanet}」が見つかりません`);
-            return undefined;
-        }
-        if (isMoon(obj)) {
-            if (observerPlanetObject.jpnName != "地球") {
-                return undefined;
-            }
-            const sun = objects.find(obj => isSun(obj));
-            if (sun) {
-                this.calculateXYZ(obj, jd, sun);
-            }
-            //月のxyzに地球のxyzを加算
-            this.calculateXYZ(observerPlanetObject, jd);
-            obj.xyz.x += observerPlanetObject.xyz.x;
-            obj.xyz.y += observerPlanetObject.xyz.y;
-            obj.xyz.z += observerPlanetObject.xyz.z;
-        }
-        else if (isMoon(observerPlanetObject)) {
-            const sun = objects.find(obj => isSun(obj));
-            if (sun) {
-                this.calculateXYZ(observerPlanetObject, jd, sun);
-            }
-            if (obj.jpnName === "地球") {
-                this.calculateXYZ(obj, jd);
-                observerPlanetObject.xyz.x += obj.xyz.x;
-                observerPlanetObject.xyz.y += obj.xyz.y;
-                observerPlanetObject.xyz.z += obj.xyz.z;
-            }
-            else {
-                const earth = objects.find(obj => isPlanet(obj) && obj.jpnName === "地球");
-                if (earth) {
-                    this.calculateXYZ(earth, jd);
-                    observerPlanetObject.xyz.x += earth.xyz.x;
-                    observerPlanetObject.xyz.y += earth.xyz.y;
-                    observerPlanetObject.xyz.z += earth.xyz.z;
-                }
-                this.calculateXYZ(observerPlanetObject, jd);
-            }
+        let observer;
+        if (objects0.find(obj => obj.jpnName === observationSite.observerPlanet)) {
+            observer = this.deepCopySolarSystemObject(objects0.find(obj => obj.jpnName === observationSite.observerPlanet));
         }
         else {
-            this.calculateXYZ(obj, jd);
-            this.calculateXYZ(observerPlanetObject, jd);
+            console.warn(`観測地の天体「${observationSite.observerPlanet}」が見つかりません`);
+            return undefined;
         }
-        this.updateObjectData(obj, jd, observerPlanetObject.xyz);
-        return obj;
+        this.calculateXYZ(target, jd);
+        this.calculateXYZ(observer, jd);
+        let earth;
+        if (isMoon(target)) {
+            if (observer.jpnName == "地球") {
+                earth = observer;
+            }
+            else {
+                earth = this.deepCopySolarSystemObject(objects0.find(obj => isPlanet(obj) && obj.jpnName === "地球"));
+                this.calculateXYZ(earth, jd);
+            }
+            target.xyz.x += earth.xyz.x;
+            target.xyz.y += earth.xyz.y;
+            target.xyz.z += earth.xyz.z;
+        }
+        else if (isMoon(observer)) {
+            if (target.jpnName == "地球") {
+                earth = target;
+            }
+            else {
+                earth = this.deepCopySolarSystemObject(objects0.find(obj => isPlanet(obj) && obj.jpnName === "地球"));
+                this.calculateXYZ(earth, jd);
+            }
+            observer.xyz.x += earth.xyz.x;
+            observer.xyz.y += earth.xyz.y;
+            observer.xyz.z += earth.xyz.z;
+        }
+        this.updateObjectData(target, jd, observer.xyz);
+        return target;
     }
     /**
      * 個別天体の位置を更新
      */
-    static updateObjectData(obj, jd, observerPlanetPosition) {
+    static updateObjectData(obj, jd, observerPosition) {
         if (isMoon(obj) && this.observationSite.observerPlanet === "地球") {
-            const equatorialCoords = this.coordinateConverter.precessionEquatorial(obj.raDec, undefined, 'j2000', jd);
-            obj.raDec = equatorialCoords;
+            obj.raDec = obj.raDec.precess(undefined, 'j2000', jd);
             return;
         }
         // 観測地の天体を中心とする直交座標
-        const xyz = {
-            x: obj.xyz.x - observerPlanetPosition.x,
-            y: obj.xyz.y - observerPlanetPosition.y,
-            z: obj.xyz.z - observerPlanetPosition.z
-        };
-        const distance = this.calculateDistance(xyz);
-        const equatorialCoordsJ2000 = this.calculateEquatorialCoordinates(xyz, distance);
-        const equatorialCoords = this.coordinateConverter.precessionEquatorial(equatorialCoordsJ2000, undefined, 'j2000', jd);
-        // 天体の座標と距離と等級を更新
-        obj.raDec = equatorialCoords;
-        obj.distance = distance;
-        this.updateMagnitude(obj, distance, observerPlanetPosition);
-    }
-    /**
-     * 直交座標から赤道座標を計算
-     */
-    static calculateEquatorialCoordinates(position, distance) {
-        const ra = Math.atan2(position.y, position.x) * 180 / Math.PI;
-        let dec = 0.0;
-        if (position.z / distance > 1) {
-            dec = 90;
-        }
-        else if (position.z / distance < -1) {
-            dec = -90;
-        }
-        else {
-            dec = Math.asin(position.z / distance) * RAD_TO_DEG;
-        }
-        return { ra, dec };
-    }
-    /**
-     * 距離を計算
-     */
-    static calculateDistance(position) {
-        const { x, y, z } = position;
-        return Math.sqrt(x * x + y * y + z * z);
+        const xyz = obj.xyz.subtract(observerPosition);
+        obj.raDec = xyz.toRaDec().precess(undefined, 'j2000', jd);
+        obj.distance = xyz.distance();
+        this.updateMagnitude(obj, observerPosition);
     }
     /**
      * 等級を更新
      * https://arxiv.org/abs/1808.01973
      * Computing Apparent Planetary Magnitudes for The Astronomical Almanac
      */
-    static updateMagnitude(obj, distance, observerPlanetPosition) {
+    static updateMagnitude(obj, observerPosition) {
         if (obj.jpnName === this.observationSite.observerPlanet) {
             obj.magnitude = 100;
             return;
         }
-        const sun_obs = this.calculateDistance(observerPlanetPosition);
-        const sun_pln = this.calculateDistance(obj.xyz);
-        const obs_pln = distance;
+        const sun_obs = observerPosition.distance();
+        const sun_pln = obj.xyz.distance();
+        const obs_pln = obj.distance;
         if (obj.type === 'sun') {
             obj.magnitude = -26.74;
         }
@@ -209,7 +140,7 @@ export class SolarSystemPositionCalculator {
             obj.magnitude = -12.74;
         }
         else if (obj.type === 'planet') {
-            const i = this.acosdeg((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
+            const i = acosdeg((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
             if (obj.jpnName === '水星') {
                 obj.magnitude = -0.613 + 0.06328 * i - 0.0016336 * i * i + 0.000033644 * i * i * i - 3.4565e-7 * i * i * i * i + 1.6893e-9 * i * i * i * i * i - 3.0334e-12 * i * i * i * i * i * i + 5 * Math.log10(obs_pln * sun_pln);
             }
@@ -280,7 +211,7 @@ export class SolarSystemPositionCalculator {
             const H = asteroid.orbit.H;
             const G = asteroid.orbit.G ?? 0.15;
             if (H != null) {
-                const a = this.acosrad((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
+                const a = acosrad((sun_pln * sun_pln + obs_pln * obs_pln - sun_obs * sun_obs) / (2 * sun_pln * obs_pln));
                 const phi1 = Math.exp(-3.33 * (Math.tan(a * 0.5)) ** 0.63);
                 const phi2 = Math.exp(-1.87 * (Math.tan(a * 0.5)) ** 1.22);
                 obj.magnitude = H - 2.5 * Math.log10((1 - G) * phi1 + G * phi2) + 5 * Math.log10(obs_pln * sun_pln);
@@ -293,12 +224,12 @@ export class SolarSystemPositionCalculator {
             obj.magnitude = 100;
         }
     }
-    static calculateXYZ(object, jd, sun) {
+    static calculateXYZ(object, jd) {
         if (isSun(object)) {
-            object.xyz = { x: 0, y: 0, z: 0 };
+            object.xyz = new Cartesian(0, 0, 0);
         }
         else if (isMoon(object)) {
-            this.calculateMoonPosition(object, jd, sun);
+            this.calculateMoonPosition(object, jd);
         }
         else if (isPlanet(object)) {
             this.calculatePlanetPositions(object, jd);
@@ -318,7 +249,7 @@ export class SolarSystemPositionCalculator {
             }
         }
         else {
-            return { x: 0, y: 0, z: 0 };
+            return new Cartesian(0, 0, 0);
         }
     }
     // 惑星の位置を計算
@@ -351,10 +282,10 @@ export class SolarSystemPositionCalculator {
         const x = Px * x0 + Qx * y0;
         const y = Py * x0 + Qy * y0;
         const z = Pz * x0 + Qz * y0;
-        planet.xyz = { x: x, y: y, z: z };
+        planet.xyz = new Cartesian(x, y, z);
     }
     // 月の位置
-    static calculateMoonPosition(moon, jd, sun) {
+    static calculateMoonPosition(moon, jd) {
         const d = jd - 2451543.5;
         const Ms = (356.0470 + 0.9856002585 * d) % 360 * DEG_TO_RAD;
         const Mm = (115.3654 + 13.0649929509 * d) % 360 * DEG_TO_RAD;
@@ -404,8 +335,8 @@ export class SolarSystemPositionCalculator {
             + 0.017 * Math.sin(2 * Mm + F)) * DEG_TO_RAD; //rad, J2000.0
         dist += -0.58 * Math.cos(Mm - 2 * D) - 0.46 * Math.cos(2 * D); //地球半径
         const Xe = Math.cos(lat_moon) * Math.cos(lon_moon) * dist * 6378.14 / 1.49598e8; //au
-        const Ye = (-Math.sin(lat_moon) * sinEpsl + Math.cos(lat_moon) * Math.sin(lon_moon) * cosEpsl) * dist * 6378.14 / 1.49598e8; //au
-        const Ze = (Math.sin(lat_moon) * cosEpsl + Math.cos(lat_moon) * Math.sin(lon_moon) * sinEpsl) * dist * 6378.14 / 1.49598e8; //au
+        const Ye = (-Math.sin(lat_moon) * SIN_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * COS_EPSL) * dist * 6378.14 / 1.49598e8; //au
+        const Ze = (Math.sin(lat_moon) * COS_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * SIN_EPSL) * dist * 6378.14 / 1.49598e8; //au
         const obsLat = window.config.observationSite.latitude * DEG_TO_RAD;
         const siderealTime = window.config.siderealTime;
         const xe = Xe - Math.cos(obsLat) * Math.cos(siderealTime) * 6378.14 / 1.49598e8; //au
@@ -414,8 +345,8 @@ export class SolarSystemPositionCalculator {
         const RA = (Math.atan2(ye, xe) * RAD_TO_DEG + 360) % 360; //deg
         const Dec = Math.atan2(ze, Math.sqrt(xe ** 2 + ye ** 2)) * RAD_TO_DEG; //deg
         dist *= 6378.14;
-        moon.xyz = { x: xe, y: ye, z: ze };
-        moon.raDec = { ra: RA, dec: Dec };
+        moon.xyz = new Cartesian(xe, ye, ze);
+        moon.raDec = new RaDec(RA, Dec);
         moon.distance = dist;
         moon.Ms = Ms;
         moon.ws = ws;
@@ -455,7 +386,7 @@ export class SolarSystemPositionCalculator {
         const x = Px * x0 + Qx * y0;
         const y = Py * x0 + Qy * y0;
         const z = Pz * x0 + Qz * y0;
-        minorObject.xyz = { x: x, y: y, z: z };
+        minorObject.xyz = new Cartesian(x, y, z);
     }
     static calculateParabolicOrbitPositions(minorObject, jd) {
         const orbit = minorObject.orbit;
@@ -470,7 +401,7 @@ export class SolarSystemPositionCalculator {
         const x = q * Px * (1 - tanv2 ** 2) + 2 * q * Qx * tanv2;
         const y = q * Py * (1 - tanv2 ** 2) + 2 * q * Qy * tanv2;
         const z = q * Pz * (1 - tanv2 ** 2) + 2 * q * Qz * tanv2;
-        minorObject.xyz = { x: x, y: y, z: z };
+        minorObject.xyz = new Cartesian(x, y, z);
     }
     static calculateHyperbolicOrbitPositions(minorObject, jd) {
         const orbit = minorObject.orbit;
@@ -505,7 +436,7 @@ export class SolarSystemPositionCalculator {
         const x = coefP * Px + coefQ * Qx;
         const y = coefP * Py + coefQ * Qy;
         const z = coefP * Pz + coefQ * Qz;
-        minorObject.xyz = { x: x, y: y, z: z };
+        minorObject.xyz = new Cartesian(x, y, z);
     }
     static calculatePQ(inclDec, nodeDec, periDec) {
         const incl = inclDec * DEG_TO_RAD;
@@ -519,10 +450,10 @@ export class SolarSystemPositionCalculator {
         const sinIncl = Math.sin(incl);
         const Px = cosPeri * cosNode - sinPeri * cosIncl * sinNode;
         const Qx = -sinPeri * cosNode - cosPeri * cosIncl * sinNode;
-        const Py = sinPeri * cosIncl * cosNode * cosEpsl + cosPeri * sinNode * cosEpsl - sinPeri * sinIncl * sinEpsl;
-        const Qy = cosPeri * cosIncl * cosNode * cosEpsl - sinPeri * sinNode * cosEpsl - cosPeri * sinIncl * sinEpsl;
-        const Pz = sinPeri * cosIncl * cosNode * sinEpsl + cosPeri * sinNode * sinEpsl + sinPeri * sinIncl * cosEpsl;
-        const Qz = cosPeri * cosIncl * cosNode * sinEpsl - sinPeri * sinNode * sinEpsl + cosPeri * sinIncl * cosEpsl;
+        const Py = sinPeri * cosIncl * cosNode * COS_EPSL + cosPeri * sinNode * COS_EPSL - sinPeri * sinIncl * SIN_EPSL;
+        const Qy = cosPeri * cosIncl * cosNode * COS_EPSL - sinPeri * sinNode * COS_EPSL - cosPeri * sinIncl * SIN_EPSL;
+        const Pz = sinPeri * cosIncl * cosNode * SIN_EPSL + cosPeri * sinNode * SIN_EPSL + sinPeri * sinIncl * COS_EPSL;
+        const Qz = cosPeri * cosIncl * cosNode * SIN_EPSL - sinPeri * sinNode * SIN_EPSL + cosPeri * sinIncl * COS_EPSL;
         return { Px: Px, Qx: Qx, Py: Py, Qy: Qy, Pz: Pz, Qz: Qz };
     }
     /**
