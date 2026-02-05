@@ -3,6 +3,7 @@ import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 import { AstronomicalCalculator } from "../utils/calculations.js";
 import { getStarSize, starSize_0mag } from "../utils/canvasHelpers.js";
 import { SolarSystemPositionCalculator } from "../utils/SolarSystemPositionCalculator.js";
+import { DEG_TO_RAD } from "../utils/constants.js";
 export class SolarSystemRenderer {
     constructor(canvas, ctx, config, colorManager, orientationData) {
         this.canvas = canvas;
@@ -12,24 +13,22 @@ export class SolarSystemRenderer {
         this.orientationData = orientationData;
     }
     drawSolarSystemObjects(objectInformation) {
-        if (!this.config.displaySettings.showPlanets)
-            return;
         const objects = SolarSystemDataManager.getAllObjects();
         if (objects.length == 0)
             return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
         this.ctx.fillStyle = 'white';
+        const sun = objects.find(obj => obj.getType() === 'sun');
         for (const object of objects) {
             if (object.getType() === 'sun') {
-                this.drawSun(object, objectInformation);
+                this.drawSun(sun, objectInformation);
             }
             else if (object.getType() === 'moon') {
-                const sun = objects.find(obj => obj.getType() === 'sun');
                 this.drawMoon(object, sun, objectInformation);
             }
             else if (object.getType() === 'planet') {
-                this.drawPlanet(object, limitingMagnitude, zeroMagSize, objectInformation);
+                this.drawPlanet(object, sun, limitingMagnitude, zeroMagSize, objectInformation);
             }
             else if (object.getType() === 'asteroid') {
                 this.drawMinorObject(object, limitingMagnitude, zeroMagSize, objectInformation);
@@ -68,15 +67,16 @@ export class SolarSystemRenderer {
             return;
         const sunDeg = sun.getRaDec();
         const moonDeg = moon.getRaDec();
-        const sunRad = sunDeg.toRad();
         const moonRad = moonDeg.toRad();
         const moonDist = moon.getDistance();
         const angRadius = 0.259 / (moonDist / 384400);
         const pxRadius0 = this.canvas.width * angRadius / this.config.viewState.fieldOfViewRA;
         const radius = Math.max(pxRadius0, 13);
         const scale = radius / pxRadius0; // 実際の視半径より何倍に見せているか
-        const lon_sun = moon.Ms + 0.017 * Math.sin(moon.Ms + 0.017 * Math.sin(moon.Ms)) + moon.ws;
-        const k = (1 - Math.cos(lon_sun - moon.lon_moon) * Math.cos(moon.lat_moon)) * 0.5;
+        // 地球-月-太陽
+        const angleEMS = moonDeg.angDistanceFrom(moon.getXYZ().toRaDec());
+        // k=0:新月 k=0.5:半月 k=1:満月
+        const k = (1. - Math.cos(Math.PI - angleEMS * DEG_TO_RAD)) * 0.5;
         const screenXY = moonDeg.toCanvasXYifin(this.config, this.orientationData, false);
         if (!screenXY[0])
             return;
@@ -88,46 +88,18 @@ export class SolarSystemRenderer {
             y: y,
             data: moon
         });
-        let p, RA1, Dec1;
-        if (this.config.displaySettings.mode == 'EtP') {
-            p = Math.atan2(Math.cos(sunRad.dec) * Math.sin(moonRad.ra - sunRad.ra), -Math.sin(moonRad.dec) * Math.cos(sunRad.ra) * Math.cos(moonRad.ra - sunRad.ra) + Math.cos(moonRad.dec) * Math.sin(sunRad.dec));
-        }
-        else if (['AEP', 'view', 'live'].includes(this.config.displaySettings.mode)) {
-            p = Math.atan2(Math.cos(sunRad.dec) * Math.sin(moonRad.ra - sunRad.ra), -Math.sin(moonRad.dec) * Math.cos(sunRad.dec) * Math.cos(moonRad.ra - sunRad.ra) + Math.cos(moonRad.dec) * Math.sin(sunRad.dec));
-            RA1 = (moonDeg.ra - 0.2 * Math.cos(p) / Math.cos(moonRad.dec));
-            Dec1 = (moonDeg.dec - 0.2 * Math.sin(p));
-            const screenXY1 = moonDeg.toCanvasXYifin(this.config, this.orientationData, true);
-            const { x: x1, y: y1 } = screenXY1[1];
-            p = Math.atan2(y1 - y, x1 - x);
-        }
-        else {
-            return;
-        }
+        const SunInMoonNorthCoord = new RaDec(sunDeg.ra - moonDeg.ra, sunDeg.dec).toCartesian().rotateY(-Math.PI / 2 + moonRad.dec);
+        // 南から、天球の外から見て反時計回りに測った、月から見た太陽の方向
+        const angleSMS = Math.atan2(SunInMoonNorthCoord.y, SunInMoonNorthCoord.x);
+        const littleSunDirection = new RaDec(moonDeg.ra + 0.5 * Math.sin(angleSMS) / Math.cos(moonRad.dec), moonDeg.dec - 0.5 * Math.cos(angleSMS));
+        const littleCloserToSunXY = littleSunDirection.toCanvasXYifin(this.config, this.orientationData, true)[1];
+        // 地球から月の外縁を時計回りに見たとき、明から暗に転じるところの、右（西）から時計回りに測った角度
+        const p = Math.atan2(littleCloserToSunXY.y - y, littleCloserToSunXY.x - x) + Math.PI * 0.5;
         this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
-        if (k < 0.5) {
-            this.ctx.fillStyle = this.colorManager.getColor('yellow');
-            this.ctx.arc(x, y, radius, p - Math.PI, p);
-            this.ctx.fill();
-            this.ctx.fillStyle = this.colorManager.getColor('moonShade');
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius, p, p + Math.PI);
-            this.ctx.ellipse(x, y, radius, radius * (1 - 2 * k), p - Math.PI, 0, Math.PI);
-            this.ctx.fill();
-        }
-        else {
-            this.ctx.fillStyle = this.colorManager.getColor('moonShade');
-            this.ctx.arc(x, y, radius, p, p + Math.PI);
-            this.ctx.fill();
-            this.ctx.fillStyle = this.colorManager.getColor('yellow');
-            this.ctx.beginPath();
-            this.ctx.arc(x, y, radius, p - Math.PI, p);
-            this.ctx.ellipse(x, y, radius, radius * (2 * k - 1), p, 0, Math.PI);
-            this.ctx.fill();
-        }
+        this.drawMichikake(x, y, radius, k, p, this.colorManager.getColor('yellow'), this.colorManager.getColor('moonShade'));
         // 簡易月食表現（本影・半影の重なりを描画）
         // 利用可能な月の黄経・黄緯（moon.lon_moon, moon.lat_moon）と太陽の黄経（lon_sun）を使う
         try {
@@ -175,7 +147,7 @@ export class SolarSystemRenderer {
         this.ctx.fillStyle = 'yellow';
         this.ctx.fillText(moon.getJapaneseName(), x + Math.max(0.8 * radius, 10), y - Math.max(0.8 * radius, 10));
     }
-    drawPlanet(planet, limitingMagnitude, zeroMagSize, objectInformation) {
+    drawPlanet(planet, sun, limitingMagnitude, zeroMagSize, objectInformation) {
         this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
@@ -191,13 +163,171 @@ export class SolarSystemRenderer {
             y: y,
             data: planet
         });
-        const radius = Math.max(getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+        if (planet.jpnName == "水星") {
+            this.drawMercury(planet, limitingMagnitude, zeroMagSize, x, y);
+        }
+        else if (planet.jpnName == "金星") {
+            this.drawVenus(planet, sun, limitingMagnitude, zeroMagSize, x, y);
+        }
+        else if (planet.jpnName == "火星") {
+            this.drawMars(planet, limitingMagnitude, zeroMagSize, x, y);
+        }
+        else if (planet.jpnName == "木星") {
+            this.drawJupiter(planet, limitingMagnitude, zeroMagSize, x, y);
+        }
+        else if (planet.jpnName == "土星") {
+            this.drawSaturn(planet, limitingMagnitude, zeroMagSize, x, y);
+        }
+        else {
+            const radius = Math.max(getStarSize(planet.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            const dxy = Math.max(2, 0.8 * radius);
+            this.ctx.fillText(planet.getJapaneseName(), x + dxy, y - dxy);
+        }
+    }
+    drawMercury(mercury, limitingMagnitude, zeroMagSize, x, y) {
+        const fov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        let radius = Math.max(this.canvas.width * (0.00093 / mercury.getDistance()) / this.config.viewState.fieldOfViewRA, 1);
+        if (fov > 2) {
+            radius = Math.max(getStarSize(mercury.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+        }
         this.ctx.beginPath();
         this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
         this.ctx.arc(x, y, radius, 0, Math.PI * 2);
         this.ctx.fill();
         const dxy = Math.max(2, 0.8 * radius);
-        this.ctx.fillText(planet.getJapaneseName(), x + dxy, y - dxy);
+        this.ctx.fillText(mercury.getJapaneseName(), x + dxy, y - dxy);
+    }
+    drawVenus(venus, sun, limitingMagnitude, zeroMagSize, x, y) {
+        const fov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        if (fov > 2) {
+            const radius = Math.max(getStarSize(venus.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            const dxy = Math.max(2, 0.8 * radius);
+            this.ctx.fillText(venus.getJapaneseName(), x + dxy, y - dxy);
+        }
+        else {
+            const sunDeg = sun.getRaDec();
+            const venusDeg = venus.getRaDec();
+            const venusRad = venusDeg.toRad();
+            const radius = this.canvas.width * (0.00232 / venus.getDistance()) / this.config.viewState.fieldOfViewRA;
+            // 地球-金星-太陽
+            const angleEVS = venusDeg.angDistanceFrom(venus.getXYZ().toRaDec());
+            // k=0:新月 k=0.5:半月 k=1:満月
+            const k = (1. - Math.cos(Math.PI - angleEVS * DEG_TO_RAD)) * 0.5;
+            const SunInVenusNorthCoord = new RaDec(sunDeg.ra - venusDeg.ra, sunDeg.dec).toCartesian().rotateY(-Math.PI / 2 + venusRad.dec);
+            // 南から、天球の外から見て反時計回りに測った、月から見た太陽の方向
+            const angleSMS = Math.atan2(SunInVenusNorthCoord.y, SunInVenusNorthCoord.x);
+            const littleSunDirection = new RaDec(venusDeg.ra + 0.5 * Math.sin(angleSMS) / Math.cos(venusRad.dec), venusDeg.dec - 0.5 * Math.cos(angleSMS));
+            const littleCloserToSunXY = littleSunDirection.toCanvasXYifin(this.config, this.orientationData, true)[1];
+            // 地球から金星の外縁を時計回りに見たとき、明から暗に転じるところの、右（西）から時計回りに測った角度
+            const p = Math.atan2(littleCloserToSunXY.y - y, littleCloserToSunXY.x - x) + Math.PI * 0.5;
+            this.drawMichikake(x, y, radius, k, p, this.colorManager.getColor('solarSystem'), this.colorManager.getColor('moonShade'));
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            const dxy = Math.max(2, 0.8 * radius);
+            this.ctx.fillText(venus.getJapaneseName(), x + dxy, y - dxy);
+        }
+    }
+    drawMars(mars, limitingMagnitude, zeroMagSize, x, y) {
+        const fov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        let radius = Math.max(this.canvas.width * (0.0013 / mars.getDistance()) / this.config.viewState.fieldOfViewRA, 1);
+        if (fov > 2) {
+            radius = Math.max(getStarSize(mars.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+        }
+        this.ctx.beginPath();
+        this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+        this.ctx.fill();
+        const dxy = Math.max(2, 0.8 * radius);
+        this.ctx.fillText(mars.getJapaneseName(), x + dxy, y - dxy);
+    }
+    drawJupiter(jupiter, limitingMagnitude, zeroMagSize, x, y) {
+        const fov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        if (fov > 3) {
+            const radius = Math.max(getStarSize(jupiter.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            const dxy = Math.max(2, 0.8 * radius);
+            this.ctx.fillText(jupiter.getJapaneseName(), x + dxy, y - dxy);
+        }
+        else {
+            const textXyList = [];
+            const radius = this.canvas.width * (0.027 / jupiter.getDistance()) / this.config.viewState.fieldOfViewRA;
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            const dxy = Math.max(2, 0.8 * radius);
+            textXyList.push({ x: x + dxy, y: y - dxy, text: jupiter.getJapaneseName() });
+            const galileoRaDecs = SolarSystemPositionCalculator.calculateJupiterMoons(this.config.displayTime.jd, jupiter);
+            for (const [name, raDec] of Object.entries(galileoRaDecs)) {
+                const screenXY = raDec.toCanvasXYifin(this.config, this.orientationData, true);
+                const { x: jx, y: jy } = screenXY[1];
+                this.ctx.beginPath();
+                this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+                this.ctx.arc(jx, jy, 2, 0, Math.PI * 2);
+                this.ctx.fill();
+                textXyList.push({ x: jx + 2, y: jy - 2, text: name });
+            }
+            textXyList.sort((a, b) => b.x - a.x); // 右から左
+            textXyList.forEach((textXy, index) => {
+                if (index > 0) {
+                    if (Math.abs(textXy.x - textXyList[index - 1].x) < 20) {
+                        textXy.y += 14;
+                    }
+                }
+                this.ctx.fillText(textXy.text, textXy.x, textXy.y);
+            });
+        }
+    }
+    drawSaturn(saturn, limitingMagnitude, zeroMagSize, x, y) {
+        const fov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        if (fov > 2) {
+            const radius = Math.max(getStarSize(saturn.getMagnitude(), limitingMagnitude, zeroMagSize), 1);
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            const dxy = Math.max(2, 0.8 * radius);
+            this.ctx.fillText(saturn.getJapaneseName(), x + dxy, y - dxy);
+        }
+        else {
+            const textXyList = [];
+            const radius = this.canvas.width * (0.023 / saturn.getDistance()) / this.config.viewState.fieldOfViewRA;
+            this.ctx.beginPath();
+            this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+            this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+            const dxy = Math.max(2, 0.8 * radius);
+            textXyList.push({ x: x + dxy, y: y - dxy, text: saturn.getJapaneseName() });
+            const saturnMoonRaDecs = SolarSystemPositionCalculator.calculateSaturnMoons(this.config.displayTime.jd, saturn);
+            for (const [name, raDec] of Object.entries(saturnMoonRaDecs)) {
+                const screenXY = raDec.toCanvasXYifin(this.config, this.orientationData, true);
+                const { x: sx, y: sy } = screenXY[1];
+                this.ctx.beginPath();
+                this.ctx.fillStyle = this.colorManager.getColor('solarSystem');
+                this.ctx.arc(sx, sy, 1, 0, Math.PI * 2);
+                this.ctx.fill();
+                textXyList.push({ x: sx + 2, y: sy - 2, text: name });
+            }
+            textXyList.sort((a, b) => b.x - a.x); // 右から左
+            textXyList.forEach((textXy, index) => {
+                if (index > 0) {
+                    if (Math.abs(textXy.x - textXyList[index - 1].x) < 20) {
+                        textXy.y += 14;
+                    }
+                }
+                this.ctx.fillText(textXy.text, textXy.x, textXy.y);
+            });
+        }
     }
     drawMinorObject(minorObject, limitingMagnitude, zeroMagSize, objectInformation) {
         this.ctx.font = '12px serif';
@@ -223,6 +353,30 @@ export class SolarSystemRenderer {
         this.ctx.fill();
         this.ctx.fillText(minorObject.getJapaneseName(), x + 2, y - 2);
     }
+    drawMichikake(x, y, radius, k, p, day, night, ctx = this.ctx) {
+        // 登場する角度は右方向から"時計回りに"測る
+        ctx.beginPath();
+        if (k < 0.5) {
+            ctx.fillStyle = day;
+            ctx.arc(x, y, radius, p - Math.PI, p);
+            ctx.fill();
+            ctx.fillStyle = night;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, p, p + Math.PI);
+            ctx.ellipse(x, y, radius, radius * (1 - 2 * k), p - Math.PI, 0, Math.PI);
+            ctx.fill();
+        }
+        else {
+            ctx.fillStyle = night;
+            ctx.arc(x, y, radius, p, p + Math.PI);
+            ctx.fill();
+            ctx.fillStyle = day;
+            ctx.beginPath();
+            ctx.arc(x, y, radius, p - Math.PI, p);
+            ctx.ellipse(x, y, radius, radius * (2 * k - 1), p, 0, Math.PI);
+            ctx.fill();
+        }
+    }
     drawPlanetMotion() {
         if (this.config.planetMotion.planet.length == 0)
             return;
@@ -231,8 +385,6 @@ export class SolarSystemRenderer {
         const timeDisplayStep = this.config.planetMotion.timeDisplayStep;
         const timeDisplayContent = this.config.planetMotion.timeDisplayContent;
         const halfCount = Math.floor(duration / interval);
-        const minJd = this.config.displayTime.jd - halfCount * interval;
-        const maxJd = this.config.displayTime.jd + halfCount * interval;
         const objectsBaseData = SolarSystemDataManager.getAllObjects();
         for (const planet of this.config.planetMotion.planet) {
             if (planet == this.config.observationSite.observerPlanet)
@@ -243,31 +395,19 @@ export class SolarSystemRenderer {
             const decs = [];
             const xys = [];
             const distances = [];
-            // for (let jd = minJd; jd <= maxJd; jd += interval) {
             for (let count = -halfCount; count <= halfCount; count++) {
                 const jd = this.config.displayTime.jd + count * interval;
-                if (count == 0) {
+                const objectData = SolarSystemPositionCalculator.oneObjectData(objectsBaseData, planet, jd, this.config.observationSite);
+                if (objectData) {
+                    const ymdhms = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
+                    const coords = objectData.getRaDec();
+                    const screenXY = coords.toCanvasXYifin(this.config, this.orientationData, true);
                     jds.push(jd);
-                    timeLabels.push("");
-                    ras.push(0);
-                    decs.push(0);
-                    xys.push({ x: 0, y: 0 });
-                    distances.push(0);
-                    continue;
-                }
-                else {
-                    const objectData = SolarSystemPositionCalculator.oneObjectData(objectsBaseData, planet, jd, this.config.observationSite);
-                    if (objectData) {
-                        const ymdhms = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
-                        const coords = objectData.getRaDec();
-                        const screenXY = coords.toCanvasXYifin(this.config, this.orientationData, true);
-                        jds.push(jd);
-                        timeLabels.push(formatTime(ymdhms, timeDisplayContent));
-                        ras.push(coords.ra);
-                        decs.push(coords.dec);
-                        xys.push(screenXY[1]);
-                        distances.push(objectData.getDistance());
-                    }
+                    timeLabels.push(formatTime(ymdhms, timeDisplayContent));
+                    ras.push(coords.ra);
+                    decs.push(coords.dec);
+                    xys.push(screenXY[1]);
+                    distances.push(objectData.getDistance());
                 }
             }
             this.ctx.font = '14px serif';

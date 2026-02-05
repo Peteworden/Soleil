@@ -2,7 +2,7 @@ import { AzAlt } from './AzAlt.js';
 import { Cartesian } from './Cartesian.js';
 import { CanvasRaDec } from './CanvasRaDec.js';
 import { acosdeg, asindeg } from '../mathUtils.js';
-import { COS_EPSL, DEG_TO_RAD, RAD_TO_DEG, SIN_EPSL } from '../constants.js';
+import { COS_EPSL, DEG_TO_RAD, EPSILON, RAD_TO_DEG, SIN_EPSL } from '../constants.js';
 export class RaDec {
     constructor(ra, dec) {
         this.ra = ra;
@@ -106,6 +106,12 @@ export class RaDec {
         const xyz2 = new Cartesian(x * cos - y * COS_EPSL * sin - z * SIN_EPSL * sin, COS_EPSL * (x * sin + cos * (y * COS_EPSL + z * SIN_EPSL)) - SIN_EPSL * (-y * SIN_EPSL + z * COS_EPSL), SIN_EPSL * (x * sin + cos * (y * COS_EPSL + z * SIN_EPSL)) + COS_EPSL * (-y * SIN_EPSL + z * COS_EPSL));
         return xyz2.toRaDec();
         // return this.cartesianToEquatorial(xyz2);
+    }
+    toEcliptic() {
+        const { x, y, z } = this.toCartesian().rotateX(EPSILON);
+        const lon = Math.atan2(y, x);
+        const lat = Math.asin(z);
+        return { lon: lon, lat: lat };
     }
     toCanvasRaDec(mode, viewState, lstLat, orientationData) {
         if (mode == 'AEP') {

@@ -308,13 +308,13 @@ export class ObjectInfoController {
         if (planetData.jpnName === '木星') {
             // infoText += '<br>ガリレオ衛星（I:イオ、E:エウロパ、G:ガニメデ、C:カリスト）の位置は概略です。<br>';
             // infoText += '<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館のサイト</a>がより正確でしょう。';
-            infoText += '<br>ガリレオ衛星の位置は<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館のサイト</a>へ（星図へも実装予定）';
+            infoText += '<br>ガリレオ衛星の詳しい位置は<a href="https://www.ncsm.city.nagoya.jp/astro/jupiter/" target="_blank">名古屋市科学館のサイト</a>へ';
         }
         else if (planetData.jpnName === '土星') {
-            infoText += '<br>土星の衛星の位置は<a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPEのサイト</a>へ';
+            infoText += '<br>土星の衛星の詳しい位置は<a href="https://skyandtelescope.org/wp-content/plugins/observing-tools/saturn_moons/saturn.html" target="_blank">SKY & TELESCOPEのサイト</a>へ';
         }
         if ((!(planetData instanceof Planet) && !['太陽', '月'].includes(planetData.jpnName)) || ['天王星', '海王星'].includes(planetData.jpnName)) {
-            infoText += '<br>詳しい位置の確認は<a href="gaiaChart.html" target="_blank">こちらのPythonスクリプト</a>で！<br>';
+            infoText += '<br>詳しい位置の確認は<a href="https://petegaiachart.streamlit.app/" target="_blank">このサイト</a>で！<br>';
         }
         objectInfoTextElement.innerHTML = infoText;
         this.planetTrack(objectInfoTextElement, planetData.jpnName);

@@ -16,6 +16,7 @@ import { DataLoader } from './utils/DataLoader.js';
 import { DeviceOrientationManager } from './utils/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 const news = [
+    { time: '2026-02-06T03:00:00', title: '惑星の表示を更新', text: '惑星、特に木星、土星や、今年10月ごろの金星を拡大して見てみてください！' },
     { time: '2026-02-01T18:00:00', title: '詳しい星図の作成が簡単に', text: '「詳しい星図を作る」が、ブラウザで簡単に実行できるようになりました！20等星図とかも作れます。<a href="https://petegaiachart.streamlit.app/">こちら</a>または左上のHOMEから。' },
     { time: '2026-01-29T15:00:00', title: '日時設定の改善', text: '星図の下の方に日時調節エリアを追加し、スライドバーで調節できる範囲やステップの種類を増やしました。' },
     { time: '2026-01-25T03:00:00', title: '恒星の表示を改善', text: '描画速度を維持しつつも、恒星の表示がとてもよくなりました。' },

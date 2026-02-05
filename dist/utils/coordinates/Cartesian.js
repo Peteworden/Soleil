@@ -14,6 +14,9 @@ export class Cartesian {
     subtract(other) {
         return new Cartesian(this.x - other.x, this.y - other.y, this.z - other.z);
     }
+    multiply(scalar) {
+        return new Cartesian(this.x * scalar, this.y * scalar, this.z * scalar);
+    }
     distance() {
         return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }

@@ -1,9 +1,7 @@
 import { NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../utils/coordinates.js';
 import { DeviceOrientationManager } from '../utils/deviceOrientation.js';
-// import { formatTextForCanvas, formatBayerDesignation } from '../utils/textFormatter.js';
 import { getColorManager } from '../utils/colorManager.js';
-// import { StarsProgram } from './webgl/programs/starsProgram.js';
 import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from '../utils/canvasHelpers.js';
 import { HipStarRenderer } from './HipStarRenderer.js';
 import { GaiaStarRenderer } from './GaiaStarRenderer.js';

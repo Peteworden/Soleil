@@ -1,6 +1,5 @@
 import { Moon, isPlanet, isSun, isMinorObject, isMoon, isOrbitalObject } from '../models/SolarSystemObjects.js';
-import { CoordinateConverter } from './coordinates.js';
-import { COS_EPSL, DEG_TO_RAD, RAD_TO_DEG, SIN_EPSL } from './constants.js';
+import { COS_EPSL, DEG_TO_RAD, EPSILON, RAD_TO_DEG, SIN_EPSL } from './constants.js';
 import { acosdeg, acosrad } from './mathUtils.js';
 import { Cartesian, RaDec } from './coordinates/index.js';
 /**
@@ -456,6 +455,68 @@ export class SolarSystemPositionCalculator {
         const Qz = cosPeri * cosIncl * cosNode * SIN_EPSL - sinPeri * sinNode * SIN_EPSL + cosPeri * sinIncl * COS_EPSL;
         return { Px: Px, Qx: Qx, Py: Py, Qy: Qy, Pz: Pz, Qz: Qz };
     }
+    static calculateJupiterMoons(jd, jupiter) {
+        function doubleSin(A1, T1, phi1, A2, T2, phi2, C) {
+            return A1 * Math.sin(2 * Math.PI * (jd - 2460700) / T1 + phi1) + A2 * Math.sin(2 * Math.PI * (jd - 2460700) / T2 + phi2) + C;
+        }
+        const io = [
+            [2.81902066e-03, 1.76913779e+00, 8.65841524e-01, 1.74598769e-05, 4.86827421e+02, 2.66915800e+00, -2.18722549e-07],
+            [2.81749741e-03, 1.76913780e+00, -7.05455552e-01, 1.74491534e-05, 4.86856291e+02, 4.24131033e+00, 8.18597552e-08],
+            [0.00010859262101371663, 1.769140962458129, -0.3257986471267499, 0, 1, 0, -1.3007560448464165e-07]
+        ];
+        const europa = [
+            [4.48458800e-03, 3.55118035e+00, -9.02192463e-01, 6.26054071e-05, 4.86569848e+02, -4.74084307e-01, -8.69788604e-07],
+            [4.48339424e-03, 3.55118004e+00, -2.47369227e+00, 6.26447647e-05, 4.87167668e+02, 1.10308902e+00, 2.64572475e-07],
+            [1.68287262e-04, 3.55119272e+00, -1.87783527e+00, 0, 1, 0, 4.81407414e-07]
+        ];
+        const ganymede = [
+            [7.15463873e-03, 7.15455397e+00, 2.92727313e+00, 6.59854992e-06, 4.78597640e+02, 2.60102925e+00, -2.00450346e-05],
+            [7.15015296e-03, 7.15455414e+00, 1.35593375e+00, 6.52410267e-06, 4.95415244e+02, -1.96356203e+00, 8.13836093e-06],
+            [2.92016360e-04, 7.15446463e+00, 1.71476937e+00, 0, 1, 0, -3.35154035e-08]
+        ];
+        const callisto = [
+            [1.25841245e-02, 1.66890172e+01, 2.15602328e-01, 4.53197520e-05, 8.34464401e+00, -1.31205372e+00, -1.33895795e-04],
+            [1.25786592e-02, 1.66890142e+01, -1.35561583e+00, 4.53041567e-05, 8.34463367e+00, -2.88356795e+00, -2.38334693e-05],
+            [4.28550326e-04, 1.66890365e+01, -9.48956811e-01, 0, 1, 0, -2.54730259e-06]
+        ];
+        const galileo = {
+            "Io": io,
+            "Eur": europa,
+            "Gan": ganymede,
+            "Cal": callisto,
+        };
+        const jupiterObservingCartesian = jupiter.getRaDec().precess(undefined, jd, 'j2000').toCartesian(jupiter.getDistance());
+        const galileoRaDecs = {};
+        for (const [name, moon] of Object.entries(galileo)) {
+            const moonJupitercenEclpXyz = moon.map(([A1, T1, phi1, A2, T2, phi2, C]) => doubleSin(A1, T1, phi1, A2, T2, phi2, C));
+            const moonJupitercenRaDecCartesian = new Cartesian(moonJupitercenEclpXyz[0], moonJupitercenEclpXyz[1], moonJupitercenEclpXyz[2]).rotateX(EPSILON);
+            const moonRaDecJ2000 = moonJupitercenRaDecCartesian.add(jupiterObservingCartesian).toRaDec();
+            galileoRaDecs[name] = moonRaDecJ2000.precess(undefined, 'j2000', jd);
+        }
+        return galileoRaDecs;
+    }
+    static calculateSaturnMoons(jd, saturn) {
+        function doubleSin(A1, T1, phi1, A2, T2, phi2, C) {
+            return A1 * Math.sin(2 * Math.PI * (jd - 2460700) / T1 + phi1) + A2 * Math.sin(2 * Math.PI * (jd - 2460700) / T2 + phi2) + C;
+        }
+        const titan = [
+            [8.13324323e-03, 1.59454546e+01, -1.38704895e+00, -1.16677669e-04, 7.97298247e+00, -7.27356118e+00, -3.44120801e-04],
+            [7.26386494e-03, 1.59454528e+01, 3.27984535e+00, 1.04227881e-04, 7.97297949e+00, 5.34643083e-01, 7.17235537e-05],
+            [3.79423154e-03, 1.59454464e+01, 3.52786814e-01, 5.44443719e-05, 7.97297511e+00, -2.39276352e+00, -2.72850500e-06]
+        ];
+        const moons = {
+            "Titan": titan,
+        };
+        const saturnObservingCartesian = saturn.getRaDec().precess(undefined, jd, 'j2000').toCartesian(saturn.getDistance());
+        const saturnMoonRaDecs = {};
+        for (const [name, moon] of Object.entries(moons)) {
+            const moonSaturncenEclpXyz = moon.map(([A1, T1, phi1, A2, T2, phi2, C]) => doubleSin(A1, T1, phi1, A2, T2, phi2, C));
+            const moonSaturncenRaDecCartesian = new Cartesian(moonSaturncenEclpXyz[0], moonSaturncenEclpXyz[1], moonSaturncenEclpXyz[2]).rotateX(EPSILON);
+            const moonRaDecJ2000 = moonSaturncenRaDecCartesian.add(saturnObservingCartesian).toRaDec();
+            saturnMoonRaDecs[name] = moonRaDecJ2000.precess(undefined, 'j2000', jd);
+        }
+        return saturnMoonRaDecs;
+    }
     /**
      * 太陽系天体オブジェクトのディープコピーを作成（メソッドを保持）
      */
@@ -492,6 +553,4 @@ SolarSystemPositionCalculator.observationSite = {
     longitude: 0,
     timezone: 0
 };
-// private static observerPlanetPosition: CartesianCoordinates = { x: 0, y: 0, z: 0 };
-SolarSystemPositionCalculator.coordinateConverter = new CoordinateConverter();
 //# sourceMappingURL=SolarSystemPositionCalculator.js.map
