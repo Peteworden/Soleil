@@ -11,14 +11,22 @@ export class SolarSystemRenderer {
         this.config = config;
         this.colorManager = colorManager;
         this.orientationData = orientationData;
+        const chartImageDir = '../../chartImage/'; // SolarSystemRenderer.jsはrenderer直下にある
         this.fullMoonImage_256px = new Image();
-        this.fullMoonImage_256px.src = '../../chartImage/fullMoon_v2_256px.png';
+        this.fullMoonImage_256px.src = chartImageDir + 'fullMoon_v2_256px.png';
+        this.fullMoonImage_256px.onload = () => {
+            console.log('fullMoonImage_256px loaded');
+        };
+        this.fullMoonImage_256px.onerror = (e) => {
+            window.setDebugInfo('256 fail');
+            console.log('fullMoonImage_256px not loaded', e);
+        };
         this.fullMoonImage_128px = new Image();
-        this.fullMoonImage_128px.src = '../../chartImage/fullMoon_v2_128px.png';
+        this.fullMoonImage_128px.src = chartImageDir + 'fullMoon_v2_128px.png';
         this.fullMoonImage_64px = new Image();
-        this.fullMoonImage_64px.src = '../../chartImage/fullMoon_v2_64px.png';
+        this.fullMoonImage_64px.src = chartImageDir + 'fullMoon_v2_64px.png';
         this.fullMoonImage_16px = new Image();
-        this.fullMoonImage_16px.src = '../../chartImage/fullMoon_v2_16px.png';
+        this.fullMoonImage_16px.src = chartImageDir + 'fullMoon_v2_16px.png';
     }
     drawSolarSystemObjects(objectInformation) {
         const objects = SolarSystemDataManager.getAllObjects();
@@ -132,22 +140,32 @@ export class SolarSystemRenderer {
             img = this.fullMoonImage_64px;
         }
         else if (radius > 8) {
+            // if (radius < 8) {
             img = this.fullMoonImage_16px;
         }
+        console.log({
+            radius: radius,
+            imgIsNull: img === null,
+            complete: img?.complete,
+            naturalWidth: img?.naturalWidth,
+            src: img?.src
+        });
         if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+            // console.log('img loaded');
             try {
                 this.ctx.drawImage(img, -radius, -radius, radius * 2, radius * 2);
             }
             catch (e) {
                 this.ctx.beginPath();
-                this.ctx.fillStyle = '#333';
+                this.ctx.fillStyle = '#cfcfcf';
                 this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
                 this.ctx.fill();
             }
         }
         else {
-            this.drawMinorObject;
-            this.ctx.fillStyle = '#333';
+            // console.log('img not loaded');
+            this.ctx.beginPath();
+            this.ctx.fillStyle = '#cfcfcf';
             this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
             this.ctx.fill();
         }
