@@ -11,15 +11,15 @@ export class SolarSystemRenderer {
         this.config = config;
         this.colorManager = colorManager;
         this.orientationData = orientationData;
-        const chartImageDir = '../../chartImage/'; // SolarSystemRenderer.jsはrenderer直下にある
+        const chartImageDir = './chartImage/'; // SolarSystemRenderer.jsはrenderer直下にある
         this.fullMoonImage_256px = new Image();
         this.fullMoonImage_256px.src = chartImageDir + 'fullMoon_v2_256px.png';
         this.fullMoonImage_256px.onload = () => {
-            console.log('fullMoonImage_256px loaded');
+            console.log('256 loaded: ' + this.fullMoonImage_256px.src);
         };
         this.fullMoonImage_256px.onerror = (e) => {
-            window.setDebugInfo('256 fail');
-            console.log('fullMoonImage_256px not loaded', e);
+            window.setDebugInfo('256 fail: ' + this.fullMoonImage_256px.src);
+            console.log('256 fail: ' + this.fullMoonImage_256px.src, e);
         };
         this.fullMoonImage_128px = new Image();
         this.fullMoonImage_128px.src = chartImageDir + 'fullMoon_v2_128px.png';
@@ -143,13 +143,13 @@ export class SolarSystemRenderer {
             // if (radius < 8) {
             img = this.fullMoonImage_16px;
         }
-        console.log({
-            radius: radius,
-            imgIsNull: img === null,
-            complete: img?.complete,
-            naturalWidth: img?.naturalWidth,
-            src: img?.src
-        });
+        // console.log({
+        //     radius: radius,
+        //     imgIsNull: img === null,
+        //     complete: img?.complete,
+        //     naturalWidth: img?.naturalWidth,
+        //     src: img?.src
+        // });
         if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
             // console.log('img loaded');
             try {
