@@ -3,7 +3,7 @@ import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 import { AstronomicalCalculator } from "../utils/calculations.js";
 import { getStarSize, starSize_0mag } from "../utils/canvasHelpers.js";
 import { SolarSystemPositionCalculator } from "../utils/SolarSystemPositionCalculator.js";
-import { DEG_TO_RAD } from "../utils/constants.js";
+import { DEG_TO_RAD, EPSILON } from "../utils/constants.js";
 export class SolarSystemRenderer {
     constructor(canvas, ctx, config, colorManager, orientationData) {
         this.canvas = canvas;
@@ -11,6 +11,14 @@ export class SolarSystemRenderer {
         this.config = config;
         this.colorManager = colorManager;
         this.orientationData = orientationData;
+        this.fullMoonImage_256px = new Image();
+        this.fullMoonImage_256px.src = '../../chartImage/fullMoon_v2_256px.png';
+        this.fullMoonImage_128px = new Image();
+        this.fullMoonImage_128px.src = '../../chartImage/fullMoon_v2_128px.png';
+        this.fullMoonImage_64px = new Image();
+        this.fullMoonImage_64px.src = '../../chartImage/fullMoon_v2_64px.png';
+        this.fullMoonImage_16px = new Image();
+        this.fullMoonImage_16px.src = '../../chartImage/fullMoon_v2_16px.png';
     }
     drawSolarSystemObjects(objectInformation) {
         const objects = SolarSystemDataManager.getAllObjects();
@@ -95,11 +103,81 @@ export class SolarSystemRenderer {
         const littleCloserToSunXY = littleSunDirection.toCanvasXYifin(this.config, this.orientationData, true)[1];
         // 地球から月の外縁を時計回りに見たとき、明から暗に転じるところの、右（西）から時計回りに測った角度
         const p = Math.atan2(littleCloserToSunXY.y - y, littleCloserToSunXY.x - x) + Math.PI * 0.5;
+        const moonEcliptic = moonDeg.toEcliptic();
+        // console.log(moonEcliptic.lon * RAD_TO_DEG, moonEcliptic.lat * RAD_TO_DEG);
+        const littleEclipNorthRaDec = new RaDec(moonEcliptic.lon, moonEcliptic.lat + 0.5).toCartesian().rotateX(EPSILON).toRaDec();
+        const littleNorthXY = littleEclipNorthRaDec.toCanvasXYifin(this.config, this.orientationData, true)[1];
+        // console.log(x.toFixed(1), y.toFixed(1), littleNorthXY.x.toFixed(1), littleNorthXY.y.toFixed(1));
+        const littleNorthAngle = Math.atan2(littleNorthXY.x - x, -littleNorthXY.y + y);
+        // console.log(littleNorthAngle * RAD_TO_DEG);
         this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
         this.ctx.textBaseline = 'bottom';
         this.ctx.fillStyle = 'white';
-        this.drawMichikake(x, y, radius, k, p, this.colorManager.getColor('yellow'), this.colorManager.getColor('moonShade'));
+        // this.drawMichikake(x, y, radius, k, p, this.colorManager.getColor('yellow'), this.colorManager.getColor('moonShade'));
+        this.ctx.save();
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
+        this.ctx.clip();
+        this.ctx.translate(x, y);
+        this.ctx.rotate(littleNorthAngle);
+        let img = null;
+        if (radius > 128) {
+            img = this.fullMoonImage_256px;
+        }
+        else if (radius > 64) {
+            img = this.fullMoonImage_128px;
+        }
+        else if (radius > 32) {
+            img = this.fullMoonImage_64px;
+        }
+        else if (radius > 8) {
+            img = this.fullMoonImage_16px;
+        }
+        if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
+            try {
+                this.ctx.drawImage(img, -radius, -radius, radius * 2, radius * 2);
+            }
+            catch (e) {
+                this.ctx.beginPath();
+                this.ctx.fillStyle = '#333';
+                this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+        else {
+            this.drawMinorObject;
+            this.ctx.fillStyle = '#333';
+            this.ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        const dayOpacity = k > 0.3 ? 0.2 : 0.2 + 0.8 * ((0.3 - k) / 0.3) ** 4;
+        const shadeOpacity = k > 0.3 ? 0.8 : 0.8 - 0.3 * ((0.3 - k) / 0.3) ** 2;
+        this.ctx.rotate(-littleNorthAngle);
+        this.ctx.beginPath();
+        if (k < 0.5) {
+            this.ctx.fillStyle = this.colorManager.getColorWithAlpha('yellow', dayOpacity);
+            this.ctx.arc(0, 0, radius, p - Math.PI, p);
+            this.ctx.ellipse(0, 0, radius, radius * (1 - 2 * k), p - Math.PI, Math.PI, 0, true);
+            this.ctx.fill();
+            this.ctx.fillStyle = this.colorManager.getColorWithAlpha('moonShade', shadeOpacity);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, radius, p - Math.PI, p, true);
+            this.ctx.ellipse(0, 0, radius, radius * (1 - 2 * k), p - Math.PI, Math.PI, 0, true);
+            this.ctx.fill();
+        }
+        else {
+            this.ctx.fillStyle = this.colorManager.getColorWithAlpha('moonShade', shadeOpacity);
+            this.ctx.arc(0, 0, radius, p - Math.PI, p, true);
+            this.ctx.ellipse(0, 0, radius, radius * (2 * k - 1), p, 0, Math.PI);
+            this.ctx.fill();
+            this.ctx.fillStyle = this.colorManager.getColorWithAlpha('yellow', dayOpacity);
+            this.ctx.beginPath();
+            this.ctx.arc(0, 0, radius, p - Math.PI, p);
+            this.ctx.ellipse(0, 0, radius, radius * (2 * k - 1), p, 0, Math.PI);
+            this.ctx.fill();
+        }
+        this.ctx.restore();
         // 簡易月食表現（本影・半影の重なりを描画）
         // 利用可能な月の黄経・黄緯（moon.lon_moon, moon.lat_moon）と太陽の黄経（lon_sun）を使う
         try {
@@ -132,11 +210,11 @@ export class SolarSystemRenderer {
             };
             // 半影（淡い影）
             if (angDistanceDeg < penumbraRadiusDeg + angRadius) {
-                const penAlpha = Math.min(0.5, Math.max(0.20, (penumbraRadiusDeg - angDistanceDeg) / penumbraRadiusDeg * 0.5));
+                const penAlpha = Math.min(0.4, Math.max(0.10, (penumbraRadiusDeg - angDistanceDeg) / penumbraRadiusDeg * 0.4));
                 drawEarthShadow(0, 0, 0, penAlpha, penumbraPx);
                 // 本影（濃い影、赤銅色）
                 if (angDistanceDeg < umbraRadiusDeg + angRadius) {
-                    const umbAlpha = Math.min(0.9, Math.max(0.7, (umbraRadiusDeg - angDistanceDeg) / umbraRadiusDeg * 0.9));
+                    const umbAlpha = Math.min(0.7, Math.max(0.5, (umbraRadiusDeg - angDistanceDeg) / umbraRadiusDeg * 0.7));
                     drawEarthShadow(120, 20, 20, umbAlpha, umbraPx);
                 }
             }

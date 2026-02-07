@@ -108,10 +108,10 @@ export class RaDec {
         // return this.cartesianToEquatorial(xyz2);
     }
     toEcliptic() {
-        const { x, y, z } = this.toCartesian().rotateX(EPSILON);
-        const lon = Math.atan2(y, x);
-        const lat = Math.asin(z);
-        return { lon: lon, lat: lat };
+        const { x, y, z } = this.toCartesian().rotateX(-EPSILON);
+        const lon = Math.atan2(y, x) * RAD_TO_DEG;
+        const lat = asindeg(z);
+        return { lon: (lon + 360) % 360, lat: lat };
     }
     toCanvasRaDec(mode, viewState, lstLat, orientationData) {
         if (mode == 'AEP') {
