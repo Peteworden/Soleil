@@ -1,0 +1,196 @@
+DefSequence[Kagawa20231208, MENU_BAR]
+	KeyString(2023年12月8日 あすちか@xx小学校)
+	SetMainMode(MODE_MAIN_SPACE)
+	SetDateTime(2023/12/08 12:00:0.5 9.0)
+	SetScale(4e-09)
+	SetOrientation(-7.01e-01, -7.00e-01, 8.44e-02, 9.54e-02)
+	SetLonLat(134.54125, 34.6725)
+	SetHeadOrientation(1.000e+00, 0.000e+00, 0.000e+00, 0.000e+00)
+	SetModesToDefault()
+	SwitchSet(
+		SUN_DISP, SUN_NAME, SUN_GLARE, PLANET_DISP,
+		PLANET_NAME, PLANET_ORBIT, PLANET_SELECT, PLANET_CLOUD,
+		SATELLITE_DISP, SATELLITE_NAME, SATELLITE_ORBIT, SATELLITE_SELECT,
+		MINOR_PLANET_DISP,
+		OORT_CLOUD_DISP, STAR_DISP, STAR_NAME, STAR_ORBIT,
+		STAR_SELECT, OUR_GALAXY_DISP, OUR_GALAXY_NAME, SGR_A_ST_DISP,
+		GALACTIC_CENTER_BG_DISP, GLOB_CLSTR_DISP, NEARBY_GALAXY_DISP, NEARBY_GALAXY_NAME,
+		NEARBY_GALAXY_SELECT, DISTANT_GALAXY_DISP, QSO_DISP, CMB_DISP,
+		SPACECRAFT_DISP, SPACECRAFT_NAME, SPACECRAFT_SELECT, ECLIPSE_DISP,
+		CONSTELLATION_SELECT_SPACE, GROUND_DISP,
+		DATE_DISP, SURFACE_POINTER_DISP, ENABLE_SHADER, ENABLE_BLACKOUT_SHORTCUT,
+		SUBTITLES_DISP
+	)
+	
+	SetTarget(PLNT_EARTH)
+	//Xキーを押して進めてください
+	Pause()
+
+	// 夜を見る
+	SetTransitionParams(DT2: 0)
+	Transition(5.0)
+	SetOrientation(-9.54e-02, -8.44e-02, -7.01e-01, -7.00e-01)
+	SetTransitionParams(DT1: 0, DT2: 1)
+	Transition(4.8)
+	SetOrientation(6.98e-01, 6.91e-01, -1.35e-01, -1.31e-01)
+	SetTransitionParams(DT1: 1)
+	Pause()
+
+	// 地球を離れ、月軌道を見る
+	Transition(8.0)
+	SetScale(1.2e-07)
+	SetOrientation(-7.93e-01, -5.26e-01, 7.33e-03, 3.08e-01)
+	Pause()
+
+	// 月と地球を見やすく
+	Transition(1.0)
+	SetMode(ZOOM, ZOOM_2)
+	Pause()
+
+	// 月の公転
+	Transition(10.0)
+	AdvanceTime(20d)
+	Pause()
+	
+	// 地球に近づく
+	SetTransitionParams(DT2: 0)
+	Transition(3.0)
+	SetScale(4.0e-08)
+	AdvanceTime(6d)
+	SetTransitionParams(DT1: 0, DT2: 0)
+	Transition(6.0)
+	AdvanceTime(12d)
+	Pause()
+
+	// 火星軌道ぐらいまで離れる
+	SetTransitionParams(DT2: 0)
+	Transition(8.0)
+	SetScale(1.2e-07)
+	AdvanceTime(14d)
+
+	SetTransitionParams(DT1: 0, DT2: 1)
+	Transition(12.0)
+	SetScale(1e-04)
+	AdvanceTime(21d)
+	//Pause()
+
+	// 太陽に近づく
+	SetTransitionParams(DT1: 1)
+	Transition(1)
+	ChangeTarget(SUN)
+	Transition(12.0)
+	SetScale(1e-06)
+	Pause()
+
+	//太陽の周りを一周
+	SetTransitionParams(DT2: 0)
+	Transition(6.0)
+	SetOrientation(2.74e-01, 4.67e-01, 7.44e-01, 3.91e-01)
+	SetTransitionParams(DT1: 0, DT2: 0)
+	Transition(6.0)
+	SetOrientation(-6.10e-01, -2.13e-01, 5.07e-01, 5.71e-01)
+	SetTransitionParams(DT2: 1)
+	Transition(6.0)
+	SetOrientation(-7.93e-01, -5.26e-01, 7.33e-03, 3.08e-01)
+	Pause()
+
+	// 火星軌道ぐらいまで離れる（+説明）
+	SwitchOff(DATE_DISP)
+	Transition(12.0)
+	AdvanceTime(200d)
+	SetScale(7e-05)
+	Pause()
+
+	// 惑星を見やすく
+	Transition(1.0)
+	SetMode(ZOOM, ZOOM_5)
+	Pause()
+
+	// 地球を回しながらオールトの雲の向こうまで
+	Transition(15.0)
+	AdvanceTime(2000d)
+	SetOrientation(-8.38e-01, -5.31e-01, 3.58e-02, 1.16e-01)
+	SetScale(3)
+	Pause()
+
+	// オリオン座表示
+	SwitchON(CONSTELLATION_LINE, CONSTELLATION_SELECT_SPACE)
+	ClearKeyGroup(CNST_SELECT)
+	SetKeyGroup(CNST_SELECT,CNST_Ori)
+	Pause()
+
+	// オリオン座消す
+	SwitchOff(CONSTELLATION_LINE, CONSTELLATION_SELECT_SPACE)
+	Pause()
+
+	// オリオン座表示
+	SwitchON(CONSTELLATION_LINE, CONSTELLATION_SELECT_SPACE)
+	ClearKeyGroup(CNST_SELECT)
+	SetKeyGroup(CNST_SELECT,CNST_Ori)
+	Pause()
+
+	// いったん離れてから角度を変える
+	Transition(4.0)
+	SetScale(300)
+	Transition(4.0)
+	SetOrientation(-8.16e-01, -5.14e-01, -1.92e-01, -1.84e-01)
+	Pause()
+
+	// オリオン座消す
+	SwitchOff(CONSTELLATION_LINE, CONSTELLATION_SELECT_SPACE)
+	Pause()
+
+	// 銀河系が見えるところまで離れる
+	Transition(20.0)
+	SetScale(150000)
+	SetOrientation(-1.74e-01, -8.05e-01, -3.75e-01, -4.26e-01)
+	Pause()
+
+	// 銀河系を横から
+	Transition(5.0)
+	SetOrientation(-6.61e-01, -7.49e-01, 3.16e-02, 2.25e-02)
+	Pause()
+
+	// いろんな表示を消す
+	SetTarget(PLNT_EARTH)
+	SetMode(ZOOM, ZOOM_REAL_SCALE)
+	SwitchOff(SUN_NAME)
+	SwitchOff(PLANET_NAME)
+	SwitchOff(PLANET_ORBIT)
+	SwitchOff(SATELLITE_NAME)
+	SwitchOff(SATELLITE_ORBIT)
+	SwitchOff(STAR_NAME)
+	SwitchOff(OUR_GALAXY_NAME)
+	SwitchOff(NEARBY_GALAXY_NAME)
+	SwitchOff(SPACECRAFT_NAME)
+	
+	// 太陽系に近づく
+	SetTransitionParams(DT2: 0)
+	Transition(30.0)
+	SetScale(3)
+
+	// 内惑星が見えるまで
+	SetTransitionParams(DT1: 0)
+	Transition(15.0)
+	SetScale(1e-04)
+	AdvanceTime(1000d)
+	SetOrientation(-7.93e-01, -5.26e-01, 7.33e-03, 3.08e-01)
+	
+	// 地球へ
+	SetTransitionParams(DT2: 3)
+	Transition(15.0)
+	SetScale(3e-09)
+	AdvanceTime(10d)
+	SetOrientation(-9.36e-01, -2.83e-01, 8.80e-02, 1.89e-01)
+
+	// 香川へ着陸
+	SetTransitionParams(DT1: 3)
+	Transition(20.0)
+	SetScale(1e-12)
+
+	AtExit:
+	SetViewTarget(PLNT_EARTH)
+	ExecCommandSet(INIT)
+
+
+

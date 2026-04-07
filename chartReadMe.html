@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang = "ja">
+  <head>
+    <title>星図の使い方</title>
+    <meta charset="UTF-8">
+    <script type="text/javascript" nonce="f995dbb5c9ed47528971ee58740" src="//local.adguard.org?ts=1698529438160&amp;type=content-script&amp;dmn=peteworden.github.io&amp;url=https%3A%2F%2Fpeteworden.github.io%2FSoleil%2FPeteHOME.html&amp;app=com.android.chrome&amp;css=3&amp;js=1&amp;rel=1&amp;rji=1&amp;sbe=0"></script>
+    <style>
+        html {
+            background-color: black;
+            color: white;
+        }
+        main {
+            margin: 30px 30px;
+        }
+        a {
+            color: azure;
+        }
+    </style>
+  </head>
+  
+  <body>
+    <!-- ヘッダー -->
+    <header style="text-align: center;">
+        <h1>ぴーとの星図の使い方</h1>
+    </header>
+    
+    <!-- メイン -->
+    <main>
+        <p>いつも星図をお使いいただきありがとうございます。ぴーとの星図と名付けることにします</p>
+        <h3>！大事！</h3>
+        <ul>
+            <li>画面左下の画面を見て現在時刻になっているか確認する。なっていなければ右上の歯車→現在時刻ボタン→OK で現在時刻にする。必要に応じてリアルタイムで動くよう設定する</li>
+            <li>URLをブックマークとかするときは「https://peteworden.github.io/Soleil/chart.html」の部分だけの保存がおすすめです（URLの最後の方に「time=...」を含めると毎回その日時の星が表示されるため）</li>
+            <li>デスクトップアプリ版を入れるとオフラインでも動かせます！</li>
+        </ul>
+
+        <h3>基本のキ</h3>
+        <ul>
+            <li>
+                下の5つのモードがあります。
+                <ul>
+                    <li>赤道座標系モード（正距方位図法）・・・赤道座標系での南北が画面の上下と一致する。正距方位図法。赤道儀での導入の微調整にはプラネタリウムモードより便利</li>
+                    <li>プラネタリウムモード（ドラッグ操作）・・・星空を見上げたときの上下が画面の上下と一致する。たぶん一番使いやすくおすすめ。正距方位図法</li>
+                    <li>赤道座標系モード（正距円筒図法）・・・赤道座標系での南北が画面の上下と一致する。普通のxy座標のようにすべての赤経の線と赤緯の線が直交し、目盛り幅にも手を加えない。</li>
+                    <li>ライブモード・・・デバイスの向きに合わせてその方向に見える星を見せる。よくある地図アプリのようにデバイスを8の字に動かすと精度がよくなる気がする。<li>
+                    <li>風景と重ねる・・・ライブモードに加え、カメラが撮影する実際の風景を重ねる。必ず横の設定ボタンから必要事項を設定してください。</li>
+                </ul>
+            </li>
+            <p><img src="./images/chartRM1.jpg" width="80%"></p>
+            <p><img src="./images/chartRM2.jpg" width="80%"></p>
+            <p><img src="./images/chartRM3.jpg" width="80%"></p>
+            <!-- <p><a href="chart_offline_intro.html">いろいろやればオフラインでも使えます。</a></p> -->
+        </ul>
+
+        <h3>設定について</h3>
+        <ul>
+            <li>
+                日時<br>
+                日時を設定します。カレンダーから設定することもできます。現在時刻に戻すには「現在時刻」ボタンを押します。
+            </li>
+            <li>
+                観測地<br>
+                観測地の緯度と経度を設定します。現在地ボタンを押すと現在地の座標が反映されます。観測地点を地球以外の太陽系天体から選ぶこともできます。その場合もプラネタリウムモードにすることはできますが、緯度・経度や星の高度・方位は意味を持ちません。海王星などにしてみると、太陽付近に惑星が集まっておもしろいです。
+            </li>
+            <li>
+                最微等級<br>
+                このスライドバーは表示する最も暗い星の等級、最微等級を調整します。右に動かすと星が増えます。最大で11.0等級までの星を表示させることができます。
+            </li>
+            <li>
+                投影モード<br>
+                画面の投影モードを選択します。詳しくは上の「基本のキ」を参照。
+            </li>
+            <li>
+                リアルタイム<br>
+                時刻を現実の時刻に合わせるかどうかを設定します。「オフ」にすると時刻が固定されます。「赤道座標固定」にすると画面中央の赤道座標が固定されます。「高度方位固定」にすると画面中央の高度と方位が固定されます。
+            </li>
+            <li>
+                中心位置<br>
+                画面の中心を示す十字線を表示するかどうかを設定します。画面左上に表示される座標はこの中心位置の情報です。
+            </li>
+            <li>
+                グリッド（プラネモード）<br>
+                プラネタリウムモードのときに、高度・方位の線を表示するかどうかを設定します。
+            </li>
+            <li>
+                恒星名<br>
+                恒星名を表示するかどうかを設定します。恒星名はToE42に協力してもらいました。
+            </li>
+            <li>
+                星座名<br>
+                星座名を表示するかどうかを設定します。
+            </li>
+            <li>
+                星座線<br>
+                星座線を表示するかどうかを設定します。
+            </li>
+            <li>
+                太陽系天体<br>
+                太陽系天体（太陽、惑星、小惑星、彗星）を表示するかどうかを設定します。
+            </li>
+            <li>
+                太陽系天体名<br>
+                太陽系天体の名前を表示するかどうかを設定します。太陽系天体を表示しないときはこの設定は無視されます。
+            </li>
+            <li>
+                クリックで詳細を見る<br>
+                太陽系天体、メシエ天体、お気に入り天体、星座をクリックしたときに詳細情報を表示するかを設定します。
+            </li>
+            <li>
+                メシエ天体<br>
+                メシエ天体を表示するかどうかを設定します。
+            </li>
+            <li>
+                その他、明るいNGC天体など<br>
+                私が選んだ明るいNGC天体などを表示するかどうかを設定します。
+            </li>
+            <li>
+                すべてのNGC天体とIC天体<br>
+                すべてのNGC天体とIC天体を表示するかどうかを設定します。大量にあるので広い範囲を見ているときは重くなります。
+            </li>
+            <li>
+                電波源<br>
+                Coming soon...
+            </li>
+            <li>
+                バイエル符号・フラムスティード番号<br>
+                明るい恒星に割り振られるバイエル符号（α、βなど。α Oriのように使われます）やフラムスティード番号（58 Oriのように使われます）を表示するかどうかを設定します。
+            </li>
+            <li>
+                画角<br>
+                京大天文同好会KUALAの機材に合わせた機能です。
+            </li>
+            <li>
+                地形<br>
+                国土地理院のデータに基づき、地形を表示させることができます。地形データには緯度・経度の情報は含まれないので、その中心が設定画面の最上部で設定する観測地と一致するようにしてください。詳細は設定画面の地形の説明ボタンから確認してください。
+            </li>
+        </ul>
+
+        <h3>検索など</h3>
+        おいおい書きます
+
+        <h3>クエリパラメータ</h3>
+            URLのchart.html?以降（クエリパラメータといいます）には次の情報を含めることができます。そこを含めたリンクを共有すると便利なことがあるかも。モードを上の説明順に(A)～(D)とします。
+            <table border="1">
+                <tr>
+                    <th>URL中での名前</th>
+                    <th>意味</th>
+                    <th>デフォルト</th>
+                </tr>
+                <tr>
+                    <td>RA</td>
+                    <td>画面中央の赤経</td> 
+                    <td>(A)(C)270° (B)(D)azm, altなどから計算</td>
+                </tr>
+                <tr>
+                    <td>Dec</td>
+                    <td>画面中央の赤緯</td> 
+                    <td>(A)(C)30° (B)(D)azm, altなどから計算</td>
+                </tr>
+                <tr>
+                    <td>azm</td>
+                    <td>画面中央の方位角</td> 
+                    <td>(B)180° (D)デバイスの向き (A)(C)RA, Decなどから計算</td>
+                </tr>
+                <tr>
+                    <td>alt</td>
+                    <td>画面中央の高度</td> 
+                    <td>(B)60° (D)デバイスの向き (A)(C)RA, Decなどから計算</td>
+                </tr>
+                <tr>
+                    <td>mode</td>
+                    <td>モード（(A)AEP (B)view (C)EtP (D)live）</td> 
+                    <td>view</td>
+                </tr>
+                <tr>
+                    <td>area</td>
+                    <td>画面の左端から右端の角距離</td> 
+                    <td>視野は画面の上下と左右の短い方を20°とする</td>
+                </tr>
+                <tr>
+                    <td>magkey</td>
+                    <td>最微等級を調整するパラメータ。画面の上下と左右のうち短い方が2°のときの最微等級。設定画面のスライダーもこれ</td> 
+                    <td>11.0等級</td>
+                </tr>
+                <tr>
+                    <td>lat</td>
+                    <td>観測地の緯度</td> 
+                    <td>+35°（北緯35°）</td>
+                </tr>
+                <tr>
+                    <td>lon</td>
+                    <td>観測地の経度</td> 
+                    <td>+135°（東経35°）</td>
+                </tr>
+                <tr>
+                    <td>time</td>
+                    <td>時刻</td> 
+                    <td>現在時刻</td>
+                </tr>
+            </table>
+        </ul>
+
+        <h3>Q&A</h3>
+        <ol>
+            <li>
+                星の数は？<br>
+                →11.0等級まで約86万個。そのうち10.0等級より暗い星は約53万個。星の数はきれいに等級の指数関数になります
+            </li>
+            <li>
+                ええー、じゃあ通信量すごそう<br>
+                →ファイルのサイズは16MB。通信の際は勝手に数分の一に圧縮されるので、意外と大したことないです。
+            </li>
+            <li>
+                どっからそんなデータ持ってきたん？<br>
+                →末尾に参考資料書きました
+            </li>
+            <li>
+                要望が、あります<br>
+                →LINEか、XのDMか、discordか、<a href="https://forms.gle/m4v7RbdWMANbt5s28" target="_blank" rel="noopener">Google Form</a>か、<a href="https://github.com/Peteworden/Soleil">GitHub</a>まで
+            </li>
+            <li>
+                作り始めたのはいつ？<br>
+                →2023/10/21。でもその前身の<a href="SoleilWeb.html">Soleil Web</a>は2023/3/31からで、
+                そのさらに前身のPython版<a href="SoleilTop.html">Soleil</a>（今は星がちゃんと表示されない）を
+                作り始めたのは2021/8下旬で、またさらに前にExcelで惑星の軌跡の描画をやってたのはおそらくその1、2年前。
+            </li>
+        </ol>
+
+        <h3>参考資料</h3>
+        <ul>
+            <li>小天体の軌道要素：<a href="https://ssd.jpl.nasa.gov/tools/sbdb_lookup.html#/">Small-Body Database Lookup</a>のWeb API</li>
+            <li>恒星の座標：<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/hipparcos.html">ヒッパルコス星表</a>、<a href="https://heasarc.gsfc.nasa.gov/W3Browse/all/tycho2.html">ティコ第２星表</a></li>
+            <li>星座関係：<a href="http://astro.starfree.jp/commons/index.html">Astro Commons</a>（星座線は私が好みに合うように変えています）</li>
+            <li>惑星の軌道要素：<a href="https://ssd.jpl.nasa.gov/planets/approx_pos.html">JPL Approximate Positions of the Planets</a></li>
+            <li>月の位置の式：<a href="https://www.stjarnhimlen.se/comp/ppcomp.html">How to compute planetary positions</a></li>
+            <li>等級計算：忘れた、しまった 探しても見つからない</li>
+            <li>位置計算、座標変換など：『天文の計算教室』（斉田博、地人書館）、『新天文学講座　第XIV巻　天体の軌道計算』（渡辺敏夫ほか、恒星社厚生閣）</li>
+        </ul>
+    </main>
+    
+    <!-- フッター -->
+    <footer>
+    </footer>
+  </body>
+</html>
