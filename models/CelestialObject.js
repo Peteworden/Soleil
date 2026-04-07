@@ -36,6 +36,7 @@ export class MessierObject extends CelestialObject {
         this.image_credit = image_credit;
         if (overlay) {
             this.overlay = {
+                filename: overlay.filename != null ? overlay.filename : `${name}.png`,
                 width: overlay.width != null ? overlay.width : 1, // 赤緯の幅
                 opacity: overlay.opacity != null ? overlay.opacity : 0.5
             };
@@ -68,7 +69,7 @@ export class MessierObject extends CelestialObject {
         return this.image_credit;
     }
     getOverlay() {
-        if (this.overlay != null && this.overlay.width !== null && this.overlay.opacity !== null) {
+        if (this.overlay != null && this.overlay.filename !== '' && this.overlay.width !== null && this.overlay.opacity !== null) {
             return this.overlay;
         }
         else {

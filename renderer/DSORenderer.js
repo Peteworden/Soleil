@@ -8,9 +8,11 @@ export class DSORenderer {
         this.colorManager = colorManager;
         this.orientationData = orientationData;
         this.imageCache = {};
+        this.imageCacheNames = [];
     }
     setImageCache(imageCache) {
         this.imageCache = imageCache;
+        this.imageCacheNames = Object.keys(imageCache).map(key => key.split('.')[0]);
     }
     // 天体を描画
     drawDSOObject(object, category, objectInformation, nameCorner) {
@@ -123,13 +125,13 @@ export class DSORenderer {
         }
         if (object instanceof MessierObject &&
             ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
-            object.getName() in this.imageCache &&
-            object.getOverlay() !== null &&
+            object.getOverlay() != null &&
+            Object.keys(this.imageCache).includes(object.getOverlay().filename) &&
             window.config.viewState.fieldOfViewRA < 20) {
-            const img = this.imageCache[object.getName()];
+            const img = this.imageCache[object.getOverlay().filename];
             // 画像が正常に読み込まれているかチェック
             if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
-                this.drawOverlay(object.getName(), coords, object.getOverlay(), x, y, this.config.displaySettings.mode);
+                this.drawOverlay(object.getOverlay().filename, coords, object.getOverlay(), x, y, this.config.displaySettings.mode);
             }
             else if (!img.complete) {
                 // 画像がまだ読み込み中の場合
