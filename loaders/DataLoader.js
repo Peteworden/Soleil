@@ -1,0 +1,278 @@
+import { HipStar, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
+import { DEG_TO_RAD } from '../utils/constants.js';
+import { CoordinateConverter } from '../core/coordinates.js';
+import { formatBayerDesignation } from '../renderer/textFormatter.js';
+export class DataLoader {
+    static async fetchText(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load ${url}: ${response.statusText}`);
+        }
+        return await response.text();
+    }
+    static async fetchJson(url) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load ${url}: ${response.statusText}`);
+        }
+        const data = await response.json();
+        return Object.values(data);
+    }
+    static async fetchGaiaBinaryData(url, encodeStyle, magOffset) {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Failed to load ${url}: ${response.statusText}`);
+        }
+        const buffer = await response.arrayBuffer();
+        const view = new DataView(buffer);
+        const bufferByteLength = buffer.byteLength;
+        let gaia = [];
+        if (encodeStyle == '3bytes') {
+            const count = Math.floor(bufferByteLength / 3);
+            gaia = new Array(count);
+            for (let i = 0; i < bufferByteLength; i += 3) {
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + magOffset;
+                gaia[i / 3] = [ra, dec, mag];
+            }
+        }
+        else if (encodeStyle == '4bytes') {
+            const count = Math.floor(bufferByteLength / 4);
+            gaia = new Array(count);
+            for (let i = 0; i < bufferByteLength; i += 4) {
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
+                const mag = view.getUint8(i + 3) * 0.1 + magOffset;
+                gaia[i >> 2] = [ra, dec, mag];
+            }
+        }
+        else {
+            throw new Error(`Invalid encode style: ${encodeStyle}`);
+        }
+        console.log(url, gaia.length, "stars");
+        return gaia;
+    }
+    // HIP星表データの読み込み
+    static async loadHIPData() {
+        const h = await this.fetchText('data/hip_65.txt');
+        const hipData = h.split(',').map(Number);
+        const hipCount = hipData.length / 4;
+        const hips = new Array(hipCount);
+        for (let i = 0; i < hipData.length; i += 4) {
+            const coordinates = {
+                ra: hipData[i] * 0.001,
+                dec: hipData[i + 1] * 0.001
+            };
+            // bv == nullのときは[i+3]には1000が入っている
+            if (hipData[i + 3] != 1000) {
+                hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
+                hipData[i + 3] * 0.1 // bv
+                );
+            }
+            else {
+                hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
+                null);
+            }
+        }
+        console.log('Hipparcos', hips.length, "stars");
+        return hips;
+    }
+    // 星座データの読み込み
+    static async loadConstellationData() {
+        return await this.fetchJson('data/constellation.json');
+        // return await this.fetchJson('下準備/202505星座線書き換え/constellation_new.json');
+    }
+    static async loadConstellationBoundariesData() {
+        const data = await this.fetchText('data/constellation_boundaries.txt');
+        const data_split = data.split(',');
+        const data_length = data_split.length;
+        const boundaryCount = data_length / 5;
+        const constellationBoundaries = new Array(boundaryCount);
+        for (let i = 0; i < data_length; i += 5) {
+            const num = +data_split[i];
+            const ra1 = +data_split[i + 1];
+            const dec1 = +data_split[i + 2];
+            const ra2 = +data_split[i + 3];
+            const dec2 = +data_split[i + 4];
+            constellationBoundaries[i / 5] = { num, ra1, dec1, ra2, dec2 };
+        }
+        return constellationBoundaries;
+    }
+    // 星名データの読み込み
+    static async loadStarNames() {
+        const data = await this.fetchJson('data/starnames.json');
+        const starNames = [];
+        for (const starName of data) {
+            starNames.push({
+                name: starName.name,
+                ra: starName.ra,
+                dec: starName.dec,
+                tier: starName.tier,
+                jpnName: starName.jpnname
+            });
+        }
+        console.log(`${starNames.length} star names`);
+        return starNames;
+    }
+    // メシエ天体データの読み込み
+    static async loadMessierData() {
+        const converter = new CoordinateConverter();
+        const data = await this.fetchJson('data/messier.json');
+        const messier = [];
+        for (const object of data) {
+            messier.push(new MessierObject(object.name, object.alt_name, [object.name].concat(object.alt_name).concat(object.search_keys ? object.search_keys : []), { ra: converter.rahmToDeg(object.ra), dec: converter.decdmToDeg(object.dec) }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
+        }
+        return messier;
+    }
+    // おすすめ天体データの読み込み
+    static async loadRecData() {
+        const converter = new CoordinateConverter();
+        const data = await this.fetchJson('data/rec.json');
+        const rec = [];
+        for (const object of data) {
+            let ra, dec;
+            if (object.ra.includes(' ')) {
+                ra = converter.rahmToDeg(object.ra);
+                dec = converter.decdmToDeg(object.dec);
+            }
+            else {
+                ra = +object.ra;
+                dec = +object.dec;
+            }
+            rec.push(new MessierObject(object.name, object.alt_name, [object.name].concat(object.alt_name).concat(object.search_name ? object.search_name : []), { ra, dec }, object.vmag, object.class, object.image_url || null, object.image_credit || null, object.overlay || undefined, object.description, object.wiki || null));
+        }
+        console.log(`${rec.length} recommended objects`);
+        const userObjects = localStorage.getItem('userObject');
+        if (userObjects) {
+            const userObjectsData = JSON.parse(userObjects);
+            if (userObjectsData && userObjectsData.userRecs) {
+                for (const item of userObjectsData.userRecs) {
+                    const object = item.content;
+                    if (object) {
+                        rec.push(new MessierObject(object.name, object.alt_name, object.alt_name, object.coordinates, object.vmag, object.type, null, //object.image_url || null,
+                        null, //object.image_credit || null,
+                        null, //object.overlay || undefined,
+                        object.description, null //object.wiki || null
+                        ));
+                    }
+                    else {
+                        userObjectsData.userRecs.splice(userObjectsData.userRecs.indexOf(item), 1);
+                    }
+                }
+            }
+            localStorage.setItem('userObject', JSON.stringify(userObjectsData));
+            console.log(`${userObjectsData.userRecs.length} user's objects`);
+        }
+        return rec;
+    }
+    // NGC天体データの読み込み
+    static async loadNGCData() {
+        const ngcData = (await this.fetchText('data/ngc.txt')).split(',');
+        const ngcCount = ngcData.length / 4;
+        const ngc = new Array(ngcCount);
+        for (let i = 0; i < ngcData.length; i += 4) {
+            ngc[i / 4] = new NGCObject(`NGC${i / 4 + 1}`, { ra: +ngcData[i] * 0.01, dec: +ngcData[i + 1] * 0.01 }, +ngcData[i + 2] * 0.1, ngcData[i + 3], null, null, null);
+        }
+        console.log(`${ngc.length} NGC objects`);
+        const icData = (await this.fetchText('data/ic.txt')).split(',');
+        const icCount = icData.length / 4;
+        const ic = new Array(icCount);
+        for (let i = 0; i < icData.length; i += 4) {
+            ic[i / 4] = new NGCObject(`IC${i / 4 + 1}`, { ra: +icData[i] * 0.01, dec: +icData[i + 1] * 0.01 }, +icData[i + 2] * 0.1, icData[i + 3], null, null, null);
+        }
+        console.log(`${ic.length} IC objects`);
+        const specialNgcIcData = await this.fetchJson('data/special_ngc_ic.json');
+        for (const object of specialNgcIcData) {
+            // ngcのその天体の情報を書き換える
+            if (object.name.startsWith('NGC')) {
+                const number = parseInt(object.name.replace('NGC', ''));
+                ngc[number - 1].setSpecialInfo(object.other_names, object.search_keys, object.description);
+            }
+            else if (object.name.startsWith('IC')) {
+                const number = parseInt(object.name.replace('IC', ''));
+                ic[number - 1].setSpecialInfo(object.other_names, object.search_keys, object.description);
+            }
+        }
+        return [ngc, ic];
+    }
+    // https://heasarc.gsfc.nasa.gov/db-perl/W3Browse/w3table.pl?tablehead=name%3Dhiiregion&Action=More+Options
+    static async loadSharplessData() {
+        const data = await this.fetchJson('data/sharpless.json');
+        const sharpless = [];
+        for (const object of data) {
+            sharpless.push(new SharplessObject(object.name, object.alt_names, object.search_names, { ra: object.ra * 0.001, dec: object.dec * 0.001 }, object.diameter, object.form, object.bright, object.description, object.link));
+        }
+        console.log(`${sharpless.length} Sharpless objects`);
+        return sharpless;
+    }
+    // 明るい星データの読み込み
+    static async loadBrightStars() {
+        const data = await this.fetchText('data/brights.txt');
+        const data_split = data.split(',');
+        const starCount = data_split.length / 6;
+        const brightStars = new Array(starCount);
+        for (let i = 0; i < data_split.length; i += 6) {
+            const flam = data_split[i + 2].length > 0 ? +data_split[i + 2] : null;
+            const bayer = data_split[i + 3].length > 0 ? formatBayerDesignation(data_split[i + 3], +data_split[i + 4]) : null;
+            const constellation = data_split[i + 5];
+            brightStars[i / 6] = {
+                coordinates: { ra: +data_split[i], dec: +data_split[i + 1] },
+                flam: flam || undefined,
+                bayer: bayer || undefined,
+                constellation: constellation
+            };
+        }
+        return brightStars;
+    }
+    // Gaiaデータの読み込み
+    static async loadGaiaData(magnitudeRange, encodeStyle, magOffset) {
+        try {
+            return await this.fetchGaiaBinaryData(`data/gaia_${magnitudeRange}.bin`, encodeStyle, magOffset);
+        }
+        catch (error) {
+            console.error(`Failed to load Gaia data: ${magnitudeRange}, ${encodeStyle}, ${magOffset}, ${error}`);
+            return [];
+        }
+    }
+    static async loadGaiaHelpData(magnitudeRange) {
+        const helpDiff = await this.fetchText(`data/gaia_${magnitudeRange}_helper.txt`);
+        const helpDiffData = helpDiff.split(',').map(Number);
+        const helpData = new Array(helpDiffData.length + 1).fill(0);
+        for (let i = 0; i < helpDiffData.length; i++) {
+            helpData[i + 1] = helpData[i] + helpDiffData[i];
+        }
+        return helpData;
+    }
+    static async loadMilkyWayData() {
+        const data = await this.fetchText('data/milky_way.txt');
+        const data_split = data.split(',');
+        const pointCount = data_split.length / 2;
+        const milkyWay = new Array(pointCount + 1);
+        for (let i = 0; i < data_split.length; i += 2) {
+            milkyWay[i / 2] = [+data_split[i], +data_split[i + 1]];
+        }
+        milkyWay[pointCount] = milkyWay[0];
+        return milkyWay;
+    }
+    static async loadArtemisEphemerides() {
+        const data = await this.fetchText('data/artemisEphemerides.txt');
+        const data_split = data.split('\n');
+        const ephemerides = [];
+        for (const line of data_split) {
+            const [_, __, ___, jd, ra, dec, dist, ____] = line.split(/\s+/);
+            const ra_rad = Number(ra) * DEG_TO_RAD;
+            const dec_rad = Number(dec) * DEG_TO_RAD;
+            const x = Number(dist) * Math.cos(dec_rad) * Math.cos(ra_rad);
+            const y = Number(dist) * Math.cos(dec_rad) * Math.sin(ra_rad);
+            const z = Number(dist) * Math.sin(dec_rad);
+            ephemerides.push([Number(jd), x, y, z]);
+        }
+        return ephemerides;
+    }
+    // 追加天体データの読み込み
+    static async loadAdditionalObjects() {
+        return await this.fetchText('data/additional_objects.txt');
+    }
+}
+//# sourceMappingURL=DataLoader.js.map
