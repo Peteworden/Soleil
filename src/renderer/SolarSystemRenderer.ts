@@ -268,9 +268,9 @@ export class SolarSystemRenderer {
 
     drawArtemis(earthXYZ: Cartesian | undefined, observerPlanetXYZ: Cartesian | undefined): void {
         const artemisEphemerides = DataStore.artemisEphemerides;
-
         if (artemisEphemerides.length == 0) return;
-        if (artemisEphemerides[0][0] > this.config.displayTime.jd || artemisEphemerides[artemisEphemerides.length - 1][0] < this.config.displayTime.jd) return;
+        const jdUT = this.config.displayTime.jd - 70.0 / 86400.0;
+        if (artemisEphemerides[0][0] > jdUT || artemisEphemerides[artemisEphemerides.length - 1][0] < jdUT) return;
         let jd1 = artemisEphemerides[0][0];
         let x1 = artemisEphemerides[0][1];
         let y1 = artemisEphemerides[0][2];
@@ -282,7 +282,7 @@ export class SolarSystemRenderer {
         for (let i = 1; i < artemisEphemerides.length; i++) {
             const line = artemisEphemerides[i];
             const jd = line[0];
-            if (jd < this.config.displayTime.jd) {
+            if (jd < jdUT) {
                 jd1 = jd;
                 x1 = line[1];
                 y1 = line[2];
@@ -295,7 +295,7 @@ export class SolarSystemRenderer {
                 break;
             }
         }
-        const t = (this.config.displayTime.jd - jd1) / (jd2 - jd1);
+        const t = (jdUT - jd1) / (jd2 - jd1);
         const x = x1 + (x2 - x1) * t;
         const y = y1 + (y2 - y1) * t;
         const z = z1 + (z2 - z1) * t;
@@ -312,13 +312,9 @@ export class SolarSystemRenderer {
             if (earthXYZ && observerPlanetXYZ) {
                 const heliocentricXYZ = new Cartesian(x, y, z).add(earthXYZ);
                 const observerCentricXYZ = heliocentricXYZ.subtract(observerPlanetXYZ);
-                // console.log(`${heliocentricXYZ.x}, ${heliocentricXYZ.y}, ${heliocentricXYZ.z}`);
-                // console.log(`${observerPlanetXYZ.x}, ${observerPlanetXYZ.y}, ${observerPlanetXYZ.z}`);
                 observerCentricRaDec = observerCentricXYZ.toRaDec().precess(this.precessionAngle);
-                // console.log(`${observerCentricXYZ.x * 1.49598e8 / 384400}, ${observerCentricXYZ.y * 1.49598e8 / 384400}, ${observerCentricXYZ.z * 1.49598e8 / 384400}`);
             } else {
-                console.log(`earthXYZ: ${earthXYZ}, observerPlanetXYZ: ${observerPlanetXYZ}`);
-                // observerCentricRaDec = new Cartesian(x, y, z).toRaDec().precess(this.precessionAngle);
+                // console.log(`earthXYZ: ${earthXYZ}, observerPlanetXYZ: ${observerPlanetXYZ}`);
                 return;
             }
         }
