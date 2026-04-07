@@ -102,7 +102,7 @@
         "dec": "-24 23.0",
         "vmag": "5.8",
         "class": "Nb",
-        "overlay": { "width": 2.0, "opacity": 0.5 },
+        "overlay": { "filename": "M8.png", "width": 2.0, "opacity": 0.5 },
         "description": "干潟星雲。暗いところでは双眼鏡でもよく見える。視直径が1°くらいと大きい。",
         "wiki": "干潟星雲"
     },
@@ -202,7 +202,7 @@
         "dec": "-13 47.0",
         "vmag": "6.0",
         "class": "OC",
-        "overlay": { "width": 0.5, "opacity": 0.5 },
+        "overlay": { "filename": "M16.PNG", "width": 0.5, "opacity": 0.5 },
         "description": "わし星雲。創造の柱がある。",
         "wiki": "わし星雲"
     },
@@ -264,7 +264,7 @@
         "dec": "-23 2.0",
         "vmag": "8.5",
         "class": "Nb",
-        "overlay": { "width": 0.5, "opacity": 0.8 },
+        "overlay": { "filename": "M20.PNG", "width": 0.5, "opacity": 0.8 },
         "description": "三裂星雲。赤い部分は輝線星雲、青い部分は反射星雲で、赤い部分の手前を暗黒帯が横切る。",
         "wiki": "三裂星雲"
     },
@@ -353,7 +353,7 @@
         "class": "Pl",
         "image_url": "M27.jpg",
         "image_credit": "me",
-        "overlay": { "width": 0.2, "opacity": 0.8 },
+        "overlay": { "filename": "M27.PNG", "width": 0.2, "opacity": 0.8 },
         "description": "亜鈴状星雲と呼ばれる惑星状星雲。小望遠鏡でも比較的よく見える。",
         "wiki": "亜鈴状星雲"
     },
@@ -408,7 +408,7 @@
         "class": "Gx",
         "image_url": "M31.jpg",
         "image_credit": "me",
-        "overlay": { "width": 3.0, "opacity": 0.5 },
+        "overlay": { "filename": "M31.png", "width": 3.0, "opacity": 0.5 },
         "description": "アンドロメダ銀河。暗い空なら肉眼でも見える。双眼鏡で見るといいかも。",
         "wiki": "アンドロメダ銀河"
     },
@@ -551,7 +551,7 @@
         "class": "Nb",
         "image_url": "M42.jpg",
         "image_credit": "me",
-        "overlay": { "width": 2.0, "opacity": 0.5 },
+        "overlay": { "filename": "M42.png", "width": 2.0, "opacity": 0.5 },
         "description": "オリオン大星雲。市街地でもオリオンの三ツ星の下にぼんやりと見える。双眼鏡や望遠鏡では広がっている様子がよく見える。星が誕生している場所。",
         "wiki": "オリオン大星雲"
     },
@@ -754,7 +754,7 @@
         "class": "Pl",
         "image_url": "M57.jpg",
         "image_credit": "me",
-        "overlay": { "width": 0.05, "opacity": 1.0 },
+        "overlay": { "filename": "M57.PNG", "width": 0.05, "opacity": 1.0 },
         "description": "リング（状）星雲や環状星雲と呼ばれる惑星状星雲。恒星とあまり変わらないくらい小さいが、9.0等級と小望遠鏡でも見える明るさ。こと座のβ星と、γ星の少しβ星側にある星との中央にあり、近くの恒星と直角二等辺三角形を作っている。",
         "wiki": "環状星雲"
     },
