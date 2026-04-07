@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "tsc && npm run --prefix wasm asbuild && cp .\\chart.html .\\dist\\",
+    "build": "tsc && npm run --prefix wasm asbuild && shx cp chart.html dist/",
     "watch": "tsc -w",
     "dev": "serve --cors -l 3000 --no-clipboard --no-request-logging --no-compression",
     "start": "concurrently \"npm run watch\" \"npm run dev\" && npx serve dist",
@@ -24,6 +24,7 @@
     "assemblyscript": "^0.28.9",
     "concurrently": "^8.2.2",
     "serve": "^14.2.1",
+    "shx": "^0.4.0",
     "typescript": "^5.3.3"
   },
   "dependencies": {
