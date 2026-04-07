@@ -1,0 +1,17 @@
+{
+  "type": "module",
+  "scripts": {
+    "asbuild:debug": "asc assembly/astroCalculation.ts --target debug",
+    "asbuild:release": "asc assembly/astroCalculation.ts --target release",
+    "asbuild": "npm run asbuild:debug && npm run asbuild:release",
+    "build": "tsc",
+    "watch": "asc assembly/astroCalculation.ts --target release -watch",
+    "test": "node tests",
+    "start": "npx serve dist"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.28.9",
+    "typescript": "^5.3.3",
+    "serve": "^14.2.1"
+  }
+}
