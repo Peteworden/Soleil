@@ -1,0 +1,33 @@
+{
+  "name": "star-chart-ts",
+  "version": "1.0.0",
+  "description": "Star Chart TypeScript Implementation",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && npm run --prefix wasm asbuild && copy .\\chart.html .\\dist\\",
+    "watch": "tsc -w",
+    "dev": "serve --cors -l 3000 --no-clipboard --no-request-logging --no-compression",
+    "start": "concurrently \"npm run watch\" \"npm run dev\" && npx serve dist",
+    "precommit": "npm run copy-files",
+    "cp-html": "copy .\\chart.html .\\Soleil\\chart.html",
+    "cp-dist": "Robocopy.exe .\\dist .\\Soleil\\dist /E /XF *.js.map",
+    "cp-style": "copy .\\styles\\styleChart.css .\\Soleil\\styles\\",
+    "cp-data": "Robocopy.exe .\\data .\\Soleil\\data /E /XF *_long.json",
+    "cp-starimages": "Robocopy.exe .\\chartImage .\\Soleil\\chartImage /E",
+    "cp-files": "npm run cp-html & npm run cp-dist & npm run cp-data & npm run cp-starimages & npm run cp-style & copy ..\\service-worker.js .\\"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "assemblyscript": "^0.28.9",
+    "concurrently": "^8.2.2",
+    "serve": "^14.2.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@assemblyscript/loader": "^0.28.9",
+    "satellite.js": "^6.0.1"
+  }
+}
