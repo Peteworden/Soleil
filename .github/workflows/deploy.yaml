@@ -1,0 +1,38 @@
+name: Build and Deploy
+
+# トリガーの設定：mainブランチにpushされた時に実行する
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    # 実行するクラウドサーバーのOSを指定
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. リポジトリのコードをサーバーにチェックアウト（取得）する
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Node.jsの環境をセットアップする
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # 3. 依存パッケージをインストールする
+      - name: Install Dependencies
+        run: npm install
+
+      # 4. TypeScriptをビルドし、distフォルダを生成する
+      - name: Build TypeScript
+        run: npm run build
+
+      # 5. 生成されたdistフォルダをGitHub Pagesにデプロイする
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist  # ビルドの出力先フォルダ名を指定
