@@ -5,6 +5,7 @@ import { ColorManager } from "./colorManager.js";
 
 export class DSORenderer {
     private imageCache: { [key: string]: HTMLImageElement } = {};
+    private imageCacheNames: string[] = [];
     constructor(
         private canvas: HTMLCanvasElement,
         private ctx: CanvasRenderingContext2D,
@@ -16,6 +17,7 @@ export class DSORenderer {
 
     setImageCache(imageCache: { [key: string]: HTMLImageElement }): void {
         this.imageCache = imageCache;
+        this.imageCacheNames = Object.keys(imageCache).map(key => key.split('.')[0]);
     }
 
     // 天体を描画
@@ -125,17 +127,18 @@ export class DSORenderer {
             this.ctx.stroke();
             // this.ctx.fillText(object.getName(), x+5, y-5);
         }
+
         if (
             object instanceof MessierObject &&
             ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
-            object.getName() in this.imageCache &&
-            object.getOverlay() !== null &&
+            object.getOverlay() != null &&
+            Object.keys(this.imageCache).includes(object.getOverlay()!.filename) &&
             (window as any).config.viewState.fieldOfViewRA < 20
         ) {
-            const img = this.imageCache[object.getName()];
+            const img = this.imageCache[object.getOverlay()!.filename];
             // 画像が正常に読み込まれているかチェック
             if (img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
-                this.drawOverlay(object.getName(), coords, object.getOverlay()!, x, y, this.config.displaySettings.mode);
+                this.drawOverlay(object.getOverlay()!.filename, coords, object.getOverlay()!, x, y, this.config.displaySettings.mode);
             } else if (!img.complete) {
                 // 画像がまだ読み込み中の場合
                 img.onload = () => {

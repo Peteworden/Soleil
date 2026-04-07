@@ -745,21 +745,22 @@ export async function main() {
                 if (messierData.length > 0) {
                     for (const messier of messierData) {
                         if (messier.getOverlay() != null && messier.getName() != null) {
-                            imageCacheNames.push(messier.getName());
+                            // imageCacheNames.push(messier.getName());
+                            imageCacheNames.push(messier.getOverlay()!.filename);
                         }
                     }
                 }
                 if (DataStore.getRecData().length > 0) {
                     for (const rec of DataStore.getRecData()) {
                         if (rec.getOverlay() != null && rec.getName() != null) {
-                            imageCacheNames.push(rec.getName());
+                            imageCacheNames.push(rec.getOverlay()!.filename);
                         }
                     }
                 }
                 for (const name of imageCacheNames) {
                     try {
                         const img = new Image();
-                        img.src = `./chartImage/overlay/${name}.PNG`;
+                        img.src = `./chartImage/overlay/${name}`;
                         imageCache[name] = img;
                     } catch (error) {
                         console.error(`Error loading image for ${name}:`, error);

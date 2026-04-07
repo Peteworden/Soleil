@@ -47,7 +47,7 @@ export class MessierObject extends CelestialObject {
     private searchKeys: string[] | null;
     private image_url: string | null;
     private image_credit: string | null;
-    private overlay: { width: number, opacity: number } | null;
+    private overlay: { filename: string, width: number, opacity: number } | null;
     private description: string;
     private wiki: string | null;
 
@@ -60,7 +60,7 @@ export class MessierObject extends CelestialObject {
         type: string,
         image_url: string | null,
         image_credit: string | null,
-        overlay: { width: number, opacity: number } | null,
+        overlay: { filename: string, width: number, opacity: number } | null,
         description: string,
         wiki: string | null
     ) {
@@ -71,6 +71,7 @@ export class MessierObject extends CelestialObject {
         this.image_credit = image_credit;
         if (overlay) {
             this.overlay = { 
+                filename: overlay.filename != null ? overlay.filename : `${name}.png`,
                 width: overlay.width != null ? overlay.width : 1, // 赤緯の幅
                 opacity: overlay.opacity != null ? overlay.opacity : 0.5 
             };
@@ -109,8 +110,8 @@ export class MessierObject extends CelestialObject {
         return this.image_credit;
     }
 
-    getOverlay(): { width: number, opacity: number } | null {
-        if (this.overlay != null && this.overlay.width !== null && this.overlay.opacity !== null) {
+    getOverlay(): { filename: string, width: number, opacity: number } | null {
+        if (this.overlay != null && this.overlay.filename !== '' && this.overlay.width !== null && this.overlay.opacity !== null) {
             return this.overlay;
         } else {
             return null;
