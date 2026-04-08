@@ -102,12 +102,10 @@ export class HipStarRenderer {
 
     drawHipStar(
         star: HipStar, [x, y]: [number, number],
-        // star: HipStar, xy: {x: number, y: number},
         limitingMagnitude: number, zeroMagSize: number, limitMagnitudeForWhiten: number,
         blurRadii: number[], colorRatios: number[], opacities: string[], starColor: string, starColorRGB: [number, number, number]
     ): void {
         const starSize = getStarSize(star.getMagnitude()!, limitingMagnitude, zeroMagSize) + 0.4;
-        // const starColor = this.colorManager.getStarColor(star.getBv()!);
 
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
         if (starSize > 2) {
