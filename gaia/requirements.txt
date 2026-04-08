@@ -1,4 +1,0 @@
-streamlit
-matplotlib
-astroquery
-numpy

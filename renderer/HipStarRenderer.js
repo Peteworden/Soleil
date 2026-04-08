@@ -94,11 +94,8 @@ export class HipStarRenderer {
             }
         }
     }
-    drawHipStar(star, [x, y], 
-    // star: HipStar, xy: {x: number, y: number},
-    limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColor, starColorRGB) {
+    drawHipStar(star, [x, y], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, starColor, starColorRGB) {
         const starSize = getStarSize(star.getMagnitude(), limitingMagnitude, zeroMagSize) + 0.4;
-        // const starColor = this.colorManager.getStarColor(star.getBv()!);
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
         if (starSize > 2) {
             // return;

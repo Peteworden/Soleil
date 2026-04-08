@@ -94,8 +94,11 @@ export class ObservationSiteController {
             latDeg = 35; // デフォルト値
         }
         // 経度の検証と設定
-        if (isNaN(lonDeg) || lonDeg < -180 || lonDeg > 180) {
+        if (isNaN(lonDeg) || lonDeg < 0 || lonDeg > 360) {
             lonDeg = 135; // デフォルト値
+        }
+        else if (lonDeg > 180) {
+            lonDeg = lonDeg - 360;
         }
         // UI要素の更新
         const latInput = document.getElementById('lat');
