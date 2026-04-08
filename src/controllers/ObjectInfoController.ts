@@ -428,7 +428,7 @@ export class ObjectInfoController {
 
         // 距離情報
         infoText += `距離: ${(data.distance * AU_TO_KM / 1000).toFixed(0)},000 km<br>`;
-        const lightMinutes = data.distance / 299792.458;
+        const lightMinutes = data.distance * AU_TO_KM / 299792.458;
         infoText += `（光の速さで${lightMinutes.toFixed(1)}秒）<br>`;
 
         objectInfoTextElement.innerHTML = infoText;
