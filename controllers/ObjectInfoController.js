@@ -2,6 +2,7 @@ import { CoordinateConverter } from "../core/coordinates.js";
 import { MessierObject, SharplessObject } from "../models/CelestialObject.js";
 import { Asteroid, Planet } from "../models/SolarSystemObjects.js";
 import { getColorManager } from "../renderer/colorManager.js";
+import { AU_TO_KM } from "../utils/constants.js";
 export class ObjectInfoController {
     /**
      * クリックされた位置から最寄りの天体を見つけて情報を表示
@@ -366,7 +367,7 @@ export class ObjectInfoController {
             }
         }
         // 距離情報
-        infoText += `距離: ${(data.distance / 1000).toFixed(0)},000 km<br>`;
+        infoText += `距離: ${(data.distance * AU_TO_KM / 1000).toFixed(0)},000 km<br>`;
         const lightMinutes = data.distance / 299792.458;
         infoText += `（光の速さで${lightMinutes.toFixed(1)}秒）<br>`;
         objectInfoTextElement.innerHTML = infoText;

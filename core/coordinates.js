@@ -1,11 +1,7 @@
 import { DataStore } from '../models/DataStore.js';
 // import { loadWasm } from './wasmLoader.js';
 import { asindeg, acosdeg } from './mathUtils.js';
-const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
-const epsilon = 0.4090926;
-const cosEpsl = Math.cos(epsilon);
-const sinEpsl = Math.sin(epsilon);
+import { DEG_TO_RAD, RAD_TO_DEG, COS_EPSL, SIN_EPSL } from '../utils/constants.js';
 class RaDec {
     constructor(ra, dec) {
         this.ra = ra;
@@ -359,9 +355,9 @@ export class CoordinateConverter {
         // const xyz3 = this.rotateZ(xyz2, precessionAngle);
         // const xyz4 = this.rotateX(xyz3, epsilon);
         const xyz2 = {
-            x: x * cos - y * cosEpsl * sin - z * sinEpsl * sin,
-            y: cosEpsl * (x * sin + cos * (y * cosEpsl + z * sinEpsl)) - sinEpsl * (-y * sinEpsl + z * cosEpsl),
-            z: sinEpsl * (x * sin + cos * (y * cosEpsl + z * sinEpsl)) + cosEpsl * (-y * sinEpsl + z * cosEpsl)
+            x: x * cos - y * COS_EPSL * sin - z * SIN_EPSL * sin,
+            y: COS_EPSL * (x * sin + cos * (y * COS_EPSL + z * SIN_EPSL)) - SIN_EPSL * (-y * SIN_EPSL + z * COS_EPSL),
+            z: SIN_EPSL * (x * sin + cos * (y * COS_EPSL + z * SIN_EPSL)) + COS_EPSL * (-y * SIN_EPSL + z * COS_EPSL)
         };
         return this.cartesianToEquatorial(xyz2);
     }
