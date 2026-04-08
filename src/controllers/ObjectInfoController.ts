@@ -3,6 +3,7 @@ import { MessierObject, NGCObject, HipStar, SharplessObject } from "../models/Ce
 import { Asteroid, Comet, Moon, Planet, Sun } from "../models/SolarSystemObjects.js";
 import { ConstellationData } from "types/index.js";
 import { getColorManager } from "../renderer/colorManager.js";
+import { AU_TO_KM } from "../utils/constants.js";
 
 interface ObjectInfo {
     name: string;
@@ -426,7 +427,7 @@ export class ObjectInfoController {
         }
 
         // 距離情報
-        infoText += `距離: ${(data.distance/1000).toFixed(0)},000 km<br>`;
+        infoText += `距離: ${(data.distance * AU_TO_KM / 1000).toFixed(0)},000 km<br>`;
         const lightMinutes = data.distance / 299792.458;
         infoText += `（光の速さで${lightMinutes.toFixed(1)}秒）<br>`;
 

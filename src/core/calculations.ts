@@ -1,7 +1,5 @@
 import { StarChartConfig, ViewState } from '../types/index.js';
-
-const DEG_TO_RAD = Math.PI / 180;
-const RAD_TO_DEG = 180 / Math.PI;
+import { DEG_TO_RAD, RAD_TO_DEG } from '../utils/constants.js';
 
 export class AstronomicalCalculator {
     static jdJSTtoJdTT(jdJST: number): number {

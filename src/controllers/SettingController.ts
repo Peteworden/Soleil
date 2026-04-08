@@ -98,7 +98,9 @@ export class SettingController {
         // 設定値をローカルストレージに保存
         SettingController.saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
-        SolarSystemDataManager.updateAllData((window as any).config.displayTime.jd, (window as any).config.observationSite);
+        const jd = (window as any).config.displayTime.jd;
+        const observer = (window as any).config.observationSite.observerPlanet;
+        SolarSystemDataManager.updateAllData(jd, observer);
         
         // デバイスオリエンテーションリスナーを更新
         const deviceOrientationManager = (window as any).deviceOrientationManager;

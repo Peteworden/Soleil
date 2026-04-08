@@ -1,5 +1,5 @@
 import { Asteroid, Sun, Moon, MinorObject, Planet, SolarSystemObjectBase, isPlanet, isSun, isMinorObject, isMoon, EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements, isOrbitalObject, OrbitalObject } from '../models/SolarSystemObjects.js';
-import { COS_EPSL, DEG_TO_RAD, EPSILON, RAD_TO_DEG, SIN_EPSL } from '../utils/constants.js';
+import { COS_EPSL, DEG_TO_RAD, EARTH_RADIUS_TO_AU, EPSILON, KM_TO_AU, RAD_TO_DEG, SIN_EPSL } from '../utils/constants.js';
 import { acosdeg, acosrad } from './mathUtils.js';
 import { Cartesian, RaDec } from './coordinates/index.js';
 
@@ -40,13 +40,13 @@ export class SolarSystemPositionCalculator {
             if (observer == '地球') {
                 const latitude = (window as any).config.observationSite.latitude * DEG_TO_RAD;
                 const siderealTime = (window as any).config.siderealTime;
-                const xe = moon.xyz.x - Math.cos(latitude) * Math.cos(siderealTime) * 6378.14 / 1.49598e8; //au
-                const ye = moon.xyz.y - Math.cos(latitude) * Math.sin(siderealTime) * 6378.14 / 1.49598e8; //au
-                const ze = moon.xyz.z - Math.sin(latitude) * 6378.14 / 1.49598e8; //au
+                const xe = moon.xyz.x - Math.cos(latitude) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU; //au
+                const ye = moon.xyz.y - Math.cos(latitude) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU; //au
+                const ze = moon.xyz.z - Math.sin(latitude) * EARTH_RADIUS_TO_AU; //au
                 const ra = (Math.atan2(ye, xe) * RAD_TO_DEG + 360) % 360; //deg
                 const dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * RAD_TO_DEG; //deg
                 moon.raDec = new RaDec(ra, dec);
-                moon.distance = Math.sqrt(xe**2 + ye**2 + ze**2) * 6378.14;
+                moon.distance = Math.sqrt(xe**2 + ye**2 + ze**2); // au
             }
         }
         
@@ -148,17 +148,17 @@ export class SolarSystemPositionCalculator {
         let xyz: Cartesian = obj.xyz.subtract(observerPosition); // observerから見た座標
         if (observerBody == '地球' && latitude && siderealTime) {
             const obsOnEarth = new Cartesian(
-                Math.cos(latitude) * Math.cos(siderealTime) * 6378.14 / 1.49598e8,
-                Math.cos(latitude) * Math.sin(siderealTime) * 6378.14 / 1.49598e8,
-                Math.sin(latitude) * 6378.14 / 1.49598e8,
+                Math.cos(latitude) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU,
+                Math.cos(latitude) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU,
+                Math.sin(latitude) * EARTH_RADIUS_TO_AU,
             );
             xyz = xyz.subtract(obsOnEarth);
         }
         obj.raDec = xyz.toRaDec().precess(undefined, 'j2000', jd);
         obj.distance = xyz.distance();
-        if (obj.type === 'moon') {
-            obj.distance *= 6378.14;
-        }
+        // if (obj.type === 'moon') {
+        //     obj.distance *= 6378.14;
+        // }
         this.updateMagnitude(obj, observerBody, observerPosition);
     }
 

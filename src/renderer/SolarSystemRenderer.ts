@@ -5,7 +5,7 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { ColorManager } from "./colorManager.js";
 import { SolarSystemPositionCalculator } from "../core/SolarSystemPositionCalculator.js";
-import { DEG_TO_RAD, EPSILON, RAD_TO_DEG } from "../utils/constants.js";
+import { AU_TO_EARTH_RADIUS, DEG_TO_RAD, EPSILON, RAD_TO_DEG } from "../utils/constants.js";
 import { DataStore } from "../models/DataStore.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 
@@ -101,8 +101,8 @@ export class SolarSystemRenderer {
         const sunDeg = sun.getRaDec();
         const moonDeg = moon.getRaDec();
         const moonRad = moonDeg.toRad();
-        const moonDist = moon.getDistance();
-        const angRadius = 0.259 / (moonDist / (6378.14 / 1.49598e8));
+        const moonDist = moon.getDistance(); // au
+        const angRadius = 0.259 / (moonDist * AU_TO_EARTH_RADIUS);
         const pxRadius0 = this.canvas.width * angRadius / this.config.viewState.fieldOfViewRA;
         const radius = Math.max(pxRadius0, 13);
         const scale = radius / pxRadius0; // 実際の視半径より何倍に見せているか
@@ -161,7 +161,6 @@ export class SolarSystemRenderer {
         } else if (radius > 32) {
             img = this.fullMoonImage_64px;
         } else if (radius > 8) {
-        // if (radius < 8) {
             img = this.fullMoonImage_16px;
         }
         if (img && img.complete && img.naturalWidth > 0 && img.naturalHeight > 0) {
@@ -218,14 +217,14 @@ export class SolarSystemRenderer {
             const umbraPx = (umbraRadiusDeg / angRadius) * radius;
 
             // 影の向き（画面上で太陽反対方向）
-            const shadowCenterFromEarthCenter = new RaDec((sunDeg.ra + 180) % 360, -sunDeg.dec).toCartesian(moonDist);
+            const shadowCenterFromEarthCenter = new RaDec((sunDeg.ra + 180) % 360, -sunDeg.dec).toCartesian(moonDist).multiply(AU_TO_EARTH_RADIUS);
             const obsLat = this.config.observationSite.latitude * Math.PI / 180;
             const siderealTime = this.config.siderealTime;
             // 以下、観測者から見て
             const shadowCenterXYZ = new Cartesian(
-                shadowCenterFromEarthCenter.x - Math.cos(obsLat) * Math.cos(siderealTime) * 6378.14,
-                shadowCenterFromEarthCenter.y - Math.cos(obsLat) * Math.sin(siderealTime) * 6378.14,
-                shadowCenterFromEarthCenter.z - Math.sin(obsLat) * 6378.14
+                shadowCenterFromEarthCenter.x - Math.cos(obsLat) * Math.cos(siderealTime),
+                shadowCenterFromEarthCenter.y - Math.cos(obsLat) * Math.sin(siderealTime),
+                shadowCenterFromEarthCenter.z - Math.sin(obsLat)
             );
             const shadowCenterRaDec = shadowCenterXYZ.toRaDec();
             const shadowCenterXY = shadowCenterRaDec.toCanvasXYifin(this.config, this.orientationData, true);
@@ -314,7 +313,6 @@ export class SolarSystemRenderer {
                 const observerCentricXYZ = heliocentricXYZ.subtract(observerPlanetXYZ);
                 observerCentricRaDec = observerCentricXYZ.toRaDec().precess(this.precessionAngle);
             } else {
-                // console.log(`earthXYZ: ${earthXYZ}, observerPlanetXYZ: ${observerPlanetXYZ}`);
                 return;
             }
         }
