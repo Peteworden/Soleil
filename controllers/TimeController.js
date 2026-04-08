@@ -306,7 +306,7 @@ export class TimeController {
         if (updateConfig) {
             updateConfig(newConfig);
         }
-        SolarSystemDataManager.updateAllData(jd, config.observationSite);
+        SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
         this.updateTimeDisplay();
         const renderAll = window.renderAll;
         if (renderAll) {
@@ -430,7 +430,7 @@ export class TimeController {
                     }
                 });
             }
-            SolarSystemDataManager.updateAllData(jd, config.observationSite);
+            SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
             const renderAll = window.renderAll;
             if (renderAll) {
                 renderAll();
@@ -466,7 +466,7 @@ export class TimeController {
                     }
                 });
             }
-            SolarSystemDataManager.updateAllData(jd, config.observationSite);
+            SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
             const renderAll = window.renderAll;
             if (renderAll) {
                 renderAll();
