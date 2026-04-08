@@ -37,17 +37,17 @@ export class SolarSystemPositionCalculator {
             moon.xyz.x += earth.xyz.x;
             moon.xyz.y += earth.xyz.y;
             moon.xyz.z += earth.xyz.z;
-            if (observer == '地球') {
-                const latitude = (window as any).config.observationSite.latitude * DEG_TO_RAD;
-                const siderealTime = (window as any).config.siderealTime;
-                const xe = moon.xyz.x - Math.cos(latitude) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU; //au
-                const ye = moon.xyz.y - Math.cos(latitude) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU; //au
-                const ze = moon.xyz.z - Math.sin(latitude) * EARTH_RADIUS_TO_AU; //au
-                const ra = (Math.atan2(ye, xe) * RAD_TO_DEG + 360) % 360; //deg
-                const dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * RAD_TO_DEG; //deg
-                moon.raDec = new RaDec(ra, dec);
-                moon.distance = Math.sqrt(xe**2 + ye**2 + ze**2); // au
-            }
+            // if (observer == '地球') {
+            //     const latitude = (window as any).config.observationSite.latitude * DEG_TO_RAD;
+            //     const siderealTime = (window as any).config.siderealTime;
+            //     const xe = moon.xyz.x - Math.cos(latitude) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU; //au
+            //     const ye = moon.xyz.y - Math.cos(latitude) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU; //au
+            //     const ze = moon.xyz.z - Math.sin(latitude) * EARTH_RADIUS_TO_AU; //au
+            //     const ra = (Math.atan2(ye, xe) * RAD_TO_DEG + 360) % 360; //deg
+            //     const dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * RAD_TO_DEG; //deg
+            //     moon.raDec = new RaDec(ra, dec);
+            //     moon.distance = Math.sqrt(xe**2 + ye**2 + ze**2); // au
+            // }
         }
         
         // 全天体の位置と等級を更新
@@ -147,18 +147,16 @@ export class SolarSystemPositionCalculator {
     ): void {
         let xyz: Cartesian = obj.xyz.subtract(observerPosition); // observerから見た座標
         if (observerBody == '地球' && latitude && siderealTime) {
+            const latRad = latitude * DEG_TO_RAD;
             const obsOnEarth = new Cartesian(
-                Math.cos(latitude) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU,
-                Math.cos(latitude) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU,
-                Math.sin(latitude) * EARTH_RADIUS_TO_AU,
+                Math.cos(latRad) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU,
+                Math.cos(latRad) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU,
+                Math.sin(latRad) * EARTH_RADIUS_TO_AU,
             );
             xyz = xyz.subtract(obsOnEarth);
         }
         obj.raDec = xyz.toRaDec().precess(undefined, 'j2000', jd);
         obj.distance = xyz.distance();
-        // if (obj.type === 'moon') {
-        //     obj.distance *= 6378.14;
-        // }
         this.updateMagnitude(obj, observerBody, observerPosition);
     }
 
@@ -371,9 +369,10 @@ export class SolarSystemPositionCalculator {
                     + 0.017*Math.sin(2*Mm + F)) * DEG_TO_RAD; //rad, J2000.0
         dist += -0.58*Math.cos(Mm - 2*D) - 0.46*Math.cos(2*D); //地球半径
 
-        const x = Math.cos(lat_moon) * Math.cos(lon_moon) * dist * 6378.14 / 1.49598e8; //au
-        const y = (-Math.sin(lat_moon) * SIN_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * COS_EPSL) * dist * 6378.14 / 1.49598e8; //au
-        const z = (Math.sin(lat_moon) * COS_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * SIN_EPSL) * dist * 6378.14 / 1.49598e8; //au
+        const dist_au = dist * EARTH_RADIUS_TO_AU;
+        const x = Math.cos(lat_moon) * Math.cos(lon_moon) * dist_au; //au
+        const y = (-Math.sin(lat_moon) * SIN_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * COS_EPSL) * dist_au; //au
+        const z = (Math.sin(lat_moon) * COS_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * SIN_EPSL) * dist_au; //au
         moon.xyz = new Cartesian(x, y, z);
         moon.Ms = Ms;
         moon.ws = ws;

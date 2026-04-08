@@ -5,7 +5,7 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { ColorManager } from "./colorManager.js";
 import { SolarSystemPositionCalculator } from "../core/SolarSystemPositionCalculator.js";
-import { AU_TO_EARTH_RADIUS, DEG_TO_RAD, EPSILON, RAD_TO_DEG } from "../utils/constants.js";
+import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, RAD_TO_DEG } from "../utils/constants.js";
 import { DataStore } from "../models/DataStore.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 
@@ -102,7 +102,7 @@ export class SolarSystemRenderer {
         const moonDeg = moon.getRaDec();
         const moonRad = moonDeg.toRad();
         const moonDist = moon.getDistance(); // au
-        const angRadius = 0.259 / (moonDist * AU_TO_EARTH_RADIUS);
+        const angRadius = 0.259 / (moonDist * AU_TO_KM / 384400);
         const pxRadius0 = this.canvas.width * angRadius / this.config.viewState.fieldOfViewRA;
         const radius = Math.max(pxRadius0, 13);
         const scale = radius / pxRadius0; // 実際の視半径より何倍に見せているか
