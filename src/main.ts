@@ -24,6 +24,7 @@ import { DeviceOrientationManager } from './device/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 
 const news: { time: string, title: string, text: string }[] = [
+    { time: '2026-04-16T21:00:00', title: 'C/2025 R3 (PANSTARRS)', text: 'PANSTARRS彗星（C/2025 R3）を追加しました。明け方の東の空、双眼鏡で見えるかも！？' },
     { time: '2026-04-05T00:00:00', title: 'Artemis II オリオン宇宙船の表示', text: 'Artemis II打ち上げ成功！ということで、オリオン宇宙船（Orion Integrity）の位置が出ます！表示される条件などは右上の三本線から。' },
     { time: '2026-02-06T03:00:00', title: '惑星の表示を更新', text: '惑星、特に木星、土星や、今年10月ごろの金星を拡大して見てみてください！' },
     { time: '2026-02-01T18:00:00', title: '詳しい星図の作成が簡単に', text: '「詳しい星図を作る」が、ブラウザで簡単に実行できるようになりました！20等星図とかも作れます。<a href="https://petegaiachart.streamlit.app/">こちら</a>または左上のHOMEから。' },
