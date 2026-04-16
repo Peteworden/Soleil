@@ -282,8 +282,12 @@ export class SolarSystemRenderer {
         let observerCentricRaDec;
         if (this.config.observationSite.observerPlanet == '地球') {
             observerCentricRaDec = new Cartesian(x - Math.cos(lat) * Math.cos(siderealTime) * 6378.14 / 1.49598e8, y - Math.cos(lat) * Math.sin(siderealTime) * 6378.14 / 1.49598e8, z - Math.sin(lat) * 6378.14 / 1.49598e8).toRaDec().precess(this.precessionAngle);
-            const a = new Cartesian(x - Math.cos(lat) * Math.cos(siderealTime) * 6378.14 / 1.49598e8, y - Math.cos(lat) * Math.sin(siderealTime) * 6378.14 / 1.49598e8, z - Math.sin(lat) * 6378.14 / 1.49598e8).toRaDec();
-            console.log(`${a.ra}, ${a.dec}`);
+            // const a = new Cartesian(
+            //     x - Math.cos(lat) * Math.cos(siderealTime) * 6378.14 / 1.49598e8,
+            //     y - Math.cos(lat) * Math.sin(siderealTime) * 6378.14 / 1.49598e8,
+            //     z - Math.sin(lat) * 6378.14 / 1.49598e8
+            // ).toRaDec();
+            // console.log(`${a.ra}, ${a.dec}`);
         }
         else {
             if (earthXYZ && observerPlanetXYZ) {
