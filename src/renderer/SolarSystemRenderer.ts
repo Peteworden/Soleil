@@ -5,7 +5,7 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { ColorManager } from "./colorManager.js";
 import { SolarSystemPositionCalculator } from "../core/SolarSystemPositionCalculator.js";
-import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, RAD_TO_DEG } from "../utils/constants.js";
+import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, KM_TO_AU, RAD_TO_DEG } from "../utils/constants.js";
 import { DataStore } from "../models/DataStore.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 
@@ -210,8 +210,8 @@ export class SolarSystemRenderer {
         // 簡易月食表現（本影・半影の重なりを描画）
         // 利用可能な月の黄経・黄緯（moon.lon_moon, moon.lat_moon）と太陽の黄経（lon_sun）を使う
         try {
-            const penumbraRadiusDeg = 1.25 * 384400 / moonDist; // 半影半径（度）
-            const umbraRadiusDeg = 0.75 * 384400 / moonDist; // 
+            const penumbraRadiusDeg = 1.25 * (384400 * KM_TO_AU) / moonDist; // 半影半径（度）
+            const umbraRadiusDeg = 0.75 * (384400 * KM_TO_AU) / moonDist; // 
 
             const penumbraPx = (penumbraRadiusDeg / angRadius) * radius;
             const umbraPx = (umbraRadiusDeg / angRadius) * radius;
