@@ -21,6 +21,21 @@ export interface LstLat {
     lat: number;
 }
 
+export interface HipData {
+    raArray: Float32Array;  // 赤経
+    decArray: Float32Array; // 赤緯
+    magArray: Float32Array; // 等級
+    bvArray: Float32Array;  // B-V色指数
+    count: number;          // 星の数
+}
+
+export interface GaiaData {
+    raArray: Float32Array;  // 赤経
+    decArray: Float32Array; // 赤緯
+    magArray: Float32Array; // 等級
+    count: number;          // 星の数
+}
+
 export interface StarName {
     name: string;
     ra: number;

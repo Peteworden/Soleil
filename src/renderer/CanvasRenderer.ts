@@ -1,5 +1,5 @@
-import { CelestialObject, HipStar, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
-import { BayerFlamData, ConstellationData, EquatorialCoordinates, StarInformation, StarChartConfig, StarName, ObjectInformation } from '../types/index.js';
+import { CelestialObject, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
+import { BayerFlamData, ConstellationData, EquatorialCoordinates, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData } from '../types/index.js';
 import { CoordinateConverter } from '../core/coordinates.js';
 import { DeviceOrientationData, DeviceOrientationManager } from '../device/deviceOrientation.js';
 import { ColorManager, getColorManager } from './colorManager.js';
@@ -130,7 +130,7 @@ export class CanvasRenderer {
         this.solarSystemRenderer.drawSolarSystemObjects(this.objectInformation);
     }
 
-    async drawHipStars(hipStars: HipStar[]): Promise<void> {
+    async drawHipStars(hipStars: HipData): Promise<void> {
         this.hipStarRenderer.drawHipStars(hipStars, this.starInformation);
     }
 
@@ -219,7 +219,7 @@ export class CanvasRenderer {
         this.ctx.restore();
     }
 
-    drawGaiaStars(gaiaData: number[][], gaiaHelpData: number[], magBrightest: number): void {
+    drawGaiaStars(gaiaData: GaiaData, gaiaHelpData: number[], magBrightest: number): void {
         this.gaiaStarRenderer.drawGaiaStars(gaiaData, gaiaHelpData, magBrightest, this.starInformation);
     }
 

@@ -30,17 +30,17 @@ export class CelestialObject {
     }
 }
 
-export class HipStar extends CelestialObject {
-    private bv: number | null;
-    constructor(coordinates: EquatorialCoordinates, magnitude: number, bv: number | null) {
-        super('', {ra: coordinates.ra, dec: coordinates.dec}, magnitude, 'hipStar');
-        this.bv = bv || null;
-    }
+// export class HipStar extends CelestialObject {
+//     private bv: number | null;
+//     constructor(coordinates: EquatorialCoordinates, magnitude: number, bv: number | null) {
+//         super('', {ra: coordinates.ra, dec: coordinates.dec}, magnitude, 'hipStar');
+//         this.bv = bv || null;
+//     }
 
-    getBv(): number | null {
-        return this.bv;
-    }
-}
+//     getBv(): number | null {
+//         return this.bv;
+//     }
+// }
 
 export class MessierObject extends CelestialObject {
     private otherNames: string[] | null;

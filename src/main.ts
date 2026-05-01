@@ -1,5 +1,5 @@
 //npm run start
-import { ViewState, StarChartConfig, DisplaySettings, ObservationSite, DisplayTime, CanvasSize, NewsPopup, PlanetMotion, ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData } from './types/index.js';
+import { ViewState, StarChartConfig, DisplaySettings, ObservationSite, DisplayTime, CanvasSize, NewsPopup, PlanetMotion, ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData, GaiaData, HipData } from './types/index.js';
 
 import { CacheInfoController } from './controllers/CacheInfoController.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
@@ -10,7 +10,7 @@ import { SettingController } from './controllers/SettingController.js';
 import { TimeController } from './controllers/TimeController.js';
 import { UserObjectController } from './controllers/UserObjectController.js';
 
-import { HipStar, MessierObject, NGCObject, SharplessObject } from './models/CelestialObject.js';
+import { MessierObject, NGCObject, SharplessObject } from './models/CelestialObject.js';
 import { DataStore } from './models/DataStore.js';
 import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
 
@@ -572,12 +572,12 @@ export async function main() {
         (window as any).renderer = renderer;
 
         // データの読み込み（段階的に）
-        let hipStars: HipStar[] = [];
-        let gaia0_80Data: number[][] = [];
-        let gaia81_90Data: number[][] = [];
-        let gaia91_100Data: number[][] = [];
-        let gaia101_110Data: number[][] = [];
-        let gaia111_120Data: number[][] = [];
+        let hipStars: HipData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), bvArray: new Float32Array(0), count: 0 };
+        let gaia0_80Data: GaiaData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia81_90Data: GaiaData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia91_100Data: GaiaData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia101_110Data: GaiaData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia111_120Data: GaiaData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
         let gaia0_80HelpData: number[] = [];
         let gaia81_90HelpData: number[] = [];
         let gaia91_100HelpData: number[] = [];

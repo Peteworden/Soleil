@@ -137,8 +137,8 @@ export class ColorManager {
      * @param bv B-V値
      * @returns 恒星の色
      */
-    getStarColor(bv: number | null): string {
-        if (bv == null) {
+    getStarColor(bv: number): string {
+        if (Number.isNaN(bv)) {
             return this.getColor('star');
         }
 

@@ -1,8 +1,8 @@
 // WebGLRenderer
 // 目的: 既存CanvasRendererに対して、WebGL2を用いた描画実装の足場を提供
 // 現状: Gaia星の点描画の雛形のみ実装（他APIはスタブ）。既存APIに近い形で差し替え可能にする前提
-import { StarChartConfig, ConstellationData, BayerFlamData } from '../../types/index.js';
-import { HipStar, CelestialObject, MessierObject } from '../../models/CelestialObject.js';
+import { StarChartConfig, ConstellationData, BayerFlamData, HipData } from '../../types/index.js';
+import { CelestialObject, MessierObject } from '../../models/CelestialObject.js';
 import { StarsProgram } from './programs/starsProgram.js';
 import { CoordinateConverter } from '../../core/coordinates.js';
 import { AstronomicalCalculator } from '../../core/calculations.js';
@@ -119,7 +119,7 @@ export class WebGLRenderer {
     }
 
     // Stubs to match CanvasRenderer API (no-ops for now)
-    drawHipStars(_: HipStar[]): void {}
+    drawHipStars(_: HipData): void {}
     writeStarNames(_: any[]): void {}
     drawConstellationLines(_: ConstellationData[]): void {}
     drawMessier(_: MessierObject[]): void {}

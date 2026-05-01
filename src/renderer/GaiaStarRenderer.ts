@@ -1,4 +1,4 @@
-import { StarChartConfig, StarInformation } from "../types/index.js";
+import { GaiaData, StarChartConfig, StarInformation } from "../types/index.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { CoordinateConverter } from "../core/coordinates.js";
@@ -23,12 +23,12 @@ export class GaiaStarRenderer {
     }
     
     drawGaiaStars(
-        gaiaData: number[][], gaiaHelpData: number[], magBrightest: number, 
+        gaiaData: GaiaData, gaiaHelpData: number[], magBrightest: number, 
         starInformation: Array<StarInformation>
     ): void {
         if (this.config.displaySettings.usedStar == 'noStar') return;
         if (!["AEP", "view"].includes(this.config.displaySettings.mode)) return;
-        if (!gaiaData || gaiaData.length == 0) return;
+        if (!gaiaData || gaiaData.count == 0) return;
         if (!gaiaHelpData || gaiaHelpData.length == 0) return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         if (magBrightest > limitingMagnitude) return;
@@ -72,11 +72,10 @@ export class GaiaStarRenderer {
 
                     // バッチ処理で座標変換を最適化
                     for (let i = st; i < fi; i++) {
-                        const data = gaiaData[i];
-                        const mag = data[2];
+                        const mag = gaiaData.magArray[i];
                         if (mag >= limitingMagnitude) continue;
-                        const ra = raInt + data[0];
-                        const dec = decInt + data[1];
+                        const ra = raInt + gaiaData.raArray[i];
+                        const dec = decInt + gaiaData.decArray[i];
                         const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
                         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
                         if (!screenXY[0]) continue;
@@ -111,11 +110,10 @@ export class GaiaStarRenderer {
 
                     // バッチ処理で座標変換を最適化
                     for (let i = st; i < fi; i++) {
-                        const data = gaiaData[i];
-                        const mag = data[2];
+                        const mag = gaiaData.magArray[i];
                         if (mag >= limitingMagnitude) continue;
-                        const ra = raInt + data[0];
-                        const dec = decInt + data[1];
+                        const ra = raInt + gaiaData.raArray[i];
+                        const dec = decInt + gaiaData.decArray[i];
                         const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
                         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
                         if (!screenXY[0]) continue;

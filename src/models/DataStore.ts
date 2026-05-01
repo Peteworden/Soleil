@@ -1,8 +1,8 @@
-import { ConstellationBoundaryData, ConstellationData, StarName } from "../types/index.js";
-import { HipStar, MessierObject, NGCObject, SharplessObject } from "./CelestialObject";
+import { ConstellationBoundaryData, ConstellationData, HipData, StarName } from "../types/index.js";
+import { MessierObject, NGCObject, SharplessObject } from "./CelestialObject";
 
 export class DataStore {
-    static hipStars: HipStar[] = [];
+    static hipStars: HipData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), bvArray: new Float32Array(0), count: 0 };
     static gaia100Data: number[][] = [];
     static gaia101_110Data: number[][] = [];
     static gaia111_120Data: number[][] = [];

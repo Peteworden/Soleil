@@ -1,5 +1,5 @@
 import { CoordinateConverter } from "../core/coordinates.js";
-import { MessierObject, NGCObject, HipStar, SharplessObject } from "../models/CelestialObject.js";
+import { MessierObject, NGCObject, SharplessObject } from "../models/CelestialObject.js";
 import { Asteroid, Comet, Moon, Planet, Sun } from "../models/SolarSystemObjects.js";
 import { ConstellationData } from "types/index.js";
 import { getColorManager } from "../renderer/colorManager.js";
@@ -151,8 +151,8 @@ export class ObjectInfoController {
             this.generateSunInfo(objectInfoTextElement, objectInfo.data);
         } else if (objectInfo.type == 'moon') {
             this.generateMoonInfo(objectInfoTextElement, objectInfo.data);
-        } else if (objectInfo.type == 'star') {
-            this.generateStarInfo(objectInfoTextElement, objectInfo.data);
+        // } else if (objectInfo.type == 'star') {
+        //     this.generateStarInfo(objectInfoTextElement, objectInfo.data);
         } else if (objectInfo.type == 'constellation') {
             this.generateConstellationInfo(objectInfoTextElement, objectInfo.data);
         }
@@ -625,6 +625,7 @@ export class ObjectInfoController {
     /**
      * 恒星の情報を生成(今は使っていない)
      */
+    /*
     private static generateStarInfo(objectInfoTextElement: HTMLElement, star: HipStar): void {
         const config = (window as any).config;
         let infoText = '';
@@ -654,6 +655,7 @@ export class ObjectInfoController {
 
         return;
     }
+        */
 
     private static generateConstellationInfo(objectInfoTextElement: HTMLElement, data: ConstellationData): void {
         let infoText = '';
