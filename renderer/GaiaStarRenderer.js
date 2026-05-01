@@ -20,7 +20,7 @@ export class GaiaStarRenderer {
             return;
         if (!["AEP", "view"].includes(this.config.displaySettings.mode))
             return;
-        if (!gaiaData || gaiaData.length == 0)
+        if (!gaiaData || gaiaData.count == 0)
             return;
         if (!gaiaHelpData || gaiaHelpData.length == 0)
             return;
@@ -64,12 +64,11 @@ export class GaiaStarRenderer {
                     const fi = gaiaHelpData[unit + 1];
                     // バッチ処理で座標変換を最適化
                     for (let i = st; i < fi; i++) {
-                        const data = gaiaData[i];
-                        const mag = data[2];
+                        const mag = gaiaData.magArray[i];
                         if (mag >= limitingMagnitude)
                             continue;
-                        const ra = raInt + data[0];
-                        const dec = decInt + data[1];
+                        const ra = raInt + gaiaData.raArray[i];
+                        const dec = decInt + gaiaData.decArray[i];
                         const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
                         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
                         if (!screenXY[0])
@@ -100,12 +99,11 @@ export class GaiaStarRenderer {
                     const fi = gaiaHelpData[unit + 1];
                     // バッチ処理で座標変換を最適化
                     for (let i = st; i < fi; i++) {
-                        const data = gaiaData[i];
-                        const mag = data[2];
+                        const mag = gaiaData.magArray[i];
                         if (mag >= limitingMagnitude)
                             continue;
-                        const ra = raInt + data[0];
-                        const dec = decInt + data[1];
+                        const ra = raInt + gaiaData.raArray[i];
+                        const dec = decInt + gaiaData.decArray[i];
                         const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
                         const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
                         if (!screenXY[0])

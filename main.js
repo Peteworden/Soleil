@@ -520,12 +520,12 @@ export async function main() {
         const renderer = new CanvasRenderer(canvas, config);
         window.renderer = renderer;
         // データの読み込み（段階的に）
-        let hipStars = [];
-        let gaia0_80Data = [];
-        let gaia81_90Data = [];
-        let gaia91_100Data = [];
-        let gaia101_110Data = [];
-        let gaia111_120Data = [];
+        let hipStars = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), bvArray: new Float32Array(0), count: 0 };
+        let gaia0_80Data = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia81_90Data = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia91_100Data = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia101_110Data = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
+        let gaia111_120Data = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
         let gaia0_80HelpData = [];
         let gaia81_90HelpData = [];
         let gaia91_100HelpData = [];

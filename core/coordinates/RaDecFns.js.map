@@ -1,0 +1,1 @@
+{"version":3,"file":"RaDecFns.js","sourceRoot":"","sources":["../../../src/core/coordinates/RaDecFns.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,UAAU,EAAE,MAAM,iBAAiB,CAAC;AAE7C,MAAM,UAAU,UAAU,CAAC,EAAU,EAAE,GAAW;IAC9C,OAAO,EAAC,EAAE,EAAE,EAAE,GAAG,UAAU,EAAE,GAAG,EAAE,GAAG,GAAG,UAAU,EAAC,CAAC;AACxD,CAAC"}

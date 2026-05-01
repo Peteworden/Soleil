@@ -39,7 +39,7 @@ export class DataStore {
         }
     }
 }
-DataStore.hipStars = [];
+DataStore.hipStars = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), bvArray: new Float32Array(0), count: 0 };
 DataStore.gaia100Data = [];
 DataStore.gaia101_110Data = [];
 DataStore.gaia111_120Data = [];

@@ -1,4 +1,4 @@
-import { HipStar, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
+import { MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { DEG_TO_RAD } from '../utils/constants.js';
 import { CoordinateConverter } from '../core/coordinates.js';
 import { formatBayerDesignation } from '../renderer/textFormatter.js';
@@ -26,57 +26,77 @@ export class DataLoader {
         const buffer = await response.arrayBuffer();
         const view = new DataView(buffer);
         const bufferByteLength = buffer.byteLength;
-        let gaia = [];
+        const count = encodeStyle === '3bytes' ? Math.floor(bufferByteLength / 3) : Math.floor(bufferByteLength / 4);
+        // let gaia = new Array(count);
+        const raArray = new Float32Array(count); // 赤経
+        const decArray = new Float32Array(count); // 赤緯
+        const magArray = new Float32Array(count); // 等級
         if (encodeStyle == '3bytes') {
-            const count = Math.floor(bufferByteLength / 3);
-            gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 3) {
                 const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
                 const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
                 const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + magOffset;
-                gaia[i / 3] = [ra, dec, mag];
+                // gaia[i / 3] = [ra, dec, mag];
+                const index = i / 3;
+                raArray[index] = ra;
+                decArray[index] = dec;
+                magArray[index] = mag;
             }
         }
         else if (encodeStyle == '4bytes') {
-            const count = Math.floor(bufferByteLength / 4);
-            gaia = new Array(count);
             for (let i = 0; i < bufferByteLength; i += 4) {
                 const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
                 const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
                 const mag = view.getUint8(i + 3) * 0.1 + magOffset;
-                gaia[i >> 2] = [ra, dec, mag];
+                // gaia[i >> 2] = [ra, dec, mag];
+                const index = i >> 2;
+                raArray[index] = ra;
+                decArray[index] = dec;
+                magArray[index] = mag;
             }
         }
         else {
             throw new Error(`Invalid encode style: ${encodeStyle}`);
         }
-        console.log(url, gaia.length, "stars");
-        return gaia;
+        console.log(url, raArray.length, "stars");
+        return { raArray, decArray, magArray, count };
     }
     // HIP星表データの読み込み
     static async loadHIPData() {
         const h = await this.fetchText('data/hip_65.txt');
         const hipData = h.split(',').map(Number);
         const hipCount = hipData.length / 4;
-        const hips = new Array(hipCount);
+        const raArray = new Float32Array(hipCount);
+        const decArray = new Float32Array(hipCount);
+        const magArray = new Float32Array(hipCount);
+        const bvArray = new Float32Array(hipCount);
         for (let i = 0; i < hipData.length; i += 4) {
-            const coordinates = {
-                ra: hipData[i] * 0.001,
-                dec: hipData[i + 1] * 0.001
-            };
+            const index = i >> 2;
+            // const coordinates: EquatorialCoordinates = {
+            //     ra: hipData[i] * 0.001,
+            //     dec: hipData[i + 1] * 0.001
+            // };
             // bv == nullのときは[i+3]には1000が入っている
-            if (hipData[i + 3] != 1000) {
-                hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
-                hipData[i + 3] * 0.1 // bv
-                );
-            }
-            else {
-                hips[i >> 2] = new HipStar(coordinates, hipData[i + 2] * 0.1, // magnitude
-                null);
-            }
+            raArray[index] = hipData[i] * 0.001;
+            decArray[index] = hipData[i + 1] * 0.001;
+            magArray[index] = hipData[i + 2] * 0.1;
+            bvArray[index] = hipData[i + 3] != 1000 ? hipData[i + 3] * 0.1 : NaN;
+            // if (hipData[i + 3] != 1000) {
+            //     hips[i >> 2] = new HipStar(
+            //         coordinates,
+            //         hipData[i + 2] * 0.1,  // magnitude
+            //         hipData[i + 3] * 0.1   // bv
+            //     );
+            // } else {
+            //     hips[i >> 2] = new HipStar(
+            //         coordinates,
+            //         hipData[i + 2] * 0.1,  // magnitude
+            //         null
+            //     );
+            // }
         }
-        console.log('Hipparcos', hips.length, "stars");
-        return hips;
+        console.log('Hipparcos', raArray.length, "stars");
+        return { raArray, decArray, magArray, bvArray, count: hipCount };
     }
     // 星座データの読み込み
     static async loadConstellationData() {
@@ -232,7 +252,7 @@ export class DataLoader {
         }
         catch (error) {
             console.error(`Failed to load Gaia data: ${magnitudeRange}, ${encodeStyle}, ${magOffset}, ${error}`);
-            return [];
+            return { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), count: 0 };
         }
     }
     static async loadGaiaHelpData(magnitudeRange) {

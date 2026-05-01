@@ -122,9 +122,8 @@ export class ObjectInfoController {
         }
         else if (objectInfo.type == 'moon') {
             this.generateMoonInfo(objectInfoTextElement, objectInfo.data);
-        }
-        else if (objectInfo.type == 'star') {
-            this.generateStarInfo(objectInfoTextElement, objectInfo.data);
+            // } else if (objectInfo.type == 'star') {
+            //     this.generateStarInfo(objectInfoTextElement, objectInfo.data);
         }
         else if (objectInfo.type == 'constellation') {
             this.generateConstellationInfo(objectInfoTextElement, objectInfo.data);
@@ -538,27 +537,37 @@ export class ObjectInfoController {
     /**
      * 恒星の情報を生成(今は使っていない)
      */
-    static generateStarInfo(objectInfoTextElement, star) {
-        const config = window.config;
+    /*
+    private static generateStarInfo(objectInfoTextElement: HTMLElement, star: HipStar): void {
+        const config = (window as any).config;
         let infoText = '';
+
         // 座標情報
         const coords = star.getCoordinates();
         const raHM = this.coordinateConverter.radeg2hm(coords.ra);
         const decDM = this.coordinateConverter.decdeg2dm(coords.dec);
+        
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}° ${decDM[1].toFixed(0)}'<br>`;
+        
         if (config && config.observationSite.observerPlanet == '地球') {
             const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
+            const horizontal = this.coordinateConverter.equatorialToHorizontal(
+                lstLat, coords
+            );
             infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
         }
+
         // 等級
         const magnitude = star.getMagnitude();
         if (magnitude != null) {
             infoText += `等級: ${magnitude}<br>`;
         }
+
         objectInfoTextElement.innerHTML = infoText;
+
         return;
     }
+        */
     static generateConstellationInfo(objectInfoTextElement, data) {
         let infoText = '';
         infoText += `日本語名: ${data.JPNname}座<br>`;
