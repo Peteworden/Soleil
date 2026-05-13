@@ -1,6 +1,7 @@
+import { RaDec } from '../core/coordinates/index.js';
 import { SolarSystemPositionCalculator } from '../core/SolarSystemPositionCalculator.js';
 import { DataStore } from './DataStore.js';
-import { Cartesian, RaDec } from '../core/coordinates/index.js';
+import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
 
 type SolarObjectType = 'sun' | 'planet' | 'moon' | 'asteroid' | 'comet';
 
@@ -49,8 +50,8 @@ export class SolarSystemObjectBase {
     hiraganaName: string;
     engName: string;
     type: SolarObjectType;
-    xyz: Cartesian; // 日心赤道直交座標
-    raDec: RaDec; // 観測地から見た赤道座標
+    xyz: CartesianCoords; // 日心赤道直交座標
+    raDec: EquatorialCoordinates; // 観測地から見た赤道座標
     distance: number; // 観測地からの距離（au)
     magnitude: number | undefined;
     constructor(data: any) {
@@ -80,11 +81,11 @@ export class SolarSystemObjectBase {
         return this.type;
     }
 
-    getXYZ(): Cartesian {
+    getXYZ(): CartesianCoords {
         return this.xyz;
     }
 
-    getRaDec(): RaDec {
+    getRaDec(): EquatorialCoordinates {
         return this.raDec;
     }
 
@@ -226,7 +227,7 @@ export class SolarSystemDataManager {
         }
     }
 
-    static updateAllData(jd: number, observer: string | Cartesian): void {
+    static updateAllData(jd: number, observer: string | CartesianCoords): void {
         SolarSystemPositionCalculator.updateAllData(this.solarObjects, jd, observer);
     }
 
@@ -291,7 +292,8 @@ export class SolarSystemDataManager {
         const latitude = (window as any).config.observationSite.latitude;
         const siderealTime = (window as any).config.siderealTime;
         const lstLat = { lst: siderealTime, lat: latitude };
-        const sunAltitude = sunRaDec.toAzAlt(lstLat).alt;
+        // const sunAltitude = sunRaDec.toAzAlt(lstLat).alt;
+        const sunAltitude = RaDec.toAzalt(sunRaDec, lstLat).alt;
         let twilight = '';
         if (sunAltitude > -0.84) {
             twilight = '昼';

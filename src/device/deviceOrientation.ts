@@ -1,3 +1,4 @@
+import { AzAlt, CanvasRaDec } from "../core/coordinates/index.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 
 export interface DeviceOrientationData {
@@ -182,17 +183,19 @@ export class DeviceOrientationManager {
         const coordinateConverter = new CoordinateConverter();
         if (coordinateConverter) {
             const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ra: 0, dec: 0}, this.orientationData);
-            const centerRaDec = coordinateConverter.horizontalToEquatorial(
-                lstLat, centerHorizontal
-            );
+            // const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ra: 0, dec: 0}, this.orientationData);
+            const centerHorizontal = CanvasRaDec.toAzAlt_Live({ra: 0.0, dec: 0.0}, this.orientationData);
+            // const centerRaDec = coordinateConverter.horizontalToEquatorial(
+            //     lstLat, centerHorizontal
+            // );
+            const centerRadec = AzAlt.toRadec(centerHorizontal, lstLat);
             const updateConfig = (window as any).updateConfig;
             if (updateConfig) {
                 updateConfig({
                     viewState: {
                         ...(window as any).config.viewState,
-                        centerRA: centerRaDec.ra,
-                        centerDec: centerRaDec.dec,
+                        centerRA: centerRadec.ra,
+                        centerDec: centerRadec.dec,
                         centerAz: centerHorizontal.az,
                         centerAlt: centerHorizontal.alt
                     }

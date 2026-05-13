@@ -1,76 +1,112 @@
-import { asindeg } from "../mathUtils.js";
-import { RaDec } from "./RaDec.js";
-import { AzAlt } from "./AzAlt.js";
-import { RAD_TO_DEG } from '../../utils/constants.js';
+// import { asindeg } from "../mathUtils.js";
+// import { RaDec, AzAlt } from "./index.js";
+// import { RAD_TO_DEG } from '../../utils/constants.js';
 
-export class Cartesian {
-    x: number;
-    y: number;
-    z: number;
-    constructor(x: number, y: number, z: number) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-    }
+import { asindeg } from "../../core/mathUtils.js";
+import { CartesianCoords, EquatorialCoordinates, HorizontalCoordinates } from "../../types";
+import { RAD_TO_DEG } from "../../utils/constants.js";
 
-    add(other: Cartesian): Cartesian {
-        return new Cartesian(this.x + other.x, this.y + other.y, this.z + other.z);
-    }
 
-    subtract(other: Cartesian): Cartesian {
-        return new Cartesian(this.x - other.x, this.y - other.y, this.z - other.z);
-    }
+// export class CartesianCoords {
+//     x: number;
+//     y: number;
+//     z: number;
+//     constructor(x: number, y: number, z: number) {
+//         this.x = x;
+//         this.y = y;
+//         this.z = z;
+//     }
 
-    multiply(scalar: number): Cartesian {
-        return new Cartesian(this.x * scalar, this.y * scalar, this.z * scalar);
+export function add(xyz1: CartesianCoords, xyz2: CartesianCoords): CartesianCoords {
+    return {
+        x: xyz1.x + xyz2.x,
+        y: xyz1.y + xyz2.y,
+        z: xyz1.z + xyz2.z,
     }
+}
 
-    distance(): number {
-        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+export function subtract(xyz1: CartesianCoords, xyz2: CartesianCoords): CartesianCoords {
+    return {
+        x: xyz1.x - xyz2.x,
+        y: xyz1.y - xyz2.y,
+        z: xyz1.z - xyz2.z,
     }
+}
 
-    toRaDec(): RaDec {
-        const distance = this.distance();
-        const dec = asindeg(this.z / distance);
-        const ra = Math.atan2(this.y, this.x) * RAD_TO_DEG;
-        return new RaDec((ra + 360) % 360, dec);
+// multiply(scalar: number): CartesianCoords {
+//     return new CartesianCoords(this.x * scalar, this.y * scalar, this.z * scalar);
+// }
+export function multiply(xyz: CartesianCoords, k: number): CartesianCoords {
+    return {
+        x: xyz.x * k,
+        y: xyz.y * k,
+        z: xyz.z * k
     }
+}
 
-    toAzAlt(): AzAlt {
-        const distance = this.distance();
-        const alt = asindeg(this.z / distance);
-        const az = Math.atan2(this.y, this.x) * RAD_TO_DEG;
-        return new AzAlt((az + 360) % 360, alt);
-    }
+export function distance(xyz: CartesianCoords): number {
+    const {x, y, z} = xyz;
+    return Math.sqrt(x * x + y * y + z * z);
+}
 
-    rotateX(angle: number): Cartesian {
-        const sin = Math.sin(angle);
-        const cos = Math.cos(angle);
-        const ans = new Cartesian(
-            this.x,
-            cos*this.y-sin*this.z,
-            sin*this.y+cos*this.z
-        );
-        return ans;
+export function toRaDec(xyz: CartesianCoords): EquatorialCoordinates {
+    const dist = distance(xyz);
+    const dec = asindeg(xyz.z / dist);
+    const ra = Math.atan2(xyz.y, xyz.x) * RAD_TO_DEG;
+    return {ra: (ra + 360) % 360, dec};
+}
+
+export function toAzAlt(xyz: CartesianCoords): HorizontalCoordinates {
+    const dist = distance(xyz);
+    const alt = asindeg(xyz.z / dist);
+    const az = Math.atan2(xyz.y, xyz.x) * RAD_TO_DEG;
+    return {az: (az + 360) % 360, alt};
+}
+
+export function rotateX(xyz: CartesianCoords, angle: number): CartesianCoords {
+    const sin = Math.sin(angle);
+    const cos = Math.cos(angle);
+    // const ans = new CartesianCoords(
+    //     this.x,
+    //     cos*this.y-sin*this.z,
+    //     sin*this.y+cos*this.z
+    // );
+    const ans = {
+        x: xyz.x,
+        y: cos * xyz.y - sin * xyz.z,
+        z: sin * xyz.y + cos * xyz.z
     }
-    rotateY(angle: number): Cartesian {
-        const sin = Math.sin(angle);
-        const cos = Math.cos(angle);
-        const ans = new Cartesian(
-            cos*this.x+sin*this.z,
-            this.y,
-            -sin*this.x+cos*this.z
-        );
-        return ans;
+    return ans;
+}
+
+export function rotateY(xyz: CartesianCoords, angle: number): CartesianCoords {
+    const sin = Math.sin(angle);
+    const cos = Math.cos(angle);
+    // const ans = new CartesianCoords(
+    //     cos*this.x+sin*this.z,
+    //     this.y,
+    //     -sin*this.x+cos*this.z
+    // );
+    const ans = {
+        x: cos * xyz.x + sin * xyz.z,
+        y: xyz.y,
+        z: -sin * xyz.x + cos * xyz.z
     }
-    rotateZ(angle: number): Cartesian {
-        const sin = Math.sin(angle);
-        const cos = Math.cos(angle);
-        const ans = new Cartesian(
-            cos*this.x-sin*this.y,
-            sin*this.x+cos*this.y,
-            this.z
-        );
-        return ans;
+    return ans;
+}
+
+export function rotateZ(xyz: CartesianCoords, angle: number): CartesianCoords {
+    const sin = Math.sin(angle);
+    const cos = Math.cos(angle);
+    // const ans = new CartesianCoords(
+    //     cos*this.x-sin*this.y,
+    //     sin*this.x+cos*this.y,
+    //     this.z
+    // );
+    const ans = {
+        x: cos * xyz.x - sin * xyz.y,
+        y: sin * xyz.x + cos * xyz.y,
+        z: xyz.z
     }
+    return ans;
 }

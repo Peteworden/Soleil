@@ -2,12 +2,13 @@ import { Asteroid, Sun, Moon, MinorObject, Planet, SolarSystemObjectBase, isPlan
 import { COS_EPSL, DEG_TO_RAD, EARTH_RADIUS_TO_AU, EPSILON, KM_TO_AU, RAD_TO_DEG, SIN_EPSL } from '../utils/constants.js';
 import { acosdeg, acosrad } from './mathUtils.js';
 import { Cartesian, RaDec } from './coordinates/index.js';
+import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
 
 /**
  * observerは観測者がいる天体の名前か日心直交座標
  */
 export class SolarSystemPositionCalculator {
-    static updateAllData(objects: SolarSystemObjectBase[], jd: number, observer: string | Cartesian): void {
+    static updateAllData(objects: SolarSystemObjectBase[], jd: number, observer: string | CartesianCoords): void {
         if (objects.length === 0) {
             console.warn('天体データがありません');
             return;
@@ -72,7 +73,7 @@ export class SolarSystemPositionCalculator {
      * @param observer 
      * @returns 
      */
-    static oneObjectData(objects0: SolarSystemObjectBase[], objName: string, jd: number, observer: string | Cartesian): SolarSystemObjectBase | undefined {
+    static oneObjectData(objects0: SolarSystemObjectBase[], objName: string, jd: number, observer: string | CartesianCoords): SolarSystemObjectBase | undefined {
         if (objects0.length === 0) {
             console.warn('天体データがありません');
             return undefined;
@@ -142,21 +143,21 @@ export class SolarSystemPositionCalculator {
      */
     private static updateObjectRadecDistanceMagnitude(
         obj: SolarSystemObjectBase, jd: number,
-        observerBody: string | undefined, observerPosition: Cartesian,
+        observerBody: string | undefined, observerPosition: CartesianCoords,
         latitude: number | undefined, siderealTime: number | undefined,
     ): void {
-        let xyz: Cartesian = obj.xyz.subtract(observerPosition); // observerから見た座標
+        let xyz: CartesianCoords = Cartesian.subtract(obj.xyz, observerPosition); // observerから見た座標
         if (observerBody == '地球' && latitude && siderealTime) {
             const latRad = latitude * DEG_TO_RAD;
-            const obsOnEarth = new Cartesian(
-                Math.cos(latRad) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU,
-                Math.cos(latRad) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU,
-                Math.sin(latRad) * EARTH_RADIUS_TO_AU,
-            );
-            xyz = xyz.subtract(obsOnEarth);
+            const obsOnEarth = {
+                x: Math.cos(latRad) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU,
+                y: Math.cos(latRad) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU,
+                z: Math.sin(latRad) * EARTH_RADIUS_TO_AU,
+            };
+            xyz = Cartesian.subtract(xyz, obsOnEarth);
         }
-        obj.raDec = xyz.toRaDec().precess(undefined, 'j2000', jd);
-        obj.distance = xyz.distance();
+        obj.raDec = RaDec.precession(Cartesian.toRaDec(xyz), undefined, 'j2000', jd);
+        obj.distance = Cartesian.distance(xyz);
         this.updateMagnitude(obj, observerBody, observerPosition);
     }
 
@@ -165,13 +166,13 @@ export class SolarSystemPositionCalculator {
      * https://arxiv.org/abs/1808.01973
      * Computing Apparent Planetary Magnitudes for The Astronomical Almanac
      */
-    private static updateMagnitude(obj: SolarSystemObjectBase, observerBody: string | undefined, observerPosition: Cartesian): void {
-        if ((observerBody && obj.jpnName === observerBody) || obj.xyz.subtract(observerPosition).distance() < 0.01) {
+    private static updateMagnitude(obj: SolarSystemObjectBase, observerBody: string | undefined, observerPosition: CartesianCoords): void {
+        if ((observerBody && obj.jpnName === observerBody) || Cartesian.distance(Cartesian.subtract(obj.xyz, observerPosition)) < 0.01) {
             obj.magnitude = undefined;
             return;
         }
-        const sun_obs = observerPosition.distance();
-        const sun_pln = obj.xyz.distance();
+        const sun_obs = Cartesian.distance(observerPosition);
+        const sun_pln = Cartesian.distance(obj.xyz);
         const obs_pln = obj.distance;
         if (obj.type === 'sun') {
             obj.magnitude = -26.74;
@@ -255,7 +256,7 @@ export class SolarSystemPositionCalculator {
      */
     static calculateXYZ(object: SolarSystemObjectBase, jd: number) {
         if (isSun(object)) {
-            object.xyz = new Cartesian(0, 0, 0);
+            object.xyz = {x: 0.0, y: 0.0, z: 0.0};
         } else if (isMoon(object)) {
             const latitude = (window as any).config.observationSite.latitude;
             const siderealTime = (window as any).config.siderealTime;
@@ -275,7 +276,7 @@ export class SolarSystemPositionCalculator {
             }
         } else {
             console.warn(`${object}の座標計算が未実装です`);
-            return new Cartesian(0, 0, 0);
+            return {x: 0.0, y: 0.0, z: 0.0};
         }
     }
     
@@ -313,7 +314,7 @@ export class SolarSystemPositionCalculator {
         const x = Px * x0 + Qx * y0;
         const y = Py * x0 + Qy * y0;
         const z = Pz * x0 + Qz * y0;
-        planet.xyz = new Cartesian(x, y, z);
+        planet.xyz = {x, y, z};
     }
 
     // 月の地心座標
@@ -373,7 +374,7 @@ export class SolarSystemPositionCalculator {
         const x = Math.cos(lat_moon) * Math.cos(lon_moon) * dist_au; //au
         const y = (-Math.sin(lat_moon) * SIN_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * COS_EPSL) * dist_au; //au
         const z = (Math.sin(lat_moon) * COS_EPSL + Math.cos(lat_moon) * Math.sin(lon_moon) * SIN_EPSL) * dist_au; //au
-        moon.xyz = new Cartesian(x, y, z);
+        moon.xyz = {x, y ,z};
         moon.Ms = Ms;
         moon.ws = ws;
         moon.lon_moon = lon_moon;
@@ -415,7 +416,7 @@ export class SolarSystemPositionCalculator {
         const y = Py * x0 + Qy * y0;
         const z = Pz * x0 + Qz * y0;
 
-        minorObject.xyz = new Cartesian(x, y, z);
+        minorObject.xyz = {x, y ,z};
     }
 
     static calculateParabolicOrbitPositions(minorObject: MinorObject, jd: number) {
@@ -430,7 +431,7 @@ export class SolarSystemPositionCalculator {
         const x = q * Px * (1 - tanv2**2) + 2 * q * Qx * tanv2;
         const y = q * Py * (1 - tanv2**2) + 2 * q * Qy * tanv2;
         const z = q * Pz * (1 - tanv2**2) + 2 * q * Qz * tanv2;
-        minorObject.xyz = new Cartesian(x, y, z);
+        minorObject.xyz = {x, y, z};
     }
 
     static calculateHyperbolicOrbitPositions(minorObject: MinorObject, jd: number) {
@@ -462,7 +463,7 @@ export class SolarSystemPositionCalculator {
         const x = coefP * Px + coefQ * Qx;
         const y = coefP * Py + coefQ * Qy;
         const z = coefP * Pz + coefQ * Qz;
-        minorObject.xyz = new Cartesian(x, y, z);
+        minorObject.xyz = {x, y ,z};
     }
 
     private static calculatePQ(inclDec: number, nodeDec: number, periDec: number): {Px: number, Qx: number, Py: number, Qy: number, Pz: number, Qz: number} {
@@ -516,17 +517,17 @@ export class SolarSystemPositionCalculator {
             "Gan": ganymede,
             "Cal": callisto,
         }
-        const jupiterObservingCartesian = jupiter.getRaDec().precess(undefined, jd, 'j2000').toCartesian(jupiter.getDistance());
-        const galileoRaDecs: { [key: string]: RaDec } = {};
+        const jupiterObservingCartesian = RaDec.toCartesian(RaDec.precession(jupiter.getRaDec(), undefined, jd, 'j2000'), jupiter.getDistance());
+        const galileoRaDecs: { [key: string]: EquatorialCoordinates } = {};
         for (const [name, moon] of Object.entries(galileo)) {
             const moonJupitercenEclpXyz = moon.map(([A1, T1, phi1, A2, T2, phi2, C]) => doubleSin(A1, T1, phi1, A2, T2, phi2, C));
-            const moonJupitercenRaDecCartesian = new Cartesian(
-                moonJupitercenEclpXyz[0],
-                moonJupitercenEclpXyz[1],
-                moonJupitercenEclpXyz[2]
-            ).rotateX(EPSILON);
-            const moonRaDecJ2000 = moonJupitercenRaDecCartesian.add(jupiterObservingCartesian).toRaDec();
-            galileoRaDecs[name] = moonRaDecJ2000.precess(undefined, 'j2000', jd);
+            const moonJupitercenRaDecCartesian = Cartesian.rotateX({
+                x: moonJupitercenEclpXyz[0],
+                y: moonJupitercenEclpXyz[1],
+                z: moonJupitercenEclpXyz[2]
+            }, EPSILON);
+            const moonRaDecJ2000 = Cartesian.toRaDec(Cartesian.add(moonJupitercenRaDecCartesian, jupiterObservingCartesian));
+            galileoRaDecs[name] = RaDec.precession(moonRaDecJ2000, undefined, 'j2000', jd);
         }
         return galileoRaDecs;
     }    
@@ -544,17 +545,17 @@ export class SolarSystemPositionCalculator {
         const moons = {
             "Titan": titan,
         }
-        const saturnObservingCartesian = saturn.getRaDec().precess(undefined, jd, 'j2000').toCartesian(saturn.getDistance());
-        const saturnMoonRaDecs: { [key: string]: RaDec } = {};
+        const saturnObservingCartesian = RaDec.toCartesian(RaDec.precession(saturn.getRaDec(), undefined, jd, 'j2000'), saturn.getDistance());
+        const saturnMoonRaDecs: { [key: string]: EquatorialCoordinates } = {};
         for (const [name, moon] of Object.entries(moons)) {
             const moonSaturncenEclpXyz = moon.map(([A1, T1, phi1, A2, T2, phi2, C]) => doubleSin(A1, T1, phi1, A2, T2, phi2, C));
-            const moonSaturncenRaDecCartesian = new Cartesian(
-                moonSaturncenEclpXyz[0],
-                moonSaturncenEclpXyz[1],
-                moonSaturncenEclpXyz[2]
-            ).rotateX(EPSILON);
-            const moonRaDecJ2000 = moonSaturncenRaDecCartesian.add(saturnObservingCartesian).toRaDec();
-            saturnMoonRaDecs[name] = moonRaDecJ2000.precess(undefined, 'j2000', jd);
+            const moonSaturncenRaDecCartesian = Cartesian.rotateX({
+                x: moonSaturncenEclpXyz[0],
+                y: moonSaturncenEclpXyz[1],
+                z: moonSaturncenEclpXyz[2]
+            }, EPSILON);
+            const moonRaDecJ2000 = Cartesian.toRaDec(Cartesian.add(moonSaturncenRaDecCartesian, saturnObservingCartesian));
+            saturnMoonRaDecs[name] = RaDec.precession(moonRaDecJ2000, undefined, 'j2000', jd);
         }
         return saturnMoonRaDecs;
     }

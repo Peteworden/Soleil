@@ -124,6 +124,27 @@ export class AstronomicalCalculator {
         return greenwichSiderealTime + longitude * DEG_TO_RAD;
     }
 
+    static precessionAngle(time1: number | string, time2: number | string): number {
+        if (typeof time1 == 'string') {
+            if (time1 == 'j2000') {
+                time1 = 2451545.0;
+            } else {
+                console.warn('precessionAngle: time1 is not a valid string');
+                return 0;
+            }
+        }
+        if (typeof time2 == 'string') {
+            if (time2 == 'j2000') {
+                time2 = 2451545.0;
+            } else {
+                console.warn('precessionAngle: time2 is not a valid string');
+                return 0;
+            }
+        }
+        const timeDiff = (time2 - time1) / 36525.0;
+        return 5029.0 / 3600.0 * timeDiff * DEG_TO_RAD;
+    }
+
     static limitingMagnitude(config: StarChartConfig): number {
         const key1 = config.viewState.starSizeKey1;
         const key2 = config.viewState.starSizeKey2;

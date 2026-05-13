@@ -4,6 +4,7 @@ import { DataStore } from '../models/DataStore.js';
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { CoordinateConverter } from '../core/coordinates.js';
 import { ObjectInfoController } from './ObjectInfoController.js';
+import { Cartesian, RaDec } from '../core/coordinates/index.js';
 
 interface SearchResult {
     type: 'planet' | 'constellation' | 'messier' | 'rec' | 'ngc' | 'ic' | 'sh2' | 'starName';
@@ -490,8 +491,8 @@ export class SearchController {
             position = coordinateConverter.precessionEquatorial(position0, undefined, 'j2000', config.displayTime.jd);
         }
 
-        const start_vector = coordinateConverter.equatorialToCartesian({ ra: config.viewState.centerRA, dec: config.viewState.centerDec });
-        const end_vector = coordinateConverter.equatorialToCartesian(position);
+        const start_vector = RaDec.toCartesian({ ra: config.viewState.centerRA, dec: config.viewState.centerDec });
+        const end_vector = RaDec.toCartesian(position);
         const steps = 30;
         const path_ras: number[] = [];
         const path_decs: number[] = [];
@@ -504,8 +505,8 @@ export class SearchController {
                 y: start_vector.y + (end_vector.y - start_vector.y) * i / steps,
                 z: start_vector.z + (end_vector.z - start_vector.z) * i / steps
             };
-            const new_position = coordinateConverter.cartesianToEquatorial(division_vector);
-            const horizontal = coordinateConverter.equatorialToHorizontal(lstLat, { ra: new_position.ra, dec: new_position.dec });
+            const new_position = Cartesian.toRaDec(division_vector);
+            const horizontal = RaDec.toAzalt({ ra: new_position.ra, dec: new_position.dec }, lstLat);
             path_ras.push(new_position.ra);
             path_decs.push(new_position.dec);
             path_azs.push(horizontal.az);

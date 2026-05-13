@@ -1,4 +1,4 @@
-import { Cartesian } from "../core/coordinates/index.js";
+// import { Cartesian } from "../core/coordinates/index.js";
 
 export interface EquatorialCoordinates {
     ra: number;  // 赤経（度）
@@ -10,16 +10,31 @@ export interface HorizontalCoordinates {
     alt: number; // 高度（度）
 }
 
-export interface CartesianCoordinates {
+export interface CartesianCoords {
     x: number;
     y: number;
     z: number;
 }
 
-export interface LstLat {
-    lst: number;
-    lat: number;
+export interface CanvasRadecCoords {
+    ra: number,
+    dec: number
 }
+
+export interface CanvasXy {
+    x: number,
+    y: number
+}
+
+export interface LstLat {
+    lst: number; // local sidereal time
+    lat: number; // latitude
+}
+
+export type TransformModeConfig =
+    | { mode: 'AEP'; center: EquatorialCoordinates; location: LstLat}
+    | { mode: 'view'; center: HorizontalCoordinates; location: LstLat }
+    | { mode: 'live' | 'ar'; center?: never; location: LstLat; orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number } };
 
 export interface HipData {
     raArray: Float32Array;  // 赤経
@@ -172,6 +187,11 @@ export interface DisplaySettings {
     // showSatelliteOrbits: boolean;
 }
 
+export interface Fov {
+    ra: number,
+    dec: number
+}
+
 export interface ViewState {
     centerRA: number;
     centerDec: number;
@@ -189,7 +209,7 @@ export interface ObservationSite {
     latitude: number;      // 緯度（度）
     longitude: number;     // 経度（度）
     timezone: number;      // タイムゾーン（UTCからの時差)
-    heliocentric?: Cartesian; // 日心直交座標
+    heliocentric?: CartesianCoords; // 日心直交座標
 }
 
 export interface DisplayTime {
@@ -246,38 +266,4 @@ export interface StarInformation {
     x: number;
     y: number;
     data: any;
-}
-
-// 座標系の型ガード関数
-export function isEquatorialCoordinates(obj: any): obj is EquatorialCoordinates {
-    return obj && typeof obj.ra === 'number' && typeof obj.dec === 'number';
-}
-
-export function isHorizontalCoordinates(obj: any): obj is HorizontalCoordinates {
-    return obj && typeof obj.az === 'number' && typeof obj.alt === 'number';
-}
-
-export function isCartesianCoordinates(obj: any): obj is CartesianCoordinates {
-    return obj && typeof obj.x === 'number' && typeof obj.y === 'number' && typeof obj.z === 'number';
-}
-
-// 座標系のユーティリティ型
-export type CoordinateSystem = 'equatorial' | 'horizontal';
-
-// 座標系の変換結果型
-export interface CoordinateConversionResult<T> {
-    coordinates: T;
-    system: CoordinateSystem;
-    timestamp?: number;
-}
-
-// 座標系の判定関数
-export function getCoordinateSystem(coords: EquatorialCoordinates | HorizontalCoordinates): CoordinateSystem {
-    if (isEquatorialCoordinates(coords)) {
-        return 'equatorial';
-    } else if (isHorizontalCoordinates(coords)) {
-        return 'horizontal';
-    } else {
-        throw new Error('Unknown coordinate system');
-    }
 }

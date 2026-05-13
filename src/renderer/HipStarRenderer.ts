@@ -1,8 +1,9 @@
-import { HipData, StarChartConfig, StarInformation } from "../types/index.js";
+import { CanvasXy, HipData, StarChartConfig, StarInformation } from "../types/index.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { ColorManager } from "./colorManager.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
+import { RaDec } from "../core/coordinates/index.js";
 
 export class HipStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
@@ -30,6 +31,9 @@ export class HipStarRenderer {
         if (this.config.displaySettings.usedStar == 'noStar') return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const currentJd = this.config.displayTime.jd;
+        
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
 
         // 歳差運動補正をキャッシュ
         let precessionAngle: number;
@@ -60,15 +64,13 @@ export class HipStarRenderer {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
                 const coords = { ra : cachedStars.raArray[i], dec: cachedStars.decArray[i] };
-                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-                if (!screenXY[0]) continue;
+                const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                if (!ifin) continue;
                 const color = this.hipStarsColors[i];
                 starInformation.push({
                     type: 'hipStar',
-                    x: screenXY[1][0],
-                    y: screenXY[1][1],
-                    // x: screenXY[1].x,
-                    // y: screenXY[1].y,
+                    x: xy.x,
+                    y: xy.y,
                     data: {
                         ra: coords.ra,
                         dec: coords.dec,
@@ -76,22 +78,22 @@ export class HipStarRenderer {
                         bv: cachedStars.bvArray[i]
                     }
                 });
-                this.drawHipStar(mag, hipStars.bvArray[i], screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                this.drawHipStar(mag, hipStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
             }
         } else {
             for (let i = 0; i < cachedStars.count; i++) {
                 if (cachedStars.magArray[i] > limitingMagnitude) continue;
                 const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
-                const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, false, this.orientationData);
-                if (!screenXY[0]) continue;
+                const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                if (!ifin) continue;
                 const color = this.hipStarsColors[i];
-                this.drawHipStar(cachedStars.magArray[i], cachedStars.bvArray[i], screenXY[1], limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                this.drawHipStar(cachedStars.magArray[i], cachedStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
             }
         }
     }
 
     drawHipStar(
-        mag: number, bv: number, [x, y]: [number, number],
+        mag: number, bv: number, {x, y}: CanvasXy,
         limitingMagnitude: number, zeroMagSize: number, limitMagnitudeForWhiten: number,
         blurRadii: number[], colorRatios: number[], opacities: string[], starColor: string, starColorRGB: [number, number, number]
     ): void {
@@ -109,7 +111,7 @@ export class HipStarRenderer {
                 this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
                 return;
             } else {
-                console.log(mag, starSize.toFixed(1), bv10Str);
+                // console.log(mag, starSize.toFixed(1), bv10Str);
                 const off = this.createHipStarSprite(starSize, bv, this.colorManager.getColor('star'), 2.5);
                 this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
                 return;

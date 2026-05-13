@@ -22,6 +22,7 @@ import { CoordinateConverter } from './core/coordinates.js';
 import { DataLoader } from './loaders/DataLoader.js';
 import { DeviceOrientationManager } from './device/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
+import { AzAlt, RaDec } from './core/coordinates/index.js';
 
 const news: { time: string, title: string, text: string }[] = [
     { time: '2026-04-16T21:00:00', title: 'C/2025 R3 (PANSTARRS)', text: 'PANSTARRS彗星（C/2025 R3）を追加しました。明け方の東の空、双眼鏡で見えるかも！？' },
@@ -236,19 +237,22 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
 
     if (noLoad) {
         const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
-        const converter = new CoordinateConverter();
+        // const converter = new CoordinateConverter();
+        const loc = { lst: siderealTime, lat: observationSite.latitude }
         if (displaySettings.mode === 'AEP') {
-            const centerHorizontal = converter.equatorialToHorizontal(
-                { lst: siderealTime, lat: observationSite.latitude },
-                { ra: viewState.centerRA, dec: viewState.centerDec }
-            );
+            // const centerHorizontal = converter.equatorialToHorizontal(
+            //     { lst: siderealTime, lat: observationSite.latitude },
+            //     { ra: viewState.centerRA, dec: viewState.centerDec }
+            // );
+            const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
             viewState.centerAz = centerHorizontal.az;
             viewState.centerAlt = centerHorizontal.alt;
         } else if (displaySettings.mode === 'view') {
-            const centerEquatorial = converter.horizontalToEquatorial(
-                { lst: siderealTime, lat: observationSite.latitude },
-                { az: viewState.centerAz, alt: viewState.centerAlt }
-            );
+            // const centerEquatorial = converter.horizontalToEquatorial(
+            //     { lst: siderealTime, lat: observationSite.latitude },
+            //     { az: viewState.centerAz, alt: viewState.centerAlt }
+            // );
+            const centerEquatorial =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
         }
@@ -368,27 +372,31 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
         });
     }
 
-    const converter = new CoordinateConverter();
+    // const converter = new CoordinateConverter();
+    const loc = { lst: siderealTime, lat: observationSite.latitude }
     if (raOverride != null || decOverride != null) {
-        const centerHorizontal = converter.equatorialToHorizontal(
-            { lst: siderealTime, lat: observationSite.latitude },
-            { ra: viewState.centerRA, dec: viewState.centerDec }
-        );
+        // const centerHorizontal = converter.equatorialToHorizontal(
+        //     { lst: siderealTime, lat: observationSite.latitude },
+        //     { ra: viewState.centerRA, dec: viewState.centerDec }
+        // );
+        const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
         viewState.centerAz = centerHorizontal.az;
         viewState.centerAlt = centerHorizontal.alt;
     } else {
         if (displaySettings.mode === 'AEP') {
-            const centerHorizontal = converter.equatorialToHorizontal(
-                { lst: siderealTime, lat: observationSite.latitude },
-                { ra: viewState.centerRA, dec: viewState.centerDec }
-            );
+            // const centerHorizontal = converter.equatorialToHorizontal(
+            //     { lst: siderealTime, lat: observationSite.latitude },
+            //     { ra: viewState.centerRA, dec: viewState.centerDec }
+            // );
+            const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
             viewState.centerAz = centerHorizontal.az;
             viewState.centerAlt = centerHorizontal.alt;
         } else if (displaySettings.mode === 'view') {
-            const centerEquatorial = converter.horizontalToEquatorial(
-                { lst: siderealTime, lat: observationSite.latitude },
-                { az: viewState.centerAz, alt: viewState.centerAlt }
-            );
+            // const centerEquatorial = converter.horizontalToEquatorial(
+            //     { lst: siderealTime, lat: observationSite.latitude },
+            //     { az: viewState.centerAz, alt: viewState.centerAlt }
+            // );
+            const centerEquatorial =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
         }

@@ -1,18 +1,24 @@
+import { CoordinateConverter } from "../core/coordinates.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { CelestialObject, MessierObject } from "../models/CelestialObject.js";
-import { EquatorialCoordinates, ObjectInformation, StarChartConfig } from "../types/index.js";
+import { EquatorialCoordinates, Fov, ObjectInformation, StarChartConfig, TransformModeConfig } from "../types/index.js";
 import { ColorManager } from "./colorManager.js";
 
 export class DSORenderer {
     private imageCache: { [key: string]: HTMLImageElement } = {};
     private imageCacheNames: string[] = [];
+    private transformConfig: TransformModeConfig;
+    private fov: Fov;
     constructor(
         private canvas: HTMLCanvasElement,
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
+        private coordinateConverter: CoordinateConverter,
         private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
     ) {
+        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
     }
 
     setImageCache(imageCache: { [key: string]: HTMLImageElement }): void {
@@ -23,10 +29,12 @@ export class DSORenderer {
     // 天体を描画
     drawDSOObject(object: CelestialObject, category: string, objectInformation: Array<ObjectInformation>, nameCorner?: string): void {
         if (!object.getName() || object.getName() == '') return;
+        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
 
-        const coordsJ2000 = new RaDec(object.getCoordinates().ra, object.getCoordinates().dec);
-        const coords = coordsJ2000.precess(undefined, 'j2000', this.config.displayTime.jd);
-        const screenXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+        const coordsJ2000 = object.getCoordinates();
+        const coords = RaDec.precession(coordsJ2000, undefined, 'j2000', this.config.displayTime.jd);
+        const screenXY = RaDec.toCanvasXYifin(coords, this.fov, this.config.canvasSize, this.transformConfig);
         if (!screenXY[0]) return;
         const {x, y} = screenXY[1];
         const type = object.getType();
@@ -156,14 +164,17 @@ export class DSORenderer {
 
     private drawOverlay(name: string, coords: EquatorialCoordinates, overlay: { width: number, opacity: number }, x: number, y: number, mode: string): void {
         this.ctx.save();
+        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
         const overlaySize = overlay.width * this.canvas.width / this.config.viewState.fieldOfViewRA;
         this.ctx.globalAlpha = overlay.opacity;
         if (mode == 'AEP') {
             this.ctx.drawImage(this.imageCache[name], x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
         } else if (mode == 'view') {
             this.ctx.translate(x, y);
-            const oneDegNorth = new RaDec(coords.ra, Math.min(coords.dec + 1, 89.999999));
-            const oneDegNorthXY = oneDegNorth.toCanvasXYifin(this.config, this.orientationData, true);
+            const oneDegNorth = {ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999)};
+            // const oneDegNorthXY = oneDegNorth.toCanvasXYifin(this.config, this.orientationData, true);
+            const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.fov, this.config.canvasSize, this.transformConfig);
             // const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.config, true, this.orientationData);
             const rotation = Math.atan2(oneDegNorthXY[1].x - x, -oneDegNorthXY[1].y + y);
             this.ctx.rotate(rotation);

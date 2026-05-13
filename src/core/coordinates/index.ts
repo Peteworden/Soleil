@@ -1,5 +1,7 @@
-export * from './RaDec.js';
-export * from './AzAlt.js';
-export * from './Cartesian.js';
+export * as RaDec from './RaDec.js';
+export * as AzAlt from './AzAlt.js';
+export * as Cartesian from './Cartesian.js';
 
-export * from './CanvasRaDec.js';
+export * as CanvasRaDec from './CanvasRaDec.js';
+
+// export * as Radec from './RaDecFns.js'

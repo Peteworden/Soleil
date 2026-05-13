@@ -1,5 +1,5 @@
 import { CelestialObject, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
-import { BayerFlamData, ConstellationData, EquatorialCoordinates, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData } from '../types/index.js';
+import { BayerFlamData, ConstellationData, EquatorialCoordinates, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData, TransformModeConfig, CanvasXy } from '../types/index.js';
 import { CoordinateConverter } from '../core/coordinates.js';
 import { DeviceOrientationData, DeviceOrientationManager } from '../device/deviceOrientation.js';
 import { ColorManager, getColorManager } from './colorManager.js';
@@ -65,7 +65,7 @@ export class CanvasRenderer {
         this.solarSystemRenderer = new SolarSystemRenderer(this.canvas, this.ctx, this.config, this.colorManager, this.coordinateConverter, this.orientationData);
         this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.coordinateConverter, this.colorManager, this.orientationData);
         this.gaiaStarRenderer = new GaiaStarRenderer(this.ctx, this.config, this.coordinateConverter, this.colorManager, this.areaCandidates, this.orientationData);
-        this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
+        this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager, this.coordinateConverter, this.orientationData);
     }
 
     // imageCacheを設定
@@ -150,6 +150,9 @@ export class CanvasRenderer {
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
         }
 
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+
         // tierは0から5
         const tier_range = [180, 90, 60, 40, 30, 30];
         let tierLimit = 3;
@@ -166,11 +169,13 @@ export class CanvasRenderer {
         for (const starName of starNames) {
             if (tierLimit == 1 && starName.tier > 0) continue;
             if (tierLimit == 2 && starName.tier > 1) continue;
-            if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) > tier_range[starName.tier - 1]) continue;
-            const coords = new RaDec(starName.ra, starName.dec).precess(precessionAngle);
-            const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
-            if (!canvasXY[0]) continue;
-            const {x, y} = canvasXY[1];
+            if (Math.max(fov.ra, fov.dec) > tier_range[starName.tier - 1]) continue;
+            // const coords = new RaDec(starName.ra, starName.dec).precess(precessionAngle);
+            const coords = this.coordinateConverter.precessionEquatorial({ra: starName.ra, dec: starName.dec}, precessionAngle);
+            // const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            // const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config, true);
+            const [ifin, {x, y}] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig, true);
+            if (!ifin) continue;
             if (starName.jpnName) {
                 this.ctx.fillText(starName.jpnName, x + 2, y - 2);
             } else {
@@ -188,6 +193,9 @@ export class CanvasRenderer {
         if (!this.config.displaySettings.showBayerFS) return;
         if (this.config.viewState.fieldOfViewRA * this.config.viewState.fieldOfViewDec > 400) return;
 
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+
         this.ctx.save();
         this.ctx.fillStyle = this.colorManager.getColor('text');
         this.ctx.font = '14px serif';
@@ -200,8 +208,10 @@ export class CanvasRenderer {
 
         for (const bayerStar of bayerData) {
             if (!bayerStar.coordinates) continue;
-            const coords = new RaDec(bayerStar.coordinates.ra, bayerStar.coordinates.dec).precess(precessionAngle);
-            const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            // const coords = new RaDec(bayerStar.coordinates.ra, bayerStar.coordinates.dec).precess(precessionAngle);
+            const coords = this.coordinateConverter.precessionEquatorial({ra: bayerStar.coordinates.ra, dec: bayerStar.coordinates.dec}, precessionAngle);
+            // const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            const canvasXY = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
             if (!canvasXY[0]) continue;
 
             const {x, y} = canvasXY[1];
@@ -238,17 +248,20 @@ export class CanvasRenderer {
         const siderealTime = this.config.siderealTime;
         const latitude = this.config.observationSite.latitude;
         const lstLat = { lst: siderealTime, lat: latitude };
-        const mode = this.config.displaySettings.mode;
+        const mode = this.config.displaySettings.mode as 'AEP' | 'view';
 
         const alpha = mode == 'AEP' ? centerRA : centerAz;
         const beta = mode == 'AEP' ? centerDec : centerAlt;
+
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+
         const [
             alphaInterval, betaInterval, alphaCalcInterval, betaCalcInterval
         ] = getGridIntervals(fieldOfViewRA, fieldOfViewDec, alpha, beta);
         const [minBeta, maxBeta] = getBetaRange(
             lstLat,
-            fieldOfViewRA, fieldOfViewDec, centerRA, centerDec, centerAz, centerAlt,
-            mode, this.coordinateConverter, this.orientationData
+            fov, transformConfig, this.coordinateConverter, this.orientationData
         );
         const minBetaLineIdx = Math.floor(minBeta / betaInterval);
         const maxBetaLineIdx = Math.ceil(maxBeta / betaInterval);
@@ -276,9 +289,9 @@ export class CanvasRenderer {
                 for (j = 0; j <= 360 / alphaCalcInterval + 1; j++) {
                     a = j * alphaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, {x, y}] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = RaDec.toCanvasXYifin({ra: a, dec: b}, fov, canvasSize, transformConfig, true);
                     } else if (mode == 'view') {
-                        [ifin, {x, y}] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = AzAlt.toCanvasXYifin({az: a, alt: b}, fov, canvasSize, transformConfig, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -300,9 +313,9 @@ export class CanvasRenderer {
                 for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
                     b = j * betaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, {x, y}] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = RaDec.toCanvasXYifin({ra: a, dec: b}, fov, canvasSize, transformConfig, true);
                     } else if (mode == 'view') {
-                        [ifin, {x, y}] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = AzAlt.toCanvasXYifin({az: a, alt: b}, fov, canvasSize, transformConfig, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -326,9 +339,9 @@ export class CanvasRenderer {
                 for (j = 0; j <= 360 / alphaCalcInterval + 1; j++) {
                     a = j * alphaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, {x, y}] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = RaDec.toCanvasXYifin({ra: a, dec: b}, fov, canvasSize, transformConfig, true);
                     } else if (mode == 'view') {
-                        [ifin, {x, y}] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = AzAlt.toCanvasXYifin({az: a, alt: b}, fov, canvasSize, transformConfig, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -350,9 +363,9 @@ export class CanvasRenderer {
                 for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
                     b = j * betaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, {x, y}] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = RaDec.toCanvasXYifin({ra: a, dec: b}, fov, canvasSize, transformConfig, true);
                     } else if (mode == 'view') {
-                        [ifin, {x, y}] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = AzAlt.toCanvasXYifin({az: a, alt: b}, fov, canvasSize, transformConfig, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -366,8 +379,8 @@ export class CanvasRenderer {
         } else {
             const alphaRange = getAlphaRange(
                 lstLat,
-                fieldOfViewRA, fieldOfViewDec, alpha,
-                mode, this.coordinateConverter, this.orientationData
+                fov, alpha,
+                transformConfig, this.coordinateConverter, this.orientationData
             );
             const minAlphaLineIdx = Math.ceil((alpha - alphaRange) / alphaInterval);
             const maxAlphaLineIdx = Math.floor((alpha + alphaRange) / alphaInterval);
@@ -384,9 +397,9 @@ export class CanvasRenderer {
                 for (j = -maxAlphaCalcIdx; j <= maxAlphaCalcIdx; j++) {
                     a = alpha + j * alphaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, {x, y}] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = RaDec.toCanvasXYifin({ra: a, dec: b}, fov, canvasSize, transformConfig, true);
                     } else if (mode == 'view') {
-                        [ifin, {x, y}] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = AzAlt.toCanvasXYifin({az: a, alt: b}, fov, canvasSize, transformConfig, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -408,9 +421,9 @@ export class CanvasRenderer {
                 for (j = minBetaCalcIdx; j <= maxBetaCalcIdx; j++) {
                     b = j * betaCalcInterval;
                     if (mode == 'AEP') {
-                        [ifin, {x, y}] = new RaDec(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = RaDec.toCanvasXYifin({ra: a, dec: b}, fov, canvasSize, transformConfig, true);
                     } else if (mode == 'view') {
-                        [ifin, {x, y}] = new AzAlt(a, b).toCanvasXYifin(this.config, this.orientationData, true);
+                        [ifin, {x, y}] = AzAlt.toCanvasXYifin({az: a, alt: b}, fov, canvasSize, transformConfig, true);
                     }
                     if (!newLine && this.coordinateConverter.shouldDrawLine(preXY.x, preXY.y, x, y, canvasSize, maxLengthSquared)) {
                         this.ctx.moveTo(preXY.x, preXY.y);
@@ -431,11 +444,15 @@ export class CanvasRenderer {
             this.ctx.fillStyle = this.colorManager.getColor('text');
             for (i = 0; i < 360; i += 45) {
                 const direction = directions[i / 45];
-                const directionRaDec = new AzAlt(i, 0).toRaDec(lstLat);
-                const [ifin, {x, y}] = directionRaDec.toCanvasXYifin(this.config, this.orientationData);
+                // const directionRaDec = new AzAlt(i, 0).toRaDec(lstLat);
+                const directionRadec = AzAlt.toRadec({az: i, alt: 0.0}, lstLat);
+                // const [ifin, {x, y}] = directionRaDec.toCanvasXYifin(this.config, this.orientationData);
+                const [ifin, {x, y}] = RaDec.toCanvasXYifin(directionRadec, fov, canvasSize, transformConfig);
                 if (ifin) {
-                    const directionRaDec2 = new AzAlt(i + 1, 0).toRaDec(lstLat);
-                    const [ifin2, {x: x2, y: y2}] = directionRaDec2.toCanvasXYifin(this.config, this.orientationData, true);
+                    // const directionRaDec2 = new AzAlt(i + 1, 0).toRaDec(lstLat);
+                    const directionRadec2 = AzAlt.toRadec({az: i + 1.0, alt: 0.0}, lstLat);
+                    // const [ifin2, {x: x2, y: y2}] = directionRaDec2.toCanvasXYifin(this.config, this.orientationData, true);
+                    const [ifin2, {x: x2, y: y2}] = RaDec.toCanvasXYifin(directionRadec, fov, canvasSize, transformConfig);
                     this.ctx.save();
                     this.ctx.translate(x, y);
                     this.ctx.rotate(Math.atan2(y2 - y, x2 - x));
@@ -450,25 +467,29 @@ export class CanvasRenderer {
     }
 
     drawPoleMark(): void {
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
         const minFov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
         if (minFov > 20) return;
-        const npScreenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.config, true, this.orientationData);
-        if (npScreenXY[0]) {
+        // const npScreenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: 90 }, this.config, true, this.orientationData);
+        const [ifinNorth, xyNorth] = RaDec.toCanvasXYifin({ ra: 0, dec: 90 }, fov, this.config.canvasSize, transformConfig);
+        if (ifinNorth) {
             if (minFov > 8) {
-                this.poleMark(npScreenXY[1], '天の北極', false);
+                this.poleMark(xyNorth, '天の北極', false);
             } else {
-                this.poleMark(npScreenXY[1], '天の北極', true);
+                this.poleMark(xyNorth, '天の北極', true);
             }
         }
-        const spScreenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.config, true, this.orientationData);
-        if (spScreenXY[0]) {
-            this.poleMark(spScreenXY[1], '天の南極', false);
+        // const spScreenXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: 0, dec: -90 }, this.config, true, this.orientationData);
+        const [ifinSouth, xySouth] = RaDec.toCanvasXYifin({ ra: 0, dec: -90 }, fov, this.config.canvasSize, transformConfig);
+        if (ifinSouth) {
+            this.poleMark(xySouth, '天の南極', false);
         }
     }
 
-    private poleMark(screenXY: [number, number], text: string, ring: boolean = false): void {
+    private poleMark(canvasXY: CanvasXy, text: string, ring: boolean = false): void {
         if (this.config.displaySettings.mode === 'AEP') return;
-        const [x, y] = screenXY;
+        const {x, y} = canvasXY;
         const a = 0.626 // 2025年始の天の北極とポラリスの離角
         const a_canvas = a * this.config.canvasSize.height / this.config.viewState.fieldOfViewDec;
         this.ctx.font = '14px Arial';
@@ -503,17 +524,32 @@ export class CanvasRenderer {
     drawConstellationLines(constellations: ConstellationData[]): void {
         if (constellations.length == 0) return;
         if (!this.config.displaySettings.showConstellationLines) return;
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
         this.ctx.strokeStyle = this.colorManager.getColor('constellationLine');
         this.ctx.lineWidth = 1;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         const maxLengthSquared = this.coordinateConverter.getMaxLineLengthSquared(this.config.canvasSize, this.config.viewState);
         this.ctx.beginPath();
+        let coords1 = {ra: 0.0, dec: 0.0};
+        let coords2 = {ra: 1.0, dec: 1.0};
+        let ifin1 = false;
+        let ifin2 = false;
+        let x1 = 0.0; let y1 = 0.0;
+        let x2 = 0.0; let y2 = 0.0;
         for (const constellation of constellations) {
             for (const line of constellation.lines) {
-                const coords1 = new RaDec(line[0], line[1]).precess(precessionAngle);
-                const coords2 = new RaDec(line[2], line[3]).precess(precessionAngle);
-                const [ifin1, {x: x1, y: y1}] = coords1.toCanvasXYifin(this.config, this.orientationData, true);
-                const [ifin2, {x: x2, y: y2}] = coords2.toCanvasXYifin(this.config, this.orientationData, true);
+                // const coords1 = new RaDec(line[0], line[1]).precess(precessionAngle);
+                // const coords2 = new RaDec(line[2], line[3]).precess(precessionAngle);
+                coords1 = this.coordinateConverter.precessionEquatorial({ra: line[0], dec: line[1]}, precessionAngle);
+                coords2 = this.coordinateConverter.precessionEquatorial({ra: line[2], dec: line[3]}, precessionAngle);
+                // const [ifin1, {x: x1, y: y1}] = coords1.toCanvasXYifin(this.config, this.orientationData, true);
+                // const [ifin2, {x: x2, y: y2}] = coords2.toCanvasXYifin(this.config, this.orientationData, true);
+                // [ifin1, [x1, y1]] = this.coordinateConverter.equatorialToScreenXYifin(coords1, this.config, true, this.orientationData);
+                // [ifin2, [x2, y2]] = this.coordinateConverter.equatorialToScreenXYifin(coords2, this.config, true, this.orientationData);
+                [ifin1, {x: x1, y: y1}] = RaDec.toCanvasXYifin(coords1, fov, this.config.canvasSize, transformConfig, true);
+                [ifin2, {x: x2, y: y2}] = RaDec.toCanvasXYifin(coords2, fov, this.config.canvasSize, transformConfig, true);
+                
                 if (this.coordinateConverter.shouldDrawLine(x1, y1, x2, y2, this.config.canvasSize, maxLengthSquared)) {
                     this.ctx.moveTo(x1, y1);
                     this.ctx.lineTo(x2, y2);
@@ -526,6 +562,8 @@ export class CanvasRenderer {
     writeConstellationNames(constellations: ConstellationData[]): void {
         if (constellations.length == 0) return;
         if (!this.config.displaySettings.showConstellationNames) return;
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
         this.ctx.font = '12px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
@@ -533,8 +571,10 @@ export class CanvasRenderer {
         const siderealTime = (window as any).config.siderealTime;
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', (window as any).config.displayTime.jd);
         for (const constellation of constellations) {
-            const coords = new RaDec(constellation.ra, constellation.dec).precess(precessionAngle);
-            const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            // const coords = new RaDec(constellation.ra, constellation.dec).precess(precessionAngle);
+            const radec = this.coordinateConverter.precessionEquatorial({ra: constellation.ra, dec: constellation.dec}, precessionAngle);
+            // const canvasXY = coords.toCanvasXYifin(this.config, this.orientationData, false);
+            const canvasXY = RaDec.toCanvasXYifin(radec, fov, this.config.canvasSize, transformConfig);
             if (!canvasXY[0]) continue;
             const {x, y} = canvasXY[1];
             this.objectInformation.push({
@@ -609,13 +649,17 @@ export class CanvasRenderer {
     drawMilkyWay(milkyWay: number[][]): void {
         if (milkyWay.length == 0) return;
         if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) < 30) return;
+        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
         const ifins: boolean[] = [];
         const screenXYs: number[][] = [];
         const precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
         for (let i = 0; i < milkyWay.length; i++) {
-            const coords = new RaDec(milkyWay[i][0], milkyWay[i][1]).precess(precessionAngle);
-            const [ifin, {x, y}] = coords.toCanvasXYifin(this.config, this.orientationData, true);
+            // const coords = new RaDec(milkyWay[i][0], milkyWay[i][1]).precess(precessionAngle);
+            // const [ifin, {x, y}] = coords.toCanvasXYifin(this.config, this.orientationData, true);
+            const radec = this.coordinateConverter.precessionEquatorial({ra: milkyWay[i][0], dec: milkyWay[i][1]}, precessionAngle);
             // const [ifin, [x, y]] = this.coordinateConverter.equatorialToScreenXYifin({ ra: milkyWay[i][0], dec: milkyWay[i][1] }, this.config, true, this.orientationData);
+            const [ifin, {x, y}] = RaDec.toCanvasXYifin(radec, fov, this.config.canvasSize, transformConfig);
             ifins.push(ifin);
             screenXYs.push([x, y]);
         }
@@ -644,6 +688,9 @@ export class CanvasRenderer {
     }
 
     private areaCandidates(): number[][] {
+        const mode0 = this.config.displaySettings.mode;
+        if (mode0 != 'AEP' && mode0 != "view") return [];
+        const conf = this.coordinateConverter.chartConfigToTransformConfig(this.config);
         // キャッシュをチェック（設定が変更されていない場合）
         const currentTime = Date.now();
         if (this.areaCandidatesCache &&
@@ -653,7 +700,7 @@ export class CanvasRenderer {
         const areaCandidates = getAreaCandidates(
             { lst: this.config.siderealTime, lat: this.config.observationSite.latitude },
             this.config.viewState, this.config.displayTime.jd,
-            this.config.displaySettings.mode, this.coordinateConverter
+            conf, this.coordinateConverter
         );
         // キャッシュを更新
         this.areaCandidatesCache = {

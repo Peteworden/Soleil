@@ -4,6 +4,7 @@ import { Asteroid, Comet, Moon, Planet, Sun } from "../models/SolarSystemObjects
 import { ConstellationData } from "types/index.js";
 import { getColorManager } from "../renderer/colorManager.js";
 import { AU_TO_KM } from "../utils/constants.js";
+import { RaDec } from "../core/coordinates/index.js";
 
 interface ObjectInfo {
     name: string;
@@ -193,8 +194,9 @@ export class ObjectInfoController {
         
         if (config && config.observationSite.observerPlanet == '地球') {
             const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            // const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
+            const azalt = RaDec.toAzalt(coords, lstLat);
+            infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
 
         // 等級
@@ -256,8 +258,8 @@ export class ObjectInfoController {
         
         if (config && config.observationSite.observerPlanet == '地球') {
             const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, coords);
-            infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+            const azalt = RaDec.toAzalt(coords, lstLat);
+            infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
 
         // 明るさ
@@ -334,8 +336,9 @@ export class ObjectInfoController {
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
             if (config.observationSite.observerPlanet == '地球') {
                 const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-                const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, planetData.raDec);
-                infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+                // const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, planetData.raDec);
+                const azalt = RaDec.toAzalt(planetData.raDec, lstLat);
+                infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
             }
         }
 
@@ -389,8 +392,9 @@ export class ObjectInfoController {
             infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
             if (config.observationSite.observerPlanet == '地球') {
                 const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-                const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, data.raDec);
-                infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+                // const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, data.raDec);
+                const azalt = RaDec.toAzalt(data.raDec, lstLat);
+                infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
             }
         }
 
@@ -421,8 +425,8 @@ export class ObjectInfoController {
             console.log(config.observationSite.observerPlanet);
             if (config.observationSite.observerPlanet == '地球') {
                 const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-                const horizontal = this.coordinateConverter.equatorialToHorizontal(lstLat, data.raDec);
-                infoText += `方位: ${horizontal.az.toFixed(1)}° 高度: ${horizontal.alt.toFixed(1)}°<br>`;
+                const azalt = RaDec.toAzalt(data.raDec, lstLat);
+                infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
             }
         }
 
