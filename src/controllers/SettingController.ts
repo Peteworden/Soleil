@@ -1,10 +1,14 @@
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { TimeController } from "./TimeController.js";
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { DisplaySettings, DisplayTime, ObservationSite } from "types/index.js";
-import { HipStarRenderer } from "../renderer/HipStarRenderer.js";
+import { DisplaySettings, DisplayTime, ObservationSite, StarChartConfig } from "types/index.js";
+import { getConfig, saveConfigToLocalStorage, updateConfig } from "../main.js";
 
 export class SettingController {
+    private config: StarChartConfig;
+    constructor () {
+        this.config = getConfig();
+    }
     static switchSettingTab(tabName: string) {
         // すべてのタブコンテンツを非表示
         document.querySelectorAll('.setting-section').forEach(section => {
@@ -29,7 +33,7 @@ export class SettingController {
         }
     }
 
-    static initialize() {
+    initialize() {
         const setting = document.getElementById('setting');
         if (setting) {
             if (window.innerWidth <= 768) {
@@ -49,22 +53,22 @@ export class SettingController {
         }
 
         // 設定をUIに反映
-        SettingController.setUiOnConfig();
+        this.setUiOnConfig();
         SettingController.setObservationSiteOnMode(modeSelect.value);
         
         // デバイスに応じてモードの有効/無効を制御
-        SettingController.updateModeSelectAvailability();
+        this.updateModeSelectAvailability();
     }
     
     // OKボタンが押されたら
-    static async finishSetting() {
+    async finishSetting() {
         console.log('🔧 finishSetting called');
         
         // 設定値を読み取ってconfigを更新
-        SettingController.updateConfigFromInputs();
+        this.updateConfigFromInputs();
 
         //darkmode
-        SettingController.toggleDarkMode();
+        this.toggleDarkMode();
 
         // 設定画面を隠す
         const setting = document.getElementById('setting');
@@ -96,10 +100,11 @@ export class SettingController {
         }
         
         // 設定値をローカルストレージに保存
-        SettingController.saveConfigToLocalStorage();
+        saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
-        const jd = (window as any).config.displayTime.jd;
-        const observer = (window as any).config.observationSite.observerPlanet;
+        const config = getConfig();
+        const jd = config.displayTime.jd;
+        const observer = config.observationSite.observerPlanet;
         SolarSystemDataManager.updateAllData(jd, observer);
         
         // デバイスオリエンテーションリスナーを更新
@@ -111,7 +116,7 @@ export class SettingController {
         (window as any).renderAll();
     }
     
-    private static updateConfigFromInputs() {
+    private updateConfigFromInputs(): void {
         console.log('🔧 updateConfigFromInputs called');
 
         const get = <T extends HTMLElement>(id: string): T | null => {
@@ -179,42 +184,35 @@ export class SettingController {
             planetCheck && messierCheck && recCheck && ngcCheck && sharplessCheck && 
             cameraSelect && equinoxSelect
         ) {
-            const updateConfig = (window as any).updateConfig;
-            
-            if (updateConfig) {
-                const currentConfig = (window as any).config;
-                const newDisplaySettings: DisplaySettings = {
-                    ...currentConfig.displaySettings, // 既存の値を保持
-                    mode: modeSelect.value,
-                    darkMode: darkMode.checked,
-                    showGrid: gridCheck.checked,
-                    showReticle: reticleCheck.checked,
-                    showObjectInfo: objectInfoCheck.checked,
-                    showStarInfo: starInfoCheck.checked,
-                    usedStar: usedStarSelect.value,
-                    showStarNames: starNameSelect.value,
-                    showBayerFS: bayerFSCheck.checked,
-                    showPlanets: planetCheck.checked,
-                    showConstellationNames: constellationNameCheck.checked,
-                    showConstellationLines: constellationLineCheck.checked,
-                    showMessiers: messierCheck.checked,
-                    showRecs: recCheck.checked,
-                    showNGC: ngcCheck.checked,
-                    showSharpless: sharplessCheck.checked,
-                    camera: cameraSelect.value,
-                    equinox: equinoxSelect.value
-                };
-                updateConfig({
-                    displaySettings: newDisplaySettings
-                });
-                console.log('🔧 updateConfig called successfully');
+            const newDisplaySettings: DisplaySettings = {
+                ...this.config.displaySettings, // 既存の値を保持
+                mode: modeSelect.value,
+                darkMode: darkMode.checked,
+                showGrid: gridCheck.checked,
+                showReticle: reticleCheck.checked,
+                showObjectInfo: objectInfoCheck.checked,
+                showStarInfo: starInfoCheck.checked,
+                usedStar: usedStarSelect.value,
+                showStarNames: starNameSelect.value,
+                showBayerFS: bayerFSCheck.checked,
+                showPlanets: planetCheck.checked,
+                showConstellationNames: constellationNameCheck.checked,
+                showConstellationLines: constellationLineCheck.checked,
+                showMessiers: messierCheck.checked,
+                showRecs: recCheck.checked,
+                showNGC: ngcCheck.checked,
+                showSharpless: sharplessCheck.checked,
+                camera: cameraSelect.value,
+                equinox: equinoxSelect.value
+            };
+            updateConfig({
+                displaySettings: newDisplaySettings
+            });
+            console.log('🔧 updateConfig called successfully');
 
-                const deviceOrientationManager = (window as any).deviceOrientationManager;
-                if (deviceOrientationManager) {
-                    deviceOrientationManager.setupOrientationListener();
-                }
-            } else {
-                console.log('❌ updateConfig function not found!');
+            const deviceOrientationManager = (window as any).deviceOrientationManager;
+            if (deviceOrientationManager) {
+                deviceOrientationManager.setupOrientationListener();
             }
         }
         
@@ -225,7 +223,6 @@ export class SettingController {
         
         if (dtlInput && realTime && loadOnCurrentTimeCheck) {
             let year: number, month: number, day: number, hour: number, minute: number, second: number, jd: number;
-            const currentConfig = (window as any).config;
             if (realTime.value === 'off') {
                 const dtlValue = dtlInput.value; // "2024-01-15T10:30" 形式
                 if (dtlValue) {
@@ -238,12 +235,13 @@ export class SettingController {
                     second = date.getSeconds();
                 } else {
                     // デフォルト値
-                    year = currentConfig.displayTime.year;
-                    month = currentConfig.displayTime.month;
-                    day = currentConfig.displayTime.day;
-                    hour = currentConfig.displayTime.hour;
-                    minute = currentConfig.displayTime.minute;
-                    second = currentConfig.displayTime.second;
+                    const t = this.config.displayTime;
+                    year = t.year;
+                    month = t.month;
+                    day = t.day;
+                    hour = t.hour;
+                    minute = t.minute;
+                    second = t.second;
                 }
                 jd = AstronomicalCalculator.jdTTFromYmdhmsJst(year, month, day, hour, minute, second);
                 TimeController.toggleRealTime('off');
@@ -286,22 +284,9 @@ export class SettingController {
         }
     }
     
-    // 現在の設定をlocalStorageに保存
-    static saveConfigToLocalStorage(): void {
-        const config = (window as any).config;
-        if (!config) {
-            console.warn('💾 No config found, cannot save');
-            return;
-        }
-        localStorage.setItem('config', JSON.stringify(config));
-    }
-
     // main.tsのconfigから設定をUIに反映するメソッド
-    static setUiOnConfig() {
-        const config = (window as any).config;
-        if (!config) return;
-
-        SettingController.toggleDarkMode();
+    setUiOnConfig() {
+        this.toggleDarkMode();
 
         const get = <T extends HTMLElement>(id: string): T | null => {
             return document.getElementById(id) as T;
@@ -330,21 +315,22 @@ export class SettingController {
         const ewSelect = get<HTMLSelectElement>('EWCombo');
         
         if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
-            observerPlanetSelect.value = config.observationSite.observerPlanet;
-            observationSiteSelect.value = config.observationSite.name;
-            const latitude = Math.abs(config.observationSite.latitude);
-            const longitude = Math.abs(config.observationSite.longitude);
+            const site = this.config.observationSite;
+            observerPlanetSelect.value = site.observerPlanet;
+            observationSiteSelect.value = site.name;
+            const latitude = Math.abs(site.latitude);
+            const longitude = Math.abs(site.longitude);
             latInput.value = latitude.toFixed(2);
             lonInput.value = longitude.toFixed(2);
-            nsSelect.value = config.observationSite.latitude >= 0 ? '北緯' : '南緯';
-            ewSelect.value = config.observationSite.longitude >= 0 ? '東経' : '西経';
+            nsSelect.value = site.latitude >= 0 ? '北緯' : '南緯';
+            ewSelect.value = site.longitude >= 0 ? '東経' : '西経';
         }
         
-        const ds = config.displaySettings;
-        const vs = config.viewState;
+        const ds = this.config.displaySettings;
+        const vs = this.config.viewState;
         apply.select(get<HTMLSelectElement>('mode'), ds.mode);
         apply.slider(get<HTMLInputElement>('magLimitSlider'), vs.starSizeKey1);
-        apply.checkbox(get<HTMLInputElement>('usedStarSelect'), ds.usedStar);
+        apply.select(get<HTMLSelectElement>('usedStarSelect'), ds.usedStar);
         apply.checkbox(get<HTMLInputElement>('dark'), ds.darkMode);
         apply.checkbox(get<HTMLInputElement>('gridCheck'), ds.showGrid);
         apply.checkbox(get<HTMLInputElement>('reticleCheck'), ds.showReticle);
@@ -378,17 +364,18 @@ export class SettingController {
 
         if (dtlInput && realTimeSelect && loadOnCurrentTimeCheck) {
             // ローカル時間で日時を作成（世界時変換を避ける）
-            const year = config.displayTime.year;
-            const month = String(config.displayTime.month).padStart(2, '0');
-            const day = String(config.displayTime.day).padStart(2, '0');
-            const hour = String(config.displayTime.hour).padStart(2, '0');
-            const minute = String(config.displayTime.minute).padStart(2, '0');
+            const t = this.config.displayTime;
+            const year = t.year;
+            const month = String(t.month).padStart(2, '0');
+            const day = String(t.day).padStart(2, '0');
+            const hour = String(t.hour).padStart(2, '0');
+            const minute = String(t.minute).padStart(2, '0');
             
             // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
             const localDateTime = `${year}-${month}-${day}T${hour}:${minute}`;
             dtlInput.value = localDateTime;
-            loadOnCurrentTimeCheck.checked = config.displayTime.loadOnCurrentTime;
-            realTimeSelect.value = config.displayTime.realTime;
+            loadOnCurrentTimeCheck.checked = t.loadOnCurrentTime;
+            realTimeSelect.value = t.realTime;
         }
         
         console.log('🔧 Settings loaded from config to UI');
@@ -426,7 +413,7 @@ export class SettingController {
     }
 
     // デバイスに応じてモードの有効/無効を制御
-    static updateModeSelectAvailability() {
+    updateModeSelectAvailability() {
         const modeSelect = document.getElementById('mode') as HTMLSelectElement;
         if (!modeSelect) return;
 
@@ -485,11 +472,10 @@ export class SettingController {
                 arFovDiv.style.display = 'none';
             } else {
                 arFovDiv.style.display = 'block';
-                const config = (window as any).config;
                 const arfovEl = document.getElementById('arFov') as HTMLInputElement;
                 const video = document.getElementById('arVideo') as HTMLVideoElement;
-                if (config && video && arfovEl) {
-                    const fovDeg = config.viewState.fieldOfViewRA;
+                if (video && arfovEl) {
+                    const fovDeg = this.config.viewState.fieldOfViewRA;
                     const fovVideo = parseFloat(arfovEl.value);
                     video.style.height = `${Math.round(100*fovVideo/fovDeg)}%`;
                 }
@@ -497,8 +483,8 @@ export class SettingController {
         }
     }
 
-    static toggleDarkMode() {
-        const darkMode = (window as any).config.displaySettings.darkMode;
+    toggleDarkMode() {
+        const darkMode = this.config.displaySettings.darkMode;
         document.querySelectorAll('*').forEach(el => {
             if (darkMode) {
                 el.classList.add('dark-mode');

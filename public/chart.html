@@ -949,11 +949,13 @@
     <div id="app">
         <canvas id="starChartCanvas"></canvas>
     </div>
-    <script type="module">
-        import { main } from '/dist/main.js?v=260501-1300'; // 編集用
+    <!-- 編集用 -->
+    <!-- <script src="/dist/main.js" type="module"></script> -->
+    <!-- 公開用 -->
+    <script src=".main.js" type="module"></script>
+        <!-- // import { main } from '/dist/main.js?v=260501-1300'; // 編集用
         // import { main } from './main.js?v=260501-1300'; // 公開用
-        window.addEventListener('DOMContentLoaded', main);
-    </script>
+        // window.addEventListener('DOMContentLoaded', main); -->
 </body>
 
 </html>

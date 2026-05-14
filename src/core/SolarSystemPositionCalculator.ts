@@ -3,6 +3,7 @@ import { COS_EPSL, DEG_TO_RAD, EARTH_RADIUS_TO_AU, EPSILON, KM_TO_AU, RAD_TO_DEG
 import { acosdeg, acosrad } from './mathUtils.js';
 import { Cartesian, RaDec } from './coordinates/index.js';
 import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
+import { getConfig } from '../main.js';
 
 /**
  * observerは観測者がいる天体の名前か日心直交座標
@@ -35,26 +36,14 @@ export class SolarSystemPositionCalculator {
         const moon = objects.find(obj => isMoon(obj));
         const earth = objects.find(obj => isPlanet(obj) && obj.jpnName === "地球");
         if (moon && earth) {
-            moon.xyz.x += earth.xyz.x;
-            moon.xyz.y += earth.xyz.y;
-            moon.xyz.z += earth.xyz.z;
-            // if (observer == '地球') {
-            //     const latitude = (window as any).config.observationSite.latitude * DEG_TO_RAD;
-            //     const siderealTime = (window as any).config.siderealTime;
-            //     const xe = moon.xyz.x - Math.cos(latitude) * Math.cos(siderealTime) * EARTH_RADIUS_TO_AU; //au
-            //     const ye = moon.xyz.y - Math.cos(latitude) * Math.sin(siderealTime) * EARTH_RADIUS_TO_AU; //au
-            //     const ze = moon.xyz.z - Math.sin(latitude) * EARTH_RADIUS_TO_AU; //au
-            //     const ra = (Math.atan2(ye, xe) * RAD_TO_DEG + 360) % 360; //deg
-            //     const dec = Math.atan2(ze, Math.sqrt(xe**2 + ye**2)) * RAD_TO_DEG; //deg
-            //     moon.raDec = new RaDec(ra, dec);
-            //     moon.distance = Math.sqrt(xe**2 + ye**2 + ze**2); // au
-            // }
+            moon.xyz = Cartesian.add(earth.xyz, moon.xyz);
         }
         
         // 全天体の位置と等級を更新
         if (typeof observer === 'string') {
-            const latitude = (window as any).config.observationSite.latitude;
-            const siderealTime = (window as any).config.siderealTime;
+            const config = getConfig();
+            const latitude = config.observationSite.latitude;
+            const siderealTime = config.siderealTime;
             objects.forEach(obj => {
                 this.updateObjectRadecDistanceMagnitude(obj, jd, observer, observerPlanetObject.xyz, latitude, siderealTime);
             });
@@ -73,7 +62,10 @@ export class SolarSystemPositionCalculator {
      * @param observer 
      * @returns 
      */
-    static oneObjectData(objects0: SolarSystemObjectBase[], objName: string, jd: number, observer: string | CartesianCoords): SolarSystemObjectBase | undefined {
+    static oneObjectData(
+        objects0: SolarSystemObjectBase[], objName: string, jd: number, observer: string | CartesianCoords,
+        latitude: number | undefined, siderealTime: number | undefined
+    ): SolarSystemObjectBase | undefined {
         if (objects0.length === 0) {
             console.warn('天体データがありません');
             return undefined;
@@ -129,9 +121,12 @@ export class SolarSystemPositionCalculator {
         }
 
         if (typeof observer === 'string') {
-            const latitude = (window as any).config.observationSite.latitude;
-            const siderealTime = (window as any).config.siderealTime;
-            this.updateObjectRadecDistanceMagnitude(target, jd, observer, observerPlanetObject!.xyz, latitude, siderealTime);
+            if (latitude != undefined && siderealTime != undefined) {
+                this.updateObjectRadecDistanceMagnitude(target, jd, observer, observerPlanetObject!.xyz, latitude, siderealTime);
+            } else {
+                console.log('solar system position calc: no lat and siderealtime');
+                this.updateObjectRadecDistanceMagnitude(target, jd, undefined, observerPlanetObject!.xyz, undefined, undefined);
+            }
         } else {
             this.updateObjectRadecDistanceMagnitude(target, jd, undefined, observer, undefined, undefined);
         }
@@ -258,8 +253,6 @@ export class SolarSystemPositionCalculator {
         if (isSun(object)) {
             object.xyz = {x: 0.0, y: 0.0, z: 0.0};
         } else if (isMoon(object)) {
-            const latitude = (window as any).config.observationSite.latitude;
-            const siderealTime = (window as any).config.siderealTime;
             this.calculateMoonPosition(object as Moon, jd);
         } else if (isPlanet(object)) {
             this.calculatePlanetPositions(object as Planet, jd);

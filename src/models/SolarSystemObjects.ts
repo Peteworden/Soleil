@@ -1,7 +1,8 @@
+import { getConfig } from '../main.js';
 import { RaDec } from '../core/coordinates/index.js';
 import { SolarSystemPositionCalculator } from '../core/SolarSystemPositionCalculator.js';
 import { DataStore } from './DataStore.js';
-import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
+import { CartesianCoords, EquatorialCoordinates, LstLat } from 'types/index.js';
 
 type SolarObjectType = 'sun' | 'planet' | 'moon' | 'asteroid' | 'comet';
 
@@ -188,10 +189,8 @@ export class SolarSystemDataManager {
 
     static async initialize(): Promise<void> {
         await this.loadSolarSystemObjectElements();
-        const config = (window as any).config;
-        if (config) {
-            this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
-        }
+        const config = getConfig();
+        this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
     }
 
     /**
@@ -249,7 +248,8 @@ export class SolarSystemDataManager {
         } else {
             this.solarObjects[index] = object;
         }
-        this.updateAllData((window as any).config.displayTime.jd, (window as any).config.observationSite.observerPlanet);
+        const config = getConfig();
+        this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
         DataStore.triggerRenderUpdate();
     }
 
@@ -285,14 +285,10 @@ export class SolarSystemDataManager {
         return this.solarObjects.find(obj => isSun(obj)) as Sun;
     }
 
-    static getTwilight(): string {
+    static getTwilight(lstLat: LstLat): string {
         const sun = this.getSun();
         if (!sun) return '';
         const sunRaDec = sun.getRaDec();
-        const latitude = (window as any).config.observationSite.latitude;
-        const siderealTime = (window as any).config.siderealTime;
-        const lstLat = { lst: siderealTime, lat: latitude };
-        // const sunAltitude = sunRaDec.toAzAlt(lstLat).alt;
         const sunAltitude = RaDec.toAzalt(sunRaDec, lstLat).alt;
         let twilight = '';
         if (sunAltitude > -0.84) {

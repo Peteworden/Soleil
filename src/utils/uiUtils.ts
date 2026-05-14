@@ -1,8 +1,9 @@
-import { CanvasSize } from "../types/index.js";
+import { CanvasSize, LstLat } from "../types/index.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { CoordinateConverter } from "../core/coordinates.js";
-// import { DataStore } from "../models/DataStore.js";
 import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
+import { RaDec } from "../core/coordinates/index.js";
+import { getConfig } from "../main.js";
 
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
@@ -12,12 +13,7 @@ export function updateInfoDisplay() {
     const fovInfo = document.getElementById('fovInfo');
     const limitingMagnitudeInfo = document.getElementById('limitingMagnitudeInfo');
     
-    // configからデータを取得
-    const config = (window as any).config;
-
-    if (!config) {
-        return;
-    }
+    const config = getConfig();
     
     // 観測地情報を更新
     if (locationInfo) {
@@ -51,7 +47,8 @@ export function updateInfoDisplay() {
             hour: '2-digit',
             minute: '2-digit'
         });
-        const twilight = SolarSystemDataManager.getTwilight();
+        const lstLat: LstLat = {lst: config.siderealTime, lat: config.observationSite.latitude};
+        const twilight = SolarSystemDataManager.getTwilight(lstLat);
         timeInfo.textContent = timeText + ' (' + twilight + ')';
     }
     
@@ -60,8 +57,7 @@ export function updateInfoDisplay() {
         let { centerRA, centerDec, centerAlt, centerAz } = config.viewState;
         const equinox = config.displaySettings.equinox;
         if (equinox == 'j2000') {
-            const coordinateConverter = new CoordinateConverter();
-            const { ra, dec } = coordinateConverter.precessionEquatorial({ra: centerRA, dec: centerDec}, undefined, config.displayTime.jd, 'j2000');
+            const { ra, dec } = RaDec.precession({ra: centerRA, dec: centerDec}, undefined, config.displayTime.jd, 'j2000');
             centerRA = ra;
             centerDec = dec;
             const centerLabel = document.getElementById('centerLabel');
@@ -75,8 +71,7 @@ export function updateInfoDisplay() {
             }
         }
 
-        const coordinateConverter = new CoordinateConverter();
-        const centerConstellation = coordinateConverter.determineConstellation({ra: centerRA, dec: centerDec});
+        const centerConstellation = CoordinateConverter.determineConstellation({ra: centerRA, dec: centerDec});
         const centerConstellationInfo = document.getElementById('centerConstellation');
         if (centerConstellationInfo) {
             centerConstellationInfo.textContent = centerConstellation;
@@ -215,7 +210,7 @@ export function measureBrowserUI(): { top: number, bottom: number, left: number,
  */
 export function updateCanvasSize() {
     // グローバルなconfigとrendererにアクセス
-    const globalConfig = (window as any).config;
+    const globalConfig = getConfig();
     const renderer = (window as any).renderer;
     const renderAll = (window as any).renderAll;
     
@@ -362,28 +357,16 @@ export function updateTimeDisplay() {
     // 時刻表示を定期的に更新
     const timeInfo = document.getElementById('timeInfo');
     if (timeInfo) {
-        const config = (window as any).config;
-        if (config) {
-            const { year, month, day, hour, minute } = config.displayTime;
-            const date = new Date(year, month - 1, day, hour, minute);
-            timeInfo.textContent = date.toLocaleString('ja-JP', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } else {
-            // configが利用できない場合は現在時刻を表示
-            const now = new Date();
-            timeInfo.textContent = now.toLocaleString('ja-JP', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
+        const config = getConfig();
+        const { year, month, day, hour, minute } = config.displayTime;
+        const date = new Date(year, month - 1, day, hour, minute);
+        timeInfo.textContent = date.toLocaleString('ja-JP', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     }
 }
 
@@ -445,6 +428,8 @@ export function recalculateCanvasSize(canvas: HTMLCanvasElement): void {
         
         canvas.width = newSize.width;
         canvas.height = newSize.height;
+
+        // updateConfigいる？
         
         // レンダリングを再実行
         if ((window as any).renderAll) {

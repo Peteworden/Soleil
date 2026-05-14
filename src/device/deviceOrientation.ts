@@ -1,5 +1,6 @@
 import { AzAlt, CanvasRaDec } from "../core/coordinates/index.js";
 import { CoordinateConverter } from "../core/coordinates.js";
+import { getConfig, updateConfig } from "../main.js";
 
 export interface DeviceOrientationData {
     alpha: number;
@@ -83,7 +84,7 @@ export class DeviceOrientationManager {
 
     // オリエンテーションリスナーを設定
     setupOrientationListener(): void {
-        const config = (window as any).config;
+        const config = getConfig();
         
         // まず既存のリスナーを削除
         if (typeof window !== 'undefined' && 'addEventListener' in window) {
@@ -129,7 +130,7 @@ export class DeviceOrientationManager {
 
     // オリエンテーションイベントハンドラー
     private handleOrientation(event: DeviceOrientationEvent): void {
-        const config = (window as any).config;
+        const config = getConfig();
         if (!config || !['live', 'ar'].includes(config.displaySettings.mode)) {
             return;
         }
@@ -183,24 +184,17 @@ export class DeviceOrientationManager {
         const coordinateConverter = new CoordinateConverter();
         if (coordinateConverter) {
             const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            // const centerHorizontal = coordinateConverter.screenRaDecToHorizontal_Live({ra: 0, dec: 0}, this.orientationData);
             const centerHorizontal = CanvasRaDec.toAzAlt_Live({ra: 0.0, dec: 0.0}, this.orientationData);
-            // const centerRaDec = coordinateConverter.horizontalToEquatorial(
-            //     lstLat, centerHorizontal
-            // );
             const centerRadec = AzAlt.toRadec(centerHorizontal, lstLat);
-            const updateConfig = (window as any).updateConfig;
-            if (updateConfig) {
-                updateConfig({
-                    viewState: {
-                        ...(window as any).config.viewState,
-                        centerRA: centerRadec.ra,
-                        centerDec: centerRadec.dec,
-                        centerAz: centerHorizontal.az,
-                        centerAlt: centerHorizontal.alt
-                    }
-                });
-            }
+            updateConfig({
+                viewState: {
+                    ...config.viewState,
+                    centerRA: centerRadec.ra,
+                    centerDec: centerRadec.dec,
+                    centerAz: centerHorizontal.az,
+                    centerAlt: centerHorizontal.alt
+                }
+            });
         }
         const canvasRenderer = (window as any).renderer;
         if (canvasRenderer) {

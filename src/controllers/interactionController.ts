@@ -1,15 +1,13 @@
 import { CoordinateConverter } from "../core/coordinates.js";
 import { AzAlt, CanvasRaDec, RaDec } from "../core/coordinates/index.js";
 import { DisplaySettings, StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
-import { SettingController } from "./SettingController.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
+import { getConfig, saveConfigToLocalStorage, updateConfig } from "../main.js";
 
 export class InteractionController {
     private canvas: HTMLCanvasElement;
     private config: StarChartConfig;
-    private displaySettings: DisplaySettings;
-    private viewState: ViewState;
-    private renderCallback: () => void;
+    private latestState: ViewState;
     private coordinateConverter: CoordinateConverter;
     // 状態管理
     private isDragging = false;
@@ -20,6 +18,12 @@ export class InteractionController {
     private clickStartTime = 0;
     private clickStartX = 0;
     private clickStartY = 0;
+    private isZoomScheduled: boolean = false;
+    private accumulatedScale = 1.0;
+    private wheelClientX = 0.0;
+    private wheelClientY = 0.0;
+
+    private configUpdated = true;
 
     // タッチ追跡
     private activePointers = new Set<number>();
@@ -29,17 +33,15 @@ export class InteractionController {
     private dragSensitivity = 0.2;
     private zoomSensitivity = 0.001;
     private lastDragTime = 0;
+    private lastWheelTime = 0;
 
     constructor(
         canvas: HTMLCanvasElement,
-        config: StarChartConfig,
-        renderCallback: () => void
+        config: StarChartConfig
     ) {
         this.canvas = canvas;
         this.config = config;
-        this.displaySettings = config.displaySettings;
-        this.viewState = config.viewState;
-        this.renderCallback = renderCallback;
+        this.latestState = { ...config.viewState };
         this.baseDistance = 0;
         this.coordinateConverter = new CoordinateConverter();
         // タッチ操作のデフォルト動作を無効化
@@ -50,31 +52,7 @@ export class InteractionController {
         (this.canvas.style as any).webkitTouchCallout = 'none';
         
         this.setupEventListeners();
-    }
-
-    // オプション更新メソッドを追加
-    updateOptions(newOptions: Partial<StarChartConfig>): void {
-        // グローバルconfigとの参照を確認
-        const globalConfig = (window as any).config;
-        if (globalConfig) {
-            // 参照が異なる場合は、globalConfigの参照に更新
-            if (this.config !== globalConfig || this.viewState !== globalConfig.viewState || this.displaySettings !== globalConfig.displaySettings) {
-                this.config = globalConfig;
-                this.viewState = globalConfig.viewState;
-                this.displaySettings = globalConfig.displaySettings;
-            }
-        }
-        
-        Object.assign(this.config, newOptions);
-        Object.assign(this.viewState, this.config.viewState);
-        Object.assign(this.displaySettings, this.config.displaySettings);
-        
-        // グローバルconfigも確実に更新
-        if (globalConfig) {
-            Object.assign(globalConfig, newOptions);
-        }
-        
-        this.renderCallback();
+        console.log("Wheel listener registered");
     }
 
     // アクティブなポインター数を取得
@@ -115,11 +93,6 @@ export class InteractionController {
         this.canvas.style.touchAction = 'none';
         this.canvas.style.cursor = 'grab';
         console.log('Touch state reset');
-    }
-
-    // configの変更を監視してCoordinateConverterを更新
-    updateCoordinateConverter(): void {
-        // this.coordinateConverter.reloadFromConfig();
     }
 
     setupEventListeners(): void {
@@ -186,12 +159,23 @@ export class InteractionController {
                 starMarkerElement.style.display = 'none';
             }
         }
+
+        const now = performance.now();
+        if (now - this.lastDragTime < 30) {
+            return;
+        }
+        this.lastDragTime = now;
+
+        const fov = {ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec};
+        const centerRaDec = {ra: this.latestState.centerRA, dec: this.latestState.centerDec};
+        const centerAzAlt = {az: this.latestState.centerAz, alt: this.latestState.centerAlt};
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
+        const mode = this.config.displaySettings.mode;
 
         // ポインターの座標を更新
         // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
         if (this.isDragging) {
-            if (e.pointerType == 'touch' && ['live', 'ar'].includes(this.displaySettings.mode)) {
+            if (e.pointerType == 'touch' && ['live', 'ar'].includes(mode)) {
                 return;
             }
             const deltaX = e.clientX - this.lastX;
@@ -199,22 +183,16 @@ export class InteractionController {
 
             // 最小移動量チェック
             const minMove = e.pointerType === 'touch' ? this.config.canvasSize.width / 200 : this.config.canvasSize.width / 400;
-            const now = performance.now();
-            if (Math.abs(deltaX) < minMove && Math.abs(deltaY) < minMove && now - this.lastDragTime < 30) {
+            if (Math.abs(deltaX) < minMove && Math.abs(deltaY) < minMove) {
                 return;
             }
             if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
                 return;
             }
-            if ((now - this.lastDragTime < 10)) {
-                return;
-            }
-            this.lastDragTime = now;
             // console.log("slow enough");
 
             // ポインターの座標を更新
             this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
-            this.lastDragTime = now;
 
             // 前回のポインター位置のスクリーン座標（キャンバス左上からの座標）
             const lastPointerX = this.lastX - this.canvas.offsetLeft;
@@ -225,16 +203,12 @@ export class InteractionController {
 
             // 前回のポインター位置のスクリーンRaDec
             const lastScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                lastPointerX, lastPointerY,
-                { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec },
-                this.canvas
+                lastPointerX, lastPointerY, fov, this.canvas
             );
 
-            if (this.displaySettings.mode == 'AEP') {
-                const centerRaDec = {ra: this.viewState.centerRA, dec: this.viewState.centerDec};
+            if (mode == 'AEP') {
                 const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
                 // 前回のポインター位置の赤道座標
-                // const lastEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(lastScreenRaDec, centerRaDec);
                 const lastEquatorial = CanvasRaDec.toRaDec(lastScreenRaDec, transformConfig);
                 
                 // 北極/南極付近の場合は従来の方式（数値的に不安定になるため）
@@ -244,29 +218,22 @@ export class InteractionController {
                 if (!isNearPole) {
                     // 現在のポインター位置のスクリーンRaDec
                     const currentCanvasRadec = this.coordinateConverter.screenXYToScreenRaDec(
-                        currentPointerX, currentPointerY,
-                        { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec },
-                        this.canvas
+                        currentPointerX, currentPointerY, fov, this.canvas
                     );
                     // 現在のポインター位置の赤道座標
-                    // const currentEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(currentCanvasRadec, centerRaDec);
                     const currentRadec = CanvasRaDec.toRaDec(currentCanvasRadec, transformConfig);
                     
                     // ポインター位置の天球座標が保たれるように中心座標を調整
-                    this.viewState.centerRA = ((lastEquatorial.ra + this.viewState.centerRA - currentRadec.ra) % 360 + 360) % 360;
-                    this.viewState.centerDec = Math.max(-90, Math.min(90, lastEquatorial.dec + this.viewState.centerDec - currentRadec.dec));
+                    centerRaDec.ra = ((lastEquatorial.ra + centerRaDec.ra - currentRadec.ra) % 360 + 360) % 360;
+                    centerRaDec.dec = Math.max(-90, Math.min(90, lastEquatorial.dec + centerRaDec.dec - currentRadec.dec));
                 }
                 
-                const centerHorizontal = RaDec.toAzalt(
-                    { ra: this.viewState.centerRA, dec: this.viewState.centerDec }, lstLat
-                );
-                this.viewState.centerAz = centerHorizontal.az;
-                this.viewState.centerAlt = centerHorizontal.alt;
-            } else if (this.displaySettings.mode == 'view') {
-                const centerAzAlt = {az: this.viewState.centerAz, alt: this.viewState.centerAlt};
+                const newCenterAzalt = RaDec.toAzalt(centerRaDec, lstLat);
+                centerAzAlt.az = newCenterAzalt.az;
+                centerAzAlt.alt = newCenterAzalt.alt;
+            } else if (mode == 'view') {
                 const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat}
                 // 前回のポインター位置の地平座標
-                // const lastHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(lastScreenRaDec, centerAzAlt);
                 const lastAzalt = CanvasRaDec.toAzAlt(lastScreenRaDec, transformConfig);
                 
                 // 天頂/天底付近の場合は従来の方式（数値的に不安定になるため）
@@ -276,25 +243,19 @@ export class InteractionController {
                 if (!isNearZenith) {
                     // 現在のポインター位置のスクリーンRaDec
                     const currentScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                        currentPointerX, currentPointerY,
-                        { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec },
-                        this.canvas
+                        currentPointerX, currentPointerY, fov, this.canvas
                     );
                     // 現在のポインター位置の地平座標
-                    // const currentHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(currentScreenRaDec, centerAzAlt);
                     const currentAzAlt = CanvasRaDec.toAzAlt(currentScreenRaDec, transformConfig);
                     
                     // ポインター位置の天球座標が保たれるように中心座標を調整
-                    this.viewState.centerAz = ((lastAzalt.az + this.viewState.centerAz - currentAzAlt.az) % 360 + 360) % 360;
-                    this.viewState.centerAlt = Math.max(-90, Math.min(90, lastAzalt.alt + this.viewState.centerAlt - currentAzAlt.alt));
+                    centerAzAlt.az = ((lastAzalt.az + centerAzAlt.az - currentAzAlt.az) % 360 + 360) % 360;
+                    centerAzAlt.alt = Math.max(-90, Math.min(90, lastAzalt.alt + centerAzAlt.alt - currentAzAlt.alt));
                 }
                 
-                // const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(
-                //     lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt }
-                // );
-                const centerRadec = AzAlt.toRadec({ az: this.viewState.centerAz, alt: this.viewState.centerAlt }, lstLat);
-                this.viewState.centerRA = centerRadec.ra;
-                this.viewState.centerDec = centerRadec.dec;
+                const newCenterRadec = AzAlt.toRadec(centerAzAlt, lstLat);
+                centerRaDec.ra = newCenterRadec.ra;
+                centerRaDec.dec = newCenterRadec.dec;
             }
 
             // 座標を更新
@@ -321,81 +282,64 @@ export class InteractionController {
             let scale = distance / this.baseDistance;
             if (!scale || scale == Infinity) return;
             if (this.canvas.width < this.canvas.height) {
-                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 270.0);
+                scale = Math.max(Math.min(scale, fov.ra / 1.0), fov.dec / 270.0);
             } else {
-                scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 270.0);
+                scale = Math.max(Math.min(scale, fov.dec / 1.0), fov.ra / 270.0);
             }
             
             // ズーム前のピンチ中心のスクリーンRaDec
             const pinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                pinchX, pinchY, 
-                { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, 
-                this.canvas
+                pinchX, pinchY, fov, this.canvas
             );
             
-            if (this.displaySettings.mode == 'AEP') {
-                const centerRaDec = {ra: this.viewState.centerRA, dec: this.viewState.centerDec};
+            if (mode == 'AEP') {
                 const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
                 // ズーム前のピンチ中心の赤道座標を保存
-                // const pinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(pinchScreenRaDec, centerRaDec);
                 const pinchRadec = CanvasRaDec.toRaDec(pinchScreenRaDec, transformConfig);
                 
                 // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
-                const isNearPole = Math.abs(this.viewState.centerDec) > 85 || Math.abs(pinchRadec.dec) > 85;
+                const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(pinchRadec.dec) > 85;
                 
                 // ズームを適用
-                this.viewState.fieldOfViewRA /= scale;
-                this.viewState.fieldOfViewDec /= scale;
+                fov.ra /= scale;
+                fov.dec /= scale;
                 
                 if (!isNearPole) {
                     const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                        pinchX, pinchY, 
-                        { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, 
-                        this.canvas
+                        pinchX, pinchY, fov, this.canvas
                     );
-                    // const newPinchEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(newPinchScreenRaDec, centerRaDec);
                     const newPinchRadec = CanvasRaDec.toRaDec(newPinchScreenRaDec, transformConfig);
-                    this.viewState.centerRA = ((pinchRadec.ra + this.viewState.centerRA - newPinchRadec.ra) % 360 + 360) % 360;
-                    this.viewState.centerDec = Math.max(-90, Math.min(90, pinchRadec.dec + this.viewState.centerDec - newPinchRadec.dec));
-                    const centerHorizontal = RaDec.toAzalt(
-                        { ra: this.viewState.centerRA, dec: this.viewState.centerDec }, lstLat
-                    );
-                    this.viewState.centerAz = centerHorizontal.az;
-                    this.viewState.centerAlt = centerHorizontal.alt;
+                    centerRaDec.ra = ((pinchRadec.ra + centerRaDec.ra - newPinchRadec.ra) % 360 + 360) % 360;
+                    centerRaDec.dec = Math.max(-90, Math.min(90, pinchRadec.dec + centerRaDec.dec - newPinchRadec.dec));
+                    const centerHorizontal = RaDec.toAzalt(centerRaDec, lstLat);
+                    centerAzAlt.az = centerHorizontal.az;
+                    centerAzAlt.alt = centerHorizontal.alt;
                 }
-            } else if (this.displaySettings.mode == 'view') { 
-                const centerAzAlt = {az: this.viewState.centerAz, alt: this.viewState.centerAlt};
+            } else if (mode == 'view') { 
                 const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat};
                 // ズーム前のピンチ中心の地平座標を保存
-                // const pinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(pinchScreenRaDec, centerAzAlt);
                 const pinchAzalt = CanvasRaDec.toAzAlt(pinchScreenRaDec, transformConfig);
                 
                 // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
-                const isNearZenith = Math.abs(this.viewState.centerAlt) > 85 || Math.abs(pinchAzalt.alt) > 85;
+                const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(pinchAzalt.alt) > 85;
                 
                 // ズームを適用
-                this.viewState.fieldOfViewRA /= scale;
-                this.viewState.fieldOfViewDec /= scale;
+                fov.ra /= scale;
+                fov.dec /= scale;
                 
                 if (!isNearZenith) {
                     // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
                     const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                        pinchX, pinchY, 
-                        { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, 
-                        this.canvas
+                        pinchX, pinchY, fov, this.canvas
                     );
                     // 新しい中心座標でのピンチした位置での地平座標
-                    // const newPinchHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(newPinchScreenRaDec ,centerAzAlt);
                     const newPinchAzalt = CanvasRaDec.toAzAlt(newPinchScreenRaDec, transformConfig);
-                    this.viewState.centerAz = ((pinchAzalt.az + this.viewState.centerAz - newPinchAzalt.az) % 360 + 360) % 360;
-                    this.viewState.centerAlt = Math.max(-90, Math.min(90, pinchAzalt.alt + this.viewState.centerAlt - newPinchAzalt.alt));
-                    
-                    // const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(
-                    //     lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt }
-                    // );
-                    const centerRadec = AzAlt.toRadec({az: this.viewState.centerAz, alt: this.viewState.centerAlt}, lstLat);
-                    this.viewState.centerRA = centerRadec.ra;
-                    this.viewState.centerDec = centerRadec.dec;
+                    centerAzAlt.az = ((pinchAzalt.az + centerAzAlt.az - newPinchAzalt.az) % 360 + 360) % 360;
+                    centerAzAlt.alt = Math.max(-90, Math.min(90, pinchAzalt.alt + centerAzAlt.alt - newPinchAzalt.alt));
+
+                    const newCenterRadec = AzAlt.toRadec(centerAzAlt, lstLat);
+                    centerRaDec.ra = newCenterRadec.ra;
+                    centerRaDec.dec = newCenterRadec.dec;
                 }
             }
             this.baseDistance = distance;
@@ -404,24 +348,26 @@ export class InteractionController {
         // URLのクエリを一度だけ削除（軽量）
         clearUrlSearchOnce();
 
-        // グローバルconfigも確実に更新
-        const globalConfig = (window as any).config;
-        if (globalConfig && globalConfig.viewState) {
-            globalConfig.viewState.centerRA = this.viewState.centerRA;
-            globalConfig.viewState.centerDec = this.viewState.centerDec;
-            globalConfig.viewState.centerAz = this.viewState.centerAz;
-            globalConfig.viewState.centerAlt = this.viewState.centerAlt;
-            globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
-            globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
+        this.configUpdated = false;
+        this.latestState = {
+            centerRA: centerRaDec.ra,
+            centerDec: centerRaDec.dec,
+            centerAz: centerAzAlt.az,
+            centerAlt: centerAzAlt.alt,
+            fieldOfViewRA: fov.ra,
+            fieldOfViewDec: fov.dec,
+            starSizeKey1: this.config.viewState.starSizeKey1,
+            starSizeKey2: this.config.viewState.starSizeKey2,
         }
+        this.configUpdated = updateConfig({
+            viewState: this.latestState
+        })
         
-        this.renderCallback();
-        
-        // 情報表示を即座に更新
-        const updateInfoDisplay = (window as any).updateInfoDisplay;
-        if (updateInfoDisplay) {
-            updateInfoDisplay();
-        }
+        // // 情報表示を即座に更新
+        // const updateInfoDisplay = (window as any).updateInfoDisplay;
+        // if (updateInfoDisplay) {
+        //     updateInfoDisplay();
+        // }
     };
 
     private onPointerUp = (e: PointerEvent): void => {
@@ -433,7 +379,7 @@ export class InteractionController {
                 (e.clientY - this.clickStartY) ** 2
             );
             
-            if (this.displaySettings.showObjectInfo) {
+            if (this.config.displaySettings.showObjectInfo) {
                 //短時間（300ms以下）で移動量が少ない（10px以下）場合はクリックとして扱う
                 if (clickDuration < 300 && moveDistance < 10) {
                     // キャンバス座標に変換
@@ -485,13 +431,7 @@ export class InteractionController {
                 this.canvas.removeEventListener('pointermove', this.onPointerMove);
             }
 
-            this.config.viewState.centerRA = this.viewState.centerRA;
-            this.config.viewState.centerDec = this.viewState.centerDec;
-            this.config.viewState.centerAz = this.viewState.centerAz;
-            this.config.viewState.centerAlt = this.viewState.centerAlt;
-            this.config.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
-            this.config.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
-            SettingController.saveConfigToLocalStorage();
+            saveConfigToLocalStorage();
         } else {
             this.isDragging = false;
             this.isPinch = false;
@@ -509,7 +449,15 @@ export class InteractionController {
         e.preventDefault();
         let scale = 1 - e.deltaY * this.zoomSensitivity;
         if (!scale || scale == Infinity || scale == 0) return;
-        
+        this.accumulatedScale *= scale;
+
+        const now = performance.now();
+        if (now - this.lastWheelTime < 30) return;
+        if (this.accumulatedScale == 1.0) return;
+
+        this.wheelClientX = e.clientX;
+        this.wheelClientY = e.clientY;
+
         const starInfoElement = document.getElementById('starInfo');
         if (starInfoElement && starInfoElement.style.display === 'block') {
             starInfoElement.style.display = 'none';
@@ -518,113 +466,110 @@ export class InteractionController {
         if (starMarkerElement && starMarkerElement.style.display === 'block') {
             starMarkerElement.style.display = 'none';
         }
-        
+
+        const fov = {ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec};
         if (this.canvas.width < this.canvas.height) {
-            scale = Math.max(Math.min(scale, this.viewState.fieldOfViewDec / 1.0), this.viewState.fieldOfViewRA / 270.0);
+            this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.dec / 1.0), fov.ra / 270.0);
         } else {
-            scale = Math.max(Math.min(scale, this.viewState.fieldOfViewRA / 1.0), this.viewState.fieldOfViewDec / 270.0);
+            this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.ra / 1.0), fov.dec / 270.0);
         }
         
         // マウス位置のスクリーン座標（中心からのオフセット）
-        const mouseX = e.clientX - this.canvas.offsetLeft;
-        const mouseY = e.clientY - this.canvas.offsetTop;
+        const mouseX = this.wheelClientX - this.canvas.offsetLeft;
+        const mouseY = this.wheelClientY - this.canvas.offsetTop;
         
         // ズーム前のマウス位置のスクリーンRaDec
         const mouseScreenRADec = this.coordinateConverter.screenXYToScreenRaDec(
-            mouseX, mouseY, 
-            { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, 
-            this.canvas
+            mouseX, mouseY, fov, this.canvas
         );
         
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
+        const mode = this.config.displaySettings.mode;
+        const centerRaDec = {ra: this.latestState.centerRA, dec: this.latestState.centerDec};
+        const centerAzAlt = {az: this.latestState.centerAz, alt: this.latestState.centerAlt};
         
-        if (this.displaySettings.mode == 'AEP') {
-            const centerRaDec = {ra: this.viewState.centerRA, dec: this.viewState.centerDec};
+        if (mode == 'AEP') {
             const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
             // ズーム前のマウス位置の赤道座標を保存
-            // const mouseEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(mouseScreenRADec, centerRaDec);
             const mouseRadec = CanvasRaDec.toRaDec(mouseScreenRADec, transformConfig);
             
             // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
-            const isNearPole = Math.abs(this.viewState.centerDec) > 85 || Math.abs(mouseRadec.dec) > 85;
+            const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(mouseRadec.dec) > 85;
             
             // ズームを適用
-            this.viewState.fieldOfViewRA /= scale;
-            this.viewState.fieldOfViewDec /= scale;
+            // console.log(`fov1: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
+            fov.ra /= this.accumulatedScale;
+            fov.dec /= this.accumulatedScale;
+            // console.log(`fov2: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
             
             if (!isNearPole) {
                 const newMouseCanvasRadec = this.coordinateConverter.screenXYToScreenRaDec(
-                    mouseX, mouseY, 
-                    { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, 
-                    this.canvas
+                    mouseX, mouseY, fov, this.canvas
                 );
-                // const newMouseEquatorial = this.coordinateConverter.screenRaDecToEquatorial_AEP(newMouseCanvasRadec, centerRaDec);
                 const newMouseRadec = CanvasRaDec.toRaDec(newMouseCanvasRadec, transformConfig);
-                this.viewState.centerRA = ((mouseRadec.ra + this.viewState.centerRA - newMouseRadec.ra) % 360 + 360) % 360;
-                this.viewState.centerDec = Math.max(-90, Math.min(90, mouseRadec.dec + this.viewState.centerDec - newMouseRadec.dec));
-                const centerHorizontal = RaDec.toAzalt(
-                    { ra: this.viewState.centerRA, dec: this.viewState.centerDec }, lstLat
-                );
-                this.viewState.centerAz = centerHorizontal.az;
-                this.viewState.centerAlt = centerHorizontal.alt;
+                centerRaDec.ra = ((mouseRadec.ra + centerRaDec.ra - newMouseRadec.ra) % 360 + 360) % 360;
+                centerRaDec.dec = Math.max(-90, Math.min(90, mouseRadec.dec + centerRaDec.dec - newMouseRadec.dec));
+                const centerHorizontal = RaDec.toAzalt(centerRaDec, lstLat);
+                centerAzAlt.az = centerHorizontal.az;
+                centerAzAlt.alt = centerHorizontal.alt;
             }
-        } else if (this.displaySettings.mode == 'view') {
-            const centerAzAlt = {az: this.viewState.centerAz, alt: this.viewState.centerAlt};
+        } else if (mode == 'view') {
             const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat};
             // ズーム前のマウス位置の地平座標を保存
-            // const mouseHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(mouseScreenRADec, centerAzAlt);
             const mouseAzalt = CanvasRaDec.toAzAlt(mouseScreenRADec, transformConfig);
             
             // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
-            const isNearZenith = Math.abs(this.viewState.centerAlt) > 85 || Math.abs(mouseAzalt.alt) > 85;
+            const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(mouseAzalt.alt) > 85;
             
             // ズームを適用
-            this.viewState.fieldOfViewRA /= scale;
-            this.viewState.fieldOfViewDec /= scale;
+            fov.ra /= this.accumulatedScale;
+            fov.dec /= this.accumulatedScale;
             
             if (!isNearZenith) {
                 // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
                 const newMouseScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                    mouseX, mouseY, 
-                    { ra: this.viewState.fieldOfViewRA, dec: this.viewState.fieldOfViewDec }, 
-                    this.canvas
+                    mouseX, mouseY, fov, this.canvas
                 );
                 // 新しい中心座標でのマウス位置での地平座標
-                // const newMouseHorizontal = this.coordinateConverter.screenRaDecToHorizontal_View(newMouseScreenRaDec, centerAzAlt);
                 const newMouseAzalt = CanvasRaDec.toAzAlt(newMouseScreenRaDec, transformConfig);
-                this.viewState.centerAz = ((mouseAzalt.az + this.viewState.centerAz - newMouseAzalt.az) % 360 + 360) % 360;
-                this.viewState.centerAlt = Math.max(-90, Math.min(90, mouseAzalt.alt + this.viewState.centerAlt - newMouseAzalt.alt));
+                centerAzAlt.az = ((mouseAzalt.az + centerAzAlt.az - newMouseAzalt.az) % 360 + 360) % 360;
+                centerAzAlt.alt = Math.max(-90, Math.min(90, mouseAzalt.alt + centerAzAlt.alt - newMouseAzalt.alt));
                 
-                // const centerEquatorial = this.coordinateConverter.horizontalToEquatorial(
-                //     lstLat, { az: this.viewState.centerAz, alt: this.viewState.centerAlt }
-                // );
-                const centerRadec = AzAlt.toRadec({ az: this.viewState.centerAz, alt: this.viewState.centerAlt }, lstLat);
-                this.viewState.centerRA = centerRadec.ra;
-                this.viewState.centerDec = centerRadec.dec;
+                const centerRadec = AzAlt.toRadec(centerAzAlt, lstLat);
+                centerRaDec.ra = centerRadec.ra;
+                centerRaDec.dec = centerRadec.dec;
             }
         }
 
-        // URLのクエリを一度だけ削除（軽量）
-        clearUrlSearchOnce();
-
-        // グローバルconfigも確実に更新
-        const globalConfig = (window as any).config;
-        if (globalConfig && globalConfig.viewState) {
-            globalConfig.viewState.centerRA = this.viewState.centerRA;
-            globalConfig.viewState.centerDec = this.viewState.centerDec;
-            globalConfig.viewState.centerAz = this.viewState.centerAz;
-            globalConfig.viewState.centerAlt = this.viewState.centerAlt;
-            globalConfig.viewState.fieldOfViewRA = this.viewState.fieldOfViewRA;
-            globalConfig.viewState.fieldOfViewDec = this.viewState.fieldOfViewDec;
+        this.latestState = {
+            centerRA: centerRaDec.ra,
+            centerDec: centerRaDec.dec,
+            centerAz: centerAzAlt.az,
+            centerAlt: centerAzAlt.alt,
+            fieldOfViewRA: fov.ra,
+            fieldOfViewDec: fov.dec,
+            starSizeKey1: this.config.viewState.starSizeKey1,
+            starSizeKey2: this.config.viewState.starSizeKey2,
         }
-        SettingController.saveConfigToLocalStorage();
-        this.renderCallback();
+
+        // URLのクエリを削除
+        clearUrlSearchOnce();
+        // console.log(`fov3: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
+        updateConfig({
+            viewState: this.latestState
+        });
+        // console.log(`fov4: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
+        saveConfigToLocalStorage();
         
         // 情報表示を即座に更新
         const updateInfoDisplay = (window as any).updateInfoDisplay;
         if (updateInfoDisplay) {
             updateInfoDisplay();
         }
+
+        this.accumulatedScale = 1.0;
+        this.isZoomScheduled = false;
+        this.lastWheelTime = now;
     };
 }
 

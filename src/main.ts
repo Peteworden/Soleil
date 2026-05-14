@@ -18,13 +18,13 @@ import { CanvasRenderer } from './renderer/CanvasRenderer.js';
 import { InteractionController } from "./controllers/interactionController.js";
 
 import { AstronomicalCalculator } from './core/calculations.js';
-import { CoordinateConverter } from './core/coordinates.js';
 import { DataLoader } from './loaders/DataLoader.js';
 import { DeviceOrientationManager } from './device/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
 import { AzAlt, RaDec } from './core/coordinates/index.js';
 
 const news: { time: string, title: string, text: string }[] = [
+    { time: '2026-05-15T00:00:00', title: '高速化', text: '高速化などを目的に、プログラムを大幅に書き換えました。これまですごく無駄な処理をさせていたことがわかりました...。バグあったら教えてください。' },
     { time: '2026-04-16T21:00:00', title: 'C/2025 R3 (PANSTARRS)', text: 'PANSTARRS彗星（C/2025 R3）を追加しました。明け方の東の空、双眼鏡で見えるかも！？' },
     { time: '2026-04-05T00:00:00', title: 'Artemis II オリオン宇宙船の表示', text: 'Artemis II打ち上げ成功！ということで、オリオン宇宙船（Orion Integrity）の位置が出ます！表示される条件などは右上の三本線から。' },
     { time: '2026-02-06T03:00:00', title: '惑星の表示を更新', text: '惑星、特に木星、土星や、今年10月ごろの金星を拡大して見てみてください！' },
@@ -237,21 +237,12 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
 
     if (noLoad) {
         const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
-        // const converter = new CoordinateConverter();
         const loc = { lst: siderealTime, lat: observationSite.latitude }
         if (displaySettings.mode === 'AEP') {
-            // const centerHorizontal = converter.equatorialToHorizontal(
-            //     { lst: siderealTime, lat: observationSite.latitude },
-            //     { ra: viewState.centerRA, dec: viewState.centerDec }
-            // );
             const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
             viewState.centerAz = centerHorizontal.az;
             viewState.centerAlt = centerHorizontal.alt;
         } else if (displaySettings.mode === 'view') {
-            // const centerEquatorial = converter.horizontalToEquatorial(
-            //     { lst: siderealTime, lat: observationSite.latitude },
-            //     { az: viewState.centerAz, alt: viewState.centerAlt }
-            // );
             const centerEquatorial =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
@@ -372,36 +363,23 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
         });
     }
 
-    // const converter = new CoordinateConverter();
     const loc = { lst: siderealTime, lat: observationSite.latitude }
     if (raOverride != null || decOverride != null) {
-        // const centerHorizontal = converter.equatorialToHorizontal(
-        //     { lst: siderealTime, lat: observationSite.latitude },
-        //     { ra: viewState.centerRA, dec: viewState.centerDec }
-        // );
         const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
         viewState.centerAz = centerHorizontal.az;
         viewState.centerAlt = centerHorizontal.alt;
     } else {
         if (displaySettings.mode === 'AEP') {
-            // const centerHorizontal = converter.equatorialToHorizontal(
-            //     { lst: siderealTime, lat: observationSite.latitude },
-            //     { ra: viewState.centerRA, dec: viewState.centerDec }
-            // );
             const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
             viewState.centerAz = centerHorizontal.az;
             viewState.centerAlt = centerHorizontal.alt;
         } else if (displaySettings.mode === 'view') {
-            // const centerEquatorial = converter.horizontalToEquatorial(
-            //     { lst: siderealTime, lat: observationSite.latitude },
-            //     { az: viewState.centerAz, alt: viewState.centerAlt }
-            // );
             const centerEquatorial =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
             viewState.centerRA = centerEquatorial.ra;
             viewState.centerDec = centerEquatorial.dec;
         }
     }
-    return {
+    const config: StarChartConfig =  {
         displaySettings: displaySettings,
         viewState: viewState,
         observationSite: observationSite,
@@ -411,27 +389,41 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
         siderealTime: siderealTime,
         newsPopup: newsPopup
     };
+    return config;
 }
 
 // 星空表示の設定
 export const config: StarChartConfig = initializeConfig();
+
+const settingController = new SettingController();
+const deviceOrientationManager = new DeviceOrientationManager();
+let interactionController: InteractionController | null = null;
+
+export function getConfig(): Readonly<StarChartConfig> {
+    return config;
+}
 
 // 設定をリセットする関数
 export function resetConfig(): void {
     localStorage.removeItem('config');
     const defaultConfig = initializeConfig();
     Object.assign(config, defaultConfig);
-    (window as any).config = config;
     console.log('🔄 Config reset completed');
 }
 
+let lastConfigUpdateTime = 0;
 // newconfigを受け取り、configを更新する
-export function updateConfig(newConfig: Partial<StarChartConfig>): void {
-    const config = (window as any).config;
+export function updateConfig(newConfig: Partial<StarChartConfig>): boolean {
+    // lastConfigUpdateTime = performance.now();
+    // console.log(lastConfigUpdateTime);
+    // console.log('222222');
     // 状態変更時はクエリパラメータをクリア
     resetURL();
+    // config = { ...config, ...newConfig };としてしまうと新しいメモリ領域にオブジェクトを作り直すことになり、
+    // ほかのファイルのコンストラクタでthis.config = getConfig();として関数内ではしていないときに、
+    // 古いconfigを使うことになってしまう
     Object.assign(config, newConfig);
-    if (newConfig.displayTime || (newConfig.observationSite && newConfig.observationSite.longitude)) {
+    if (newConfig.displayTime !== undefined || (newConfig.observationSite?.longitude !== undefined)) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
     }
 
@@ -441,23 +433,20 @@ export function updateConfig(newConfig: Partial<StarChartConfig>): void {
             getColorManager(newConfig.displaySettings!.darkMode);
         });
     }
-    (window as any).config = config;
-    (window as any).renderer.updateOptions(config);
-    if (newConfig.displaySettings || newConfig.viewState) {
-        (window as any).interactionController.updateOptions({
-            displaySettings: config.displaySettings,
-            viewState: config.viewState
-        });
-    }
-
-    // console.log('updateConfig called');
+    (window as any).renderer.updateOptions(newConfig);
     (window as any).renderAll();
+    updateInfoDisplay();
+    return true
+}
+
+export function saveConfigToLocalStorage(): void {
+    localStorage.setItem('config', JSON.stringify(config));
 }
 
 function resetAll() {
     // LocalStorage, config, UIをリセット
     resetConfig();
-    SettingController.setUiOnConfig();
+    settingController.setUiOnConfig();
 }
 
 function resetURL() {
@@ -494,7 +483,6 @@ function showErrorMessage(text: string) {
     console.log(errorMessage);
 }
 
-(window as any).config = config;
 (window as any).updateConfig = updateConfig;
 (window as any).updateInfoDisplay = updateInfoDisplay;
 (window as any).showErrorMessage = showErrorMessage;
@@ -505,8 +493,7 @@ export async function main() {
 
     try {
         // 設定を初期化（DOM要素が読み込まれた後に実行）
-        const config = initializeConfig();
-        (window as any).config = config;
+        // initializeConfig();
 
         // 色管理システムを初期化
         const { getColorManager } = await import('./renderer/colorManager.js');
@@ -576,7 +563,7 @@ export async function main() {
         // const params = new URLSearchParams(location.search);
         // const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
         // const renderer = createRenderer(rendererType as any, canvas, config);
-        const renderer = new CanvasRenderer(canvas, config);
+        const renderer = new CanvasRenderer(canvas);
         (window as any).renderer = renderer;
 
         // データの読み込み（段階的に）
@@ -607,72 +594,57 @@ export async function main() {
         const imageCache: { [key: string]: HTMLImageElement } = {};
         const imageCacheNames: string[] = [];
 
-        let timer1 = new Array(0).fill(0);
-        let timer2 = new Array(0).fill(0);
-        let timer3 = new Array(0).fill(0);
-        let timer4 = new Array(0).fill(0);
-        let renderCount = 0;
+        let isRendering = false;
+        let renderRequested = false;
+        let lastRender = 0;
+
         function renderAll() {
-            const time000 = performance.now();
-            renderer.clearObjectInformation();
-            renderer.clearStarInformation();
-            renderer.clear();
-            const tempTarget = getTempTarget();
-            renderer.drawGrid();
-            renderer.drawMilkyWay(milkyWayData);
-            renderer.drawPoleMark();
-            renderer.drawCameraView();
-            renderer.drawConstellationLines(constellationData);
-            const time100 = performance.now();
-            renderer.drawGaiaStars(gaia111_120Data, gaia111_120HelpData, 11.1);
-            renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
-            renderer.drawGaiaStars(gaia91_100Data, gaia91_100HelpData, 9.1);
-            renderer.drawGaiaStars(gaia81_90Data, gaia81_90HelpData, 8.1);
-            renderer.drawGaiaStars(gaia0_80Data, gaia0_80HelpData, 0);
-            const time200 = performance.now();
-            renderer.drawHipStars(hipStars);
-            renderer.writeStarNames(starNames);
-            renderer.drawBayerDesignations(brightStars, AstronomicalCalculator.limitingMagnitude(config));
-            renderer.drawMessier(messierData);
-            renderer.drawRec(DataStore.getRecData());
-            renderer.drawNGC(ngcData, icData);
-            renderer.drawSharpless(sharplessData);
-            renderer.drawTempTarget(tempTarget);
-            renderer.writeConstellationNames(constellationData);
-            renderer.drawSolarSystemObjects();
-            renderer.drawReticle();
-            updateInfoDisplay();
-            const time300 = performance.now();
-            // renderCount++;
-            // timer1.push(time100 - time000);
-            // timer2.push(time200 - time100);
-            // timer3.push(time300 - time200);
-            // timer4.push(time300 - time000);
-            // if (renderCount > 30) {
-            //     timer1.shift();
-            //     timer2.shift();
-            //     timer3.shift();
-            //     timer4.shift();
-            //     console.log(
-            //         (timer1.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
-            //         (timer2.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
-            //         (timer3.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
-            //         (timer4.reduce((a, b) => a + b, 0) / 30).toFixed(1), 'ms, ',
-            //         renderCount
-            //     );
-            // }
+            // if (renderRequested) return;
+            // renderRequested = true;
+            // if (isRendering) return;
+            // isRendering = true;
+            // requestAnimationFrame(() => {
+            //     try {
+                    renderer.clearObjectInformation();
+                    renderer.clearStarInformation();
+                    renderer.clear();
+                    const tempTarget = getTempTarget();
+                    renderer.drawGrid();
+                    renderer.drawMilkyWay(milkyWayData);
+                    renderer.drawPoleMark();
+                    renderer.drawCameraView();
+                    renderer.drawConstellationLines(constellationData);
+                    renderer.drawGaiaStars(gaia111_120Data, gaia111_120HelpData, 11.1);
+                    renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
+                    renderer.drawGaiaStars(gaia91_100Data, gaia91_100HelpData, 9.1);
+                    renderer.drawGaiaStars(gaia81_90Data, gaia81_90HelpData, 8.1);
+                    renderer.drawGaiaStars(gaia0_80Data, gaia0_80HelpData, 0);
+                    renderer.drawHipStars(hipStars);
+                    renderer.writeStarNames(starNames);
+                    renderer.drawBayerDesignations(brightStars, AstronomicalCalculator.limitingMagnitude(config));
+                    renderer.drawMessier(messierData);
+                    renderer.drawRec(DataStore.getRecData());
+                    renderer.drawNGC(ngcData, icData);
+                    renderer.drawSharpless(sharplessData);
+                    renderer.drawTempTarget(tempTarget);
+                    renderer.writeConstellationNames(constellationData);
+                    renderer.drawSolarSystemObjects();
+                    renderer.drawReticle();
+                // } finally {
+                    // isRendering = false;
+                // }
+            // });
         }
         (window as any).renderAll = renderAll;
 
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
-        SettingController.setUiOnConfig();
+        settingController.setUiOnConfig();
 
         TimeController.initialize();
         
         // 地球上の観測地のcontroller
         ObservationSiteController.initialize();
 
-        const deviceOrientationManager = new DeviceOrientationManager();
         (window as any).deviceOrientationManager = deviceOrientationManager;
         if (deviceOrientationManager.isOrientationAvailable()) {
             deviceOrientationManager.setupOrientationListener();
@@ -799,7 +771,7 @@ export async function main() {
 
         await SolarSystemDataManager.initialize();
 
-        const interactionController = new InteractionController(canvas, config, renderAll);
+        interactionController = new InteractionController(canvas, config);
         (window as any).interactionController = interactionController;
 
         UserObjectController.init();
@@ -893,7 +865,6 @@ function updateFullScreenState(isFullscreen: boolean) {
         if (fullScreenBtnMobile) {
             fullScreenBtnMobile.innerHTML = `<i class="fas fa-compress" aria-hidden="true"></i>`;
         }
-        const config = (window as any).config;
         const renderer = (window as any).renderer;
         if (renderer && renderer.canvas) {
             // Canvasの論理サイズを実際の表示サイズに合わせる
@@ -922,7 +893,6 @@ function updateFullScreenState(isFullscreen: boolean) {
         if (fullScreenBtnMobile) {
             fullScreenBtnMobile.innerHTML = `<i class="fas fa-expand" aria-hidden="true"></i>`;
         }
-        const config = (window as any).config;
         const renderer = (window as any).renderer;
         if (renderer && renderer.canvas) {
             // Canvasの論理サイズを実際の表示サイズに合わせる
@@ -1022,7 +992,7 @@ function setupButtonEvents() {
     const settingBtn = document.getElementById('settingBtn');
     if (settingBtn) {
         settingBtn.addEventListener('click', () => {
-            SettingController.initialize();
+            settingController.initialize();
         });
     }
 
@@ -1044,7 +1014,7 @@ function setupButtonEvents() {
     const settingBtnMobile = document.getElementById('settingBtnMobile');
     if (settingBtnMobile) {
         settingBtnMobile.addEventListener('click', () => {
-            SettingController.initialize();
+            settingController.initialize();
         });
     } else {
     }
@@ -1106,7 +1076,7 @@ function setupButtonEvents() {
     });
 
     // 設定画面のOKボタン
-    document.getElementById('showBtn')?.addEventListener('click', SettingController.finishSetting);
+    document.getElementById('showBtn')?.addEventListener('click', () => settingController.finishSetting());
     document.getElementById('clearLocalStorage')?.addEventListener('click', resetAll);
     document.getElementById('checkDefaultConfig')?.addEventListener('click', () => {
         const defaultConfigPopup = document.getElementById('defaultConfigPopup');
@@ -1215,7 +1185,7 @@ function setupButtonEvents() {
     document.getElementById('magLimitSlider')?.addEventListener('change', function () {
         const magLimitSlider = document.getElementById('magLimitSlider') as HTMLInputElement;
         const magLimitSliderValue = parseFloat(magLimitSlider.value);
-        const viewState = (window as any).config.viewState;
+        const viewState = config.viewState;
         if (viewState) {
             viewState.starSizeKey1 = magLimitSliderValue;
             viewState.starSizeKey2 = 1.8;

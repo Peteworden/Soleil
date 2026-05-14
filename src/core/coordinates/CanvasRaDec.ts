@@ -90,12 +90,9 @@ function toAzAlt_View(canvasRadec: CanvasRadecCoords, center: HorizontalCoordina
     const sinThetaSH = Math.sin(thetaSH);
     const cosThetaSH = Math.cos(thetaSH);
 
-    const xyz = {x: sinR * cosThetaSH, y: sinR * sinThetaSH, z: cosR}
-    // const abc = xyz.rotateY(Math.PI / 2 - centerRad.alt);
+    const xyz = {x: sinR * cosThetaSH, y: sinR * sinThetaSH, z: cosR};
     const abc = Cartesian.rotateY(xyz, Math.PI / 2 - centerRad.alt);
-    // const abc2 = abc.rotateZ(-centerRad.az);
-    const {x: a, y: b, z: c} = Cartesian.rotateZ(xyz, -centerRad.az);
-    // const {x: a, y: b, z: c} = abc2;
+    const {x: a, y: b, z: c} = Cartesian.rotateZ(abc, -centerRad.az);
 
     const alt = asindeg(c);
     const az = ((Math.atan2(-b, a) * RAD_TO_DEG) % 360 + 360) % 360;
@@ -113,7 +110,6 @@ export function toAzAlt_Live(
     const beta = orientationData.beta;
     const gamma = orientationData.gamma;
     const xyz = {x: Math.sin(r)*Math.cos(theta), y: Math.sin(r)*Math.sin(theta), z: -Math.cos(r)};
-    // const {x, y, z} = xyz.rotateY(gamma).rotateX(beta).rotateZ(alpha);
     const {x, y, z} = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY(xyz, gamma), beta), alpha);
     const alt = asindeg(z);
     const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;

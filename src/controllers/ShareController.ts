@@ -1,9 +1,10 @@
+import { getConfig } from '../main.js';
 import { StarChartConfig } from '../types/index.js';
 
 export class ShareController {
     static copyShareUrl(): void {
         try {
-            const config: StarChartConfig = (window as any).config;
+            const config: StarChartConfig = getConfig();
             const ra = ShareController.roundTo(config.viewState.centerRA, 3);
             const dec = ShareController.roundTo(config.viewState.centerDec, 3);
             const lat = ShareController.roundTo(config.observationSite.latitude, 3);

@@ -1,8 +1,9 @@
-import { acosdeg, asindeg } from "../../core/mathUtils.js";
+import { acosdeg, asindeg, asinrad } from "../../core/mathUtils.js";
 import { CanvasRadecCoords, CanvasSize, CanvasXy, CartesianCoords, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, TransformModeConfig, ViewState } from "../../types";
 import { COS_EPSL, DEG_TO_RAD, EPSILON, RAD_TO_DEG, SIN_EPSL } from "../../utils/constants.js";
 import { AzAlt, CanvasRaDec, Cartesian } from "./index.js";
 import { AstronomicalCalculator } from "../../core/calculations.js";
+import { DeviceOrientationData } from "device/deviceOrientation.js";
 
 export function toRad(radec: EquatorialCoordinates): EquatorialCoordinates {
     return {ra: radec.ra * DEG_TO_RAD, dec: radec.dec * DEG_TO_RAD};
@@ -44,6 +45,21 @@ export function precession(
     return Cartesian.toRaDec(xyz2);
 }
 
+/* radで返ることに注意*/
+export function precessionFast(
+    radecRad: EquatorialCoordinates, sin: number, cos: number
+): EquatorialCoordinates {
+    const x = Math.cos(radecRad.ra) * Math.cos(radecRad.dec);
+    const y = Math.sin(radecRad.ra) * Math.cos(radecRad.dec);
+    const z = Math.sin(radecRad.dec);
+    const a = y*COS_EPSL+z*SIN_EPSL;
+    const b = -y*SIN_EPSL+z*COS_EPSL;
+    const x2 =  x*cos - y*COS_EPSL*sin - z*SIN_EPSL*sin;
+    const y2 = COS_EPSL * (x*sin + cos*a) - SIN_EPSL * b;
+    const z2 = SIN_EPSL * (x*sin + cos*a) + COS_EPSL * b;
+    return {ra: Math.atan2(y2, x2), dec: asinrad(z2) }
+}
+
 export function toAzalt (coords: EquatorialCoordinates, lstLat: LstLat): HorizontalCoordinates {
     const ra = coords.ra * DEG_TO_RAD;
     const dec = coords.dec * DEG_TO_RAD;
@@ -60,6 +76,22 @@ export function toAzalt (coords: EquatorialCoordinates, lstLat: LstLat): Horizon
     const z =  sinLat * sinDec + cosLat * cosDec * cosHourAngle;
     const az = (Math.atan2(y, x) * RAD_TO_DEG + 360) % 360;
     const alt = asindeg(z);
+    return {az, alt};
+}
+export function toAzaltFast (
+    coordsRad: EquatorialCoordinates,
+    sinLat: number, cosLat: number, siderealTime: number
+): HorizontalCoordinates {
+    const sinDec = Math.sin(coordsRad.dec);
+    const cosDec = Math.cos(coordsRad.dec);
+    const hourAngle = siderealTime - coordsRad.ra;
+    const sinHourAngle = Math.sin(hourAngle);
+    const cosHourAngle = Math.cos(hourAngle);
+    const x =  cosLat * sinDec - sinLat * cosDec * cosHourAngle;
+    const y = -cosDec * sinHourAngle;
+    const z =  sinLat * sinDec + cosLat * cosDec * cosHourAngle;
+    const az = Math.atan2(y, x);
+    const alt = asinrad(z);
     return {az, alt};
 }
 
@@ -92,12 +124,49 @@ export function toCanvasRadec(
     }
     return { ra: 0, dec: 0 };
 }
+export function toCanvasRadecFast(
+    radec: EquatorialCoordinates,
+    mode: string,
+    centerRaRad: number, sinCenterDec: number, cosCenterDec: number,
+    centerAzRad: number, sinCenterAlt: number, cosCenterAlt: number,
+    sinLat: number, cosLat: number, siderealTime: number, orientationData: DeviceOrientationData
+): CanvasRadecCoords {
+    if (mode == 'AEP') {
+        return toCanvasRadecFast_AEP(radec, centerRaRad, sinCenterDec, cosCenterDec);
+    } else if (mode == 'view') {
+        return AzAlt.toCanvasRadecFast_View(toAzaltFast(radec, sinLat, cosLat, siderealTime), centerAzRad, sinCenterAlt, cosCenterAlt);
+    } else if (['live', 'ar'].includes(mode)) {
+        return AzAlt.toCanvasRadecFast_Live(toAzaltFast(radec, sinLat, cosLat, siderealTime), orientationData);
+    }
+    return { ra: 0, dec: 0 };
+}
 
 export function toCanvasXYifin(
     radec: EquatorialCoordinates,
     fov: Fov, canvasSize: CanvasSize, transformConfig: TransformModeConfig, force: boolean = false
 ): [boolean, CanvasXy] {
     const canvasRaDec = toCanvasRadec(radec, transformConfig);
+    if (Math.abs(canvasRaDec.ra) < fov.ra * 0.5 && Math.abs(canvasRaDec.dec) < fov.dec * 0.5) {
+        const xy = CanvasRaDec.toCanvasXY(canvasRaDec, canvasSize, fov);
+        return [true, xy];
+    } else if (force) {
+        const xy = CanvasRaDec.toCanvasXY(canvasRaDec, canvasSize, fov);
+        return [false, xy];
+    } else {
+        return [false, {x: 0, y: 0}];
+    }
+}
+
+export function toCanvasXYifinFast(
+    radec: EquatorialCoordinates, mode: string,
+    centerRaRad: number, sinCenterDec: number, cosCenterDec: number,
+    centerAzRad: number, sinCenterAlt: number, cosCenterAlt: number,
+    sinLat: number, cosLat: number, siderealTime: number, orientationData: DeviceOrientationData,
+    fov: Fov, canvasSize: CanvasSize, force: boolean = false
+): [boolean, CanvasXy] {
+    const canvasRaDec = toCanvasRadecFast(
+        radec, mode, centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, orientationData
+    );
     if (Math.abs(canvasRaDec.ra) < fov.ra * 0.5 && Math.abs(canvasRaDec.dec) < fov.dec * 0.5) {
         const xy = CanvasRaDec.toCanvasXY(canvasRaDec, canvasSize, fov);
         return [true, xy];
@@ -125,13 +194,30 @@ export function toCanvasRadec_AEP(
     const sinCenterDec = Math.sin(centerDecRad);
     const cosCenterDec = Math.cos(centerDecRad);
 
-    const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec;
-    const b =                cosDec * Math.sin(ra_diff);
+    const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec; // 下向き
+    const b =                cosDec * Math.sin(ra_diff); // 左向き
     const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
 
     const r = acosdeg(c); //中心からの角距離, deg
-    const thetaSH = Math.atan2(b, a); //南（下）向きから時計回り
-    const scrRA = r * Math.sin(thetaSH);
-    const scrDec = - r * Math.cos(thetaSH);
-    return { ra: scrRA, dec: scrDec };
+    const d = 1.0 / Math.sqrt(a * a + b * b);
+    return {ra: r * d * b, dec : - r * d * a};
+}
+export function toCanvasRadecFast_AEP(
+    coordsRad: EquatorialCoordinates, 
+    centerRaRad: number,
+    sinCenterDec: number,
+    cosCenterDec: number,
+): CanvasRadecCoords {
+    const ra_diff = coordsRad.ra - centerRaRad;
+    const sinDec = Math.sin(coordsRad.dec);
+    const cosDec = Math.cos(coordsRad.dec);
+    const cosRaDiff = Math.cos(ra_diff);
+
+    const a = sinCenterDec * cosDec * cosRaDiff - cosCenterDec * sinDec;
+    const b =                cosDec * Math.sin(ra_diff);
+    const c = cosCenterDec * cosDec * cosRaDiff + sinCenterDec * sinDec;
+
+    const r = acosdeg(c); //中心からの角距離, deg
+    const d = r / Math.sqrt(a * a + b * b);
+    return {ra: d * b, dec : -d * a};
 }

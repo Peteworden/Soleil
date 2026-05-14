@@ -1,3 +1,4 @@
+import { getConfig, saveConfigToLocalStorage, updateConfig } from '../main.js';
 import { ObservationSite } from '../types/index.js';
 import { SettingController } from './SettingController.js';
 declare const L: any;
@@ -148,13 +149,16 @@ export class ObservationSiteController {
                 if (observationSiteSelect) {
                     observationSiteSelect.value = 'カスタム';
                 }
-                this.updateConfig({
-                    observerPlanet: '地球',
-                    name: 'カスタム',
-                    latitude: lat,
-                    longitude: lon,
-                    timezone: 9
-                });
+                updateConfig({
+                    observationSite: {
+                        observerPlanet: '地球',
+                        name: 'カスタム',
+                        latitude: lat,
+                        longitude: lon,
+                        timezone: 9
+                    }
+                })
+                saveConfigToLocalStorage();
             }
         }
     }
@@ -193,7 +197,8 @@ export class ObservationSiteController {
         }
 
         // 設定の更新
-        this.updateConfig(site);
+        updateConfig({observationSite: site});
+        saveConfigToLocalStorage();
 
         console.log(`🗺️ Observation site set to: ${latDeg}°, ${lonDeg}°`);
     }
@@ -308,8 +313,7 @@ export class ObservationSiteController {
             return;
         }
 
-        const config = (window as any).config;
-        if (!config) return;
+        const config = getConfig();
 
         const currentLat = config.observationSite.latitude;
         const currentLon = config.observationSite.longitude;
@@ -362,18 +366,8 @@ export class ObservationSiteController {
         }
     }
 
-    /**
-     * 設定を更新
-     */
-    private static updateConfig(site: ObservationSite): void {
-        const updateConfig = (window as any).updateConfig;
-        if (updateConfig) {
-            updateConfig({
-                observationSite: site
-            });
-        }
-        SettingController.saveConfigToLocalStorage();
-    }
+
+
 
     /**
      * 保存された観測地を読み込み

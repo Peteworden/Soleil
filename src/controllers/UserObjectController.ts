@@ -6,7 +6,6 @@ import { Asteroid, Comet, SolarSystemDataManager, SolarSystemObjectBase,
     EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements
 } from "../models/SolarSystemObjects.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
-// import { EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements } from "types/solarObjects.js";
 
 // フォームのクリアは入力画面を出るときに行う
 // idはLocalStorageを読んでいるときと編集するときだけ-1以外にする

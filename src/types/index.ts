@@ -1,5 +1,3 @@
-// import { Cartesian } from "../core/coordinates/index.js";
-
 export interface EquatorialCoordinates {
     ra: number;  // 赤経（度）
     dec: number; // 赤緯（度）
@@ -31,10 +29,17 @@ export interface LstLat {
     lat: number; // latitude
 }
 
+export interface DeviceOrientation {
+    alpha: number,
+    beta: number,
+    gamma: number,
+    webkitCompassHeading: number
+}
+
 export type TransformModeConfig =
     | { mode: 'AEP'; center: EquatorialCoordinates; location: LstLat}
     | { mode: 'view'; center: HorizontalCoordinates; location: LstLat }
-    | { mode: 'live' | 'ar'; center?: never; location: LstLat; orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number } };
+    | { mode: 'live' | 'ar'; center?: never; location: LstLat; orientationData: DeviceOrientation };
 
 export interface HipData {
     raArray: Float32Array;  // 赤経
