@@ -22,7 +22,6 @@ export class SolarSystemRenderer {
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        private coordinateConverter: CoordinateConverter,
         private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
     ) {
         const chartImageDir = './chartImage/'; // SolarSystemRenderer.jsはrenderer直下にある
@@ -42,9 +41,10 @@ export class SolarSystemRenderer {
         this.fullMoonImage_16px = new Image();
         this.fullMoonImage_16px.src = chartImageDir + 'fullMoon_v2_16px.png';
 
-        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
-        this.precessionAngle = this.coordinateConverter.precessionAngle('j2000', this.config.displayTime.jd);
+        // ここで計算した値を使い続けるのはまずくない？
+        this.precessionAngle = AstronomicalCalculator.precessionAngle('j2000', this.config.displayTime.jd);
     }
 
     drawSolarSystemObjects(objectInformation: Array<ObjectInformation>): void {
@@ -52,7 +52,7 @@ export class SolarSystemRenderer {
         if (objects.length == 0) return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
-        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
         this.ctx.fillStyle = 'white';
         const sun = objects.find(obj => obj.getType() === 'sun') as Sun;
@@ -129,26 +129,20 @@ export class SolarSystemRenderer {
         });
 
         const SunInMoonNorthCoord = Cartesian.rotateY(RaDec.toCartesian({ra: sunDeg.ra - moonDeg.ra, dec: sunDeg.dec}), -Math.PI / 2 + moonRad.dec)
-        // const SunInMoonNorthCoord = Cartesian.rotateY(RaDec.t)
         // 南から、天球の外から見て反時計回りに測った、月から見た太陽の方向
         const angleSMS = Math.atan2(SunInMoonNorthCoord.y, SunInMoonNorthCoord.x);
         const littleSunDirection = {
             ra: moonDeg.ra + 0.5 * Math.sin(angleSMS) / Math.cos(moonRad.dec), 
             dec: moonDeg.dec - 0.5 * Math.cos(angleSMS)
         };
-        // const littleCloserToSunXY = littleSunDirection.toCanvasXYifin(this.config, this.orientationData, true)[1];
         const littleCloserToSunXY = RaDec.toCanvasXYifin(littleSunDirection, this.fov, this.config.canvasSize, this.transformConfig, true)[1];
         // 地球から月の外縁を時計回りに見たとき、明から暗に転じるところの、右（西）から時計回りに測った角度
         const p = Math.atan2(littleCloserToSunXY.y - y, littleCloserToSunXY.x - x) + Math.PI * 0.5;
 
         const moonEcliptic = RaDec.toEcliptic(moonDeg);
-        // console.log(moonEcliptic.lon * RAD_TO_DEG, moonEcliptic.lat * RAD_TO_DEG);
         const littleEclipNorthRaDec = Cartesian.toRaDec(Cartesian.rotateX(RaDec.toCartesian({ra: moonEcliptic.lon, dec: moonEcliptic.lat + 0.5}), EPSILON));
-        // const littleNorthXY = littleEclipNorthRaDec.toCanvasXYifin(this.config, this.orientationData, true)[1];
         const littleNorthXY = RaDec.toCanvasXYifin(littleEclipNorthRaDec, this.fov, this.config.canvasSize, this.transformConfig, true)[1];
-        // console.log(x.toFixed(1), y.toFixed(1), littleNorthXY.x.toFixed(1), littleNorthXY.y.toFixed(1));
         const littleNorthAngle = Math.atan2(littleNorthXY.x - x, -littleNorthXY.y + y);
-        // console.log(littleNorthAngle * RAD_TO_DEG);
 
         this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
@@ -316,12 +310,6 @@ export class SolarSystemRenderer {
                 y: y - Math.cos(lat) * Math.sin(siderealTime) * 6378.14 / 1.49598e8,
                 z: z - Math.sin(lat) * 6378.14 / 1.49598e8
             }), this.precessionAngle);
-            // const a = new Cartesian(
-            //     x - Math.cos(lat) * Math.cos(siderealTime) * 6378.14 / 1.49598e8,
-            //     y - Math.cos(lat) * Math.sin(siderealTime) * 6378.14 / 1.49598e8,
-            //     z - Math.sin(lat) * 6378.14 / 1.49598e8
-            // ).toRaDec();
-            // console.log(`${a.ra}, ${a.dec}`);
         } else {
             if (earthXYZ && observerPlanetXYZ) {
                 const heliocentricXYZ = Cartesian.add({x, y, z}, earthXYZ);
@@ -601,7 +589,9 @@ export class SolarSystemRenderer {
             for (let count = -halfCount; count <= halfCount; count++) {
                 const jd = this.config.displayTime.jd + count * interval;
                 const observerBody = this.config.observationSite.observerPlanet;
-                const objectData = SolarSystemPositionCalculator.oneObjectData(objectsBaseData, planet, jd, observerBody) as SolarSystemObjectBase;
+                const lat = this.config.observationSite.latitude;
+                const lst = this.config.siderealTime;
+                const objectData = SolarSystemPositionCalculator.oneObjectData(objectsBaseData, planet, jd, observerBody, lat, lst) as SolarSystemObjectBase;
                 if (objectData) {
                     const ymdhms = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
                     const coords = objectData.getRaDec();

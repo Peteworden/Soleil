@@ -1,3 +1,4 @@
+import { getConfig } from "../main.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { CelestialObject, MessierObject } from "../models/CelestialObject.js";
@@ -14,10 +15,9 @@ export class DSORenderer {
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        private coordinateConverter: CoordinateConverter,
         private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
     ) {
-        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
     }
 
@@ -29,7 +29,7 @@ export class DSORenderer {
     // 天体を描画
     drawDSOObject(object: CelestialObject, category: string, objectInformation: Array<ObjectInformation>, nameCorner?: string): void {
         if (!object.getName() || object.getName() == '') return;
-        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
 
         const coordsJ2000 = object.getCoordinates();
@@ -141,7 +141,7 @@ export class DSORenderer {
             ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
             object.getOverlay() != null &&
             Object.keys(this.imageCache).includes(object.getOverlay()!.filename) &&
-            (window as any).config.viewState.fieldOfViewRA < 20
+            getConfig().viewState.fieldOfViewRA < 20
         ) {
             const img = this.imageCache[object.getOverlay()!.filename];
             // 画像が正常に読み込まれているかチェック
@@ -164,7 +164,7 @@ export class DSORenderer {
 
     private drawOverlay(name: string, coords: EquatorialCoordinates, overlay: { width: number, opacity: number }, x: number, y: number, mode: string): void {
         this.ctx.save();
-        this.transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
         const overlaySize = overlay.width * this.canvas.width / this.config.viewState.fieldOfViewRA;
         this.ctx.globalAlpha = overlay.opacity;
@@ -173,9 +173,7 @@ export class DSORenderer {
         } else if (mode == 'view') {
             this.ctx.translate(x, y);
             const oneDegNorth = {ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999)};
-            // const oneDegNorthXY = oneDegNorth.toCanvasXYifin(this.config, this.orientationData, true);
             const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.fov, this.config.canvasSize, this.transformConfig);
-            // const oneDegNorthXY = this.coordinateConverter.equatorialToScreenXYifin({ ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) }, this.config, true, this.orientationData);
             const rotation = Math.atan2(oneDegNorthXY[1].x - x, -oneDegNorthXY[1].y + y);
             this.ctx.rotate(rotation);
             this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);

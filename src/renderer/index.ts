@@ -10,8 +10,8 @@ export function createRenderer(type: RendererType, canvas: HTMLCanvasElement, co
             return new WebGLRenderer(canvas, config);
         } catch (_) {
             // Fallback to Canvas when WebGL2 is unavailable
-            return new CanvasRenderer(canvas, config);
+            return new CanvasRenderer(canvas);
         }
     }
-    return new CanvasRenderer(canvas, config);
+    return new CanvasRenderer(canvas)
 }

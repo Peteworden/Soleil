@@ -46,12 +46,10 @@ export function addEdge(
     screenRA: number, screenDec: number,
     edgeRA: number[], edgeDec: number[],
     jd: number,
-    coordinateConverter: CoordinateConverter,
     conf: TransformModeConfig
 ): void {
-    // const equatorialApparent = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRA, dec: screenDec }, conf);
     const equatorialApparent = CanvasRaDec.toRaDec({ ra: screenRA, dec: screenDec }, conf);
-    const equatorial = coordinateConverter.precessionEquatorial(equatorialApparent, undefined, jd, 'j2000');
+    const equatorial = RaDec.precession(equatorialApparent, undefined, jd, 'j2000');
     edgeRA.push(equatorial.ra);
     edgeDec.push(equatorial.dec);
 }
@@ -186,17 +184,14 @@ export function getAreaCandidates(
     viewState: ViewState,
     jd: number,
     conf: TransformModeConfig,
-    coordinateConverter: CoordinateConverter
 ): number[][] {
     if (!['AEP', 'view'].includes(conf.mode)) return [];
     const edgeRA: number[] = [];
     const edgeDec: number[] = [];
     const raWidth = viewState.fieldOfViewRA * 0.5 + 1.0;
     const decWidth = viewState.fieldOfViewDec * 0.5 + 1.0;
-    const currentNorthPoleJ2000 = coordinateConverter.precessionEquatorial({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
-    const currentSouthPoleJ2000 = coordinateConverter.precessionEquatorial({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
-    // const npScreenRaDec = coordinateConverter.equatorialToScrenRaDec(currentNorthPoleJ2000, conf.mode, lstLat, viewState, undefined);
-    // const spScreenRaDec = coordinateConverter.equatorialToScrenRaDec(currentSouthPoleJ2000, conf.mode, lstLat, viewState, undefined);
+    const currentNorthPoleJ2000 = RaDec.precession({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
+    const currentSouthPoleJ2000 = RaDec.precession({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
     const npCanvasRadec = RaDec.toCanvasRadec(currentNorthPoleJ2000, conf);
     const spCanvasRadec = RaDec.toCanvasRadec(currentSouthPoleJ2000, conf);
     const npIsIn = Math.abs(npCanvasRadec.ra) < raWidth + 3.0 && Math.abs(npCanvasRadec.dec) < decWidth + 3.0;
@@ -212,8 +207,7 @@ export function getAreaCandidates(
 
     //右上から左上
     while (screenRa < raWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, conf);
-        // const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa += dscreenRa;
@@ -222,7 +216,7 @@ export function getAreaCandidates(
     screenRa = raWidth;
     screenDec = decWidth;
     while (screenDec > -decWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec -= dscreenDec;
@@ -231,7 +225,7 @@ export function getAreaCandidates(
     screenRa = raWidth;
     screenDec = -decWidth;
     while (screenRa > -raWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa -= dscreenRa;
@@ -240,7 +234,7 @@ export function getAreaCandidates(
     screenRa = -raWidth;
     screenDec = -decWidth;
     while (screenDec < decWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec += dscreenDec;
@@ -275,11 +269,8 @@ export function getGridIntervals(
 }
 
 export function getBetaRange(
-    lstLat: LstLat,
     fov: Fov,
     config: TransformModeConfig,
-    coordinateConverter: CoordinateConverter,
-    orientationData?: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
 ): number[] {
     let maxBeta = 90;
     let minBeta = -90;
@@ -288,9 +279,6 @@ export function getBetaRange(
             90,
             Math.max(
                 config.center.dec + fov.dec / 2,
-                // coordinateConverter.screenRaDecToEquatorial(
-                //     lstLat, { ra: fieldOfViewRA / 2, dec: fov.dec / 2 }, config
-                // ).dec
                 CanvasRaDec.toRaDec({ra: fov.ra / 2, dec: fov.dec / 2}, config).dec
             )
         );
@@ -298,9 +286,6 @@ export function getBetaRange(
             -90,
             Math.min(
                 config.center.dec - fov.dec / 2,
-                // coordinateConverter.screenRaDecToEquatorial(
-                //     lstLat, { ra: fieldOfViewRA / 2, dec: -fov.dec / 2 }, config
-                // ).dec
                 CanvasRaDec.toRaDec({ra: fov.ra / 2, dec: -fov.dec / 2}, config).dec
             )
         );
@@ -309,18 +294,12 @@ export function getBetaRange(
             90,
             Math.max(
                 config.center.alt + fov.dec / 2,
-                // coordinateConverter.screenRaDecToHorizontal(
-                //     lstLat, { ra: fieldOfViewRA / 2, dec: fov.dec / 2 }, conf
-                // ).alt
                 CanvasRaDec.toAzAlt({ra: fov.ra / 2, dec: fov.dec / 2}, config).alt
             )
         );
         minBeta = Math.max(
             -90,
             Math.min(config.center.alt - fov.dec / 2,
-                // coordinateConverter.screenRaDecToHorizontal(
-                //     lstLat, { ra: fieldOfViewRA / 2, dec: -fov.dec / 2 }, conf
-                // ).alt
                 CanvasRaDec.toAzAlt({ra: fov.ra / 2, dec: -fov.dec / 2}, config).alt
             )
         );
@@ -336,39 +315,18 @@ export function getGridLineWidth(beta: number): number {
 }
 
 export function getAlphaRange(
-    lstLat: LstLat,
     fov: Fov,
     alpha: number,
     config: TransformModeConfig,
-    coordinateConverter: CoordinateConverter,
-    orientationData?: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
 ): number {
     if (config.mode == 'AEP') {
         return Math.max(
-            // (coordinateConverter.screenRaDecToEquatorial(
-            //     lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, config
-            // ).ra - alpha + 360.0) % 360,
-            // (coordinateConverter.screenRaDecToEquatorial(
-            //     lstLat, { ra: fieldOfViewRA / 2, dec: 0.0 }, conf
-            // ).ra - alpha + 360.0) % 360,
-            // (coordinateConverter.screenRaDecToEquatorial(
-            //     lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, conf
-            // ).ra - alpha + 360.0) % 360
             (CanvasRaDec.toRaDec({ra: fov.ra / 2, dec:  fov.dec / 2}, config).ra - alpha + 360.0) % 360.0,
             (CanvasRaDec.toRaDec({ra: fov.ra / 2, dec:          0.0}, config).ra - alpha + 360.0) % 360.0,
             (CanvasRaDec.toRaDec({ra: fov.ra / 2, dec: -fov.dec / 2}, config).ra - alpha + 360.0) % 360.0,
         );
     } else if (config.mode == 'view') {
         return Math.max(
-            // (coordinateConverter.screenRaDecToHorizontal(
-            //     lstLat, { ra: -fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, config
-            // ).az - alpha + 360.0) % 360,
-            // (coordinateConverter.screenRaDecToHorizontal(
-            //     lstLat, { ra: -fieldOfViewRA / 2, dec: 0.0 }, config
-            // ).az - alpha + 360.0) % 360,
-            // (coordinateConverter.screenRaDecToHorizontal(
-            //     lstLat, { ra: -fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, config
-            // ).az - alpha + 360.0) % 360
             (CanvasRaDec.toAzAlt({ra: -fov.ra / 2, dec:  fov.dec / 2}, config).az - alpha + 360.0) % 360.0,
             (CanvasRaDec.toAzAlt({ra: -fov.ra / 2, dec:          0.0}, config).az - alpha + 360.0) % 360.0,
             (CanvasRaDec.toAzAlt({ra: -fov.ra / 2, dec: -fov.dec / 2}, config).az - alpha + 360.0) % 360.0,

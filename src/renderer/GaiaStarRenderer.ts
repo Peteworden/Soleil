@@ -4,6 +4,7 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { ColorManager } from "./colorManager.js";
 import { RaDec } from "../core/coordinates/index.js";
+import { DEG_TO_RAD } from "../utils/constants.js";
 
 export class GaiaStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
@@ -11,7 +12,6 @@ export class GaiaStarRenderer {
     constructor(
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
-        private coordinateConverter: CoordinateConverter,
         private colorManager: ColorManager,
         private areaCandidates: () => number[][],
         private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
@@ -36,7 +36,17 @@ export class GaiaStarRenderer {
         const unclipedLimitingMagnitude = AstronomicalCalculator.unclipedLimitingMagnitude(this.config.viewState);
         
         const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
-        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
+        const centerRaRad = this.config.viewState.centerRA * DEG_TO_RAD;
+        const sinCenterDec = Math.sin(this.config.viewState.centerDec * DEG_TO_RAD);
+        const cosCenterDec = Math.cos(this.config.viewState.centerDec * DEG_TO_RAD);
+        const centerAzRad = this.config.viewState.centerAz * DEG_TO_RAD;
+        const sinCenterAlt = Math.sin(this.config.viewState.centerAlt * DEG_TO_RAD);
+        const cosCenterAlt = Math.cos(this.config.viewState.centerAlt * DEG_TO_RAD);
+        const sinLat = Math.sin(this.config.observationSite.latitude * DEG_TO_RAD);
+        const cosLat = Math.cos(this.config.observationSite.latitude * DEG_TO_RAD);
+        const siderealTime = this.config.siderealTime;
+        
 
         if (this.config.displaySettings.usedStar == 'to6') {
             if (magBrightest > 6.5) return;
@@ -44,17 +54,19 @@ export class GaiaStarRenderer {
             if (magBrightest > 10.0) return;
         }
 
-        const currentJd = (window as any).config.displayTime.jd;
+        const currentJd = this.config.displayTime.jd;
         // 歳差運動補正をキャッシュ
         let precessionAngle: number;
         let recalculate = false;
         if (this.precessionCache && Math.abs(this.precessionCache.jd - currentJd) < 10.0) {
             precessionAngle = this.precessionCache.angle;
         } else {
-            precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
+            precessionAngle = AstronomicalCalculator.precessionAngle('j2000', currentJd);
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
             recalculate = true;
         }
+        const sinPrec = Math.sin(precessionAngle);
+        const cosPrec = Math.cos(precessionAngle);
 
         const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
 
@@ -80,25 +92,28 @@ export class GaiaStarRenderer {
                         if (mag >= limitingMagnitude) continue;
                         const ra = raInt + gaiaData.raArray[i];
                         const dec = decInt + gaiaData.decArray[i];
-                        const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
-                        // const screenXY = this.coordinateConverter.equatorialToScreenXYifin(coords, this.config);
-                        const [ifin, {x, y}] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                        // const coords = RaDec.precession({ ra, dec }, precessionAngle);
+                        const coords = RaDec.precessionFast({ra: ra * DEG_TO_RAD, dec: dec * DEG_TO_RAD}, sinPrec, cosPrec);
+                        // const [ifin, {x, y}] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                        const [ifin, xy] = RaDec.toCanvasXYifinFast(
+                            coords, this.config.displaySettings.mode,
+                            centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
+                            fov, this.config.canvasSize
+                        )
                         if (!ifin) continue;
 
                         starInformation.push({
                             type: 'gaiaStar',
-                            x: x,
-                            y: y,
+                            x: xy.x,
+                            y: xy.y,
                             data: {
-                                raJ2000: ra,
-                                decJ2000: dec,
-                                raApparent: coords.ra,
-                                decApparent: coords.dec,
+                                radecJ2000: {ra, dec},
+                                radecApparent: coords,
                                 mag: mag
                             }
                         });
                         this.drawGaiaStar(
-                            {x, y}, 
+                            xy, 
                             mag, limitingMagnitude, unclipedLimitingMagnitude, zeroMagSize, 
                             faintFillStyle, brightFillStyle
                         );
@@ -119,8 +134,14 @@ export class GaiaStarRenderer {
                         if (mag >= limitingMagnitude) continue;
                         const ra = raInt + gaiaData.raArray[i];
                         const dec = decInt + gaiaData.decArray[i];
-                        const coords = this.coordinateConverter.precessionEquatorial({ ra, dec }, precessionAngle);
-                        const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                        // const coords = RaDec.precession({ ra, dec }, precessionAngle);
+                        const coords = RaDec.precessionFast({ra: ra * DEG_TO_RAD, dec: dec * DEG_TO_RAD}, sinPrec, cosPrec);
+                        // const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                        const [ifin, xy] = RaDec.toCanvasXYifinFast(
+                            coords, this.config.displaySettings.mode,
+                            centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
+                            fov, this.config.canvasSize
+                        )
                         if (!ifin) continue;
 
                         this.drawGaiaStar(
@@ -158,12 +179,10 @@ export class GaiaStarRenderer {
             const sprite = this.getGaiaStarSprite(starSize);
             if (sprite) {
                 this.ctx.drawImage(sprite, xy.x - sprite.width / 2, xy.y - sprite.height / 2);
-                return;
             } else {
-                console.log(starSize);
+                console.log(`no gaia splite for size ${starSize}`);
                 const off = this.createGaiaStarSprite(starSize, brightFillStyle, 2.5);
                 this.ctx.drawImage(off, xy.x - off.width / 2, xy.y - off.height / 2);
-                return;
             }
         } else {
             if (mag > unclipedLimitingMagnitude - 3.0) {
@@ -173,12 +192,12 @@ export class GaiaStarRenderer {
                 this.ctx.fillStyle = brightFillStyle;
             }
 
-            if (starSize < 2.0) {
-                this.ctx.fillRect(xy.x - starSize * 0.7, xy.y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
-            } else {
+            // if (starSize < 2.0) {
+            //     this.ctx.fillRect(xy.x - starSize * 0.7, xy.y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
+            // } else {
                 this.ctx.moveTo(xy.x, xy.y);
                 this.ctx.arc(xy.x, xy.y, starSize, 0, Math.PI * 2);
-            }
+            // }
         }
     }
 

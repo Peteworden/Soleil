@@ -4,6 +4,7 @@ import { CoordinateConverter } from "../core/coordinates.js";
 import { ColorManager } from "./colorManager.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { RaDec } from "../core/coordinates/index.js";
+import { DEG_TO_RAD } from "../utils/constants.js";
 
 export class HipStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
@@ -14,7 +15,6 @@ export class HipStarRenderer {
     constructor(
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
-        private coordinateConverter: CoordinateConverter,
         private colorManager: ColorManager,
         private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
     ) {
@@ -33,14 +33,24 @@ export class HipStarRenderer {
         const currentJd = this.config.displayTime.jd;
         
         const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
-        const transformConfig = this.coordinateConverter.chartConfigToTransformConfig(this.config);
+        const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
+
+        const centerRaRad = this.config.viewState.centerRA * DEG_TO_RAD;
+        const sinCenterDec = Math.sin(this.config.viewState.centerDec * DEG_TO_RAD);
+        const cosCenterDec = Math.cos(this.config.viewState.centerDec * DEG_TO_RAD);
+        const centerAzRad = this.config.viewState.centerAz * DEG_TO_RAD;
+        const sinCenterAlt = Math.sin(this.config.viewState.centerAlt * DEG_TO_RAD);
+        const cosCenterAlt = Math.cos(this.config.viewState.centerAlt * DEG_TO_RAD);
+        const sinLat = Math.sin(this.config.observationSite.latitude * DEG_TO_RAD);
+        const cosLat = Math.cos(this.config.observationSite.latitude * DEG_TO_RAD);
+        const siderealTime = this.config.siderealTime;
 
         // 歳差運動補正をキャッシュ
         let precessionAngle: number;
         if (this.precessionCache && Math.abs(this.precessionCache.jd - currentJd) < 10.0) {
             precessionAngle = this.precessionCache.angle;
         } else {
-            precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
+            precessionAngle = AstronomicalCalculator.precessionAngle('j2000', currentJd);
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
         }
 
@@ -63,8 +73,14 @@ export class HipStarRenderer {
             for (let i = 0; i < cachedStars.count; i++) {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
-                const coords = { ra : cachedStars.raArray[i], dec: cachedStars.decArray[i] };
+                const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
+                // const coords = { ra: cachedStars.raArray[i] * DEG_TO_RAD, dec: cachedStars.decArray[i] * DEG_TO_RAD };
                 const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                // const [ifin, xy] = RaDec.toCanvasXYifinFast(
+                    // coords, this.config.displaySettings.mode,
+                    // centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
+                    // fov, this.config.canvasSize
+                // )
                 if (!ifin) continue;
                 const color = this.hipStarsColors[i];
                 starInformation.push({
@@ -72,8 +88,7 @@ export class HipStarRenderer {
                     x: xy.x,
                     y: xy.y,
                     data: {
-                        ra: coords.ra,
-                        dec: coords.dec,
+                        radec: coords,
                         mag: mag,
                         bv: cachedStars.bvArray[i]
                     }
@@ -83,8 +98,14 @@ export class HipStarRenderer {
         } else {
             for (let i = 0; i < cachedStars.count; i++) {
                 if (cachedStars.magArray[i] > limitingMagnitude) continue;
-                const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
-                const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                // const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
+                const coords = { ra: cachedStars.raArray[i] * DEG_TO_RAD, dec: cachedStars.decArray[i] * DEG_TO_RAD };
+                // const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                const [ifin, xy] = RaDec.toCanvasXYifinFast(
+                    coords, this.config.displaySettings.mode,
+                    centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
+                    fov, this.config.canvasSize
+                )
                 if (!ifin) continue;
                 const color = this.hipStarsColors[i];
                 this.drawHipStar(cachedStars.magArray[i], cachedStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
@@ -101,7 +122,6 @@ export class HipStarRenderer {
 
         // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
         if (starSize > 2) {
-            // return;
             let bv10Str = "null";
             if (!Number.isNaN(bv)) {
                 bv10Str = Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString();
@@ -215,11 +235,11 @@ export class HipStarRenderer {
         }
 
         // console.log("HIP cache check:", this.hipStarsCache?.jd, jd);
-        if (this.hipStarsCache && Math.abs(this.hipStarsCache.jd - jd) < 10.0) {
+        if (this.hipStarsCache !== null && Math.abs(this.hipStarsCache.jd - jd) < 10.0) {
             return this.hipStarsCache.stars;
         }
 
-        if (!this.hipStarsCache || this.hipStarsCache.stars.count !== hipStars.count) {
+        if (this.hipStarsCache === null || this.hipStarsCache.stars.count !== hipStars.count) {
             this.hipStarsCache = {
                 stars: {
                     raArray: new Float32Array(hipStars.count),
@@ -233,15 +253,16 @@ export class HipStarRenderer {
         } else {
             this.hipStarsCache.jd = jd;
         }
-        const precessionAngle = this.coordinateConverter.precessionAngle('j2000', jd);
+        const precessionAngle = AstronomicalCalculator.precessionAngle('j2000', jd);
 
         // 新しいHIP星データを作成（歳差運動補正済み）
         let originalCoords = { ra: hipStars.raArray[0], dec: hipStars.decArray[0] };
+        let radec = {ra: 0.0, dec: 0.0};
         for (let i = 0; i < hipStars.count; i++) {
             originalCoords = { ra: hipStars.raArray[i], dec: hipStars.decArray[i] };
-            const correctedCoords = this.coordinateConverter.precessionEquatorial(originalCoords, precessionAngle);
-            this.hipStarsCache.stars.raArray[i] = correctedCoords.ra;
-            this.hipStarsCache.stars.decArray[i] = correctedCoords.dec;
+            radec = RaDec.precession(originalCoords, precessionAngle);
+            this.hipStarsCache.stars.raArray[i] = radec.ra;
+            this.hipStarsCache.stars.decArray[i] = radec.dec;
         }
         return this.hipStarsCache.stars;
     }
@@ -251,6 +272,7 @@ export class HipStarRenderer {
      * サイズ別にハロー付きの星を描画し、キャッシュしておく
      */
     createHipStarSprites(): void {
+        console.log('create hip star sprites');
         this.hipStarSprites.clear();
         const baseColor = this.colorManager.getColor('star');
 
@@ -307,11 +329,12 @@ export class HipStarRenderer {
 
     getHipStarsColors(bvs: Float32Array): string[] {
         const colors = Array.from(bvs).map((bv: number) => this.colorManager.getStarColor(bv));
-        console.log("colors", colors);
         return colors;
     }
 
-    clearHipStarsCache(): void {
-        this.hipStarsCache = null;
+    clearHipStarsCache(jd: number, threshold: number = 10): void {
+        if (this.hipStarsCache !== null && Math.abs(jd - this.hipStarsCache.jd) > threshold) {
+            this.hipStarsCache = null;
+        }
     }
 }
