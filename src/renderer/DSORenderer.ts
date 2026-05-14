@@ -166,14 +166,14 @@ export class DSORenderer {
         this.ctx.save();
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
-        const overlaySize = overlay.width * this.canvas.width / this.config.viewState.fieldOfViewRA;
+        const overlaySize = overlay.width * this.canvas.width / this.fov.ra;
         this.ctx.globalAlpha = overlay.opacity;
         if (mode == 'AEP') {
             this.ctx.drawImage(this.imageCache[name], x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
         } else if (mode == 'view') {
             this.ctx.translate(x, y);
             const oneDegNorth = {ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999)};
-            const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.fov, this.config.canvasSize, this.transformConfig);
+            const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.fov, this.config.canvasSize, this.transformConfig, true);
             const rotation = Math.atan2(oneDegNorthXY[1].x - x, -oneDegNorthXY[1].y + y);
             this.ctx.rotate(rotation);
             this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);
