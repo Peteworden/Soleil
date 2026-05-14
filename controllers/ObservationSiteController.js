@@ -1,4 +1,4 @@
-import { SettingController } from './SettingController.js';
+import { getConfig, saveConfigToLocalStorage, updateConfig } from '../main.js';
 export class ObservationSiteController {
     /**
      * 観測地選択の初期化
@@ -73,13 +73,16 @@ export class ObservationSiteController {
                 if (observationSiteSelect) {
                     observationSiteSelect.value = 'カスタム';
                 }
-                this.updateConfig({
-                    observerPlanet: '地球',
-                    name: 'カスタム',
-                    latitude: lat,
-                    longitude: lon,
-                    timezone: 9
+                updateConfig({
+                    observationSite: {
+                        observerPlanet: '地球',
+                        name: 'カスタム',
+                        latitude: lat,
+                        longitude: lon,
+                        timezone: 9
+                    }
                 });
+                saveConfigToLocalStorage();
             }
         }
     }
@@ -113,7 +116,8 @@ export class ObservationSiteController {
             ewSelect.value = lonDeg >= 0 ? '東経' : '西経';
         }
         // 設定の更新
-        this.updateConfig(site);
+        updateConfig({ observationSite: site });
+        saveConfigToLocalStorage();
         console.log(`🗺️ Observation site set to: ${latDeg}°, ${lonDeg}°`);
     }
     /**
@@ -214,9 +218,7 @@ export class ObservationSiteController {
             alert('地図ライブラリが読み込まれていません');
             return;
         }
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const currentLat = config.observationSite.latitude;
         const currentLon = config.observationSite.longitude;
         this.map = L.map('observation-site-map').setView([currentLat, currentLon], 10);
@@ -257,18 +259,6 @@ export class ObservationSiteController {
             this.map.remove();
             this.map = null;
         }
-    }
-    /**
-     * 設定を更新
-     */
-    static updateConfig(site) {
-        const updateConfig = window.updateConfig;
-        if (updateConfig) {
-            updateConfig({
-                observationSite: site
-            });
-        }
-        SettingController.saveConfigToLocalStorage();
     }
     /**
      * 保存された観測地を読み込み

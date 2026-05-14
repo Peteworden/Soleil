@@ -1,7 +1,8 @@
+import { getConfig } from '../main.js';
 export class ShareController {
     static copyShareUrl() {
         try {
-            const config = window.config;
+            const config = getConfig();
             const ra = ShareController.roundTo(config.viewState.centerRA, 3);
             const dec = ShareController.roundTo(config.viewState.centerDec, 3);
             const lat = ShareController.roundTo(config.observationSite.latitude, 3);

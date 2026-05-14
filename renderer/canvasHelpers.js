@@ -1,3 +1,4 @@
+import { CanvasRaDec, RaDec } from '../core/coordinates/index.js';
 export function starSize_0mag(fieldOfViewRA, fieldOfViewDec) {
     return Math.max(200.0 / (Math.min(fieldOfViewRA, fieldOfViewDec) + 15), 3.0);
 }
@@ -32,9 +33,9 @@ export function rangeInt(a, b) {
         return [];
     return Array.from({ length: end - start + 1 }, (_, i) => start + i);
 }
-export function addEdge(lstLat, screenRA, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode) {
-    const equatorialApparent = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRA, dec: screenDec }, mode, undefined);
-    const equatorial = coordinateConverter.precessionEquatorial(equatorialApparent, undefined, jd, 'j2000');
+export function addEdge(screenRA, screenDec, edgeRA, edgeDec, jd, conf) {
+    const equatorialApparent = CanvasRaDec.toRaDec({ ra: screenRA, dec: screenDec }, conf);
+    const equatorial = RaDec.precession(equatorialApparent, undefined, jd, 'j2000');
     edgeRA.push(equatorial.ra);
     edgeDec.push(equatorial.dec);
 }
@@ -159,56 +160,57 @@ export function getAreaCandidatesFromEdge(edgeRA, edgeDec, np, sp) {
     }
     return candidateAreas;
 }
-export function getAreaCandidates(lstLat, viewState, jd, mode, coordinateConverter) {
-    if (!['AEP', 'view'].includes(mode))
+export function getAreaCandidates(lstLat, viewState, jd, conf) {
+    if (!['AEP', 'view'].includes(conf.mode))
         return [];
     const edgeRA = [];
     const edgeDec = [];
     const raWidth = viewState.fieldOfViewRA * 0.5 + 1.0;
     const decWidth = viewState.fieldOfViewDec * 0.5 + 1.0;
-    const currentNorthPoleJ2000 = coordinateConverter.precessionEquatorial({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
-    const currentSouthPoleJ2000 = coordinateConverter.precessionEquatorial({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
-    const npScreenRaDec = coordinateConverter.equatorialToScrenRaDec(currentNorthPoleJ2000, mode, lstLat, viewState, undefined);
-    const spScreenRaDec = coordinateConverter.equatorialToScrenRaDec(currentSouthPoleJ2000, mode, lstLat, viewState, undefined);
-    const npIsIn = Math.abs(npScreenRaDec.ra) < raWidth + 3.0 && Math.abs(npScreenRaDec.dec) < decWidth + 3.0;
-    const spIsIn = Math.abs(spScreenRaDec.ra) < raWidth + 3.0 && Math.abs(spScreenRaDec.dec) < decWidth + 3.0;
+    const currentNorthPoleJ2000 = RaDec.precession({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
+    const currentSouthPoleJ2000 = RaDec.precession({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
+    const npCanvasRadec = RaDec.toCanvasRadec(currentNorthPoleJ2000, conf);
+    const spCanvasRadec = RaDec.toCanvasRadec(currentSouthPoleJ2000, conf);
+    const npIsIn = Math.abs(npCanvasRadec.ra) < raWidth + 3.0 && Math.abs(npCanvasRadec.dec) < decWidth + 3.0;
+    const spIsIn = Math.abs(spCanvasRadec.ra) < raWidth + 3.0 && Math.abs(spCanvasRadec.dec) < decWidth + 3.0;
     let screenRa = -raWidth;
     let screenDec = decWidth;
     let dscreenRa = 0.0;
     let dscreenDec = 0.0;
+    let edgePointRadec;
     // 天球全体が見えるときの処理はごまかしているかも
     //右上から左上
     while (screenRa < raWidth) {
-        addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
-        dscreenRa = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
+        dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa += dscreenRa;
     }
     //左上から左下
     screenRa = raWidth;
     screenDec = decWidth;
     while (screenDec > -decWidth) {
-        addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
-        dscreenDec = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
+        dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec -= dscreenDec;
     }
     //左下から右下
     screenRa = raWidth;
     screenDec = -decWidth;
     while (screenRa > -raWidth) {
-        addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
-        dscreenRa = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
+        dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa -= dscreenRa;
     }
     //右下から右上
     screenRa = -raWidth;
     screenDec = -decWidth;
     while (screenDec < decWidth) {
-        addEdge(lstLat, screenRa, screenDec, edgeRA, edgeDec, jd, coordinateConverter, mode);
-        const edgePointEquatorial = coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: screenRa, dec: screenDec }, mode, undefined);
-        dscreenDec = 0.3 * Math.max(Math.cos(edgePointEquatorial.dec * Math.PI / 180), 0.01);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
+        dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec += dscreenDec;
     }
     return getAreaCandidatesFromEdge(edgeRA, edgeDec, npIsIn, spIsIn);
@@ -233,16 +235,16 @@ export function getGridIntervals(fieldOfViewRA, fieldOfViewDec, alpha, beta) {
     }
     return [alphaInterval, betaInterval, alphaCalcInterval, betaCalcInterval];
 }
-export function getBetaRange(lstLat, fieldOfViewRA, fieldOfViewDec, centerRA, centerDec, centerAz, centerAlt, mode, coordinateConverter, orientationData) {
+export function getBetaRange(fov, config) {
     let maxBeta = 90;
     let minBeta = -90;
-    if (mode == 'AEP') {
-        maxBeta = Math.min(90, Math.max(centerDec + fieldOfViewDec / 2, coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).dec));
-        minBeta = Math.max(-90, Math.min(centerDec - fieldOfViewDec / 2, coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).dec));
+    if (config.mode == 'AEP') {
+        maxBeta = Math.min(90, Math.max(config.center.dec + fov.dec / 2, CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: fov.dec / 2 }, config).dec));
+        minBeta = Math.max(-90, Math.min(config.center.dec - fov.dec / 2, CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: -fov.dec / 2 }, config).dec));
     }
-    else if (mode == 'view') {
-        maxBeta = Math.min(90, Math.max(centerAlt + fieldOfViewDec / 2, coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).alt));
-        minBeta = Math.max(-90, Math.min(centerAlt - fieldOfViewDec / 2, coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).alt));
+    else if (config.mode == 'view') {
+        maxBeta = Math.min(90, Math.max(config.center.alt + fov.dec / 2, CanvasRaDec.toAzAlt({ ra: fov.ra / 2, dec: fov.dec / 2 }, config).alt));
+        minBeta = Math.max(-90, Math.min(config.center.alt - fov.dec / 2, CanvasRaDec.toAzAlt({ ra: fov.ra / 2, dec: -fov.dec / 2 }, config).alt));
     }
     else {
         return [0, 0];
@@ -255,12 +257,12 @@ export function getGridLineWidth(beta) {
     else
         return 1;
 }
-export function getAlphaRange(lstLat, fieldOfViewRA, fieldOfViewDec, alpha, mode, coordinateConverter, orientationData) {
-    if (mode == 'AEP') {
-        return Math.max((coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode).ra - alpha + 360.0) % 360, (coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: 0.0 }, mode).ra - alpha + 360.0) % 360, (coordinateConverter.screenRaDecToEquatorial(lstLat, { ra: fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode).ra - alpha + 360.0) % 360);
+export function getAlphaRange(fov, alpha, config) {
+    if (config.mode == 'AEP') {
+        return Math.max((CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: fov.dec / 2 }, config).ra - alpha + 360.0) % 360.0, (CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: 0.0 }, config).ra - alpha + 360.0) % 360.0, (CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: -fov.dec / 2 }, config).ra - alpha + 360.0) % 360.0);
     }
-    else if (mode == 'view') {
-        return Math.max((coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: -fieldOfViewRA / 2, dec: fieldOfViewDec / 2 }, mode, undefined).az - alpha + 360.0) % 360, (coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: -fieldOfViewRA / 2, dec: 0.0 }, mode, undefined).az - alpha + 360.0) % 360, (coordinateConverter.screenRaDecToHorizontal(lstLat, { ra: -fieldOfViewRA / 2, dec: -fieldOfViewDec / 2 }, mode, undefined).az - alpha + 360.0) % 360);
+    else if (config.mode == 'view') {
+        return Math.max((CanvasRaDec.toAzAlt({ ra: -fov.ra / 2, dec: fov.dec / 2 }, config).az - alpha + 360.0) % 360.0, (CanvasRaDec.toAzAlt({ ra: -fov.ra / 2, dec: 0.0 }, config).az - alpha + 360.0) % 360.0, (CanvasRaDec.toAzAlt({ ra: -fov.ra / 2, dec: -fov.dec / 2 }, config).az - alpha + 360.0) % 360.0);
     }
     else {
         return 0;

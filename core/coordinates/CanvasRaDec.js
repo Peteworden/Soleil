@@ -1,109 +1,97 @@
 import { asindeg } from "../mathUtils.js";
-import { AzAlt } from "./AzAlt.js";
-import { RaDec } from "./RaDec.js";
-import { Cartesian } from "./Cartesian.js";
+// import { Cartesian } from "./Cartesian.js";
 import { DEG_TO_RAD, RAD_TO_DEG } from '../../utils/constants.js';
-export class CanvasRaDec {
-    constructor(ra, dec) {
-        this.ra = ra;
-        this.dec = dec;
+import * as RaDec from "./RaDec.js";
+import * as AzAlt from "./AzAlt.js";
+import { Cartesian } from "./index.js";
+export function isCenter(coord) {
+    return coord.ra == 0 && coord.dec == 0;
+}
+export function toRad(canvasRadec) {
+    return { ra: canvasRadec.ra * DEG_TO_RAD, dec: canvasRadec.dec * DEG_TO_RAD };
+}
+export function toCanvasXY(canvasRadec, canvasSize, fov) {
+    const x = canvasSize.width * (0.5 - canvasRadec.ra / fov.ra);
+    const y = canvasSize.height * (0.5 - canvasRadec.dec / fov.dec);
+    return { x, y };
+}
+export function toRaDec(canvasRadec, config) {
+    if (config.mode == 'AEP') {
+        return toRadec_AEP(canvasRadec, config.center);
     }
-    isCenter() {
-        return this.ra == 0 && this.dec == 0;
+    else if (config.mode == 'view') {
+        return AzAlt.toRadec(toAzAlt_View(canvasRadec, config.center), config.location);
     }
-    toRad() {
-        return { ra: this.ra * DEG_TO_RAD, dec: this.dec * DEG_TO_RAD };
+    else if (['live', 'ar'].includes(config.mode)) {
+        return AzAlt.toRadec(toAzAlt_Live(canvasRadec, config.orientationData), config.location);
     }
-    toCanvasXY(canvasSize, viewState) {
-        const x = canvasSize.width * (0.5 - this.ra / viewState.fieldOfViewRA);
-        const y = canvasSize.height * (0.5 - this.dec / viewState.fieldOfViewDec);
-        return { x, y };
+    return { ra: 0.0, dec: 0.0 };
+}
+export function toAzAlt(canvasRadec, config) {
+    if (config.mode == 'AEP') {
+        return RaDec.toAzalt(toRadec_AEP(canvasRadec, config.center), config.location);
     }
-    toRaDec(mode, viewState, lstLat, orientationData) {
-        if (mode == 'AEP') {
-            const center = new RaDec(viewState.centerRA, viewState.centerDec);
-            return this.toRaDec_AEP(center);
-        }
-        else if (mode == 'view') {
-            const center = new AzAlt(viewState.centerAz, viewState.centerAlt);
-            return this.toAzAlt_View(center).toRaDec(lstLat);
-        }
-        else if (['live', 'ar'].includes(mode) && orientationData) {
-            return this.toAzAlt_Live(orientationData).toRaDec(lstLat);
-        }
-        return new RaDec(0, 0);
+    else if (config.mode == 'view') {
+        return toAzAlt_View(canvasRadec, config.center);
     }
-    toAzAlt(mode, viewState, lstLat, orientationData) {
-        if (mode == 'AEP') {
-            const center = new RaDec(viewState.centerRA, viewState.centerDec);
-            return this.toRaDec_AEP(center).toAzAlt(lstLat);
-        }
-        else if (mode == 'view') {
-            const center = new AzAlt(viewState.centerAz, viewState.centerAlt);
-            return this.toAzAlt_View(center);
-        }
-        else if (['live', 'ar'].includes(mode) && orientationData) {
-            return this.toAzAlt_Live(orientationData);
-        }
-        return new AzAlt(0, 0);
+    else if (['live', 'ar'].includes(config.mode)) {
+        return toAzAlt_Live(canvasRadec, config.orientationData);
     }
-    toRaDec_AEP(center) {
-        if (this.isCenter()) {
-            return new RaDec(center.ra, center.dec);
-        }
-        else {
-            const thetaSH = Math.atan2(this.ra, -this.dec);
-            const r = Math.sqrt(this.ra * this.ra + this.dec * this.dec) * DEG_TO_RAD;
-            const centerDec_rad = center.dec * DEG_TO_RAD;
-            const sinDec = Math.sin(centerDec_rad);
-            const cosDec = Math.cos(centerDec_rad);
-            const sinR = Math.sin(r);
-            const cosR = Math.cos(r);
-            const sinThetaSH = Math.sin(thetaSH);
-            const cosThetaSH = Math.cos(thetaSH);
-            const a = sinDec * sinR * cosThetaSH + cosDec * cosR;
-            const b = sinR * sinThetaSH;
-            const c = -cosDec * sinR * cosThetaSH + sinDec * cosR;
-            const dec = asindeg(c);
-            const ra = ((Math.atan2(b, a) * RAD_TO_DEG + center.ra) % 360 + 360) % 360;
-            return new RaDec(ra, dec);
-        }
+    return { az: 0.0, alt: 0.0 };
+}
+function toRadec_AEP(canvasRadec, center) {
+    if (isCenter(canvasRadec)) {
+        return center;
     }
-    // ViewモードでスクリーンRaDecから地平座標への変換
-    toAzAlt_View(center) {
-        if (this.isCenter()) {
-            return new AzAlt(center.az, center.alt);
-        }
-        else {
-            const { ra, dec } = this.toRad();
-            const thetaSH = Math.atan2(ra, -dec);
-            const r = Math.sqrt(ra * ra + dec * dec);
-            const centerRad = center.toRad();
-            const sinR = Math.sin(r);
-            const cosR = Math.cos(r);
-            const sinThetaSH = Math.sin(thetaSH);
-            const cosThetaSH = Math.cos(thetaSH);
-            const xyz = new Cartesian(sinR * cosThetaSH, sinR * sinThetaSH, cosR);
-            const abc = xyz.rotateY(Math.PI / 2 - centerRad.alt);
-            const abc2 = abc.rotateZ(-centerRad.az);
-            const { x: a, y: b, z: c } = abc2;
-            const alt = asindeg(c);
-            const az = ((Math.atan2(-b, a) * RAD_TO_DEG) % 360 + 360) % 360;
-            return new AzAlt(az, alt);
-        }
+    else {
+        const thetaSH = Math.atan2(canvasRadec.ra, -canvasRadec.dec);
+        const r = Math.sqrt(canvasRadec.ra * canvasRadec.ra + canvasRadec.dec * canvasRadec.dec) * DEG_TO_RAD;
+        const centerDec_rad = center.dec * DEG_TO_RAD;
+        const sinDec = Math.sin(centerDec_rad);
+        const cosDec = Math.cos(centerDec_rad);
+        const sinR = Math.sin(r);
+        const cosR = Math.cos(r);
+        const sinThetaSH = Math.sin(thetaSH);
+        const cosThetaSH = Math.cos(thetaSH);
+        const a = sinDec * sinR * cosThetaSH + cosDec * cosR;
+        const b = sinR * sinThetaSH;
+        const c = -cosDec * sinR * cosThetaSH + sinDec * cosR;
+        const dec = asindeg(c);
+        const ra = ((Math.atan2(b, a) * RAD_TO_DEG + center.ra) % 360 + 360) % 360;
+        return { ra: ra, dec: dec };
     }
-    // LiveモードでスクリーンRaDecから地平座標への変換
-    toAzAlt_Live(orientationData) {
-        const theta = Math.atan2(this.dec, -this.ra); //画面上で普通に極座標
-        const r = Math.sqrt(this.ra * this.ra + this.dec * this.dec) * DEG_TO_RAD;
-        const alpha = orientationData.alpha;
-        const beta = orientationData.beta;
-        const gamma = orientationData.gamma;
-        const xyz = new Cartesian(Math.sin(r) * Math.cos(theta), Math.sin(r) * Math.sin(theta), -Math.cos(r));
-        const { x, y, z } = xyz.rotateY(gamma).rotateX(beta).rotateZ(alpha);
-        const alt = asindeg(z);
-        const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
-        return new AzAlt(az, alt);
+}
+// ViewモードでスクリーンRaDecから地平座標への変換
+function toAzAlt_View(canvasRadec, center) {
+    if (isCenter(canvasRadec)) {
+        return center;
     }
+    const { ra, dec } = toRad(canvasRadec);
+    const thetaSH = Math.atan2(ra, -dec);
+    const r = Math.sqrt(ra * ra + dec * dec);
+    const centerRad = AzAlt.toRad(center);
+    const sinR = Math.sin(r);
+    const cosR = Math.cos(r);
+    const sinThetaSH = Math.sin(thetaSH);
+    const cosThetaSH = Math.cos(thetaSH);
+    const xyz = { x: sinR * cosThetaSH, y: sinR * sinThetaSH, z: cosR };
+    const abc = Cartesian.rotateY(xyz, Math.PI / 2 - centerRad.alt);
+    const { x: a, y: b, z: c } = Cartesian.rotateZ(abc, -centerRad.az);
+    const alt = asindeg(c);
+    const az = ((Math.atan2(-b, a) * RAD_TO_DEG) % 360 + 360) % 360;
+    return { az: az, alt: alt };
+}
+// LiveモードでスクリーンRaDecから地平座標への変換
+export function toAzAlt_Live(canvasRadec, orientationData) {
+    const theta = Math.atan2(canvasRadec.dec, -canvasRadec.ra); //画面上で普通に極座標
+    const r = Math.sqrt(canvasRadec.ra * canvasRadec.ra + canvasRadec.dec * canvasRadec.dec) * DEG_TO_RAD;
+    const alpha = orientationData.alpha;
+    const beta = orientationData.beta;
+    const gamma = orientationData.gamma;
+    const xyz = { x: Math.sin(r) * Math.cos(theta), y: Math.sin(r) * Math.sin(theta), z: -Math.cos(r) };
+    const { x, y, z } = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY(xyz, gamma), beta), alpha);
+    const alt = asindeg(z);
+    const az = ((Math.atan2(-y, x) * RAD_TO_DEG + (orientationData.webkitCompassHeading || 0) + 90) % 360 + 360) % 360;
+    return { az: az, alt: alt };
 }
 //# sourceMappingURL=CanvasRaDec.js.map

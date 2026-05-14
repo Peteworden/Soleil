@@ -1,7 +1,8 @@
 import { DataStore } from '../models/DataStore.js';
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { CoordinateConverter } from '../core/coordinates.js';
 import { ObjectInfoController } from './ObjectInfoController.js';
+import { Cartesian, RaDec } from '../core/coordinates/index.js';
+import { getConfig, updateConfig } from '../main.js';
 export class SearchController {
     static openSearch() {
         const searchDiv = document.getElementById('search');
@@ -481,21 +482,15 @@ export class SearchController {
     }
     static async selectSearchResult(position0, epoch = 'j2000') {
         // 検索結果が選択された時の処理
-        const config = window.config;
-        if (!config)
-            return;
-        const renderAll = window.renderAll;
-        if (!renderAll)
-            return;
-        const coordinateConverter = new CoordinateConverter();
+        const config = getConfig();
         // 検索結果が選択された時にobjectInfoとstarInfoを非表示
         ObjectInfoController.closeObjectInfo();
         let position = position0;
         if (epoch === 'j2000') {
-            position = coordinateConverter.precessionEquatorial(position0, undefined, 'j2000', config.displayTime.jd);
+            position = RaDec.precession(position0, undefined, 'j2000', config.displayTime.jd);
         }
-        const start_vector = coordinateConverter.equatorialToCartesian({ ra: config.viewState.centerRA, dec: config.viewState.centerDec });
-        const end_vector = coordinateConverter.equatorialToCartesian(position);
+        const start_vector = RaDec.toCartesian({ ra: config.viewState.centerRA, dec: config.viewState.centerDec });
+        const end_vector = RaDec.toCartesian(position);
         const steps = 30;
         const path_ras = [];
         const path_decs = [];
@@ -508,8 +503,8 @@ export class SearchController {
                 y: start_vector.y + (end_vector.y - start_vector.y) * i / steps,
                 z: start_vector.z + (end_vector.z - start_vector.z) * i / steps
             };
-            const new_position = coordinateConverter.cartesianToEquatorial(division_vector);
-            const horizontal = coordinateConverter.equatorialToHorizontal(lstLat, { ra: new_position.ra, dec: new_position.dec });
+            const new_position = Cartesian.toRaDec(division_vector);
+            const horizontal = RaDec.toAzalt({ ra: new_position.ra, dec: new_position.dec }, lstLat);
             path_ras.push(new_position.ra);
             path_decs.push(new_position.dec);
             path_azs.push(horizontal.az);
@@ -523,10 +518,7 @@ export class SearchController {
                 config.viewState.centerDec = path_decs[i];
                 config.viewState.centerAz = path_azs[i];
                 config.viewState.centerAlt = path_alts[i];
-                window.updateConfig({
-                    viewState: config.viewState
-                });
-                renderAll();
+                updateConfig({ viewState: config.viewState });
                 await new Promise(resolve => setTimeout(resolve, interval));
             }
         }

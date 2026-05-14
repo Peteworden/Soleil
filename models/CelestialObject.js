@@ -18,16 +18,6 @@ export class CelestialObject {
         return this.type;
     }
 }
-// export class HipStar extends CelestialObject {
-//     private bv: number | null;
-//     constructor(coordinates: EquatorialCoordinates, magnitude: number, bv: number | null) {
-//         super('', {ra: coordinates.ra, dec: coordinates.dec}, magnitude, 'hipStar');
-//         this.bv = bv || null;
-//     }
-//     getBv(): number | null {
-//         return this.bv;
-//     }
-// }
 export class MessierObject extends CelestialObject {
     constructor(name, otherNames, searchKeys, coordinates, magnitude, type, image_url, image_credit, overlay, description, wiki) {
         super(name, coordinates, magnitude, type);

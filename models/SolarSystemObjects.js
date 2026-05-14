@@ -1,3 +1,5 @@
+import { getConfig } from '../main.js';
+import { RaDec } from '../core/coordinates/index.js';
 import { SolarSystemPositionCalculator } from '../core/SolarSystemPositionCalculator.js';
 import { DataStore } from './DataStore.js';
 // 共通プロパティ
@@ -112,10 +114,8 @@ export function isOrbitalObject(obj) {
 export class SolarSystemDataManager {
     static async initialize() {
         await this.loadSolarSystemObjectElements();
-        const config = window.config;
-        if (config) {
-            this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
-        }
+        const config = getConfig();
+        this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
     }
     /**
      * solarObjects.jsonからデータを読み込む（最初の読み込み時のみ）
@@ -169,7 +169,8 @@ export class SolarSystemDataManager {
         else {
             this.solarObjects[index] = object;
         }
-        this.updateAllData(window.config.displayTime.jd, window.config.observationSite.observerPlanet);
+        const config = getConfig();
+        this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
         DataStore.triggerRenderUpdate();
     }
     static createSpecificClassObject(data) {
@@ -205,15 +206,12 @@ export class SolarSystemDataManager {
     static getSun() {
         return this.solarObjects.find(obj => isSun(obj));
     }
-    static getTwilight() {
+    static getTwilight(lstLat) {
         const sun = this.getSun();
         if (!sun)
             return '';
         const sunRaDec = sun.getRaDec();
-        const latitude = window.config.observationSite.latitude;
-        const siderealTime = window.config.siderealTime;
-        const lstLat = { lst: siderealTime, lat: latitude };
-        const sunAltitude = sunRaDec.toAzAlt(lstLat).alt;
+        const sunAltitude = RaDec.toAzalt(sunRaDec, lstLat).alt;
         let twilight = '';
         if (sunAltitude > -0.84) {
             twilight = '昼';

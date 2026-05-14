@@ -1,6 +1,7 @@
+import { AzAlt, RaDec } from "../core/coordinates/index.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
-import { CoordinateConverter } from "../core/coordinates.js";
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
+import { getConfig, updateConfig } from "../main.js";
 export class TimeController {
     static initialize() {
         // 既に初期化済みの場合はスキップ（表示更新のみ）
@@ -25,8 +26,8 @@ export class TimeController {
         this.timeSlider = document.getElementById('timeSlider');
         if (!this.timeSlider)
             return;
-        const config = window.config;
-        if (config && config.displayTime.realTime === 'off') {
+        const config = getConfig();
+        if (config.displayTime.realTime === 'off') {
             this.timeControl.style.display = 'block';
             this.sliderBaseJd = config.displayTime.jd;
             this.initSliderRange();
@@ -42,11 +43,9 @@ export class TimeController {
         this.timeSlider.addEventListener('change', (e) => {
             this.isDragging = false;
             // ドラッグ終了後、基準点を更新
-            const config = window.config;
-            if (config) {
-                this.sliderBaseJd = config.displayTime.jd;
-                this.initSliderRange();
-            }
+            const config = getConfig();
+            this.sliderBaseJd = config.displayTime.jd;
+            this.initSliderRange();
         });
         // 折りたたみトグル
         const toggleBtn = document.getElementById('timeControlToggle');
@@ -112,10 +111,8 @@ export class TimeController {
     // ステップ設定
     static setStep(minutes) {
         this.currentStepMinutes = minutes;
-        const config = window.config;
-        if (config) {
-            this.sliderBaseJd = config.displayTime.jd;
-        }
+        const config = getConfig();
+        this.sliderBaseJd = config.displayTime.jd;
         this.initSliderRange();
     }
     // スライダー範囲を初期化（基準点を使用）
@@ -153,15 +150,13 @@ export class TimeController {
         const display = document.getElementById('timeDisplayCompact');
         if (!display)
             return;
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const dt = config.displayTime;
         display.textContent = `${dt.month}/${dt.day} ${String(dt.hour).padStart(2, '0')}:${String(dt.minute).padStart(2, '0')}`;
     }
     // 一歩進む
     static stepForward() {
-        const config = window.config;
+        const config = getConfig();
         if (!config)
             return;
         const jdStep = this.currentStepMinutes / 1440.0;
@@ -169,17 +164,13 @@ export class TimeController {
     }
     // 一歩戻る
     static stepBackward() {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const jdStep = this.currentStepMinutes / 1440.0;
         this.setTimeWithoutSliderReset(config.displayTime.jd - jdStep);
     }
     // 日の出（6時）にジャンプ
     static jumpToSunrise() {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const dt = config.displayTime;
         let targetHour = 6;
         let year = dt.year;
@@ -197,9 +188,7 @@ export class TimeController {
     }
     // 日没（18時）にジャンプ
     static jumpToSunset() {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const dt = config.displayTime;
         let targetHour = 18;
         let year = dt.year;
@@ -250,11 +239,9 @@ export class TimeController {
             this.playIntervalId = null;
         }
         // 停止時に基準点を更新
-        const config = window.config;
-        if (config) {
-            this.sliderBaseJd = config.displayTime.jd;
-            this.initSliderRange();
-        }
+        const config = getConfig();
+        this.sliderBaseJd = config.displayTime.jd;
+        this.initSliderRange();
     }
     // 時刻を設定（スライダー範囲もリセット）
     static setTime(jd) {
@@ -272,23 +259,23 @@ export class TimeController {
     }
     // 内部の時刻設定処理
     static setTimeInternal(jd) {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const targetJd = AstronomicalCalculator.calculateYmdhmsJstFromJdTT(jd);
         const viewState = config.viewState;
-        const coordinateConverter = new CoordinateConverter();
+        const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
         if (config.displaySettings.mode == 'AEP') {
-            const centerAzAlt = coordinateConverter.equatorialToHorizontal({ lst: config.siderealTime, lat: config.observationSite.latitude }, { ra: viewState.centerRA, dec: viewState.centerDec });
+            const centerAzAlt = RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, lstlat);
             viewState.centerAz = centerAzAlt.az;
             viewState.centerAlt = centerAzAlt.alt;
         }
         else if (config.displaySettings.mode == 'view') {
-            const centerRaDec = coordinateConverter.horizontalToEquatorial({ lst: config.siderealTime, lat: config.observationSite.latitude }, { az: viewState.centerAz, alt: viewState.centerAlt });
+            const centerRaDec = AzAlt.toRadec({ az: viewState.centerAz, alt: viewState.centerAlt }, lstlat);
             viewState.centerRA = centerRaDec.ra;
             viewState.centerDec = centerRaDec.dec;
         }
-        const newConfig = {
+        SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
+        this.updateTimeDisplay();
+        updateConfig({
             viewState: viewState,
             displayTime: {
                 year: targetJd.year,
@@ -298,20 +285,11 @@ export class TimeController {
                 minute: targetJd.minute,
                 second: targetJd.second,
                 jd: jd,
-                realTime: 'off'
+                realTime: 'off',
+                loadOnCurrentTime: config.displayTime.loadOnCurrentTime
             },
             siderealTime: AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude || 135)
-        };
-        const updateConfig = window.updateConfig;
-        if (updateConfig) {
-            updateConfig(newConfig);
-        }
-        SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
-        this.updateTimeDisplay();
-        const renderAll = window.renderAll;
-        if (renderAll) {
-            renderAll();
-        }
+        });
     }
     static handleSliderInput(event) {
         const target = event.target;
@@ -320,9 +298,6 @@ export class TimeController {
         this.setTimeInternal(jd);
     }
     static setToCurrentTime() {
-        const config = window.config;
-        if (!config)
-            return;
         // 再生中なら停止
         if (this.isPlaying) {
             this.stopPlay();
@@ -335,9 +310,7 @@ export class TimeController {
             return;
         if (!this.timeSlider)
             return;
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         // リアルタイムモードの場合は非表示
         if (config.displayTime.realTime != 'off') {
             this.timeControl.style.display = 'none';
@@ -364,16 +337,8 @@ export class TimeController {
             controlPanel.style.display = 'block';
         }
     }
-    static updateSlider() {
-        this.updateSliderValue();
-    }
-    static onConfigUpdate() {
-        this.updateTimeDisplay();
-    }
     static toggleRealTime(mode) {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         // 再生中なら停止
         if (this.isPlaying) {
             this.stopPlay();
@@ -402,75 +367,61 @@ export class TimeController {
         this.updateSliderValue();
     }
     static realtimeRadec() {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const now = new Date();
         if (now.getSeconds() % 3 == 0 && now.getMilliseconds() < 500) {
             const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
-            config.displayTime.jd = jd;
-            const coordinateConverter = new CoordinateConverter();
-            const newCenterHorizontal = coordinateConverter.equatorialToHorizontal({ lst: config.siderealTime, lat: config.observationSite.latitude }, { ra: config.viewState.centerRA, dec: config.viewState.centerDec });
-            config.viewState.centerAz = newCenterHorizontal.az;
-            config.viewState.centerAlt = newCenterHorizontal.alt;
-            const updateConfig = window.updateConfig;
-            if (updateConfig) {
-                updateConfig({
-                    viewState: config.viewState,
-                    displayTime: {
-                        jd: jd,
-                        year: y,
-                        month: m,
-                        day: d,
-                        hour: h,
-                        minute: mi,
-                        second: 0,
-                        realTime: 'radec'
-                    }
-                });
-            }
+            const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+            const newCenterHorizontal = RaDec.toAzalt({ ra: config.viewState.centerRA, dec: config.viewState.centerDec }, lstlat);
             SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
-            const renderAll = window.renderAll;
-            if (renderAll) {
-                renderAll();
-            }
+            updateConfig({
+                viewState: {
+                    ...config.viewState,
+                    centerAz: newCenterHorizontal.az,
+                    centerAlt: newCenterHorizontal.alt
+                },
+                displayTime: {
+                    jd: jd,
+                    year: y,
+                    month: m,
+                    day: d,
+                    hour: h,
+                    minute: mi,
+                    second: 0,
+                    realTime: 'radec',
+                    loadOnCurrentTime: config.displayTime.loadOnCurrentTime
+                }
+            });
         }
     }
     static realtimeAzalt() {
-        const config = window.config;
-        if (!config)
-            return;
+        const config = getConfig();
         const now = new Date();
         if (now.getSeconds() % 3 == 0 && now.getMilliseconds() < 500) {
             const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
-            config.displayTime.jd = jd;
-            const coordinateConverter = new CoordinateConverter();
-            const newCenterEquatorial = coordinateConverter.horizontalToEquatorial({ lst: config.siderealTime, lat: config.observationSite.latitude }, { az: config.viewState.centerAz, alt: config.viewState.centerAlt });
-            config.viewState.centerRA = newCenterEquatorial.ra;
-            config.viewState.centerDec = newCenterEquatorial.dec;
-            const updateConfig = window.updateConfig;
-            if (updateConfig) {
-                updateConfig({
-                    viewState: config.viewState,
-                    displayTime: {
-                        jd: jd,
-                        year: y,
-                        month: m,
-                        day: d,
-                        hour: h,
-                        minute: mi,
-                        second: s,
-                        realTime: 'azalt'
-                    }
-                });
-            }
+            const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+            const newCenterEquatorial = AzAlt.toRadec({ az: config.viewState.centerAz, alt: config.viewState.centerAlt }, lstlat);
             SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
-            const renderAll = window.renderAll;
-            if (renderAll) {
-                renderAll();
-            }
+            updateConfig({
+                viewState: {
+                    ...config.viewState,
+                    centerRA: newCenterEquatorial.ra,
+                    centerDec: newCenterEquatorial.dec
+                },
+                displayTime: {
+                    jd: jd,
+                    year: y,
+                    month: m,
+                    day: d,
+                    hour: h,
+                    minute: mi,
+                    second: s,
+                    realTime: 'azalt',
+                    loadOnCurrentTime: config.displayTime.loadOnCurrentTime
+                }
+            });
         }
     }
 }

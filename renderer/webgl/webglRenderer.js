@@ -1,6 +1,7 @@
 import { StarsProgram } from './programs/starsProgram.js';
 import { CoordinateConverter } from '../../core/coordinates.js';
 import { AstronomicalCalculator } from '../../core/calculations.js';
+import { getConfig, updateConfig } from '../../main.js';
 export class WebGLRenderer {
     // WebGL2コンテキストの初期化、StarsProgramの準備
     constructor(canvas, config) {
@@ -29,7 +30,7 @@ export class WebGLRenderer {
     }
     // 設定更新時にcanvasサイズやviewportを同期
     updateOptions(options) {
-        Object.assign(this.config, options);
+        updateConfig(options);
         this.canvas.width = this.config.canvasSize.width;
         this.canvas.height = this.config.canvasSize.height;
         this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
@@ -74,7 +75,7 @@ export class WebGLRenderer {
         else if (gaiaHelpData && gaiaHelpData.length > 0) {
             // 通常のGaiaデータ（区画+helpインデックス）を用いた投影（簡易版）
             const limitingMag = AstronomicalCalculator.limitingMagnitude(this.config);
-            const currentJd = window.config.displayTime.jd;
+            const currentJd = getConfig().displayTime.jd;
             const precessionAngle = this.coordinateConverter.precessionAngle('j2000', currentJd);
             // 簡易: 全区画を走査（後でCanvasRendererのareaCandidates最適化を共有化可能）
             for (let unit = 0; unit < gaiaHelpData.length - 1; unit++) {
