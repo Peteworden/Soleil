@@ -286,6 +286,22 @@ export class InteractionController {
             } else {
                 scale = Math.max(Math.min(scale, fov.dec / 1.0), fov.ra / 270.0);
             }
+            this.accumulatedScale *= scale;
+
+            const now = performance.now();
+            if (now - this.lastDragTime < 30) {
+                return;
+            }
+            this.lastDragTime = now;
+
+            // ズームを適用
+            if (this.canvas.width < this.canvas.height) {
+                this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.ra / 1.0), fov.dec / 270.0);
+            } else {
+                this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.dec / 1.0), fov.ra / 270.0);
+            }
+            fov.ra /= this.accumulatedScale;
+            fov.dec /= this.accumulatedScale;
             
             // ズーム前のピンチ中心のスクリーンRaDec
             const pinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
@@ -299,11 +315,6 @@ export class InteractionController {
                 
                 // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
                 const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(pinchRadec.dec) > 85;
-                
-                // ズームを適用
-                fov.ra /= scale;
-                fov.dec /= scale;
-                
                 if (!isNearPole) {
                     const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
                         pinchX, pinchY, fov, this.canvas
@@ -311,9 +322,9 @@ export class InteractionController {
                     const newPinchRadec = CanvasRaDec.toRaDec(newPinchScreenRaDec, transformConfig);
                     centerRaDec.ra = ((pinchRadec.ra + centerRaDec.ra - newPinchRadec.ra) % 360 + 360) % 360;
                     centerRaDec.dec = Math.max(-90, Math.min(90, pinchRadec.dec + centerRaDec.dec - newPinchRadec.dec));
-                    const centerHorizontal = RaDec.toAzalt(centerRaDec, lstLat);
-                    centerAzAlt.az = centerHorizontal.az;
-                    centerAzAlt.alt = centerHorizontal.alt;
+                    const newCenterAzalt = RaDec.toAzalt(centerRaDec, lstLat);
+                    centerAzAlt.az = newCenterAzalt.az;
+                    centerAzAlt.alt = newCenterAzalt.alt;
                 }
             } else if (mode == 'view') { 
                 const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat};
@@ -322,11 +333,6 @@ export class InteractionController {
                 
                 // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
                 const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(pinchAzalt.alt) > 85;
-                
-                // ズームを適用
-                fov.ra /= scale;
-                fov.dec /= scale;
-                
                 if (!isNearZenith) {
                     // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
                     const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
@@ -336,7 +342,6 @@ export class InteractionController {
                     const newPinchAzalt = CanvasRaDec.toAzAlt(newPinchScreenRaDec, transformConfig);
                     centerAzAlt.az = ((pinchAzalt.az + centerAzAlt.az - newPinchAzalt.az) % 360 + 360) % 360;
                     centerAzAlt.alt = Math.max(-90, Math.min(90, pinchAzalt.alt + centerAzAlt.alt - newPinchAzalt.alt));
-
                     const newCenterRadec = AzAlt.toRadec(centerAzAlt, lstLat);
                     centerRaDec.ra = newCenterRadec.ra;
                     centerRaDec.dec = newCenterRadec.dec;
@@ -348,7 +353,6 @@ export class InteractionController {
         // URLのクエリを一度だけ削除（軽量）
         clearUrlSearchOnce();
 
-        this.configUpdated = false;
         this.latestState = {
             centerRA: centerRaDec.ra,
             centerDec: centerRaDec.dec,
@@ -359,15 +363,9 @@ export class InteractionController {
             starSizeKey1: this.config.viewState.starSizeKey1,
             starSizeKey2: this.config.viewState.starSizeKey2,
         }
-        this.configUpdated = updateConfig({
+        updateConfig({
             viewState: this.latestState
         })
-        
-        // // 情報表示を即座に更新
-        // const updateInfoDisplay = (window as any).updateInfoDisplay;
-        // if (updateInfoDisplay) {
-        //     updateInfoDisplay();
-        // }
     };
 
     private onPointerUp = (e: PointerEvent): void => {
@@ -430,7 +428,6 @@ export class InteractionController {
                 this.canvas.style.touchAction = 'none';
                 this.canvas.removeEventListener('pointermove', this.onPointerMove);
             }
-
             saveConfigToLocalStorage();
         } else {
             this.isDragging = false;
@@ -441,7 +438,7 @@ export class InteractionController {
             this.canvas.releasePointerCapture(e.pointerId);
             console.log('onPointerUp (2)', e.pointerType, e.pointerId);
         }
-
+        this.accumulatedScale = 1.0;
         this.baseDistance = 0;
     };
 
