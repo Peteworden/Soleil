@@ -44,9 +44,10 @@ export function precessionFast(radecRad, sin, cos) {
     const z = Math.sin(radecRad.dec);
     const a = y * COS_EPSL + z * SIN_EPSL;
     const b = -y * SIN_EPSL + z * COS_EPSL;
-    const x2 = x * cos - y * COS_EPSL * sin - z * SIN_EPSL * sin;
-    const y2 = COS_EPSL * (x * sin + cos * a) - SIN_EPSL * b;
-    const z2 = SIN_EPSL * (x * sin + cos * a) + COS_EPSL * b;
+    const c = x * sin + cos * a;
+    const x2 = x * cos - a * sin;
+    const y2 = COS_EPSL * c - SIN_EPSL * b;
+    const z2 = SIN_EPSL * c + COS_EPSL * b;
     return { ra: Math.atan2(y2, x2), dec: asinrad(z2) };
 }
 export function toAzalt(coords, lstLat) {
