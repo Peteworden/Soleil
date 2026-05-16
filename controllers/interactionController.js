@@ -1,6 +1,6 @@
 import { AzAlt, CanvasRaDec, CanvasXy, RaDec } from "../core/coordinates/index.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
-import { saveConfigToLocalStorage, updateConfig } from "../main.js";
+import { saveConfigToLocalStorage, setDebugInfo, updateConfig } from "../main.js";
 export class InteractionController {
     constructor(canvas, config) {
         // 状態管理
@@ -222,6 +222,7 @@ export class InteractionController {
                 }
                 this.baseDistance = distance;
             }
+            setDebugInfo(`${fov.ra.toFixed(1)}, ${fov.dec.toFixed(1)}`);
             // URLのクエリを一度だけ削除（軽量）
             clearUrlSearchOnce();
             this.latestState = {
@@ -314,7 +315,7 @@ export class InteractionController {
                 return;
             this.accumulatedScale *= scale;
             const now = performance.now();
-            if (now - this.lastWheelTime < 30)
+            if (now - this.lastWheelTime < 10)
                 return;
             if (this.accumulatedScale == 1.0)
                 return;
