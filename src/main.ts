@@ -563,7 +563,7 @@ export async function main() {
         // const params = new URLSearchParams(location.search);
         // const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
         // const renderer = createRenderer(rendererType as any, canvas, config);
-        const renderer = new CanvasRenderer(canvas);
+        const renderer = new CanvasRenderer(canvas, deviceOrientationManager);
         (window as any).renderer = renderer;
 
         // データの読み込み（段階的に）

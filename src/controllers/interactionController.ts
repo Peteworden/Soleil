@@ -160,6 +160,12 @@ export class InteractionController {
             }
         }
 
+        const now = performance.now();
+        if (now - this.lastDragTime < 30) {
+            return;
+        }
+        this.lastDragTime = now;
+
         const fov = {ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec};
         const centerRaDec = {ra: this.latestState.centerRA, dec: this.latestState.centerDec};
         const centerAzAlt = {az: this.latestState.centerAz, alt: this.latestState.centerAlt};
@@ -172,12 +178,6 @@ export class InteractionController {
             if (e.pointerType == 'touch' && ['live', 'ar'].includes(mode)) {
                 return;
             }
-
-            const now = performance.now();
-            if (now - this.lastDragTime < 30) {
-                return;
-            }
-            this.lastDragTime = now;
 
             const deltaX = e.clientX - this.lastX;
             const deltaY = e.clientY - this.lastY;
@@ -282,27 +282,15 @@ export class InteractionController {
             // 1より大きければ拡大、小さければ縮小
             let scale = distance / this.baseDistance;
             if (!scale || scale == Infinity) return;
+
+            // ズームを適用
             if (this.canvas.width < this.canvas.height) {
                 scale = Math.max(Math.min(scale, fov.ra / 1.0), fov.dec / 270.0);
             } else {
                 scale = Math.max(Math.min(scale, fov.dec / 1.0), fov.ra / 270.0);
             }
-            this.accumulatedScale *= scale;
-
-            const now = performance.now();
-            if (now - this.lastDragTime < 30) {
-                return;
-            }
-            this.lastDragTime = now;
-
-            // ズームを適用
-            if (this.canvas.width < this.canvas.height) {
-                this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.ra / 1.0), fov.dec / 270.0);
-            } else {
-                this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.dec / 1.0), fov.ra / 270.0);
-            }
-            fov.ra /= this.accumulatedScale;
-            fov.dec /= this.accumulatedScale;
+            fov.ra /= scale;
+            fov.dec /= scale;
             
             // ズーム前のピンチ中心のスクリーンRaDec
             const pinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(

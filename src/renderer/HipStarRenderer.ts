@@ -23,20 +23,24 @@ export class HipStarRenderer {
         private orientationManager: DeviceOrientationManager
     ) {
         this.deviceOrientationManager = orientationManager;
-        this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
-            this.orientationData = {
-                alpha: data.alpha,
-                beta: data.beta,
-                gamma: data.gamma,
-                webkitCompassHeading: data.webkitCompassHeading
-            };
-        });
+        // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
+        //     this.orientationData = {
+        //         alpha: data.alpha,
+        //         beta: data.beta,
+        //         gamma: data.gamma,
+        //         webkitCompassHeading: data.webkitCompassHeading
+        //     };
+        // });
         this.initialize();
     }
 
     private initialize(){
         this.hipStarsColors = [];
         this.createHipStarSprites();
+    }
+
+    updateOrientationData(data: DeviceOrientationData) {
+        this.orientationData = data;
     }
     
     async drawHipStars(hipStars: HipData, starInformation: Array<StarInformation>): Promise<void> {

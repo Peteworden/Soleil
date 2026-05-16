@@ -34,7 +34,10 @@ export class CanvasRenderer {
 
     private colorManager: ColorManager;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(
+        canvas: HTMLCanvasElement,
+        deviceOrientationManager:  DeviceOrientationManager
+    ) {
         this.canvas = canvas;
         const context = canvas.getContext('2d');
         if (!context) throw new Error('Failed to get canvas context');
@@ -46,15 +49,15 @@ export class CanvasRenderer {
         console.log("CanvasRenderer constructor");
 
         this.coordinateConverter = new CoordinateConverter();
-        this.deviceOrientationManager = new DeviceOrientationManager();
-        this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
-            this.orientationData = {
-                alpha: data.alpha,
-                beta: data.beta,
-                gamma: data.gamma,
-                webkitCompassHeading: data.webkitCompassHeading
-            };
-        });
+        this.deviceOrientationManager = deviceOrientationManager;
+        // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
+        //     this.orientationData = {
+        //         alpha: data.alpha,
+        //         beta: data.beta,
+        //         gamma: data.gamma,
+        //         webkitCompassHeading: data.webkitCompassHeading
+        //     };
+        // });
 
         // 色管理システムを初期化
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
@@ -701,8 +704,9 @@ export class CanvasRenderer {
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
     }
 
-    setOrientationData(orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }): void {
-        this.orientationData = orientationData;
+    setOrientationData(data: DeviceOrientationData): void {
+        this.orientationData = data;
+        this.hipStarRenderer.updateOrientationData(data)
     }
 
     clearObjectInformation(): void {
