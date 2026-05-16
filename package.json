@@ -5,9 +5,12 @@
   "main": "dist/main.js",
   "type": "module",
   "scripts": {
-    "build": "tsc && npm run --prefix wasm asbuild && cp -r public/. dist/",
+    "dev": "vite",
+    "build": "npm run --prefix wasm asbuild && tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "build_old": "tsc && npm run --prefix wasm asbuild && cp -r public/. dist/",
     "watch": "tsc -w",
-    "dev": "serve --cors -l 3000 --no-clipboard --no-request-logging --no-compression",
+    "dev_old": "serve --cors -l 3000 --no-clipboard --no-request-logging --no-compression",
     "start": "concurrently \"npm run watch\" \"npm run dev\" && npx serve dist",
     "precommit": "npm run copy-files",
     "cp-html": "copy .\\chart.html .\\Soleil\\chart.html",
@@ -25,7 +28,8 @@
     "concurrently": "^8.2.2",
     "serve": "^14.2.1",
     "shx": "^0.4.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "^8.0.13"
   },
   "dependencies": {
     "@assemblyscript/loader": "^0.28.9",
