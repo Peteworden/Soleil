@@ -1289,12 +1289,13 @@ function showNewsPopupIfNeeded() {
  * デバッグ情報をタイトルバーの右端に表示
  * @param text 表示するテキスト
  */
-window.setDebugInfo = (text) => {
+export function setDebugInfo(text) {
     const debugInfoElement = document.getElementById('debugInfo');
     if (debugInfoElement) {
         debugInfoElement.textContent = text;
     }
-};
+}
+;
 /**
  * デバッグ情報をクリア
  */

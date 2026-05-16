@@ -6,6 +6,7 @@ import { SolarSystemPositionCalculator } from "../core/SolarSystemPositionCalcul
 import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, KM_TO_AU } from "../utils/constants.js";
 import { DataStore } from "../models/DataStore.js";
 import { CoordinateConverter } from "../core/coordinates.js";
+import { setDebugInfo } from "../main.js";
 export class SolarSystemRenderer {
     constructor(canvas, ctx, config, colorManager, orientationData) {
         this.canvas = canvas;
@@ -20,7 +21,7 @@ export class SolarSystemRenderer {
             console.log('256 loaded: ' + this.fullMoonImage_256px.src);
         };
         this.fullMoonImage_256px.onerror = (e) => {
-            window.setDebugInfo('256 fail: ' + this.fullMoonImage_256px.src);
+            setDebugInfo('256 fail: ' + this.fullMoonImage_256px.src);
             console.log('256 fail: ' + this.fullMoonImage_256px.src, e);
         };
         this.fullMoonImage_128px = new Image();

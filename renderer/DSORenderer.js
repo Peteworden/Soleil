@@ -3,16 +3,19 @@ import { CoordinateConverter } from "../core/coordinates.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { MessierObject } from "../models/CelestialObject.js";
 export class DSORenderer {
-    constructor(canvas, ctx, config, colorManager, orientationData) {
+    constructor(canvas, ctx, config, colorManager) {
         this.canvas = canvas;
         this.ctx = ctx;
         this.config = config;
         this.colorManager = colorManager;
-        this.orientationData = orientationData;
         this.imageCache = {};
         this.imageCacheNames = [];
+        this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
+    }
+    updateOrientationData(data) {
+        this.orientationData = data;
     }
     setImageCache(imageCache) {
         this.imageCache = imageCache;
