@@ -117,10 +117,11 @@ export function toCanvasRadec_Live(azalt, orientationData) {
     const compassHeading = orientationData.webkitCompassHeading;
     const az = (azalt.az - compassHeading - 90) * DEG_TO_RAD;
     const alt = azalt.alt * DEG_TO_RAD;
-    const x0 = Math.cos(alt) * Math.cos(az);
-    const y0 = -Math.cos(alt) * Math.sin(az);
+    const x0 = Math.cos(alt) * Math.cos(az); // North
+    const y0 = -Math.cos(alt) * Math.sin(az); // Eastcq
     const z0 = Math.sin(alt);
-    const xyz = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY({ x: x0, y: y0, z: z0 }, -gamma), -beta), -alpha);
+    // const xyz = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY({x: x0, y: y0, z: z0}, -gamma), -beta), -alpha);
+    const xyz = Cartesian.rotateY(Cartesian.rotateX(Cartesian.rotateZ({ x: x0, y: y0, z: z0 }, -alpha), -beta), -gamma);
     if (-xyz.z >= 1) {
         return { ra: 0.0, dec: 0.0 };
     }

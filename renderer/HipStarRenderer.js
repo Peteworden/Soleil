@@ -4,15 +4,26 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { DEG_TO_RAD } from "../utils/constants.js";
 export class HipStarRenderer {
-    constructor(ctx, config, colorManager, orientationData) {
+    ;
+    constructor(ctx, config, colorManager, orientationManager) {
         this.ctx = ctx;
         this.config = config;
         this.colorManager = colorManager;
-        this.orientationData = orientationData;
+        this.orientationManager = orientationManager;
         this.precessionCache = null;
         this.hipStarsCache = null;
         this.hipStarsColors = [];
         this.hipStarSprites = new Map();
+        this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
+        this.deviceOrientationManager = orientationManager;
+        this.deviceOrientationManager.setOrientationCallback((data) => {
+            this.orientationData = {
+                alpha: data.alpha,
+                beta: data.beta,
+                gamma: data.gamma,
+                webkitCompassHeading: data.webkitCompassHeading
+            };
+        });
         this.initialize();
     }
     initialize() {

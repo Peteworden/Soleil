@@ -72,11 +72,6 @@ export class InteractionController {
                     starMarkerElement.style.display = 'none';
                 }
             }
-            const now = performance.now();
-            if (now - this.lastDragTime < 30) {
-                return;
-            }
-            this.lastDragTime = now;
             const fov = { ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec };
             const centerRaDec = { ra: this.latestState.centerRA, dec: this.latestState.centerDec };
             const centerAzAlt = { az: this.latestState.centerAz, alt: this.latestState.centerAlt };
@@ -88,6 +83,11 @@ export class InteractionController {
                 if (e.pointerType == 'touch' && ['live', 'ar'].includes(mode)) {
                     return;
                 }
+                const now = performance.now();
+                if (now - this.lastDragTime < 30) {
+                    return;
+                }
+                this.lastDragTime = now;
                 const deltaX = e.clientX - this.lastX;
                 const deltaY = e.clientY - this.lastY;
                 // 最小移動量チェック

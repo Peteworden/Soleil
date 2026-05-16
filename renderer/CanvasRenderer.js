@@ -38,7 +38,7 @@ export class CanvasRenderer {
         // 色管理システムを初期化
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
         this.solarSystemRenderer = new SolarSystemRenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
-        this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.colorManager, this.orientationData);
+        this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.colorManager, this.deviceOrientationManager);
         this.gaiaStarRenderer = new GaiaStarRenderer(this.ctx, this.config, this.colorManager, this.areaCandidates, this.orientationData);
         this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
     }
