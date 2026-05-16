@@ -72,10 +72,6 @@ export class InteractionController {
                 }
             }
             const now = performance.now();
-            if (now - this.lastDragTime < 50) {
-                return;
-            }
-            this.lastDragTime = now;
             const fov = { ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec };
             const centerRaDec = { ra: this.latestState.centerRA, dec: this.latestState.centerDec };
             const centerAzAlt = { az: this.latestState.centerAz, alt: this.latestState.centerAlt };
@@ -84,6 +80,10 @@ export class InteractionController {
             // ポインターの座標を更新
             // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
+                if (now - this.lastDragTime < 30) {
+                    return;
+                }
+                this.lastDragTime = now;
                 if (e.pointerType == 'touch' && ['live', 'ar'].includes(mode)) {
                     return;
                 }
@@ -153,6 +153,10 @@ export class InteractionController {
                 this.lastY = e.clientY;
             }
             else if (this.isPinch) {
+                if (now - this.lastDragTime < 100) {
+                    return;
+                }
+                this.lastDragTime = now;
                 const pointerIds = this.getActivePointerIds();
                 if (pointerIds.length < 2)
                     return;
