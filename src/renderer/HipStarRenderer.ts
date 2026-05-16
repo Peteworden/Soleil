@@ -5,6 +5,7 @@ import { ColorManager } from "./colorManager.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { DEG_TO_RAD } from "../utils/constants.js";
+import { DeviceOrientationData, DeviceOrientationManager } from "device/deviceOrientation.js";
 
 export class HipStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
@@ -12,12 +13,24 @@ export class HipStarRenderer {
     private hipStarsColors: string[] = [];
     private hipStarSprites: Map<string, HTMLCanvasElement> = new Map();
 
+    private deviceOrientationManager: DeviceOrientationManager;
+    private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };;
+
     constructor(
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
+        private orientationManager: DeviceOrientationManager
     ) {
+        this.deviceOrientationManager = orientationManager;
+        this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
+            this.orientationData = {
+                alpha: data.alpha,
+                beta: data.beta,
+                gamma: data.gamma,
+                webkitCompassHeading: data.webkitCompassHeading
+            };
+        });
         this.initialize();
     }
 

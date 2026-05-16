@@ -30,7 +30,7 @@ export class CanvasRenderer {
     private starInformation: Array<StarInformation> = [];
 
     private deviceOrientationManager: DeviceOrientationManager;
-    private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number } = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
+    private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
 
     private colorManager: ColorManager;
 
@@ -60,7 +60,7 @@ export class CanvasRenderer {
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
 
         this.solarSystemRenderer = new SolarSystemRenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
-        this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.colorManager, this.orientationData);
+        this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.colorManager, this.deviceOrientationManager);
         this.gaiaStarRenderer = new GaiaStarRenderer(this.ctx, this.config, this.colorManager, this.areaCandidates, this.orientationData);
         this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
     }
