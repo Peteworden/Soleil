@@ -1,6 +1,5 @@
 import { NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { CoordinateConverter } from '../core/coordinates.js';
-import { DeviceOrientationManager } from '../device/deviceOrientation.js';
 import { getColorManager } from './colorManager.js';
 import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from './canvasHelpers.js';
 import { HipStarRenderer } from './HipStarRenderer.js';
@@ -11,7 +10,7 @@ import { AzAlt, RaDec } from '../core/coordinates/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
 import { getConfig } from '../main.js';
 export class CanvasRenderer {
-    constructor(canvas) {
+    constructor(canvas, deviceOrientationManager) {
         this.areaCandidatesCache = null;
         this.precessionCache = null;
         this.objectInformation = [];
@@ -26,15 +25,15 @@ export class CanvasRenderer {
         this.objectInformation = [];
         console.log("CanvasRenderer constructor");
         this.coordinateConverter = new CoordinateConverter();
-        this.deviceOrientationManager = new DeviceOrientationManager();
-        this.deviceOrientationManager.setOrientationCallback((data) => {
-            this.orientationData = {
-                alpha: data.alpha,
-                beta: data.beta,
-                gamma: data.gamma,
-                webkitCompassHeading: data.webkitCompassHeading
-            };
-        });
+        this.deviceOrientationManager = deviceOrientationManager;
+        // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
+        //     this.orientationData = {
+        //         alpha: data.alpha,
+        //         beta: data.beta,
+        //         gamma: data.gamma,
+        //         webkitCompassHeading: data.webkitCompassHeading
+        //     };
+        // });
         // 色管理システムを初期化
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
         this.solarSystemRenderer = new SolarSystemRenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
@@ -678,8 +677,9 @@ export class CanvasRenderer {
     updateColorManager() {
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
     }
-    setOrientationData(orientationData) {
-        this.orientationData = orientationData;
+    setOrientationData(data) {
+        this.orientationData = data;
+        this.hipStarRenderer.updateOrientationData(data);
     }
     clearObjectInformation() {
         this.objectInformation = [];

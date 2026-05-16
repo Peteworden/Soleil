@@ -525,7 +525,7 @@ export async function main() {
         // const params = new URLSearchParams(location.search);
         // const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
         // const renderer = createRenderer(rendererType as any, canvas, config);
-        const renderer = new CanvasRenderer(canvas);
+        const renderer = new CanvasRenderer(canvas, deviceOrientationManager);
         window.renderer = renderer;
         // データの読み込み（段階的に）
         let hipStars = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), bvArray: new Float32Array(0), count: 0 };

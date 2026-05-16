@@ -16,19 +16,22 @@ export class HipStarRenderer {
         this.hipStarSprites = new Map();
         this.orientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
         this.deviceOrientationManager = orientationManager;
-        this.deviceOrientationManager.setOrientationCallback((data) => {
-            this.orientationData = {
-                alpha: data.alpha,
-                beta: data.beta,
-                gamma: data.gamma,
-                webkitCompassHeading: data.webkitCompassHeading
-            };
-        });
+        // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
+        //     this.orientationData = {
+        //         alpha: data.alpha,
+        //         beta: data.beta,
+        //         gamma: data.gamma,
+        //         webkitCompassHeading: data.webkitCompassHeading
+        //     };
+        // });
         this.initialize();
     }
     initialize() {
         this.hipStarsColors = [];
         this.createHipStarSprites();
+    }
+    updateOrientationData(data) {
+        this.orientationData = data;
     }
     async drawHipStars(hipStars, starInformation) {
         if (hipStars.count == 0)
