@@ -613,7 +613,6 @@ export async function main() {
             // isRendering = true;
             // requestAnimationFrame(() => {
             //     try {
-            console.log(`time: ${performance.now()}`);
                     renderer.clearObjectInformation();
                     renderer.clearStarInformation();
                     renderer.clear();
