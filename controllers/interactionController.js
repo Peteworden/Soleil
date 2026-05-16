@@ -78,7 +78,7 @@ export class InteractionController {
             const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             const mode = this.config.displaySettings.mode;
             // ポインターの座標を更新
-            // this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
+            this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
             if (this.isDragging) {
                 if (now - this.lastDragTime < 30) {
                     return;
@@ -98,8 +98,6 @@ export class InteractionController {
                     return;
                 }
                 // console.log("slow enough");
-                // ポインターの座標を更新
-                this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 // 前回のポインター位置のスクリーン座標（キャンバス左上からの座標）
                 const lastPointerX = this.lastX - this.canvas.offsetLeft;
                 const lastPointerY = this.lastY - this.canvas.offsetTop;
@@ -160,7 +158,6 @@ export class InteractionController {
                 const pointerIds = this.getActivePointerIds();
                 if (pointerIds.length < 2)
                     return;
-                this.pointerPositions.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 const x1 = this.pointerPositions.get(pointerIds[0])?.x;
                 const y1 = this.pointerPositions.get(pointerIds[0])?.y;
                 const x2 = this.pointerPositions.get(pointerIds[1])?.x;
@@ -226,7 +223,7 @@ export class InteractionController {
                 }
                 this.baseDistance = distance;
             }
-            setDebugInfo(`${fov.ra.toFixed(1)}, ${fov.dec.toFixed(1)}`);
+            setDebugInfo(`${fov.ra.toFixed(0)},${fov.dec.toFixed(0)}`);
             // URLのクエリを一度だけ削除（軽量）
             clearUrlSearchOnce();
             this.latestState = {
