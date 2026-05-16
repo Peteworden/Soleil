@@ -1,7 +1,7 @@
 import { AzAlt, CanvasRaDec, CanvasXy, RaDec } from "../core/coordinates/index.js";
 import { DisplaySettings, StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
-import { getConfig, saveConfigToLocalStorage, updateConfig } from "../main.js";
+import { getConfig, saveConfigToLocalStorage, setDebugInfo, updateConfig } from "../main.js";
 
 export class InteractionController {
     private canvas: HTMLCanvasElement;
@@ -336,6 +336,8 @@ export class InteractionController {
             this.baseDistance = distance;
         }
 
+        setDebugInfo(`${fov.ra.toFixed(1)}, ${fov.dec.toFixed(1)}`);
+
         // URLのクエリを一度だけ削除（軽量）
         clearUrlSearchOnce();
 
@@ -435,7 +437,7 @@ export class InteractionController {
         this.accumulatedScale *= scale;
 
         const now = performance.now();
-        if (now - this.lastWheelTime < 30) return;
+        if (now - this.lastWheelTime < 10) return;
         if (this.accumulatedScale == 1.0) return;
 
         this.wheelClientX = e.clientX;

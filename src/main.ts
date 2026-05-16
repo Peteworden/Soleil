@@ -419,19 +419,20 @@ export function updateConfig(newConfig: Partial<StarChartConfig>): boolean {
     // console.log('222222');
     // 状態変更時はクエリパラメータをクリア
     resetURL();
+
+    // ダークモードが変更された場合、色管理システムを更新
+    if (newConfig.displaySettings?.darkMode !== undefined && (config.displaySettings.darkMode != newConfig.displaySettings.darkMode)) {
+        import('./renderer/colorManager.js').then(({ getColorManager }) => {
+            getColorManager(newConfig.displaySettings!.darkMode);
+        });
+    }
+
     // config = { ...config, ...newConfig };としてしまうと新しいメモリ領域にオブジェクトを作り直すことになり、
     // ほかのファイルのコンストラクタでthis.config = getConfig();として関数内ではしていないときに、
     // 古いconfigを使うことになってしまう
     Object.assign(config, newConfig);
     if (newConfig.displayTime !== undefined || (newConfig.observationSite?.longitude !== undefined)) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
-    }
-
-    // ダークモードが変更された場合、色管理システムを更新
-    if (newConfig.displaySettings?.darkMode !== undefined) {
-        import('./renderer/colorManager.js').then(({ getColorManager }) => {
-            getColorManager(newConfig.displaySettings!.darkMode);
-        });
     }
     (window as any).renderer.updateOptions(newConfig);
     (window as any).renderAll();
@@ -597,11 +598,18 @@ export async function main() {
         let isRendering = false;
         let renderRequested = false;
         let lastRender = 0;
+        let lastRenderTime = 0;
+        let lastRequestTIme = 0;
 
         function renderAll() {
             // if (renderRequested) return;
             // renderRequested = true;
-            // if (isRendering) return;
+            // lastRequestTIme = performance.now();
+            // if (isRendering) {
+            //     console.log('skip');
+            //     return;
+            // };
+            // console.log('render');
             // isRendering = true;
             // requestAnimationFrame(() => {
             //     try {
@@ -630,8 +638,15 @@ export async function main() {
                     renderer.writeConstellationNames(constellationData);
                     renderer.drawSolarSystemObjects();
                     renderer.drawReticle();
+                    // for (let i = 1; i < 10000000; i++) {lastRender += 1.0 / i * Math.sin(i * i + i);};
+                    // console.log(lastRender);
                 // } finally {
                     // isRendering = false;
+                    // lastRenderTime = 0;
+                    // if (lastRequestTIme > lastRenderTime) {
+                    //     console.log('new request');
+                    //     renderAll();
+                    // }
                 // }
             // });
         }
