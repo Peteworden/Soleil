@@ -613,6 +613,7 @@ export async function main() {
             // isRendering = true;
             // requestAnimationFrame(() => {
             //     try {
+            console.log(`time: ${performance.now()}`);
                     renderer.clearObjectInformation();
                     renderer.clearStarInformation();
                     renderer.clear();
@@ -638,8 +639,8 @@ export async function main() {
                     renderer.writeConstellationNames(constellationData);
                     renderer.drawSolarSystemObjects();
                     renderer.drawReticle();
-                    // for (let i = 1; i < 10000000; i++) {lastRender += 1.0 / i * Math.sin(i * i + i);};
-                    // console.log(lastRender);
+                    for (let i = 1; i < 10000000; i++) {lastRender += 1.0 / i * Math.sin(i * i + i);};
+                    console.log(lastRender);
                 // } finally {
                     // isRendering = false;
                     // lastRenderTime = 0;
