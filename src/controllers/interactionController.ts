@@ -194,16 +194,12 @@ export class InteractionController {
                     // console.log("slow enough");
 
                     // 前回のポインター位置のスクリーン座標（キャンバス左上からの座標）
-                    const lastPointerX = this.lastX - this.canvas.offsetLeft;
-                    const lastPointerY = this.lastY - this.canvas.offsetTop;
+                    const lastXY = {x: this.lastX - this.canvas.offsetLeft, y: this.lastY - this.canvas.offsetTop};
                     // 現在のポインター位置のスクリーン座標
-                    const currentPointerX = e.clientX - this.canvas.offsetLeft;
-                    const currentPointerY = e.clientY - this.canvas.offsetTop;
+                    const currentXY = {x: e.clientX - this.canvas.offsetLeft, y: e.clientY - this.canvas.offsetTop};
 
                     // 前回のポインター位置のスクリーンRaDec
-                    const lastScreenRaDec = CanvasXy.toCanvasRadec(
-                        {x: lastPointerX, y: lastPointerY}, fov, this.config.canvasSize
-                    );
+                    const lastScreenRaDec = CanvasXy.toCanvasRadec(lastXY, fov, this.config.canvasSize);
 
                     if (mode == 'AEP') {
                         const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
@@ -216,9 +212,7 @@ export class InteractionController {
                         
                         if (!isNearPole) {
                             // 現在のポインター位置のスクリーンRaDec
-                            const currentCanvasRadec = CanvasXy.toCanvasRadec(
-                                {x: currentPointerX, y: currentPointerY}, fov, this.config.canvasSize
-                            );
+                            const currentCanvasRadec = CanvasXy.toCanvasRadec(currentXY, fov, this.config.canvasSize);
                             // 現在のポインター位置の赤道座標
                             const currentRadec = CanvasRaDec.toRaDec(currentCanvasRadec, transformConfig);
                             
@@ -241,9 +235,7 @@ export class InteractionController {
                         
                         if (!isNearZenith) {
                             // 現在のポインター位置のスクリーンRaDec
-                            const currentScreenRaDec = CanvasXy.toCanvasRadec(
-                                {x: currentPointerX, y: currentPointerY}, fov, this.config.canvasSize
-                            );
+                            const currentScreenRaDec = CanvasXy.toCanvasRadec(currentXY, fov, this.config.canvasSize);
                             // 現在のポインター位置の地平座標
                             const currentAzAlt = CanvasRaDec.toAzAlt(currentScreenRaDec, transformConfig);
                             
@@ -277,8 +269,7 @@ export class InteractionController {
                     if (distance == 0) return;
                     
                     // ピンチ中心点のスクリーン座標（キャンバス左上からの座標）
-                    const pinchX = (x1 + x2) / 2 - this.canvas.offsetLeft;
-                    const pinchY = (y1 + y2) / 2 - this.canvas.offsetTop;
+                    const pinchXY = {x: (x1 + x2) / 2 - this.canvas.offsetLeft, y: (y1 + y2) / 2 - this.canvas.offsetTop};
                     
                     // 1より大きければ拡大、小さければ縮小
                     let scale = distance / this.baseDistance;
@@ -294,9 +285,7 @@ export class InteractionController {
                     fov.dec /= scale;
                     
                     // ズーム前のピンチ中心のスクリーンRaDec
-                    const pinchScreenRaDec = CanvasXy.toCanvasRadec(
-                        {x: pinchX, y: pinchY}, fov, this.config.canvasSize
-                    );
+                    const pinchScreenRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
                     
                     if (mode == 'AEP') {
                         const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
@@ -306,9 +295,7 @@ export class InteractionController {
                         // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
                         const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(pinchRadec.dec) > 85;
                         if (!isNearPole) {
-                            const newPinchScreenRaDec = CanvasXy.toCanvasRadec(
-                                {x: pinchX, y: pinchY}, fov, this.config.canvasSize
-                            );
+                            const newPinchScreenRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
                             const newPinchRadec = CanvasRaDec.toRaDec(newPinchScreenRaDec, transformConfig);
                             centerRaDec.ra = ((pinchRadec.ra + centerRaDec.ra - newPinchRadec.ra) % 360 + 360) % 360;
                             centerRaDec.dec = Math.max(-90, Math.min(90, pinchRadec.dec + centerRaDec.dec - newPinchRadec.dec));
@@ -325,9 +312,7 @@ export class InteractionController {
                         const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(pinchAzalt.alt) > 85;
                         if (!isNearZenith) {
                             // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
-                            const newPinchScreenRaDec = CanvasXy.toCanvasRadec(
-                                {x: pinchX, y: pinchY}, fov, this.config.canvasSize
-                            );
+                            const newPinchScreenRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
                             // 新しい中心座標でのピンチした位置での地平座標
                             const newPinchAzalt = CanvasRaDec.toAzAlt(newPinchScreenRaDec, transformConfig);
                             centerAzAlt.az = ((pinchAzalt.az + centerAzAlt.az - newPinchAzalt.az) % 360 + 360) % 360;
@@ -339,9 +324,6 @@ export class InteractionController {
                     }
                     this.baseDistance = distance;
                 }
-
-                // URLのクエリを一度だけ削除（軽量）
-                clearUrlSearchOnce();
 
                 this.latestState = {
                     centerRA: centerRaDec.ra,
@@ -467,13 +449,10 @@ export class InteractionController {
         }
         
         // マウス位置のスクリーン座標（中心からのオフセット）
-        const mouseX = this.wheelClientX - this.canvas.offsetLeft;
-        const mouseY = this.wheelClientY - this.canvas.offsetTop;
+        const mouseXY = {x: this.wheelClientX - this.canvas.offsetLeft, y: this.wheelClientY - this.canvas.offsetTop};
         
         // ズーム前のマウス位置のスクリーンRaDec
-        const mouseScreenRADec = CanvasXy.toCanvasRadec(
-            {x: mouseX, y: mouseY}, fov, this.config.canvasSize
-        );
+        const mouseScreenRADec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
         
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
         const mode = this.config.displaySettings.mode;
@@ -489,15 +468,11 @@ export class InteractionController {
             const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(mouseRadec.dec) > 85;
             
             // ズームを適用
-            // console.log(`fov1: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
             fov.ra /= this.accumulatedScale;
             fov.dec /= this.accumulatedScale;
-            // console.log(`fov2: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
             
             if (!isNearPole) {
-                const newMouseCanvasRadec = CanvasXy.toCanvasRadec(
-                    {x: mouseX, y: mouseY}, fov, this.config.canvasSize
-                );
+                const newMouseCanvasRadec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
                 const newMouseRadec = CanvasRaDec.toRaDec(newMouseCanvasRadec, transformConfig);
                 centerRaDec.ra = ((mouseRadec.ra + centerRaDec.ra - newMouseRadec.ra) % 360 + 360) % 360;
                 centerRaDec.dec = Math.max(-90, Math.min(90, mouseRadec.dec + centerRaDec.dec - newMouseRadec.dec));
@@ -519,9 +494,7 @@ export class InteractionController {
             
             if (!isNearZenith) {
                 // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
-                const newMouseScreenRaDec = CanvasXy.toCanvasRadec(
-                    {x: mouseX, y: mouseY}, fov, this.config.canvasSize
-                );
+                const newMouseScreenRaDec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
                 // 新しい中心座標でのマウス位置での地平座標
                 const newMouseAzalt = CanvasRaDec.toAzAlt(newMouseScreenRaDec, transformConfig);
                 centerAzAlt.az = ((mouseAzalt.az + centerAzAlt.az - newMouseAzalt.az) % 360 + 360) % 360;
@@ -544,20 +517,10 @@ export class InteractionController {
             starSizeKey2: this.config.viewState.starSizeKey2,
         }
 
-        // URLのクエリを削除
-        clearUrlSearchOnce();
-        // console.log(`fov3: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
         updateConfig({
             viewState: this.latestState
         });
-        // console.log(`fov4: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
         saveConfigToLocalStorage();
-        
-        // 情報表示を即座に更新
-        const updateInfoDisplay = (window as any).updateInfoDisplay;
-        if (updateInfoDisplay) {
-            updateInfoDisplay();
-        }
 
         this.accumulatedScale = 1.0;
         this.isScheduled = false;
@@ -568,17 +531,17 @@ export class InteractionController {
 }
 
 // クエリ削除を一度だけ行う軽量関数（履歴書き換えの回数を抑制）
-let __urlCleared = false;
-function clearUrlSearchOnce(): void {
-    if (__urlCleared) return;
-    if (!location.search) { __urlCleared = true; return; }
-    try {
-        if (history.replaceState) {
-            history.replaceState(null, '', location.pathname + location.hash);
-        }
-    } catch (_) {
-        // noop
-    } finally {
-        __urlCleared = true;
-    }
-}
+// let __urlCleared = false;
+// function clearUrlSearchOnce(): void {
+//     if (__urlCleared) return;
+//     if (!location.search) { __urlCleared = true; return; }
+//     try {
+//         if (history.replaceState) {
+//             history.replaceState(null, '', location.pathname + location.hash);
+//         }
+//     } catch (_) {
+//         // noop
+//     } finally {
+//         __urlCleared = true;
+//     }
+// }

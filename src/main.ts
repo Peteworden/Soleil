@@ -92,6 +92,8 @@ export function getTempTarget(): string | null {
     }
 }
 
+let hasUrlQuery = false;
+
 // 初期設定を読み込む関数
 function initializeConfig(noLoad: boolean = false): StarChartConfig {
     const savedSettings = localStorage.getItem('config');
@@ -172,6 +174,9 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
     const lonParam = params.get('lon');
     const timeParam = params.get('time'); // YYYYMMDD-HHMM.M （JST）
     const fovParam = params.get('fov');
+    if (raParam != null || decParam != null || latParam != null || lonParam != null || timeParam != null || fovParam != null) {
+        hasUrlQuery = true;
+    }
 
     let raOverride: number | null = null;
     let decOverride: number | null = null;
@@ -414,9 +419,6 @@ export function resetConfig(): void {
 let lastConfigUpdateTime = 0;
 // newconfigを受け取り、configを更新する
 export function updateConfig(newConfig: Partial<StarChartConfig>): boolean {
-    // lastConfigUpdateTime = performance.now();
-    // console.log(lastConfigUpdateTime);
-    // console.log('222222');
     // 状態変更時はクエリパラメータをクリア
     resetURL();
 
@@ -451,6 +453,7 @@ function resetAll() {
 }
 
 function resetURL() {
+    if (!hasUrlQuery) return;
     try {
         if (location.search && history.replaceState) {
             const newUrl = location.pathname + location.hash;
@@ -485,7 +488,6 @@ function showErrorMessage(text: string) {
 }
 
 (window as any).updateConfig = updateConfig;
-(window as any).updateInfoDisplay = updateInfoDisplay;
 (window as any).showErrorMessage = showErrorMessage;
 
 export async function main() {
@@ -595,60 +597,32 @@ export async function main() {
         const imageCache: { [key: string]: HTMLImageElement } = {};
         const imageCacheNames: string[] = [];
 
-        let isRendering = false;
-        let renderRequested = false;
-        let lastRender = 0;
-        let lastRenderTime = 0;
-        let lastRequestTIme = 0;
-
         function renderAll() {
-            // if (renderRequested) return;
-            // renderRequested = true;
-            // lastRequestTIme = performance.now();
-            // if (isRendering) {
-            //     console.log('skip');
-            //     return;
-            // };
-            // console.log('render');
-            // isRendering = true;
-            // requestAnimationFrame(() => {
-            //     try {
-                    renderer.clearObjectInformation();
-                    renderer.clearStarInformation();
-                    renderer.clear();
-                    const tempTarget = getTempTarget();
-                    renderer.drawGrid();
-                    renderer.drawMilkyWay(milkyWayData);
-                    renderer.drawPoleMark();
-                    renderer.drawCameraView();
-                    renderer.drawConstellationLines(constellationData);
-                    renderer.drawGaiaStars(gaia111_120Data, gaia111_120HelpData, 11.1);
-                    renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
-                    renderer.drawGaiaStars(gaia91_100Data, gaia91_100HelpData, 9.1);
-                    renderer.drawGaiaStars(gaia81_90Data, gaia81_90HelpData, 8.1);
-                    renderer.drawGaiaStars(gaia0_80Data, gaia0_80HelpData, 0);
-                    renderer.drawHipStars(hipStars);
-                    renderer.writeStarNames(starNames);
-                    renderer.drawBayerDesignations(brightStars, AstronomicalCalculator.limitingMagnitude(config));
-                    renderer.drawMessier(messierData);
-                    renderer.drawRec(DataStore.getRecData());
-                    renderer.drawNGC(ngcData, icData);
-                    renderer.drawSharpless(sharplessData);
-                    renderer.drawTempTarget(tempTarget);
-                    renderer.writeConstellationNames(constellationData);
-                    renderer.drawSolarSystemObjects();
-                    renderer.drawReticle();
-                    // for (let i = 1; i < 10000000; i++) {lastRender += 1.0 / i * Math.sin(i * i + i);};
-                    // console.log(lastRender);
-                // } finally {
-                    // isRendering = false;
-                    // lastRenderTime = 0;
-                    // if (lastRequestTIme > lastRenderTime) {
-                    //     console.log('new request');
-                    //     renderAll();
-                    // }
-                // }
-            // });
+            renderer.clearObjectInformation();
+            renderer.clearStarInformation();
+            renderer.clear();
+            const tempTarget = getTempTarget();
+            renderer.drawGrid();
+            renderer.drawMilkyWay(milkyWayData);
+            renderer.drawPoleMark();
+            renderer.drawCameraView();
+            renderer.drawConstellationLines(constellationData);
+            renderer.drawGaiaStars(gaia111_120Data, gaia111_120HelpData, 11.1);
+            renderer.drawGaiaStars(gaia101_110Data, gaia101_110HelpData, 10.1);
+            renderer.drawGaiaStars(gaia91_100Data, gaia91_100HelpData, 9.1);
+            renderer.drawGaiaStars(gaia81_90Data, gaia81_90HelpData, 8.1);
+            renderer.drawGaiaStars(gaia0_80Data, gaia0_80HelpData, 0);
+            renderer.drawHipStars(hipStars);
+            renderer.writeStarNames(starNames);
+            renderer.drawBayerDesignations(brightStars, AstronomicalCalculator.limitingMagnitude(config));
+            renderer.drawMessier(messierData);
+            renderer.drawRec(DataStore.getRecData());
+            renderer.drawNGC(ngcData, icData);
+            renderer.drawSharpless(sharplessData);
+            renderer.drawTempTarget(tempTarget);
+            renderer.writeConstellationNames(constellationData);
+            renderer.drawSolarSystemObjects();
+            renderer.drawReticle();
         }
         (window as any).renderAll = renderAll;
 

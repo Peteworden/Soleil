@@ -130,14 +130,6 @@ export class CoordinateConverter {
         return centerConstellation;
     }
 
-    // ------------------------------スクリーンXYからの変換------------------------------
-    // スクリーン座標からスクリーンRaDecへの変換
-    screenXYToScreenRaDec(x: number, y: number, fov: Fov, canvas: HTMLCanvasElement): EquatorialCoordinates {
-        const ra = (0.5 - x / canvas.width) * fov.ra;
-        const dec = (0.5 - y / canvas.height) * fov.dec;
-        return { ra, dec };
-    }
-
     getMaxLineLengthSquared(canvasSize: CanvasSize, viewState: ViewState): number {
         const xmax = canvasSize.width;
         const ymax = canvasSize.height;
