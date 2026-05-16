@@ -1,5 +1,4 @@
-import { CoordinateConverter } from "../core/coordinates.js";
-import { AzAlt, CanvasRaDec, RaDec } from "../core/coordinates/index.js";
+import { AzAlt, CanvasRaDec, CanvasXy, RaDec } from "../core/coordinates/index.js";
 import { DisplaySettings, StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
 import { getConfig, saveConfigToLocalStorage, updateConfig } from "../main.js";
@@ -8,7 +7,6 @@ export class InteractionController {
     private canvas: HTMLCanvasElement;
     private config: StarChartConfig;
     private latestState: ViewState;
-    private coordinateConverter: CoordinateConverter;
     // 状態管理
     private isDragging = false;
     private isPinch = false;
@@ -43,7 +41,6 @@ export class InteractionController {
         this.config = config;
         this.latestState = { ...config.viewState };
         this.baseDistance = 0;
-        this.coordinateConverter = new CoordinateConverter();
         // タッチ操作のデフォルト動作を無効化
         this.canvas.style.touchAction = 'none';
         this.canvas.style.userSelect = 'none';
@@ -161,7 +158,7 @@ export class InteractionController {
         }
 
         const now = performance.now();
-        if (now - this.lastDragTime < 30) {
+        if (now - this.lastDragTime < 50) {
             return;
         }
         this.lastDragTime = now;
@@ -203,8 +200,8 @@ export class InteractionController {
             const currentPointerY = e.clientY - this.canvas.offsetTop;
 
             // 前回のポインター位置のスクリーンRaDec
-            const lastScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                lastPointerX, lastPointerY, fov, this.canvas
+            const lastScreenRaDec = CanvasXy.toCanvasRadec(
+                {x: lastPointerX, y: lastPointerY}, fov, this.config.canvasSize
             );
 
             if (mode == 'AEP') {
@@ -218,8 +215,8 @@ export class InteractionController {
                 
                 if (!isNearPole) {
                     // 現在のポインター位置のスクリーンRaDec
-                    const currentCanvasRadec = this.coordinateConverter.screenXYToScreenRaDec(
-                        currentPointerX, currentPointerY, fov, this.canvas
+                    const currentCanvasRadec = CanvasXy.toCanvasRadec(
+                        {x: currentPointerX, y: currentPointerY}, fov, this.config.canvasSize
                     );
                     // 現在のポインター位置の赤道座標
                     const currentRadec = CanvasRaDec.toRaDec(currentCanvasRadec, transformConfig);
@@ -243,8 +240,8 @@ export class InteractionController {
                 
                 if (!isNearZenith) {
                     // 現在のポインター位置のスクリーンRaDec
-                    const currentScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                        currentPointerX, currentPointerY, fov, this.canvas
+                    const currentScreenRaDec = CanvasXy.toCanvasRadec(
+                        {x: currentPointerX, y: currentPointerY}, fov, this.config.canvasSize
                     );
                     // 現在のポインター位置の地平座標
                     const currentAzAlt = CanvasRaDec.toAzAlt(currentScreenRaDec, transformConfig);
@@ -293,8 +290,8 @@ export class InteractionController {
             fov.dec /= scale;
             
             // ズーム前のピンチ中心のスクリーンRaDec
-            const pinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                pinchX, pinchY, fov, this.canvas
+            const pinchScreenRaDec = CanvasXy.toCanvasRadec(
+                {x: pinchX, y: pinchY}, fov, this.config.canvasSize
             );
             
             if (mode == 'AEP') {
@@ -305,8 +302,8 @@ export class InteractionController {
                 // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
                 const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(pinchRadec.dec) > 85;
                 if (!isNearPole) {
-                    const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                        pinchX, pinchY, fov, this.canvas
+                    const newPinchScreenRaDec = CanvasXy.toCanvasRadec(
+                        {x: pinchX, y: pinchY}, fov, this.config.canvasSize
                     );
                     const newPinchRadec = CanvasRaDec.toRaDec(newPinchScreenRaDec, transformConfig);
                     centerRaDec.ra = ((pinchRadec.ra + centerRaDec.ra - newPinchRadec.ra) % 360 + 360) % 360;
@@ -324,8 +321,8 @@ export class InteractionController {
                 const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(pinchAzalt.alt) > 85;
                 if (!isNearZenith) {
                     // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
-                    const newPinchScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                        pinchX, pinchY, fov, this.canvas
+                    const newPinchScreenRaDec = CanvasXy.toCanvasRadec(
+                        {x: pinchX, y: pinchY}, fov, this.config.canvasSize
                     );
                     // 新しい中心座標でのピンチした位置での地平座標
                     const newPinchAzalt = CanvasRaDec.toAzAlt(newPinchScreenRaDec, transformConfig);
@@ -465,8 +462,8 @@ export class InteractionController {
         const mouseY = this.wheelClientY - this.canvas.offsetTop;
         
         // ズーム前のマウス位置のスクリーンRaDec
-        const mouseScreenRADec = this.coordinateConverter.screenXYToScreenRaDec(
-            mouseX, mouseY, fov, this.canvas
+        const mouseScreenRADec = CanvasXy.toCanvasRadec(
+            {x: mouseX, y: mouseY}, fov, this.config.canvasSize
         );
         
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
@@ -489,8 +486,8 @@ export class InteractionController {
             // console.log(`fov2: ${fov.ra}, ${fov.dec} ${this.config.viewState.fieldOfViewRA} ${this.config.viewState.fieldOfViewDec}`);
             
             if (!isNearPole) {
-                const newMouseCanvasRadec = this.coordinateConverter.screenXYToScreenRaDec(
-                    mouseX, mouseY, fov, this.canvas
+                const newMouseCanvasRadec = CanvasXy.toCanvasRadec(
+                    {x: mouseX, y: mouseY}, fov, this.config.canvasSize
                 );
                 const newMouseRadec = CanvasRaDec.toRaDec(newMouseCanvasRadec, transformConfig);
                 centerRaDec.ra = ((mouseRadec.ra + centerRaDec.ra - newMouseRadec.ra) % 360 + 360) % 360;
@@ -513,8 +510,8 @@ export class InteractionController {
             
             if (!isNearZenith) {
                 // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
-                const newMouseScreenRaDec = this.coordinateConverter.screenXYToScreenRaDec(
-                    mouseX, mouseY, fov, this.canvas
+                const newMouseScreenRaDec = CanvasXy.toCanvasRadec(
+                    {x: mouseX, y: mouseY}, fov, this.config.canvasSize
                 );
                 // 新しい中心座標でのマウス位置での地平座標
                 const newMouseAzalt = CanvasRaDec.toAzAlt(newMouseScreenRaDec, transformConfig);

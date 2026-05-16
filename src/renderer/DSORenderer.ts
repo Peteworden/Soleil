@@ -4,21 +4,26 @@ import { RaDec } from "../core/coordinates/index.js";
 import { CelestialObject, MessierObject } from "../models/CelestialObject.js";
 import { EquatorialCoordinates, Fov, ObjectInformation, StarChartConfig, TransformModeConfig } from "../types/index.js";
 import { ColorManager } from "./colorManager.js";
+import { DeviceOrientationData } from "../device/deviceOrientation.js";
 
 export class DSORenderer {
     private imageCache: { [key: string]: HTMLImageElement } = {};
     private imageCacheNames: string[] = [];
     private transformConfig: TransformModeConfig;
     private fov: Fov;
+    private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
     constructor(
         private canvas: HTMLCanvasElement,
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
     ) {
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+    }
+
+    updateOrientationData(data: DeviceOrientationData) {
+        this.orientationData = data;
     }
 
     setImageCache(imageCache: { [key: string]: HTMLImageElement }): void {

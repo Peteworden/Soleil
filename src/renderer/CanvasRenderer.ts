@@ -63,9 +63,9 @@ export class CanvasRenderer {
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
 
         this.solarSystemRenderer = new SolarSystemRenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
-        this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.colorManager, this.deviceOrientationManager);
+        this.hipStarRenderer = new HipStarRenderer(this.ctx, this.config, this.colorManager);
         this.gaiaStarRenderer = new GaiaStarRenderer(this.ctx, this.config, this.colorManager, this.areaCandidates, this.orientationData);
-        this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager, this.orientationData);
+        this.dsoRenderer = new DSORenderer(this.canvas, this.ctx, this.config, this.colorManager);
     }
 
     // imageCacheを設定
@@ -706,7 +706,8 @@ export class CanvasRenderer {
 
     setOrientationData(data: DeviceOrientationData): void {
         this.orientationData = data;
-        this.hipStarRenderer.updateOrientationData(data)
+        this.hipStarRenderer.updateOrientationData(data);
+        this.dsoRenderer.updateOrientationData(data);
     }
 
     clearObjectInformation(): void {

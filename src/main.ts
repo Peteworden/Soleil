@@ -1406,7 +1406,7 @@ function showNewsPopupIfNeeded() {
  * デバッグ情報をタイトルバーの右端に表示
  * @param text 表示するテキスト
  */
-(window as any).setDebugInfo = (text: string) => {
+export function setDebugInfo(text: string): void {
     const debugInfoElement = document.getElementById('debugInfo');
     if (debugInfoElement) {
         debugInfoElement.textContent = text;

@@ -13,16 +13,16 @@ export class HipStarRenderer {
     private hipStarsColors: string[] = [];
     private hipStarSprites: Map<string, HTMLCanvasElement> = new Map();
 
-    private deviceOrientationManager: DeviceOrientationManager;
-    private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };;
+    // private deviceOrientationManager: DeviceOrientationManager;
+    private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
 
     constructor(
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        private orientationManager: DeviceOrientationManager
+        // private orientationManager: DeviceOrientationManager
     ) {
-        this.deviceOrientationManager = orientationManager;
+        // this.deviceOrientationManager = orientationManager;
         // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
         //     this.orientationData = {
         //         alpha: data.alpha,
