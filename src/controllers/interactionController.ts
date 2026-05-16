@@ -160,12 +160,6 @@ export class InteractionController {
             }
         }
 
-        const now = performance.now();
-        if (now - this.lastDragTime < 30) {
-            return;
-        }
-        this.lastDragTime = now;
-
         const fov = {ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec};
         const centerRaDec = {ra: this.latestState.centerRA, dec: this.latestState.centerDec};
         const centerAzAlt = {az: this.latestState.centerAz, alt: this.latestState.centerAlt};
