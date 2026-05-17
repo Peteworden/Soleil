@@ -3,7 +3,8 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 import { RaDec } from "../core/coordinates/index.js";
-import { getConfig } from "../main.js";
+import { getConfig, updateConfig } from "../core/ConfigManager";
+import { CanvasRenderer } from "renderer/CanvasRenderer.js";
 
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
@@ -49,7 +50,9 @@ export function updateInfoDisplay() {
         });
         const lstLat: LstLat = {lst: config.siderealTime, lat: config.observationSite.latitude};
         const twilight = SolarSystemDataManager.getTwilight(lstLat);
-        timeInfo.textContent = timeText + ' (' + twilight + ')';
+        if (twilight != '') {
+            timeInfo.textContent = timeText + ' (' + twilight + ')';
+        }
     }
     
     // 中心座標情報を更新
@@ -105,7 +108,7 @@ export function updateInfoDisplay() {
     }
 }
 
-export function handleResize() {
+export function handleResize(renderer: CanvasRenderer) {
     const mobileDock = document.getElementById('mobileButtonDock');
     const topButtons = document.querySelector('.top-right-buttons');
     const bottomButtons = document.querySelector('.bottom-right-buttons');
@@ -121,7 +124,7 @@ export function handleResize() {
     }
     
     // Canvasサイズの更新とrenderAllの呼び出し
-    updateCanvasSize();
+    updateCanvasSize(renderer);
 }
 
 /**
@@ -208,61 +211,36 @@ export function measureBrowserUI(): { top: number, bottom: number, left: number,
 /**
  * Canvasサイズを更新し、renderAllを呼び出す
  */
-export function updateCanvasSize() {
+function updateCanvasSize(renderer: CanvasRenderer) {
     // グローバルなconfigとrendererにアクセス
-    const globalConfig = getConfig();
-    const renderer = (window as any).renderer;
-    const renderAll = (window as any).renderAll;
+    const config = getConfig();
     
-    if (!globalConfig || !renderer || !renderAll) {
-        console.warn('updateCanvasSize: 必要なグローバル変数が見つかりません');
-        return;
-    }
-    
-    // 現在のウィンドウサイズを取得
-    const { width, height } = getCurrentWindowSize();
-    
-    // Canvasサイズを更新
-    globalConfig.canvasSize.width = width;
-    globalConfig.canvasSize.height = height;
-    if (width > height) {
-        globalConfig.viewState.fieldOfViewDec = globalConfig.viewState.fieldOfViewRA * height / width;
-    } else {
-        globalConfig.viewState.fieldOfViewRA = globalConfig.viewState.fieldOfViewDec * width / height;
-    }
-    
+    // const { width, height } = getCurrentWindowSize();
     // rendererのcanvasサイズも更新（実際の表示サイズに合わせる）
-    if (renderer.canvas) {
-        const rect = renderer.canvas.getBoundingClientRect();
-        const actualWidth = Math.round(rect.width);
-        const actualHeight = Math.round(rect.height);
-        
-        renderer.canvas.width = actualWidth;
-        renderer.canvas.height = actualHeight;
-        
-        // configも実際のサイズに更新
-        globalConfig.canvasSize.width = actualWidth;
-        globalConfig.canvasSize.height = actualHeight;
-        
-        // 視野角も更新
-        if (actualWidth > actualHeight) {
-            globalConfig.viewState.fieldOfViewDec = globalConfig.viewState.fieldOfViewRA * actualHeight / actualWidth;
-        } else {
-            globalConfig.viewState.fieldOfViewRA = globalConfig.viewState.fieldOfViewDec * actualWidth / actualHeight;
+    const rect = renderer.getCanvasBoundingClientRect();
+    const actualWidth = Math.round(rect.width);
+    const actualHeight = Math.round(rect.height);
+    renderer.updateCanvasSize({width: actualWidth, height: actualHeight});
+    
+    // 視野角も更新
+    let fovRa = config.viewState.fieldOfViewRA;
+    let fovDec = config.viewState.fieldOfViewDec;
+    if (actualWidth > actualHeight) {
+        fovDec = fovRa * actualHeight / actualWidth;
+    } else {
+        fovRa = fovDec * actualWidth / actualHeight;
+    }
+    
+    updateConfig({
+        canvasSize: { width: actualWidth, height: actualHeight },
+        viewState: {
+            ...config.viewState,
+            fieldOfViewRA: fovRa,
+            fieldOfViewDec: fovDec
         }
-    }
+    });
     
-    // rendererのupdateOptionsを呼び出して設定を更新
-    if (renderer.updateOptions) {
-        renderer.updateOptions({
-            canvasSize: { width, height }
-        });
-    }
-    
-    // renderAllを呼び出して再描画
-    renderAll();
-    
-    console.log(`Canvasサイズを更新しました: ${width}x${height}`);
+    console.log(`Canvasサイズを更新: ${actualWidth}x${actualHeight}`);
 }
 
 /**
@@ -330,30 +308,7 @@ export function getCanvasSize(): CanvasSize {
     return canvasSize;
 }
 
-/**
- * 描画可能領域の情報をコンソールに出力（デバッグ用）
- */
-export function logAvailableScreenInfo(): void {
-    console.log('=== 描画可能領域の情報 ===');
-    console.log('window.screen:', window.screen.width, 'x', window.screen.height);
-    console.log('window.outerWidth/Height:', window.outerWidth, 'x', window.outerHeight);
-    console.log('window.innerWidth/Height:', window.innerWidth, 'x', window.innerHeight);
-    console.log('window.screenX/Y:', window.screenX, window.screenY);
-    
-    const ui = measureBrowserUI();
-    console.log('ブラウザUIサイズ:', ui);
-    
-    const available = getAvailableSize();
-    console.log('描画可能領域:', available);
-    
-    const current = getCurrentWindowSize();
-    console.log('現在のウィンドウサイズ:', current);
-    
-    console.log('フルスクリーン状態:', !!document.fullscreenElement);
-    console.log('========================');
-}
-
-export function updateTimeDisplay() {
+function updateTimeDisplay() {
     // 時刻表示を定期的に更新
     const timeInfo = document.getElementById('timeInfo');
     if (timeInfo) {
@@ -416,27 +371,27 @@ export function showError(message: string) {
     }, 3000);
 }
 
-/**
- * CSS適用後にキャンバスサイズを再計算
- * @param canvas HTMLCanvasElement
- */
-export function recalculateCanvasSize(canvas: HTMLCanvasElement): void {
-    // 少し遅延を入れてCSSの適用を待つ
-    setTimeout(() => {
-        const newSize = getCanvasSize();
-        console.log('Recalculating canvas size:', newSize);
+// /**
+//  * CSS適用後にキャンバスサイズを再計算
+//  * @param canvas HTMLCanvasElement
+//  */
+// export function recalculateCanvasSize(canvas: HTMLCanvasElement): void {
+//     // 少し遅延を入れてCSSの適用を待つ
+//     setTimeout(() => {
+//         const newSize = getCanvasSize();
+//         console.log('Recalculating canvas size:', newSize);
         
-        canvas.width = newSize.width;
-        canvas.height = newSize.height;
+//         canvas.width = newSize.width;
+//         canvas.height = newSize.height;
 
-        // updateConfigいる？
+//         // updateConfigいる？
         
-        // レンダリングを再実行
-        if ((window as any).renderAll) {
-            (window as any).renderAll();
-        }
-    }, 100);
-}
+//         // レンダリングを再実行
+//         if ((window as any).renderAll) {
+//             (window as any).renderAll();
+//         }
+//     }, 100);
+// }
 
 // export function showSuccess(message: string) {
 //     // 成功メッセージを表示

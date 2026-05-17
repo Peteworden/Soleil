@@ -1,5 +1,5 @@
 import { StarChartConfig, ViewState } from '../types/index.js';
-import { DEG_TO_RAD, RAD_TO_DEG } from '../utils/constants.js';
+import { DEG_TO_RAD } from '../utils/constants.js';
 
 export class AstronomicalCalculator {
     static jdJSTtoJdTT(jdJST: number): number {

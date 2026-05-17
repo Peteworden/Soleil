@@ -1,5 +1,5 @@
 //npm run start
-import { ViewState, StarChartConfig, DisplaySettings, ObservationSite, DisplayTime, CanvasSize, NewsPopup, PlanetMotion, ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData, GaiaData, HipData } from './types/index.js';
+import { ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData, GaiaData, HipData } from './types/index.js';
 
 import { CacheInfoController } from './controllers/CacheInfoController.js';
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
@@ -21,7 +21,7 @@ import { AstronomicalCalculator } from './core/calculations.js';
 import { DataLoader } from './loaders/DataLoader.js';
 import { DeviceOrientationManager } from './device/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
-import { AzAlt, RaDec } from './core/coordinates/index.js';
+import { config, getConfig, resetConfig, setConfigChangeListener, updateConfig, updateConfigOnly } from './core/ConfigManager.js';
 
 const news: { time: string, title: string, text: string }[] = [
     { time: '2026-05-15T00:00:00', title: '高速化', text: '高速化などを目的に、プログラムを大幅に書き換えました。これまですごく無駄な処理をさせていたことがわかりました...。バグあったら教えてください。' },
@@ -74,7 +74,7 @@ function getSessionItem(key: string): string | null {
     }
 }
 
-export function setTempTarget(value: string | null) {
+function setTempTarget(value: string | null) {
     if (value == null) {
         setSessionItem('tempTarget', null);
         return;
@@ -82,7 +82,7 @@ export function setTempTarget(value: string | null) {
     setSessionItem('tempTarget', JSON.stringify(value));
 }
 
-export function getTempTarget(): string | null {
+function getTempTarget(): string | null {
     const raw = getSessionItem('tempTarget');
     if (!raw) return null;
     try {
@@ -92,81 +92,7 @@ export function getTempTarget(): string | null {
     }
 }
 
-let hasUrlQuery = false;
-
-// 初期設定を読み込む関数
-function initializeConfig(noLoad: boolean = false): StarChartConfig {
-    const savedSettings = localStorage.getItem('config');
-    const savedSettingsObject = savedSettings ? JSON.parse(savedSettings) : null;
-    const now = new Date();
-    const displaySettings: DisplaySettings = {
-        darkMode: false,
-        mode: 'view',
-        showGrid: true,
-        showReticle: true,
-        showObjectInfo: true,
-        showStarInfo: false,
-        usedStar: 'to12',
-        showStarNames: 'to2',
-        showBayerFS: true,
-        showPlanets: true,
-        showConstellationNames: true,
-        showConstellationLines: true,
-        showMessiers: true,
-        showRecs: true,
-        showNGC: false,
-        showSharpless: false,
-        showCameraView: false,
-        camera: 'none',
-        showTopography: false, // 読み込み時は常にfalse
-        equinox: 'apparent'
-    };
-    const viewState: ViewState = {
-        centerRA: 90,
-        centerDec: 0,
-        centerAz: 180,
-        centerAlt: 45,
-        fieldOfViewRA: 60,
-        fieldOfViewDec: 60,
-        starSizeKey1: 14,
-        starSizeKey2: 1.8
-    };
-    const observationSite: ObservationSite = {
-        observerPlanet: '地球',
-        name: 'カスタム',
-        latitude: 35.0,
-        longitude: 135.0,
-        timezone: 9,
-        heliocentric: undefined
-    };
-    const displayTime: DisplayTime = {
-        year: now.getFullYear(),
-        month: now.getMonth() + 1,
-        day: now.getDate(),
-        hour: now.getHours(),
-        minute: now.getMinutes(),
-        second: now.getSeconds(),
-        jd: AstronomicalCalculator.calculateCurrentJdTT(),
-        realTime: 'off',
-        loadOnCurrentTime: true
-    };
-    const planetMotion: PlanetMotion = {
-        planet: [],
-        duration: 30,
-        interval: 1.0,
-        timeDisplayStep: 5,
-        timeDisplayContent: 'md'
-    };
-    const newsPopup: NewsPopup = {
-        lastShownTime: '',
-        dontShow: false
-    };
-    const canvasSize: CanvasSize = {
-        width: window.innerWidth,
-        height: window.innerHeight
-    };
-
-    // URL クエリからの初期値上書き（例: ?ra=123.45）
+function hasUrlQueryFunc(): boolean {
     const params = new URLSearchParams(location.search);
     const raParam = params.get('ra');
     const decParam = params.get('dec');
@@ -174,282 +100,24 @@ function initializeConfig(noLoad: boolean = false): StarChartConfig {
     const lonParam = params.get('lon');
     const timeParam = params.get('time'); // YYYYMMDD-HHMM.M （JST）
     const fovParam = params.get('fov');
-    if (raParam != null || decParam != null || latParam != null || lonParam != null || timeParam != null || fovParam != null) {
-        hasUrlQuery = true;
-    }
-
-    let raOverride: number | null = null;
-    let decOverride: number | null = null;
-    let latOverride: number | null = null;
-    let lonOverride: number | null = null;
-    let timeOverride: { year: number; month: number; day: number; hour: number; minute: number; second: number } | null = null;
-    let fovOverride: number | null = null;
-
-    if (raParam != null) {
-        const raParsed = parseFloat(raParam);
-        if (!Number.isNaN(raParsed)) {
-            raOverride = ((raParsed % 360) + 360) % 360;
-        }
-    }
-    if (decParam != null) {
-        const decParsed = parseFloat(decParam);
-        if (!Number.isNaN(decParsed)) {
-            decOverride = Math.max(-90, Math.min(90, decParsed));
-        }
-    }
-    if (latParam != null) {
-        const latParsed = parseFloat(latParam);
-        if (!Number.isNaN(latParsed)) {
-            latOverride = Math.max(-90, Math.min(90, latParsed));
-        }
-    }
-    if (lonParam != null) {
-        const lonParsed = parseFloat(lonParam);
-        if (!Number.isNaN(lonParsed)) {
-            // -180～180 に正規化
-            lonOverride = (((lonParsed + 180) % 360) + 360) % 360 - 180;
-        }
-    }
-    if (timeParam != null) {
-        // フォーマット: YYYYMMDD-HHMMSS
-        // 例: 20251017-213030 => 2025/10/17 21:30:30 JST
-        const m = timeParam.match(/^(\d{8})-(\d{2})(\d{2})(\d{2})$/);
-        if (m) {
-            const yyyymmdd = m[1];
-            const hourStr = m[2];
-            const minuteStr = m[3];
-            const secondStr = m[4];
-            const year = parseInt(yyyymmdd.slice(0, 4));
-            const month = parseInt(yyyymmdd.slice(4, 6));
-            const day = parseInt(yyyymmdd.slice(6, 8));
-            const hour = parseInt(hourStr);
-            const minute = parseInt(minuteStr);
-            const second = parseInt(secondStr);
-            if (
-                Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day) &&
-                Number.isFinite(hour) && Number.isFinite(minute) && Number.isFinite(second)
-            ) {
-                timeOverride = { year, month, day, hour, minute, second };
-            }
-        }
-    }
-    if (fovParam != null) {
-        const fovParsed = parseFloat(fovParam);
-        if (!Number.isNaN(fovParsed)) {
-            fovOverride = Math.max(1, Math.min(180, fovParsed));
-        }
-    }
-
-    if (noLoad) {
-        const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
-        const loc = { lst: siderealTime, lat: observationSite.latitude }
-        if (displaySettings.mode === 'AEP') {
-            const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
-            viewState.centerAz = centerHorizontal.az;
-            viewState.centerAlt = centerHorizontal.alt;
-        } else if (displaySettings.mode === 'view') {
-            const centerEquatorial =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
-            viewState.centerRA = centerEquatorial.ra;
-            viewState.centerDec = centerEquatorial.dec;
-        }
-        if (fovOverride != null) {
-            viewState.fieldOfViewRA = fovOverride;
-        }
-        viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
-        return {
-            displaySettings: displaySettings,
-            viewState: viewState,
-            observationSite: observationSite,
-            displayTime: displayTime,
-            canvasSize: canvasSize,
-            planetMotion: planetMotion,
-            siderealTime: siderealTime,
-            newsPopup: newsPopup
-        };
-    }
-
-    if (savedSettingsObject && savedSettingsObject.displaySettings) {
-        const savedDisplaySettings = savedSettingsObject.displaySettings;
-        Object.keys(displaySettings).forEach(key => {
-            const savedValue = savedDisplaySettings[key as keyof DisplaySettings];
-            if (savedValue != null) {
-                (displaySettings as any)[key] = savedValue;
-            }
-        });
-    }
-
-    if (savedSettingsObject && savedSettingsObject.viewState) {
-        const savedViewState = savedSettingsObject.viewState;
-        Object.keys(viewState).forEach(key => {
-            const savedValue = savedViewState[key as keyof ViewState];
-            if (savedValue != null) {
-                (viewState as any)[key] = savedValue;
-            }
-        });
-    }
-    if (raOverride != null) {
-        viewState.centerRA = raOverride;
-    }
-    if (decOverride != null) {
-        viewState.centerDec = decOverride;
-    }
-    if (fovOverride != null) {
-        viewState.fieldOfViewRA = fovOverride;
-    }
-    viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
-
-    if (savedSettingsObject && savedSettingsObject.observationSite) {
-        const savedObservationSite = savedSettingsObject.observationSite;
-        Object.keys(observationSite).forEach(key => {
-            const savedValue = savedObservationSite[key as keyof ObservationSite];
-            if (savedValue != null) {
-                (observationSite as any)[key] = savedValue;
-            }
-        });
-        if (observationSite.name === '地図上で選択' || observationSite.name === '現在地') {
-            observationSite.name = 'カスタム';
-        }
-    }
-    if (latOverride != null) {
-        observationSite.latitude = latOverride;
-        observationSite.name = 'カスタム';
-    }
-    if (lonOverride != null) {
-        observationSite.longitude = lonOverride;
-        observationSite.name = 'カスタム';
-    }
-
-    if (savedSettingsObject && savedSettingsObject.displayTime) {
-        const savedDisplayTime = savedSettingsObject.displayTime;
-        displayTime.loadOnCurrentTime = savedDisplayTime.loadOnCurrentTime != null ? savedDisplayTime.loadOnCurrentTime : displayTime.loadOnCurrentTime;
-        displayTime.realTime = savedDisplayTime.realTime != null ? savedDisplayTime.realTime : displayTime.realTime;
-        if (displayTime.loadOnCurrentTime || displayTime.realTime != 'off' ||
-            savedDisplayTime.year == null ||
-            savedDisplayTime.month == null || savedDisplayTime.day == null ||
-            savedDisplayTime.hour == null || savedDisplayTime.minute == null || savedDisplayTime.second == null
-        ) {
-            displayTime.year = now.getFullYear();
-            displayTime.month = now.getMonth() + 1;
-            displayTime.day = now.getDate();
-            displayTime.hour = now.getHours();
-            displayTime.minute = now.getMinutes();
-            displayTime.second = now.getSeconds();
-        } else {
-            displayTime.year = savedDisplayTime.year;
-            displayTime.month = savedDisplayTime.month;
-            displayTime.day = savedDisplayTime.day;
-            displayTime.hour = savedDisplayTime.hour;
-            displayTime.minute = savedDisplayTime.minute;
-            displayTime.second = savedDisplayTime.second;
-        }
-    }
-    if (timeOverride != null) {
-        displayTime.year = timeOverride.year;
-        displayTime.month = timeOverride.month;
-        displayTime.day = timeOverride.day;
-        displayTime.hour = timeOverride.hour;
-        displayTime.minute = timeOverride.minute;
-        displayTime.second = timeOverride.second;
-        displayTime.realTime = 'off';
-        displayTime.loadOnCurrentTime = false;
-    }
-    displayTime.jd = AstronomicalCalculator.jdTTFromYmdhmsJst(
-        displayTime.year, displayTime.month, displayTime.day, displayTime.hour, displayTime.minute, displayTime.second
-    );
-    const siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(displayTime.jd, observationSite.longitude);
-
-    if (savedSettingsObject && savedSettingsObject.newsPopup) {
-        const savedNewsPopup = savedSettingsObject.newsPopup;
-        Object.keys(newsPopup).forEach(key => {
-            const savedValue = savedNewsPopup[key as keyof NewsPopup];
-            if (savedValue != null) {
-                (newsPopup as any)[key] = savedValue;
-            }
-        });
-    }
-
-    const loc = { lst: siderealTime, lat: observationSite.latitude }
-    if (raOverride != null || decOverride != null) {
-        const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
-        viewState.centerAz = centerHorizontal.az;
-        viewState.centerAlt = centerHorizontal.alt;
-    } else {
-        if (displaySettings.mode === 'AEP') {
-            const centerHorizontal =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
-            viewState.centerAz = centerHorizontal.az;
-            viewState.centerAlt = centerHorizontal.alt;
-        } else if (displaySettings.mode === 'view') {
-            const centerEquatorial =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
-            viewState.centerRA = centerEquatorial.ra;
-            viewState.centerDec = centerEquatorial.dec;
-        }
-    }
-    const config: StarChartConfig =  {
-        displaySettings: displaySettings,
-        viewState: viewState,
-        observationSite: observationSite,
-        displayTime: displayTime,
-        canvasSize: canvasSize,
-        planetMotion: planetMotion,
-        siderealTime: siderealTime,
-        newsPopup: newsPopup
-    };
-    return config;
+    return (raParam != null || decParam != null || latParam != null || lonParam != null || timeParam != null || fovParam != null);
 }
+let hasUrlQuery = hasUrlQueryFunc();
 
-// 星空表示の設定
-export const config: StarChartConfig = initializeConfig();
-
-const settingController = new SettingController();
-const deviceOrientationManager = new DeviceOrientationManager();
+// instances
+let renderer: CanvasRenderer | null = null;
+let deviceOrientationManager: DeviceOrientationManager | null = null;
+let objectInfoController: ObjectInfoController | null = null;
+let settingController : SettingController | null = null;
 let interactionController: InteractionController | null = null;
-
-export function getConfig(): Readonly<StarChartConfig> {
-    return config;
-}
-
-// 設定をリセットする関数
-export function resetConfig(): void {
-    localStorage.removeItem('config');
-    const defaultConfig = initializeConfig();
-    Object.assign(config, defaultConfig);
-    console.log('🔄 Config reset completed');
-}
-
-let lastConfigUpdateTime = 0;
-// newconfigを受け取り、configを更新する
-export function updateConfig(newConfig: Partial<StarChartConfig>): boolean {
-    // 状態変更時はクエリパラメータをクリア
-    resetURL();
-
-    // ダークモードが変更された場合、色管理システムを更新
-    if (newConfig.displaySettings?.darkMode !== undefined && (config.displaySettings.darkMode != newConfig.displaySettings.darkMode)) {
-        import('./renderer/colorManager.js').then(({ getColorManager }) => {
-            getColorManager(newConfig.displaySettings!.darkMode);
-        });
-    }
-
-    // config = { ...config, ...newConfig };としてしまうと新しいメモリ領域にオブジェクトを作り直すことになり、
-    // ほかのファイルのコンストラクタでthis.config = getConfig();として関数内ではしていないときに、
-    // 古いconfigを使うことになってしまう
-    Object.assign(config, newConfig);
-    if (newConfig.displayTime !== undefined || (newConfig.observationSite?.longitude !== undefined)) {
-        config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(config.displayTime.jd, config.observationSite.longitude);
-    }
-    (window as any).renderer.updateOptions(newConfig);
-    (window as any).renderAll();
-    updateInfoDisplay();
-    return true
-}
-
-export function saveConfigToLocalStorage(): void {
-    localStorage.setItem('config', JSON.stringify(config));
-}
+let searchController: SearchController | null = null;
 
 function resetAll() {
     // LocalStorage, config, UIをリセット
     resetConfig();
-    settingController.setUiOnConfig();
+    if (settingController !== null) {
+        settingController.setUiOnConfig();
+    }
 }
 
 function resetURL() {
@@ -464,7 +132,7 @@ function resetURL() {
     }
 }
 
-function showErrorMessage(text: string) {
+export function showErrorMessage(text: string) {
     const errorMessage = document.getElementById('errorMessage');
     if (errorMessage) {
         errorMessage.style.display = 'block';
@@ -487,16 +155,22 @@ function showErrorMessage(text: string) {
     console.log(errorMessage);
 }
 
-(window as any).updateConfig = updateConfig;
-(window as any).showErrorMessage = showErrorMessage;
-
 export async function main() {
     const app = document.getElementById('app');
     if (!app) return;
 
     try {
-        // 設定を初期化（DOM要素が読み込まれた後に実行）
-        // initializeConfig();
+        console.log('start');
+
+        setConfigChangeListener(() => {
+            resetURL();
+            // 既存の renderer.updateOptions や window.renderAll()、updateInfoDisplay() をここに集約
+            if (renderer !== null) {
+                renderer.updateOptions(getConfig());
+            }
+            renderAll(); // (window as any).renderAll() を直接関数呼び出しに直せます
+            updateInfoDisplay();
+        });
 
         // 色管理システムを初期化
         const { getColorManager } = await import('./renderer/colorManager.js');
@@ -518,16 +192,26 @@ export async function main() {
             if (canvas.width !== actualWidth || canvas.height !== actualHeight) {
                 canvas.width = actualWidth;
                 canvas.height = actualHeight;
-                config.canvasSize.width = actualWidth;
-                config.canvasSize.height = actualHeight;
 
                 // 視野角も更新
+                let fovRa = config.viewState.fieldOfViewRA;
+                let fovDec = config.viewState.fieldOfViewDec;
                 if (actualWidth > actualHeight) {
-                    config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * actualHeight / actualWidth;
+                    fovDec = fovRa * actualHeight / actualWidth;
                 } else {
-                    config.viewState.fieldOfViewRA = config.viewState.fieldOfViewDec * actualWidth / actualHeight;
+                    fovRa = fovDec * actualWidth / actualHeight;
                 }
 
+                updateConfigOnly({
+                    viewState: {
+                        ...config.viewState,
+                        fieldOfViewDec: config.viewState.fieldOfViewRA * actualHeight / actualWidth
+                    },
+                    canvasSize: {
+                        width: actualWidth,
+                        height: actualHeight,
+                    }
+                })
                 console.log(`Canvas論理サイズを実際の表示サイズに合わせました: ${actualWidth}x${actualHeight}`);
             }
         };
@@ -543,11 +227,18 @@ export async function main() {
             if (actualWidth > 0 && actualHeight > 0) {
                 canvas.width = actualWidth;
                 canvas.height = actualHeight;
-                config.canvasSize.width = actualWidth;
-                config.canvasSize.height = actualHeight;
 
                 // 視野角も更新
-                config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * actualHeight / actualWidth;
+                updateConfigOnly({
+                    viewState: {
+                        ...config.viewState,
+                        fieldOfViewDec: config.viewState.fieldOfViewRA * actualHeight / actualWidth
+                    },
+                    canvasSize: {
+                        width: actualWidth,
+                        height: actualHeight,
+                    }
+                })
                 console.log(`Canvas初期サイズ: ${actualWidth}x${actualHeight}`);
             } else {
                 // フォールバック
@@ -561,13 +252,11 @@ export async function main() {
         if (document.readyState !== 'complete') {
             window.addEventListener('load', updateCanvasLogicalSize);
         }
-
-        // レンダラーの作成（URLパラメータ renderer=webgl で切替。例: ?renderer=webgl）
-        // const params = new URLSearchParams(location.search);
-        // const rendererType = (params.get('renderer') === 'webgl') ? 'webgl' : 'canvas';
-        // const renderer = createRenderer(rendererType as any, canvas, config);
-        const renderer = new CanvasRenderer(canvas, deviceOrientationManager);
-        (window as any).renderer = renderer;
+        renderer = new CanvasRenderer(canvas);
+        deviceOrientationManager = new DeviceOrientationManager(renderer);
+        objectInfoController = new ObjectInfoController(renderer);
+        settingController = new SettingController(deviceOrientationManager, renderer);
+        settingController.setRenderer(renderer);
 
         // データの読み込み（段階的に）
         let hipStars: HipData = { raArray: new Float32Array(0), decArray: new Float32Array(0), magArray: new Float32Array(0), bvArray: new Float32Array(0), count: 0 };
@@ -598,6 +287,7 @@ export async function main() {
         const imageCacheNames: string[] = [];
 
         function renderAll() {
+            if (renderer === null) return;
             renderer.clearObjectInformation();
             renderer.clearStarInformation();
             renderer.clear();
@@ -628,13 +318,9 @@ export async function main() {
 
         // localStorageから読み込んだ設定をUIに反映（HTML要素が読み込まれた後に実行）
         settingController.setUiOnConfig();
-
         TimeController.initialize();
-        
-        // 地球上の観測地のcontroller
         ObservationSiteController.initialize();
 
-        (window as any).deviceOrientationManager = deviceOrientationManager;
         if (deviceOrientationManager.isOrientationAvailable()) {
             deviceOrientationManager.setupOrientationListener();
         }
@@ -736,7 +422,7 @@ export async function main() {
                         console.error(`Error loading image for ${name}:`, error);
                     }
                 }
-                renderer.setImageCache(imageCache);
+                if (renderer !== null) renderer.setImageCache(imageCache);
 
                 [
                     gaia101_110Data, gaia101_110HelpData,
@@ -752,7 +438,7 @@ export async function main() {
 
             } catch (error) {
                 console.error('データの読み込みに失敗しました:', error);
-                (window as any).showErrorMessage(`loadDataStep() in main() in main.ts: ${error}`);
+                showErrorMessage(`loadDataStep() in main() in main.ts: ${error}`);
                 return;
             }
         };
@@ -760,13 +446,21 @@ export async function main() {
 
         await SolarSystemDataManager.initialize();
 
-        interactionController = new InteractionController(canvas, config);
+        interactionController = new InteractionController(canvas, config, objectInfoController);
         (window as any).interactionController = interactionController;
+
+        searchController = new SearchController(interactionController);
 
         UserObjectController.init();
 
-        setupButtonEvents();
-        setupResizeHandler();
+        setupButtonEvents(settingController);
+
+        // 画面のサイズ変更
+        window.addEventListener('resize', () => {
+            if (renderer !== null) handleResize(renderer);
+        });
+        handleResize(renderer); // 初期実行
+
         setupVisibilityHandler(renderAll, canvas, renderer);
 
         document.getElementById('loadingtext')!.innerHTML = '';
@@ -774,7 +468,7 @@ export async function main() {
         showNewsPopupIfNeeded();
     } catch (error: unknown) {
         console.error('データの読み込みに失敗しました:', error);
-        (window as any).showErrorMessage(`main() in main.ts: ${error}`);
+        showErrorMessage(`main() in main.ts: ${error}`);
         return;
     }
 }
@@ -844,6 +538,7 @@ function togglefullScreen() {
 function updateFullScreenState(isFullscreen: boolean) {
     const fullScreenBtn = document.getElementById('fullScreenBtn');
     const fullScreenBtnMobile = document.getElementById('fullScreenBtnMobile');
+    if (renderer === null) return;
 
     if (isFullscreen) {
         // フルスクリーンになった時
@@ -854,25 +549,6 @@ function updateFullScreenState(isFullscreen: boolean) {
         if (fullScreenBtnMobile) {
             fullScreenBtnMobile.innerHTML = `<i class="fas fa-compress" aria-hidden="true"></i>`;
         }
-        const renderer = (window as any).renderer;
-        if (renderer && renderer.canvas) {
-            // Canvasの論理サイズを実際の表示サイズに合わせる
-            const rect = renderer.canvas.getBoundingClientRect();
-            const actualWidth = Math.round(rect.width);
-            const actualHeight = Math.round(rect.height);
-
-            renderer.canvas.width = actualWidth;
-            renderer.canvas.height = actualHeight;
-            config.canvasSize.width = actualWidth;
-            config.canvasSize.height = actualHeight;
-
-            if (actualWidth > actualHeight) {
-                config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * actualHeight / actualWidth;
-            } else {
-                config.viewState.fieldOfViewRA = config.viewState.fieldOfViewDec * actualWidth / actualHeight;
-            }
-            updateConfig(config);
-        }
     } else {
         // フルスクリーンが解除された時
         console.log('Updating buttons to enter fullscreen state');
@@ -882,26 +558,29 @@ function updateFullScreenState(isFullscreen: boolean) {
         if (fullScreenBtnMobile) {
             fullScreenBtnMobile.innerHTML = `<i class="fas fa-expand" aria-hidden="true"></i>`;
         }
-        const renderer = (window as any).renderer;
-        if (renderer && renderer.canvas) {
-            // Canvasの論理サイズを実際の表示サイズに合わせる
-            const rect = renderer.canvas.getBoundingClientRect();
-            const actualWidth = Math.round(rect.width);
-            const actualHeight = Math.round(rect.height);
-
-            renderer.canvas.width = actualWidth;
-            renderer.canvas.height = actualHeight;
-            config.canvasSize.width = actualWidth;
-            config.canvasSize.height = actualHeight;
-
-            if (actualWidth > actualHeight) {
-                config.viewState.fieldOfViewDec = config.viewState.fieldOfViewRA * actualHeight / actualWidth;
-            } else {
-                config.viewState.fieldOfViewRA = config.viewState.fieldOfViewDec * actualWidth / actualHeight;
-            }
-            updateConfig(config);
-        }
     }
+
+    // Canvasの論理サイズを実際の表示サイズに合わせる
+    const rect = renderer.getCanvasBoundingClientRect();
+    const actualWidth = Math.round(rect.width);
+    const actualHeight = Math.round(rect.height);
+
+    let fovRa = config.viewState.fieldOfViewRA;
+    let fovDec = config.viewState.fieldOfViewDec;
+    if (actualWidth > actualHeight) {
+        fovDec = fovRa * actualHeight / actualWidth;
+    } else {
+        fovRa = fovDec * actualWidth / actualHeight;
+    }
+
+    updateConfig({
+        canvasSize: { width: actualWidth, height: actualHeight },
+        viewState: {
+            ...config.viewState,
+            fieldOfViewRA: fovRa,
+            fieldOfViewDec: fovDec
+        }
+    });
 }
 
 function setupFullScreenButton() {
@@ -974,9 +653,10 @@ function setupOrientationPermissionButton(deviceOrientationManager: DeviceOrient
 }
 
 // ページ読み込み時に実行
-window.addEventListener('DOMContentLoaded', main);
+// Viteでは不要。代わりに最後にmain()
+// window.addEventListener('DOMContentLoaded', main);
 
-function setupButtonEvents() {
+function setupButtonEvents(settingController: SettingController) {
     // 設定ボタン
     const settingBtn = document.getElementById('settingBtn');
     if (settingBtn) {
@@ -1012,7 +692,7 @@ function setupButtonEvents() {
     const closeObjectInfoBtn = document.getElementById('closeObjectInfo');
     if (closeObjectInfoBtn) {
         closeObjectInfoBtn.addEventListener('click', () => {
-            ObjectInfoController.closeObjectInfo();
+            if (objectInfoController !== null) ObjectInfoController.closeObjectInfo();
         });
     }
 
@@ -1021,13 +701,17 @@ function setupButtonEvents() {
     if (closeStarInfoBtn) {
         closeStarInfoBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            ObjectInfoController.closeObjectInfo();
+            if (objectInfoController !== null) ObjectInfoController.closeObjectInfo();
         });
     }
 
     // 検索ボタン
-    document.getElementById('searchBtn')?.addEventListener('click', SearchController.toggleSearch);
-    document.getElementById('searchBtnMobile')?.addEventListener('click', SearchController.toggleSearch);
+    document.getElementById('searchBtn')?.addEventListener('click', () => {
+        if (searchController !== null) searchController.toggleSearch();
+    });
+    document.getElementById('searchBtnMobile')?.addEventListener('click', () => {
+        if (searchController !== null) searchController.toggleSearch();
+    });
 
     // 説明ボタン
     const descriptionBtn = document.getElementById('descriptionBtn');
@@ -1090,7 +774,7 @@ function setupButtonEvents() {
             defaultConfigPopup.style.display = 'none';
         }
     });
-    SearchController.setupSearchInput();
+    if (searchController !== null) searchController.setupSearchInput();
 
     const popupIds = [
         {
@@ -1274,11 +958,6 @@ function setupButtonEvents() {
     });
 }
 
-function setupResizeHandler() {
-    window.addEventListener('resize', handleResize);
-    handleResize(); // 初期実行
-}
-
 function setupVisibilityHandler(renderAll: () => void, canvas: HTMLCanvasElement, renderer: any) {
     // タブが非アクティブ/アクティブになったときの処理
     document.addEventListener('visibilitychange', () => {
@@ -1395,7 +1074,7 @@ function showNewsPopupIfNeeded() {
  * デバッグ情報をタイトルバーの右端に表示
  * @param text 表示するテキスト
  */
-export function setDebugInfo(text: string): void {
+(window as any).setDebugInfo = (text: string) => {
     const debugInfoElement = document.getElementById('debugInfo');
     if (debugInfoElement) {
         debugInfoElement.textContent = text;
@@ -1411,3 +1090,9 @@ export function setDebugInfo(text: string): void {
         debugInfoElement.textContent = '';
     }
 };
+
+main();
+
+function initializeConfig(arg0: boolean): any {
+    throw new Error('Function not implemented.');
+}

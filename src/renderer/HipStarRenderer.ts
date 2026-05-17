@@ -5,7 +5,7 @@ import { ColorManager } from "./colorManager.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { DEG_TO_RAD } from "../utils/constants.js";
-import { DeviceOrientationData, DeviceOrientationManager } from "device/deviceOrientation.js";
+import { DeviceOrientationData } from "device/deviceOrientation.js";
 
 export class HipStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
@@ -13,24 +13,13 @@ export class HipStarRenderer {
     private hipStarsColors: string[] = [];
     private hipStarSprites: Map<string, HTMLCanvasElement> = new Map();
 
-    // private deviceOrientationManager: DeviceOrientationManager;
     private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
 
     constructor(
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        // private orientationManager: DeviceOrientationManager
     ) {
-        // this.deviceOrientationManager = orientationManager;
-        // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
-        //     this.orientationData = {
-        //         alpha: data.alpha,
-        //         beta: data.beta,
-        //         gamma: data.gamma,
-        //         webkitCompassHeading: data.webkitCompassHeading
-        //     };
-        // });
         this.initialize();
     }
 
@@ -90,14 +79,14 @@ export class HipStarRenderer {
             for (let i = 0; i < cachedStars.count; i++) {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
-                const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
-                // const coords = { ra: cachedStars.raArray[i] * DEG_TO_RAD, dec: cachedStars.decArray[i] * DEG_TO_RAD };
-                const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
-                // const [ifin, xy] = RaDec.toCanvasXYifinFast(
-                    // coords, this.config.displaySettings.mode,
-                    // centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
-                    // fov, this.config.canvasSize
-                // )
+                // const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
+                const coords = { ra: cachedStars.raArray[i] * DEG_TO_RAD, dec: cachedStars.decArray[i] * DEG_TO_RAD };
+                // const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                const [ifin, xy] = RaDec.toCanvasXYifinFast(
+                    coords, this.config.displaySettings.mode,
+                    centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
+                    fov, this.config.canvasSize
+                )
                 if (!ifin) continue;
                 const color = this.hipStarsColors[i];
                 starInformation.push({

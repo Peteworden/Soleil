@@ -3,7 +3,7 @@ import { COS_EPSL, DEG_TO_RAD, EARTH_RADIUS_TO_AU, EPSILON, KM_TO_AU, RAD_TO_DEG
 import { acosdeg, acosrad } from './mathUtils.js';
 import { Cartesian, RaDec } from './coordinates/index.js';
 import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
-import { getConfig } from '../main.js';
+import { getConfig } from '../core/ConfigManager.js';
 
 /**
  * observerは観測者がいる天体の名前か日心直交座標

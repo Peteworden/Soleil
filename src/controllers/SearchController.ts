@@ -4,7 +4,8 @@ import { DataStore } from '../models/DataStore.js';
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { ObjectInfoController } from './ObjectInfoController.js';
 import { Cartesian, RaDec } from '../core/coordinates/index.js';
-import { getConfig, updateConfig } from '../main.js';
+import { getConfig, updateConfig } from '../core/ConfigManager';
+import { InteractionController } from './interactionController.js';
 
 interface SearchResult {
     type: 'planet' | 'constellation' | 'messier' | 'rec' | 'ngc' | 'ic' | 'sh2' | 'starName';
@@ -14,7 +15,15 @@ interface SearchResult {
 }
 
 export class SearchController {
-    static openSearch() {
+    private interactionController: InteractionController;
+
+    constructor(
+        interactionController: InteractionController
+    ) {
+        this.interactionController = interactionController;
+    }
+
+    openSearch() {
         const searchDiv = document.getElementById('search');
         if (searchDiv) {
             searchDiv.style.display = 'block';
@@ -35,7 +44,7 @@ export class SearchController {
         }
     }
 
-    static closeSearch() {
+    closeSearch() {
         const searchDiv = document.getElementById('search');
         if (searchDiv) {
             const searchInput = document.getElementById('searchInput') as HTMLInputElement;
@@ -56,20 +65,20 @@ export class SearchController {
         }
     }
 
-    static toggleSearch() {
+    toggleSearch() {
         const searchDiv = document.getElementById('search');
         if (searchDiv) {
             if (searchDiv.style.display === 'block') {
                 document.body.classList.remove('search-open');
-                SearchController.closeSearch();
+                this.closeSearch();
             } else {
                 document.body.classList.add('search-open');
-                SearchController.openSearch();
+                this.openSearch();
             }
         }
     }
     
-    static performSearch(query: string) {
+    performSearch(query: string) {
         // 検索処理の実装
         // 天体データから検索
         // 結果の表示
@@ -89,7 +98,7 @@ export class SearchController {
         this.displaySearchResults(this.normalizeText(query));
     }
     
-    private static displaySearchResults(query: string) {
+    private displaySearchResults(query: string) {
         const container = document.getElementById('suggestionButtonContainer');
         if (!container) return;
         
@@ -475,7 +484,7 @@ export class SearchController {
         }
     }
     
-    private static async selectSearchResult(position0: EquatorialCoordinates, epoch: 'current' | 'j2000' = 'j2000') {
+    private async selectSearchResult(position0: EquatorialCoordinates, epoch: 'current' | 'j2000' = 'j2000') {
         // 検索結果が選択された時の処理
         const config = getConfig();
 
@@ -522,16 +531,13 @@ export class SearchController {
                 await new Promise(resolve => setTimeout(resolve, interval));
             }
         }
-        const interactionController = (window as any).interactionController;
-        if (interactionController) {
-            interactionController.removeEventListeners();
-            await move();
-            interactionController.setupEventListeners();
-        }
+        this.interactionController.removeEventListeners();
+        await move();
+        this.interactionController.setupEventListeners();
     }
 
     //カタカナをひらがなにする関数
-    private static kanaToHira(name: string): string {
+    private kanaToHira(name: string): string {
         return name.replace(/[\u30a1-\u30f6]/g, function(match: string) {
             const chr = match.charCodeAt(0) - 0x60;
             return String.fromCharCode(chr);
@@ -539,22 +545,22 @@ export class SearchController {
     }
 
     // 全角数字・アルファベットを半角にする関数
-    private static toHalfWidth(name: string): string {
+    private toHalfWidth(name: string): string {
         return name.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(match: string) {
             const chr = match.charCodeAt(0) - 0xfee0;
             return String.fromCharCode(chr);
         });
     }
 
-    private static normalizeText(name: string): string {
+    private normalizeText(name: string): string {
         return this.kanaToHira(this.toHalfWidth(name)).toLowerCase();
     }
 
-    private static isInteger(name: string): boolean {
+    private isInteger(name: string): boolean {
         return /^\d+$/.test(name);
     }
     
-    static setupSearchInput() {
+    setupSearchInput() {
         const searchInput = document.getElementById('searchInput') as HTMLInputElement;
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {

@@ -1,4 +1,4 @@
-import { CanvasRadecCoords, CanvasSize, CanvasXy, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, StarChartConfig, TransformModeConfig, ViewState } from "../../types/index.js";
+import { CanvasRadecCoords, CanvasSize, CanvasXy, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, TransformModeConfig } from "../../types/index.js";
 import { acosdeg, asindeg } from "../mathUtils.js";
 import { DEG_TO_RAD, RAD_TO_DEG } from '../../utils/constants.js';
 import { CanvasRaDec, Cartesian, RaDec } from "./index.js";
@@ -171,7 +171,8 @@ export function toCanvasRadecFast_Live(
     const x0 = Math.cos(azaltRad.alt) * Math.cos(az);
     const y0 = -Math.cos(azaltRad.alt) * Math.sin(az);
     const z0 = Math.sin(azaltRad.alt);
-    const xyz = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY({x: x0, y: y0, z: z0}, -gamma), -beta), -alpha);
+    // const xyz = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY({x: x0, y: y0, z: z0}, -gamma), -beta), -alpha);
+    const xyz = Cartesian.rotateY(Cartesian.rotateX(Cartesian.rotateZ({x: x0, y: y0, z: z0}, -alpha), -beta), -gamma);
     if (-xyz.z >= 1) {
         return {ra: 0.0, dec: 0.0};
     } else {

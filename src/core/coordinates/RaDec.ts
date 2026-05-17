@@ -49,8 +49,9 @@ export function precession(
 export function precessionFast(
     radecRad: EquatorialCoordinates, sin: number, cos: number
 ): EquatorialCoordinates {
-    const x = Math.cos(radecRad.ra) * Math.cos(radecRad.dec);
-    const y = Math.sin(radecRad.ra) * Math.cos(radecRad.dec);
+    const cosDec = Math.cos(radecRad.dec);
+    const x = Math.cos(radecRad.ra) * cosDec;
+    const y = Math.sin(radecRad.ra) * cosDec;
     const z = Math.sin(radecRad.dec);
     const a = y*COS_EPSL+z*SIN_EPSL;
     const b = -y*SIN_EPSL+z*COS_EPSL;
@@ -105,9 +106,10 @@ export function toEcliptic(radec: EquatorialCoordinates): {lon: number, lat: num
 
 export function toCartesian(radec: EquatorialCoordinates, distance: number = 1): CartesianCoords {
     const {ra, dec} = toRad(radec);
+    const cosDec = Math.cos(dec);
     return {
-        x: distance * Math.cos(dec) * Math.cos(ra),
-        y: distance * Math.cos(dec) * Math.sin(ra),
+        x: distance * cosDec * Math.cos(ra),
+        y: distance * cosDec * Math.sin(ra),
         z: distance * Math.sin(dec)
     };
 }
@@ -184,16 +186,15 @@ export function toCanvasRadec_AEP(
     coords: EquatorialCoordinates, 
     center: EquatorialCoordinates
 ): CanvasRadecCoords {
-    const ra = coords.ra * DEG_TO_RAD;
-    const dec = coords.dec * DEG_TO_RAD;
-    const centerRARad = center.ra * DEG_TO_RAD;
-    const centerDecRad = center.dec * DEG_TO_RAD;
-    const ra_diff = ra - centerRARad;
+    const {ra, dec} = toRad(coords);
+    const {ra: centerRa, dec: centerDec} = toRad(center);
+
+    const ra_diff = ra - centerRa;
 
     const sinDec = Math.sin(dec);
     const cosDec = Math.cos(dec);
-    const sinCenterDec = Math.sin(centerDecRad);
-    const cosCenterDec = Math.cos(centerDecRad);
+    const sinCenterDec = Math.sin(centerDec);
+    const cosCenterDec = Math.cos(centerDec);
 
     const a = sinCenterDec * cosDec * Math.cos(ra_diff) - cosCenterDec * sinDec; // 下向き
     const b =                cosDec * Math.sin(ra_diff); // 左向き

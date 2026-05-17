@@ -5,10 +5,9 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { ColorManager } from "./colorManager.js";
 import { SolarSystemPositionCalculator } from "../core/SolarSystemPositionCalculator.js";
-import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, KM_TO_AU, RAD_TO_DEG } from "../utils/constants.js";
+import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, KM_TO_AU } from "../utils/constants.js";
 import { DataStore } from "../models/DataStore.js";
 import { CoordinateConverter } from "../core/coordinates.js";
-import { setDebugInfo } from "../main.js";
 
 export class SolarSystemRenderer {
     private fullMoonImage_256px: HTMLImageElement;
@@ -32,7 +31,6 @@ export class SolarSystemRenderer {
             console.log('256 loaded: ' + this.fullMoonImage_256px.src);
         };
         this.fullMoonImage_256px.onerror = (e) => {
-            setDebugInfo('256 fail: ' + this.fullMoonImage_256px.src);
             console.log('256 fail: ' + this.fullMoonImage_256px.src, e);
         };
         this.fullMoonImage_128px = new Image();

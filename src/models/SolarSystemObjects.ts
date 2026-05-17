@@ -1,4 +1,4 @@
-import { getConfig } from '../main.js';
+import { getConfig } from '../core/ConfigManager';
 import { RaDec } from '../core/coordinates/index.js';
 import { SolarSystemPositionCalculator } from '../core/SolarSystemPositionCalculator.js';
 import { DataStore } from './DataStore.js';

@@ -2,13 +2,27 @@ import { AstronomicalCalculator } from "../core/calculations.js";
 import { TimeController } from "./TimeController.js";
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { DisplaySettings, DisplayTime, ObservationSite, StarChartConfig } from "types/index.js";
-import { getConfig, saveConfigToLocalStorage, updateConfig } from "../main.js";
+import { getConfig, saveConfigToLocalStorage, updateConfig } from "../core/ConfigManager.js";
+import { DeviceOrientationManager } from "device/deviceOrientation.js";
+import { CanvasRenderer } from "renderer/CanvasRenderer.js";
 
 export class SettingController {
+    private deviceOrientationManager;
+    private renderer;
     private config: StarChartConfig;
-    constructor () {
+    constructor (
+        deviceOrientationManager: DeviceOrientationManager,
+        renderer: CanvasRenderer | null
+    ) {
+        this.deviceOrientationManager = deviceOrientationManager;
+        this.renderer = renderer;
         this.config = getConfig();
     }
+
+    setRenderer(renderer: CanvasRenderer) {
+        this.renderer = renderer;
+    }
+
     static switchSettingTab(tabName: string) {
         // すべてのタブコンテンツを非表示
         document.querySelectorAll('.setting-section').forEach(section => {
@@ -107,12 +121,6 @@ export class SettingController {
         const observer = config.observationSite.observerPlanet;
         SolarSystemDataManager.updateAllData(jd, observer);
         
-        // デバイスオリエンテーションリスナーを更新
-        const deviceOrientationManager = (window as any).deviceOrientationManager;
-        if (deviceOrientationManager) {
-            deviceOrientationManager.setupOrientationListener();
-        }
-        
         (window as any).renderAll();
     }
     
@@ -142,19 +150,18 @@ export class SettingController {
             const latitude = parseFloat(latInput.value) * (nsSelect.value === '北緯' ? 1 : -1);
             const longitude = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
             
-            const updateConfig = (window as any).updateConfig;
-            if (updateConfig) {
-                const observationSite: ObservationSite = {
-                    observerPlanet: observerPlanet,
-                    name: observationSiteSelect.value,
-                    latitude: latitude,
-                    longitude: longitude,
-                    timezone: 9
-                };
-                updateConfig({
-                    observationSite: observationSite
-                });
-            }
+            
+            const observationSite: ObservationSite = {
+                ...this.config.observationSite,
+                observerPlanet: observerPlanet,
+                name: observationSiteSelect.value,
+                latitude: latitude,
+                longitude: longitude,
+                timezone: 9
+            };
+            updateConfig({
+                observationSite: observationSite
+            });
         }
         
         // 表示設定を読み取り
@@ -209,11 +216,6 @@ export class SettingController {
                 displaySettings: newDisplaySettings
             });
             console.log('🔧 updateConfig called successfully');
-
-            const deviceOrientationManager = (window as any).deviceOrientationManager;
-            if (deviceOrientationManager) {
-                deviceOrientationManager.setupOrientationListener();
-            }
         }
         
         // 時刻設定を読み取り
@@ -263,24 +265,22 @@ export class SettingController {
                     TimeController.toggleRealTime('azalt');
                 }
             }
-            const updateConfig = (window as any).updateConfig;
-            if (updateConfig) {
-                const displayTime: DisplayTime = {
-                    year: year,
-                    month: month,
-                    day: day,
-                    hour: hour,
-                    minute: minute,
-                    second: second,
-                    jd: jd,
-                    realTime: realTime.value || 'off',
-                    loadOnCurrentTime: loadOnCurrentTimeCheck.checked
-                }
-                updateConfig({
-                    displayTime: displayTime
-                });
-                TimeController.initialize();
+            const displayTime: DisplayTime = {
+                ...this.config.displayTime,
+                year: year,
+                month: month,
+                day: day,
+                hour: hour,
+                minute: minute,
+                second: second,
+                jd: jd,
+                realTime: realTime.value || 'off',
+                loadOnCurrentTime: loadOnCurrentTimeCheck.checked
             }
+            updateConfig({
+                displayTime: displayTime
+            });
+            TimeController.initialize();
         }
     }
     
@@ -417,10 +417,7 @@ export class SettingController {
         const modeSelect = document.getElementById('mode') as HTMLSelectElement;
         if (!modeSelect) return;
 
-        const deviceOrientationManager = (window as any).deviceOrientationManager;
-        if (!deviceOrientationManager) return;
-
-        const deviceInfo = deviceOrientationManager.getDeviceInfo();
+        const deviceInfo = this.deviceOrientationManager.getDeviceInfo();
         
         // すべてのオプションを有効にする
         Array.from(modeSelect.options).forEach(option => {
@@ -492,8 +489,8 @@ export class SettingController {
                 el.classList.remove('dark-mode');
             }
         });
-        (window as any).renderer.updateColorManager();
-        (window as any).renderer.hipStarRenderer.initialize();
-        (window as any).renderer.gaiaStarRenderer.initialize();
+        if (this.renderer !== null) {
+            this.renderer.updateColorManager();
+        }
     }
 }

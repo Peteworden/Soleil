@@ -1,7 +1,7 @@
 import { AzAlt, CanvasRaDec } from "../core/coordinates/index.js";
-import { CoordinateConverter } from "../core/coordinates.js";
-import { getConfig, updateConfig } from "../main.js";
+import { getConfig, updateConfig } from "../core/ConfigManager";
 import { DEG_TO_RAD } from "../utils/constants.js";
+import { CanvasRenderer } from "renderer/CanvasRenderer.js";
 
 export interface DeviceOrientationData {
     alpha: number;
@@ -16,6 +16,7 @@ export interface DeviceInfo {
 }
 
 export class DeviceOrientationManager {
+    private renderer: CanvasRenderer;
     private deviceInfo: DeviceInfo;
     private orientationData: DeviceOrientationData = { // 直近の平均を使ってブレを軽減した値
         alpha: 0,
@@ -41,7 +42,10 @@ export class DeviceOrientationManager {
     private orientationCallback?: (data: DeviceOrientationData) => void;
     private videoOn: boolean = false;
 
-    constructor() {
+    constructor(
+        renderer: CanvasRenderer
+    ) {
+        this.renderer = renderer;
         this.deviceInfo = this.detectOS();
         this.videoOn = false;
     }
@@ -209,10 +213,7 @@ export class DeviceOrientationManager {
             }
         });
 
-        const canvasRenderer = (window as any).renderer;
-        if (canvasRenderer) {
-            canvasRenderer.setOrientationData(this.orientationData);
-        }
+        this.renderer.setOrientationData(this.orientationData);
     }
 
     setVideoOn(): void {

@@ -1,6 +1,7 @@
+import { DEG_TO_RAD, RAD_TO_DEG } from '../utils/constants.js';
 import { CanvasRaDec, RaDec } from '../core/coordinates/index.js';
-import { CoordinateConverter } from '../core/coordinates.js';
-import { TransformModeConfig, LstLat, ViewState, Fov, EquatorialCoordinates } from '../types/index.js';
+import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates } from '../types/index.js';
+import { AstronomicalCalculator } from '../core/calculations.js';
 
 export function starSize_0mag(fieldOfViewRA: number, fieldOfViewDec: number): number {
     return Math.max(200.0 / (Math.min(fieldOfViewRA, fieldOfViewDec) + 15), 3.0);
@@ -42,16 +43,17 @@ export function rangeInt(a: number, b: number): number[] {
     return Array.from({length: end - start + 1}, (_, i) => start + i);
 }
 
-export function addEdge(
+export function addEdge (
     screenRA: number, screenDec: number,
     edgeRA: number[], edgeDec: number[],
-    jd: number,
+    sinPrecess: number,
+    cosPrecess: number,
     conf: TransformModeConfig
 ): void {
-    const equatorialApparent = CanvasRaDec.toRaDec({ ra: screenRA, dec: screenDec }, conf);
-    const equatorial = RaDec.precession(equatorialApparent, undefined, jd, 'j2000');
-    edgeRA.push(equatorial.ra);
-    edgeDec.push(equatorial.dec);
+    const radecApp = CanvasRaDec.toRaDec({ ra: screenRA, dec: screenDec }, conf);
+    const radec = RaDec.precessionFast({ra: radecApp.ra * DEG_TO_RAD, dec: radecApp.dec * DEG_TO_RAD}, sinPrecess, cosPrecess);
+    edgeRA.push((radec.ra * RAD_TO_DEG + 360) % 360);
+    edgeDec.push(radec.dec * RAD_TO_DEG);
 }
 
 export function getAreaCandidatesFromEdge(
@@ -180,7 +182,6 @@ export function getAreaCandidatesFromEdge(
 }
 
 export function getAreaCandidates(
-    lstLat: LstLat,
     viewState: ViewState,
     jd: number,
     conf: TransformModeConfig,
@@ -203,11 +204,15 @@ export function getAreaCandidates(
     let dscreenDec = 0.0;
     let edgePointRadec: EquatorialCoordinates;
 
+    let precessionAngle = AstronomicalCalculator.precessionAngle(jd, 'j2000');
+    let sinPrecess = Math.sin(precessionAngle);
+    let cosPrecess = Math.cos(precessionAngle);
+
     // 天球全体が見えるときの処理はごまかしているかも
 
     //右上から左上
     while (screenRa < raWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa += dscreenRa;
@@ -216,7 +221,7 @@ export function getAreaCandidates(
     screenRa = raWidth;
     screenDec = decWidth;
     while (screenDec > -decWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec -= dscreenDec;
@@ -225,7 +230,7 @@ export function getAreaCandidates(
     screenRa = raWidth;
     screenDec = -decWidth;
     while (screenRa > -raWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa -= dscreenRa;
@@ -234,7 +239,7 @@ export function getAreaCandidates(
     screenRa = -raWidth;
     screenDec = -decWidth;
     while (screenDec < decWidth) {
-        addEdge(screenRa, screenDec, edgeRA, edgeDec, jd, conf);
+        addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
         edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
         dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec += dscreenDec;

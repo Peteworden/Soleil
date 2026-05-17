@@ -1,4 +1,4 @@
-import { getConfig } from "../main.js";
+import { getConfig } from "../core/ConfigManager";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { CelestialObject, MessierObject } from "../models/CelestialObject.js";
@@ -56,7 +56,7 @@ export class DSORenderer {
             markFlag = false;
         }
 
-        this.ctx.font = '12px Arial';
+        this.ctx.font = '14px Arial';
         this.ctx.fillStyle = this.colorManager.getColor('dso');
         this.ctx.strokeStyle = this.colorManager.getColor('dso');
         this.ctx.lineWidth = 1;

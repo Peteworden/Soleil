@@ -1,15 +1,16 @@
 import { CoordinateConverter } from "../core/coordinates.js";
 import { MessierObject, NGCObject, SharplessObject } from "../models/CelestialObject.js";
 import { Asteroid, Comet, Moon, Planet, Sun } from "../models/SolarSystemObjects.js";
-import { ConstellationData, EquatorialCoordinates } from "types/index.js";
+import { ConstellationData, EquatorialCoordinates, StarChartConfig } from "types/index.js";
 import { getColorManager } from "../renderer/colorManager.js";
 import { AU_TO_KM } from "../utils/constants.js";
 import { RaDec } from "../core/coordinates/index.js";
-import { getConfig, updateConfig } from "../main.js";
+import { CanvasRenderer } from "renderer/CanvasRenderer.js";
+import { getConfig, updateConfig } from "../core/ConfigManager.js";
 
 interface ObjectInfo {
     name: string;
-    type: 'messier' | 'rec' | 'ngc' | 'sharpless' | 'planet' | 'asteroidComet' | 'sun' | 'moon' | 'star' | 'constellation';
+    type: string; // 'messier' | 'rec' | 'ngc' | 'sharpless' | 'planet' | 'asteroidComet' | 'sun' | 'moon' | 'star' | 'constellation';
     x: number;
     y: number;
     distance: number;
@@ -29,7 +30,7 @@ interface GaiaStarInfoData {
 }
 
 interface StarInfo {
-    type: 'hipStar' | 'gaiaStar';
+    type: string; // 'hipStar' | 'gaiaStar';
     x: number;
     y: number;
     distance: number;
@@ -37,17 +38,25 @@ interface StarInfo {
 }
 
 export class ObjectInfoController {
-    private static coordinateConverter = new CoordinateConverter();
-    private static readonly CLICK_THRESHOLD = 50; // クリック判定の閾値（ピクセル）
+    private config: StarChartConfig;
+    private renderer: CanvasRenderer;
+    private coordinateConverter = new CoordinateConverter();
+    private readonly CLICK_THRESHOLD = 50; // クリック判定の閾値（ピクセル）
 
-    private static colorManager = getColorManager();
+    private colorManager = getColorManager();
+
+    constructor(
+        renderer: CanvasRenderer
+    ) {
+        this.renderer = renderer;
+        this.config = getConfig();
+    }
 
     /**
      * クリックされた位置から最寄りの天体を見つけて情報を表示
      */
-    static showObjectInfo(x: number, y: number, closeIfNotFound: boolean = false): void {
+    showObjectInfo(x: number, y: number, closeIfNotFound: boolean = false): void {
         const nearestObject = this.findNearestObject(x, y);
-        
         if (nearestObject && nearestObject.distance <= this.CLICK_THRESHOLD) {
             if (nearestObject.type == 'hipStar' || nearestObject.type == 'gaiaStar') {
                 this.displayStarInfo(nearestObject as StarInfo);
@@ -58,7 +67,7 @@ export class ObjectInfoController {
             console.log('近くに天体が見つかりませんでした');
             // 新しい天体が見つからない場合で、closeIfNotFoundがtrueの場合のみ閉じる
             if (closeIfNotFound) {
-                this.closeObjectInfo();
+                ObjectInfoController.closeObjectInfo();
             }
         }
     }
@@ -66,22 +75,14 @@ export class ObjectInfoController {
     /**
      * クリックされた位置から最寄りの天体を見つける
      */
-    private static findNearestObject(x: number, y: number): ObjectInfo | StarInfo | null {
-        const config = getConfig();
-        // CanvasRendererから画面内の天体リストを取得
-        const canvasRenderer = (window as any).renderer;
-        if (!canvasRenderer) {
-            console.warn('CanvasRenderer not found');
-            return null;
-        }
-
-        const visibleObjects = canvasRenderer.getVisibleObjects();
-        const starInfoList = canvasRenderer.getStarInformation();
+    private findNearestObject(x: number, y: number): ObjectInfo | StarInfo | null {
+        const visibleObjects = this.renderer.getVisibleObjects();
+        const starInfoList = this.renderer.getStarInformation();
         let nearestObject: ObjectInfo | StarInfo | null = null;
         let nearestDistance = Infinity;
 
         // 画面内の天体から最寄りのものを探す
-        if (config.displaySettings.showStarInfo) {
+        if (this.config.displaySettings.showStarInfo) {
             for (const obj of visibleObjects) {
                 const distance = Math.sqrt((x - obj.x) ** 2 + (y - obj.y) ** 2);
                 if (distance < nearestDistance) {
@@ -133,7 +134,7 @@ export class ObjectInfoController {
     /**
      * 天体情報を表示
      */
-    private static displayObjectInfo(objectInfo: ObjectInfo): void {
+    private displayObjectInfo(objectInfo: ObjectInfo): void {
         const objectInfoElement = document.getElementById('objectInfo');
         const objectInfoNameElement = document.getElementById('objectInfoName');
         const objectInfoTextElement = document.getElementById('objectInfoText');
@@ -195,8 +196,7 @@ export class ObjectInfoController {
     /**
      * メシエ天体の情報を生成
      */
-    private static generateMessierInfo(objectInfoTextElement: HTMLElement, data: MessierObject | NGCObject): void {
-        const config = getConfig();
+    private generateMessierInfo(objectInfoTextElement: HTMLElement, data: MessierObject | NGCObject): void {
         let infoText = '';
 
         // 座標情報
@@ -206,8 +206,8 @@ export class ObjectInfoController {
         
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (J2000.0)<br>`;
         
-        if (config && config.observationSite.observerPlanet == '地球') {
-            const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+        if (this.config.observationSite.observerPlanet == '地球') {
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             const azalt = RaDec.toAzalt(coords, lstLat);
             infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
@@ -221,7 +221,7 @@ export class ObjectInfoController {
         // 分類
         const type = data.getType();
         if (type) {
-            infoText += `分類: ${this.getObjectClassDescription(type)}<br>`;
+            infoText += `分類: ${ObjectInfoController.getObjectClassDescription(type)}<br>`;
         }
 
         // 説明
@@ -248,14 +248,13 @@ export class ObjectInfoController {
     /**
      * シャープルス天体の情報を生成
      */
-    private static generateSharplessInfo(objectInfoTextElement: HTMLElement, data: SharplessObject): void {
+    private generateSharplessInfo(objectInfoTextElement: HTMLElement, data: SharplessObject): void {
         console.log(data);
         if (!(data instanceof SharplessObject)) {
             objectInfoTextElement.innerHTML = '';
             console.log('data is not a SharplessObject');
             return;
         }
-        const config = getConfig();
         let infoText = '';
 
         if (data.getAltNames().length > 0) {
@@ -269,8 +268,8 @@ export class ObjectInfoController {
         
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (J2000.0)<br>`;
         
-        if (config && config.observationSite.observerPlanet == '地球') {
-            const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
+        if (this.config.observationSite.observerPlanet == '地球') {
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
             const azalt = RaDec.toAzalt(coords, lstLat);
             infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
@@ -324,8 +323,7 @@ export class ObjectInfoController {
     /**
      * 惑星の情報を生成
      */
-    private static generatePlanetInfo(objectInfoTextElement: HTMLElement, planetData: Planet | Asteroid | Comet): void {
-        const config = getConfig();
+    private generatePlanetInfo(objectInfoTextElement: HTMLElement, planetData: Planet | Asteroid | Comet): void {
         let infoText = '';
 
         const jpnName = planetData.jpnName;
@@ -342,16 +340,14 @@ export class ObjectInfoController {
         const decDM = this.coordinateConverter.decdeg2dm(planetData.raDec.dec);
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (視位置)<br>`;
         
-        if (config) {
-            const radecJ2000 = RaDec.precession(planetData.raDec, undefined, config.displayTime.jd, 'j2000');
-            const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
-            const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
-            infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            if (config.observationSite.observerPlanet == '地球') {
-                const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-                const azalt = RaDec.toAzalt(planetData.raDec, lstLat);
-                infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
-            }
+        const radecJ2000 = RaDec.precession(planetData.raDec, undefined, this.config.displayTime.jd, 'j2000');
+        const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
+        const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
+        infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
+        if (this.config.observationSite.observerPlanet == '地球') {
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
+            const azalt = RaDec.toAzalt(planetData.raDec, lstLat);
+            infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
 
         // 等級
@@ -389,29 +385,27 @@ export class ObjectInfoController {
         return;
     }
 
-    private static generateSunInfo(objectInfoTextElement: HTMLElement, data: Sun): void {
-        const config = getConfig();
+    private generateSunInfo(objectInfoTextElement: HTMLElement, data: Sun): void {
         let infoText = '';
 
         // 座標情報
         const raHM = this.coordinateConverter.radeg2hm(data.raDec.ra);
         const decDM = this.coordinateConverter.decdeg2dm(data.raDec.dec);
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}'<br>`;
-        if (config) {
-            const radecJ2000 = RaDec.precession(data.raDec, undefined, config.displayTime.jd, 'j2000');
-            const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
-            const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
-            infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            if (config.observationSite.observerPlanet == '地球') {
-                const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-                const azalt = RaDec.toAzalt(data.raDec, lstLat);
-                infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
-            }
+
+        const radecJ2000 = RaDec.precession(data.raDec, undefined, this.config.displayTime.jd, 'j2000');
+        const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
+        const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
+        infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
+        if (this.config.observationSite.observerPlanet == '地球') {
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
+            const azalt = RaDec.toAzalt(data.raDec, lstLat);
+            infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
 
         // 等級
         const magnitude = data.getMagnitude();
-        if (magnitude != null && config && config.observationSite.observerPlanet == '地球') {
+        if (magnitude != null && this.config.observationSite.observerPlanet == '地球') {
             infoText += `等級: ${magnitude}<br>`;
         }
 
@@ -420,25 +414,23 @@ export class ObjectInfoController {
         return;
     }
 
-    private static generateMoonInfo(objectInfoTextElement: HTMLElement, data: Moon): void {
-        const config = getConfig();
+    private generateMoonInfo(objectInfoTextElement: HTMLElement, data: Moon): void {
         let infoText = '';
 
         // 座標情報
         const raHM = this.coordinateConverter.radeg2hm(data.raDec.ra);
         const decDM = this.coordinateConverter.decdeg2dm(data.raDec.dec);
         infoText += `RA: ${raHM[0]}h ${raHM[1].toFixed(1)}m Dec: ${decDM[0]}${decDM[1]}° ${decDM[2].toFixed(0)}' (視位置)<br>`;
-        if (config) {
-            const radecJ2000 = RaDec.precession(data.raDec, undefined, config.displayTime.jd, 'j2000');
-            const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
-            const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
-            infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
-            console.log(config.observationSite.observerPlanet);
-            if (config.observationSite.observerPlanet == '地球') {
-                const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-                const azalt = RaDec.toAzalt(data.raDec, lstLat);
-                infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
-            }
+
+        const radecJ2000 = RaDec.precession(data.raDec, undefined, this.config.displayTime.jd, 'j2000');
+        const raHMJ2000 = this.coordinateConverter.radeg2hm(radecJ2000.ra);
+        const decDMJ2000 = this.coordinateConverter.decdeg2dm(radecJ2000.dec);
+        infoText += `RA: ${raHMJ2000[0]}h ${raHMJ2000[1].toFixed(1)}m Dec: ${decDMJ2000[0]}${decDMJ2000[1]}° ${decDMJ2000[2].toFixed(0)}' (J2000.0)<br>`;
+        console.log(this.config.observationSite.observerPlanet);
+        if (this.config.observationSite.observerPlanet == '地球') {
+            const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
+            const azalt = RaDec.toAzalt(data.raDec, lstLat);
+            infoText += `方位: ${azalt.az.toFixed(1)}° 高度: ${azalt.alt.toFixed(1)}°<br>`;
         }
 
         // 距離情報
@@ -451,30 +443,27 @@ export class ObjectInfoController {
         return;
     }
 
-    private static planetTrack(objectInfoTextElement: HTMLElement, name: string): void {
+    private planetTrack(objectInfoTextElement: HTMLElement, name: string): void {
         // 毎回新しいチェックボックスを作成
         const planetTrackCheck = document.createElement('input');
         planetTrackCheck.type = 'checkbox';
         planetTrackCheck.id = 'planetTrackCheck_' + name;
         
-        const config = getConfig();
-        planetTrackCheck.checked = config.planetMotion.planet.includes(name);
+        planetTrackCheck.checked = this.config.planetMotion.planet.includes(name);
         
         planetTrackCheck.addEventListener('change', () => {
-            const config = getConfig();
-            console.log(config.viewState.centerRA, config.viewState.centerDec);
-            if (!config.planetMotion.planet.includes(name)) {
-                config.planetMotion.planet.push(name);
+            let planet: string[] = []
+            if (!this.config.planetMotion.planet.includes(name)) {
+                planet.push(name);
             } else {
-                config.planetMotion.planet = config.planetMotion.planet.filter((p: string) => p !== name);
+                planet = this.config.planetMotion.planet.filter((p: string) => p !== name);
             }
-            
-            // configを更新
-            // const updateConfig = (window as any).updateConfig;
-            // if (updateConfig) {
-            //     updateConfig({planetMotion: config.planetMotion});
-            // }
-            updateConfig({planetMotion: config.planetMotion});
+            updateConfig({
+                planetMotion: {
+                    ...this.config.planetMotion,
+                    planet: planet
+                }
+            })
         });
         
         // 惑星軌跡設定のUIを作成
@@ -527,48 +516,51 @@ export class ObjectInfoController {
             if (trackInterval && trackIntervalUnit && trackDuration && trackDurationUnit && trackTimeDisplayInterval && trackTimeDisplayContent) {
                 // 間隔設定の変更
                 const handleIntervalChange = () => {
-                    const config = getConfig();
-                    config.planetMotion.interval = parseFloat(trackInterval.value) || 1;
-                    if (config.planetMotion.interval <= 0) {
-                        config.planetMotion.interval = 1;
-                        trackInterval.value = config.planetMotion.interval.toString();
+                    let interval = parseFloat(trackInterval.value) ?? 1;
+                    if (interval <= 0) {
+                        interval = 1;
+                        trackDuration.value = interval.toString();
                     }
-                    console.log('間隔設定変更:', config.planetMotion.interval);
-                    
-                    // configを更新
-                    updateConfig({planetMotion: config.planetMotion});
+                    updateConfig({
+                        planetMotion: {
+                            ...this.config.planetMotion,
+                            interval: interval
+                        }
+                    })
                 };
                 
                 // 期間設定の変更
                 const handleDurationChange = () => {
-                    const config = getConfig();
-                    config.planetMotion.duration = parseFloat(trackDuration.value) || 30;
-                    if (config.planetMotion.duration <= 0) {
-                        config.planetMotion.duration = 30;
-                        trackDuration.value = config.planetMotion.duration.toString();
+                    let duration = parseFloat(trackDuration.value) ?? 30;
+                    if (duration <= 0) {
+                        duration = 30;
+                        trackDuration.value = duration.toString();
                     }
-                    console.log('期間設定変更:', config.planetMotion.duration);
-                    updateConfig({planetMotion: config.planetMotion});
+                    updateConfig({
+                        planetMotion: {
+                            ...this.config.planetMotion,
+                            duration: duration 
+                        }
+                    })
                 };
 
                 const handleTimeDisplayIntervalChange = () => {
-                    const config = getConfig();
-                    config.planetMotion.timeDisplayStep = parseInt(trackTimeDisplayInterval.value) || 1;
-                    if (config.planetMotion.timeDisplayStep < 1) {
-                        config.planetMotion.timeDisplayStep = 1;
-                    }
-                    config.planetMotion.timeDisplayContent = trackTimeDisplayContent.value;
-                    
-                    // configを更新
-                    updateConfig({planetMotion: config.planetMotion});
+                    updateConfig({
+                        planetMotion: {
+                            ...this.config.planetMotion,
+                            timeDisplayStep: Math.max(1, parseInt(trackTimeDisplayInterval.value) ?? 1),
+                            timeDisplayContent: trackTimeDisplayContent.value
+                        }
+                    })
                 };
 
                 const handleTimeDisplayContentChange = () => {
-                    const config = getConfig();
-                    config.planetMotion.timeDisplayContent = trackTimeDisplayContent.value;
-                    
-                    // configを更新
-                    updateConfig({planetMotion: config.planetMotion});
+                    updateConfig({
+                        planetMotion: {
+                            ...this.config.planetMotion,
+                            timeDisplayContent: trackTimeDisplayContent.value
+                        }
+                    })
                 };
                 
                 // イベントリスナーを追加
@@ -580,17 +572,17 @@ export class ObjectInfoController {
                 trackTimeDisplayContent.addEventListener('change', handleTimeDisplayContentChange);
                 
                 // 初期値をconfigから設定
-                if (config.planetMotion.interval) {
-                    trackInterval.value = config.planetMotion.interval.toString();
+                if (this.config.planetMotion.interval) {
+                    trackInterval.value = this.config.planetMotion.interval.toString();
                 }
-                if (config.planetMotion.duration) {
-                    trackDuration.value = config.planetMotion.duration.toString();
+                if (this.config.planetMotion.duration) {
+                    trackDuration.value = this.config.planetMotion.duration.toString();
                 }
-                if (config.planetMotion.timeDisplayStep) {
-                    trackTimeDisplayInterval.value = config.planetMotion.timeDisplayStep.toString();
+                if (this.config.planetMotion.timeDisplayStep) {
+                    trackTimeDisplayInterval.value = this.config.planetMotion.timeDisplayStep.toString();
                 }
-                if (config.planetMotion.timeDisplayContent) {
-                    trackTimeDisplayContent.value = config.planetMotion.timeDisplayContent;
+                if (this.config.planetMotion.timeDisplayContent) {
+                    trackTimeDisplayContent.value = this.config.planetMotion.timeDisplayContent;
                 }
             }
         }, 0);
@@ -634,7 +626,7 @@ export class ObjectInfoController {
     }
         */
 
-    private static generateConstellationInfo(objectInfoTextElement: HTMLElement, data: ConstellationData): void {
+    private generateConstellationInfo(objectInfoTextElement: HTMLElement, data: ConstellationData): void {
         let infoText = '';
         infoText += `日本語名: ${data.JPNname}座<br>`;
         infoText += `英語名: ${data.IAUname}<br>`;
@@ -642,8 +634,6 @@ export class ObjectInfoController {
         infoText += `赤経: ${data.ra.toFixed(1)}h<br>`;
         infoText += `赤緯: ${data.dec.toFixed(1)}°<br>`;
         objectInfoTextElement.innerHTML = infoText;
-
-        return;
     }
 
     /**
@@ -684,7 +674,7 @@ export class ObjectInfoController {
         };
     }
 
-    private static displayStarInfo(starInfo: StarInfo): void {
+    private displayStarInfo(starInfo: StarInfo): void {
         const starInfoElement = document.getElementById('starInfo');
         const starInfoRA2000Element = document.getElementById('starInfoRA2000');
         const starInfoDec2000Element = document.getElementById('starInfoDec2000');
@@ -699,7 +689,7 @@ export class ObjectInfoController {
 
         if (starInfo.type == 'hipStar') {
             const data = starInfo.data as HipStarInfoData;
-            const jd = getConfig().displayTime.jd;
+            const jd = this.config.displayTime.jd;
             const coordJ2000 = RaDec.precession(data.radec, undefined, jd, 'j2000');
             const raJ2000HMS = this.coordinateConverter.radeg2hms(coordJ2000.ra);
             const decJ2000DM = this.coordinateConverter.decdeg2dm2(coordJ2000.dec);
@@ -833,7 +823,7 @@ export class ObjectInfoController {
     /**
      * 画像URLを取得
      */
-    private static getImageUrl(object: any): string {
+    private getImageUrl(object: any): string {
         if (object.image_url) {
             return `chartImage/${object.image_url}`;
         }

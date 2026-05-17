@@ -1,6 +1,5 @@
-import { getConfig, saveConfigToLocalStorage, updateConfig } from '../main.js';
+import { getConfig, saveConfigToLocalStorage, updateConfig } from '../core/ConfigManager';
 import { ObservationSite } from '../types/index.js';
-import { SettingController } from './SettingController.js';
 declare const L: any;
 
 export class ObservationSiteController {

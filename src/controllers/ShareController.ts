@@ -1,4 +1,4 @@
-import { getConfig } from '../main.js';
+import { getConfig } from '../core/ConfigManager';
 import { StarChartConfig } from '../types/index.js';
 
 export class ShareController {

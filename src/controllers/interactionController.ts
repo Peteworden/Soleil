@@ -1,11 +1,12 @@
+import { saveConfigToLocalStorage, updateConfig } from "../core/ConfigManager.js";
 import { AzAlt, CanvasRaDec, CanvasXy, RaDec } from "../core/coordinates/index.js";
-import { DisplaySettings, StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
+import { StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
-import { getConfig, saveConfigToLocalStorage, setDebugInfo, updateConfig } from "../main.js";
 
 export class InteractionController {
     private canvas: HTMLCanvasElement;
     private config: StarChartConfig;
+    private objectInfoController: ObjectInfoController;
     private latestState: ViewState;
     // 状態管理
     private isDragging = false;
@@ -35,10 +36,12 @@ export class InteractionController {
 
     constructor(
         canvas: HTMLCanvasElement,
-        config: StarChartConfig
+        config: StarChartConfig,
+        objectInfoController: ObjectInfoController
     ) {
         this.canvas = canvas;
         this.config = config;
+        this.objectInfoController = objectInfoController;
         this.latestState = { ...config.viewState };
         this.baseDistance = 0;
         // タッチ操作のデフォルト動作を無効化
@@ -343,6 +346,7 @@ export class InteractionController {
     };
 
     private onPointerUp = (e: PointerEvent): void => {
+        // なぜか2回実行されてる！？
         if (this.activePointers.size === 1) {
             // クリック判定
             const clickDuration = Date.now() - this.clickStartTime;
@@ -384,8 +388,7 @@ export class InteractionController {
                             ObjectInfoController.closeObjectInfo();
                         }
                     }
-
-                    ObjectInfoController.showObjectInfo(canvasX, canvasY, isClickOutsideStarInfo);
+                    this.objectInfoController.showObjectInfo(canvasX, canvasY, isClickOutsideStarInfo);
                 }
             }
 

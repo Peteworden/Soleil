@@ -30,7 +30,7 @@ export const colorTheme: ColorTheme = {
         solarSystem: 'rgb(255, 219, 88)',
         moonShade: '#333333',
         solarSystemMotion: '#AAFFAA',
-        dso: 'rgb(214, 139, 0)',
+        dso: 'rgb(222, 154, 28)',
         
         // その他
         poleMark: 'orange',

@@ -6,7 +6,7 @@ import { CelestialObject, MessierObject } from '../../models/CelestialObject.js'
 import { StarsProgram } from './programs/starsProgram.js';
 import { CoordinateConverter } from '../../core/coordinates.js';
 import { AstronomicalCalculator } from '../../core/calculations.js';
-import { getConfig, updateConfig } from '../../main.js';
+import { getConfig, updateConfig } from '../../core/ConfigManager.js';
 
 export class WebGLRenderer {
     private canvas: HTMLCanvasElement;

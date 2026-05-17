@@ -2,7 +2,7 @@
 import { AzAlt, RaDec } from "../core/coordinates/index.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
-import { getConfig, updateConfig } from "../main.js";
+import { getConfig, updateConfig } from "../core/ConfigManager";
 
 export class TimeController {
     private static timeControl: HTMLDivElement | null = null;

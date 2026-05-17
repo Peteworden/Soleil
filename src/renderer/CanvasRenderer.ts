@@ -1,7 +1,7 @@
 import { CelestialObject, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
-import { BayerFlamData, ConstellationData, EquatorialCoordinates, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData, TransformModeConfig, CanvasXy } from '../types/index.js';
+import { BayerFlamData, ConstellationData, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData, TransformModeConfig, CanvasXy, CanvasSize } from '../types/index.js';
 import { CoordinateConverter } from '../core/coordinates.js';
-import { DeviceOrientationData, DeviceOrientationManager } from '../device/deviceOrientation.js';
+import { DeviceOrientationData } from '../device/deviceOrientation.js';
 import { ColorManager, getColorManager } from './colorManager.js';
 import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from './canvasHelpers.js';
 import { HipStarRenderer } from './HipStarRenderer.js';
@@ -10,7 +10,7 @@ import { SolarSystemRenderer } from './SolarSystemRenderer.js';
 import { DSORenderer } from './DSORenderer.js';
 import { AzAlt, RaDec } from '../core/coordinates/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
-import { getConfig, updateConfig } from '../main.js';
+import { getConfig } from '../core/ConfigManager.js';
 
 export class CanvasRenderer {
     private canvas: HTMLCanvasElement;
@@ -23,20 +23,21 @@ export class CanvasRenderer {
     private gaiaStarRenderer: GaiaStarRenderer;
     private dsoRenderer: DSORenderer;
 
-    private areaCandidatesCache: { areas: number[][], timestamp: number } | null = null;
+    private areaCandidatesCache: {
+        areas: number[][], mode: string,
+        jd: number, centerRa: number, centerDec: number, fovRa: number, fovDec: number, planet: string, lat: number, lon: number
+    } | null = null;
     private precessionCache: { angle: number, jd: number } | null = null;
 
     private objectInformation: Array<ObjectInformation> = [];
     private starInformation: Array<StarInformation> = [];
 
-    private deviceOrientationManager: DeviceOrientationManager;
     private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
 
     private colorManager: ColorManager;
 
     constructor(
-        canvas: HTMLCanvasElement,
-        deviceOrientationManager:  DeviceOrientationManager
+        canvas: HTMLCanvasElement
     ) {
         this.canvas = canvas;
         const context = canvas.getContext('2d');
@@ -49,15 +50,6 @@ export class CanvasRenderer {
         console.log("CanvasRenderer constructor");
 
         this.coordinateConverter = new CoordinateConverter();
-        this.deviceOrientationManager = deviceOrientationManager;
-        // this.deviceOrientationManager.setOrientationCallback((data: DeviceOrientationData) => {
-        //     this.orientationData = {
-        //         alpha: data.alpha,
-        //         beta: data.beta,
-        //         gamma: data.gamma,
-        //         webkitCompassHeading: data.webkitCompassHeading
-        //     };
-        // });
 
         // 色管理システムを初期化
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
@@ -70,7 +62,6 @@ export class CanvasRenderer {
 
     // imageCacheを設定
     setImageCache(imageCache: { [key: string]: HTMLImageElement }): void {
-        // this.imageCache = imageCache;
         this.dsoRenderer.setImageCache(imageCache);
     }
 
@@ -660,31 +651,49 @@ export class CanvasRenderer {
     private areaCandidates(): number[][] {
         const mode0 = this.config.displaySettings.mode;
         if (mode0 != 'AEP' && mode0 != "view") return [];
-        const conf = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         // キャッシュをチェック（設定が変更されていない場合）
-        const currentTime = Date.now();
-        if (this.areaCandidatesCache &&
-            currentTime - this.areaCandidatesCache.timestamp < 10) { // 10ms以内ならキャッシュを使用
+        const jd = this.config.displayTime.jd;
+        if (
+            this.areaCandidatesCache != null &&
+            Math.abs(jd - this.areaCandidatesCache.jd) < 10.0 &&
+            this.areaCandidatesCache.mode == this.config.displaySettings.mode &&
+            this.areaCandidatesCache.centerRa == this.config.viewState.centerRA &&
+            this.areaCandidatesCache.centerDec == this.config.viewState.centerDec &&
+            this.areaCandidatesCache.fovRa == this.config.viewState.fieldOfViewRA &&
+            this.areaCandidatesCache.fovDec == this.config.viewState.fieldOfViewDec &&
+            this.areaCandidatesCache.planet == this.config.observationSite.observerPlanet &&
+            this.areaCandidatesCache.lat == this.config.observationSite.latitude &&
+            this.areaCandidatesCache.lon == this.config.observationSite.longitude
+        ) {
             return this.areaCandidatesCache.areas;
         }
-        const areaCandidates = getAreaCandidates(
-            { lst: this.config.siderealTime, lat: this.config.observationSite.latitude },
-            this.config.viewState, this.config.displayTime.jd,
-            conf
-        );
+        const conf = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
+        const areaCandidates = getAreaCandidates(this.config.viewState, jd, conf);
         // キャッシュを更新
         this.areaCandidatesCache = {
-            areas: areaCandidates,
-            timestamp: currentTime
+            areas: areaCandidates, jd: jd,
+            mode: this.config.displaySettings.mode,
+            centerRa: this.config.viewState.centerRA, centerDec: this.config.viewState.centerDec,
+            fovRa: this.config.viewState.fieldOfViewRA, fovDec: this.config.viewState.fieldOfViewDec,
+            planet: this.config.observationSite.observerPlanet,
+            lat: this.config.observationSite.latitude, lon: this.config.observationSite.longitude,
         };
         return areaCandidates;
+    }
+
+    getCanvasBoundingClientRect(): DOMRect {
+        return this.canvas.getBoundingClientRect()
+    }
+
+    updateCanvasSize(size: CanvasSize): void {
+        this.canvas.width = size.width;
+        this.canvas.height = size.height;
     }
 
     // 描画オプションを更新
     // timeSliderが動いたときに呼び出される
     updateOptions(options: Partial<StarChartConfig>): void {
-        this.canvas.width = this.config.canvasSize.width;
-        this.canvas.height = this.config.canvasSize.height;
+        this.updateCanvasSize(this.config.canvasSize);
         // 設定が変更されたらキャッシュをクリア
         if (options.viewState || options.displaySettings) {
             this.areaCandidatesCache = null;
@@ -693,15 +702,14 @@ export class CanvasRenderer {
 
         // 時刻が変更されたらキャッシュをクリア
         if (options.displayTime) {
-            // this.areaCandidatesCache = null;
-            // this.precessionCache = null;
             this.hipStarRenderer.clearHipStarsCache(options.displayTime.jd);
-            // this.objectInformation = [];
         }
     }
 
     updateColorManager(): void {
         this.colorManager = getColorManager(this.config.displaySettings.darkMode);
+        this.hipStarRenderer.createHipStarSprites();
+        this.gaiaStarRenderer.createGaiaStarSprites();
     }
 
     setOrientationData(data: DeviceOrientationData): void {
