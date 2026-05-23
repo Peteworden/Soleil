@@ -181,3 +181,28 @@ export function toCanvasRadecFast_Live(
         return {ra: -d * xyz.x, dec: d * xyz.y}
     }
 }
+
+export function getCenterByCanvasRadec(azAlt: HorizontalCoordinates, canvasradec: CanvasRadecCoords, newCenterAlt: number) {
+    const theta = Math.atan2(canvasradec.ra, -canvasradec.dec);
+    const r = Math.sqrt(canvasradec.ra * canvasradec.ra + canvasradec.dec * canvasradec.dec) * DEG_TO_RAD;
+    const sinR = Math.sin(r);
+    // const cosR = Math.cos(r);
+    const sinTheta = Math.sin(theta);
+    const cosTheta = Math.cos(theta);
+    // const x1 = sinR * cosTheta;
+    const y1 = sinR * sinTheta;
+    // const z1 = cosR;
+    const {az, alt} = toRad(azAlt);
+    const cosAlt = Math.cos(alt);
+    const x2 = Math.cos(az) * cosAlt;
+    const y2 = -Math.sin(az) * cosAlt;
+
+    const newCenterAltRad = newCenterAlt * DEG_TO_RAD;
+    const sinCenterAlt1 = Math.sin(newCenterAltRad);
+    const cosCenterAlt1 = Math.cos(newCenterAltRad);
+
+    // x2 =  k * cos(azAlt.az) + y2 * sin(azAlt.az)
+    // y2 = y1 * cos(azAlt.az) -  k * sin(azAlt.az)
+    const k = sinR * cosTheta * sinCenterAlt1 + Math.cos(r) * cosCenterAlt1;
+    return {az: Math.atan2(y1 * x2 - k * y2, k * x2 + y1 * y2), alt: newCenterAlt};
+}

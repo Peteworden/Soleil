@@ -1,3 +1,4 @@
+import { DEG_TO_RAD, RAD_TO_DEG } from "../utils/constants";
 import { saveConfigToLocalStorage, updateConfig } from "../core/ConfigManager.js";
 import { AzAlt, CanvasRaDec, CanvasXy, RaDec } from "../core/coordinates/index.js";
 import { StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
@@ -202,50 +203,45 @@ export class InteractionController {
                     const currentXY = {x: e.clientX - this.canvas.offsetLeft, y: e.clientY - this.canvas.offsetTop};
 
                     // 前回のポインター位置のスクリーンRaDec
-                    const lastScreenRaDec = CanvasXy.toCanvasRadec(lastXY, fov, this.config.canvasSize);
+                    const lastCanvasRaDec = CanvasXy.toCanvasRadec(lastXY, fov, this.config.canvasSize);
 
                     if (mode == 'AEP') {
-                        const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
-                        // 前回のポインター位置の赤道座標
-                        const lastEquatorial = CanvasRaDec.toRaDec(lastScreenRaDec, transformConfig);
-                        
-                        // 北極/南極付近の場合は従来の方式（数値的に不安定になるため）
-                        // const isNearPole = Math.abs(this.viewState.centerDec) > 85 || Math.abs(lastEquatorial.dec) > 85;
-                        const isNearPole = false;
-                        
-                        if (!isNearPole) {
-                            // 現在のポインター位置のスクリーンRaDec
-                            const currentCanvasRadec = CanvasXy.toCanvasRadec(currentXY, fov, this.config.canvasSize);
-                            // 現在のポインター位置の赤道座標
-                            const currentRadec = CanvasRaDec.toRaDec(currentCanvasRadec, transformConfig);
-                            
-                            // ポインター位置の天球座標が保たれるように中心座標を調整
-                            centerRaDec.ra = ((lastEquatorial.ra + centerRaDec.ra - currentRadec.ra) % 360 + 360) % 360;
-                            centerRaDec.dec = Math.max(-90, Math.min(90, lastEquatorial.dec + centerRaDec.dec - currentRadec.dec));
+                        const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat};
+                        const lastRadec = CanvasRaDec.toRaDec(lastCanvasRaDec, transformConfig);
+                        const currentCanvasRadec = CanvasXy.toCanvasRadec(currentXY, fov, this.config.canvasSize);
+                        centerRaDec.dec = centerRaDec.dec - (currentCanvasRadec.dec - lastCanvasRaDec.dec);
+                        if (centerRaDec.dec > 90) {
+                            const rotationAngle = Math.atan2(lastCanvasRaDec.ra, lastCanvasRaDec.dec) - Math.atan2(currentCanvasRadec.ra, currentCanvasRadec.dec);
+                            centerRaDec.ra = centerRaDec.ra - rotationAngle * RAD_TO_DEG;
+                            centerRaDec.dec = 90;
+                        } else if (centerRaDec.dec <= -90) {
+                            const rotationAngle = Math.atan2(lastCanvasRaDec.ra, lastCanvasRaDec.dec) - Math.atan2(currentCanvasRadec.ra, currentCanvasRadec.dec);
+                            centerRaDec.ra = centerRaDec.ra + rotationAngle * RAD_TO_DEG;
+                            centerRaDec.dec = -90;
+                        } else {
+                            centerRaDec.ra = RaDec.getCenterByCanvasRadec(lastRadec, currentCanvasRadec, centerRaDec.dec).ra * RAD_TO_DEG;
                         }
-                        
+                        centerRaDec.ra = (centerRaDec.ra % 360 + 360) % 360;
                         const newCenterAzalt = RaDec.toAzalt(centerRaDec, lstLat);
                         centerAzAlt.az = newCenterAzalt.az;
                         centerAzAlt.alt = newCenterAzalt.alt;
                     } else if (mode == 'view') {
                         const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat}
-                        // 前回のポインター位置の地平座標
-                        const lastAzalt = CanvasRaDec.toAzAlt(lastScreenRaDec, transformConfig);
-                        
-                        // 天頂/天底付近の場合は従来の方式（数値的に不安定になるため）
-                        // const isNearZenith = Math.abs(this.viewState.centerAlt) > 85 || Math.abs(lastHorizontal.alt) > 85;
-                        const isNearZenith = false;
-                        
-                        if (!isNearZenith) {
-                            // 現在のポインター位置のスクリーンRaDec
-                            const currentScreenRaDec = CanvasXy.toCanvasRadec(currentXY, fov, this.config.canvasSize);
-                            // 現在のポインター位置の地平座標
-                            const currentAzAlt = CanvasRaDec.toAzAlt(currentScreenRaDec, transformConfig);
-                            
-                            // ポインター位置の天球座標が保たれるように中心座標を調整
-                            centerAzAlt.az = ((lastAzalt.az + centerAzAlt.az - currentAzAlt.az) % 360 + 360) % 360;
-                            centerAzAlt.alt = Math.max(-90, Math.min(90, lastAzalt.alt + centerAzAlt.alt - currentAzAlt.alt));
+                        const lastAzalt = CanvasRaDec.toAzAlt(lastCanvasRaDec, transformConfig);
+                        const currentCanvasRadec = CanvasXy.toCanvasRadec(currentXY, fov, this.config.canvasSize);
+                        centerAzAlt.alt = centerAzAlt.alt - (currentCanvasRadec.dec - lastCanvasRaDec.dec);
+                        if (centerAzAlt.alt > 90) {
+                            const rotationAngle = Math.atan2(lastCanvasRaDec.ra, lastCanvasRaDec.dec) - Math.atan2(currentCanvasRadec.ra, currentCanvasRadec.dec);
+                            centerAzAlt.az = centerAzAlt.az + rotationAngle * RAD_TO_DEG;
+                            centerAzAlt.alt = 90;
+                        } else if (centerAzAlt.alt <= -90) {
+                            const rotationAngle = Math.atan2(lastCanvasRaDec.ra, lastCanvasRaDec.dec) - Math.atan2(currentCanvasRadec.ra, currentCanvasRadec.dec);
+                            centerAzAlt.az = centerAzAlt.az - rotationAngle * RAD_TO_DEG;
+                            centerAzAlt.alt = -90;
+                        } else {
+                            centerAzAlt.az = AzAlt.getCenterByCanvasRadec(lastAzalt, currentCanvasRadec, centerAzAlt.alt).az * RAD_TO_DEG;
                         }
+                        centerAzAlt.az = (centerAzAlt.az % 360 + 360) % 360;
                         
                         const newCenterRadec = AzAlt.toRadec(centerAzAlt, lstLat);
                         centerRaDec.ra = newCenterRadec.ra;
@@ -288,18 +284,18 @@ export class InteractionController {
                     fov.dec /= scale;
                     
                     // ズーム前のピンチ中心のスクリーンRaDec
-                    const pinchScreenRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
+                    const pinchCanvasRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
                     
                     if (mode == 'AEP') {
                         const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
                         // ズーム前のピンチ中心の赤道座標を保存
-                        const pinchRadec = CanvasRaDec.toRaDec(pinchScreenRaDec, transformConfig);
+                        const pinchRadec = CanvasRaDec.toRaDec(pinchCanvasRaDec, transformConfig);
                         
                         // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
                         const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(pinchRadec.dec) > 85;
                         if (!isNearPole) {
-                            const newPinchScreenRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
-                            const newPinchRadec = CanvasRaDec.toRaDec(newPinchScreenRaDec, transformConfig);
+                            const newPinchCanvasRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
+                            const newPinchRadec = CanvasRaDec.toRaDec(newPinchCanvasRaDec, transformConfig);
                             centerRaDec.ra = ((pinchRadec.ra + centerRaDec.ra - newPinchRadec.ra) % 360 + 360) % 360;
                             centerRaDec.dec = Math.max(-90, Math.min(90, pinchRadec.dec + centerRaDec.dec - newPinchRadec.dec));
                             const newCenterAzalt = RaDec.toAzalt(centerRaDec, lstLat);
@@ -309,15 +305,15 @@ export class InteractionController {
                     } else if (mode == 'view') { 
                         const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat};
                         // ズーム前のピンチ中心の地平座標を保存
-                        const pinchAzalt = CanvasRaDec.toAzAlt(pinchScreenRaDec, transformConfig);
+                        const pinchAzalt = CanvasRaDec.toAzAlt(pinchCanvasRaDec, transformConfig);
                         
                         // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
                         const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(pinchAzalt.alt) > 85;
                         if (!isNearZenith) {
                             // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
-                            const newPinchScreenRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
+                            const newPinchCanvasRaDec = CanvasXy.toCanvasRadec(pinchXY, fov, this.config.canvasSize);
                             // 新しい中心座標でのピンチした位置での地平座標
-                            const newPinchAzalt = CanvasRaDec.toAzAlt(newPinchScreenRaDec, transformConfig);
+                            const newPinchAzalt = CanvasRaDec.toAzAlt(newPinchCanvasRaDec, transformConfig);
                             centerAzAlt.az = ((pinchAzalt.az + centerAzAlt.az - newPinchAzalt.az) % 360 + 360) % 360;
                             centerAzAlt.alt = Math.max(-90, Math.min(90, pinchAzalt.alt + centerAzAlt.alt - newPinchAzalt.alt));
                             const newCenterRadec = AzAlt.toRadec(centerAzAlt, lstLat);
@@ -455,7 +451,7 @@ export class InteractionController {
         const mouseXY = {x: this.wheelClientX - this.canvas.offsetLeft, y: this.wheelClientY - this.canvas.offsetTop};
         
         // ズーム前のマウス位置のスクリーンRaDec
-        const mouseScreenRADec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
+        const mouseCanvasRadec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
         
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
         const mode = this.config.displaySettings.mode;
@@ -465,7 +461,7 @@ export class InteractionController {
         if (mode == 'AEP') {
             const transformConfig: TransformModeConfig = {mode: 'AEP', center: centerRaDec, location: lstLat}
             // ズーム前のマウス位置の赤道座標を保存
-            const mouseRadec = CanvasRaDec.toRaDec(mouseScreenRADec, transformConfig);
+            const mouseRadec = CanvasRaDec.toRaDec(mouseCanvasRadec, transformConfig);
             
             // 北極/南極付近の場合は画面中心でズーム（数値的に不安定になるため）
             const isNearPole = Math.abs(centerRaDec.dec) > 85 || Math.abs(mouseRadec.dec) > 85;
@@ -486,7 +482,7 @@ export class InteractionController {
         } else if (mode == 'view') {
             const transformConfig: TransformModeConfig = {mode: 'view', center: centerAzAlt, location: lstLat};
             // ズーム前のマウス位置の地平座標を保存
-            const mouseAzalt = CanvasRaDec.toAzAlt(mouseScreenRADec, transformConfig);
+            const mouseAzalt = CanvasRaDec.toAzAlt(mouseCanvasRadec, transformConfig);
             
             // 天頂/天底付近の場合は画面中心でズーム（数値的に不安定になるため）
             const isNearZenith = Math.abs(centerAzAlt.alt) > 85 || Math.abs(mouseAzalt.alt) > 85;
@@ -497,9 +493,9 @@ export class InteractionController {
             
             if (!isNearZenith) {
                 // ピンチした位置（スクリーン上の座標が不変という意味で）のスクリーンRaDecを計算
-                const newMouseScreenRaDec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
+                const newMouseCanvasRadec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);
                 // 新しい中心座標でのマウス位置での地平座標
-                const newMouseAzalt = CanvasRaDec.toAzAlt(newMouseScreenRaDec, transformConfig);
+                const newMouseAzalt = CanvasRaDec.toAzAlt(newMouseCanvasRadec, transformConfig);
                 centerAzAlt.az = ((mouseAzalt.az + centerAzAlt.az - newMouseAzalt.az) % 360 + 360) % 360;
                 centerAzAlt.alt = Math.max(-90, Math.min(90, mouseAzalt.alt + centerAzAlt.alt - newMouseAzalt.alt));
                 
@@ -532,19 +528,3 @@ export class InteractionController {
         }
     };
 }
-
-// クエリ削除を一度だけ行う軽量関数（履歴書き換えの回数を抑制）
-// let __urlCleared = false;
-// function clearUrlSearchOnce(): void {
-//     if (__urlCleared) return;
-//     if (!location.search) { __urlCleared = true; return; }
-//     try {
-//         if (history.replaceState) {
-//             history.replaceState(null, '', location.pathname + location.hash);
-//         }
-//     } catch (_) {
-//         // noop
-//     } finally {
-//         __urlCleared = true;
-//     }
-// }

@@ -384,7 +384,6 @@ export class SolarSystemPositionCalculator {
         const m0 = orbit.m0 * DEG_TO_RAD;
 
         if (orbit.t0 == undefined) {
-            // (window as any).showErrorMessage(`${minorObject.jpnName}の元期が未設定です`);
             return;
         }
 

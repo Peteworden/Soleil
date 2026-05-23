@@ -223,3 +223,12 @@ export function toCanvasRadecFast_AEP(
     const d = r / Math.sqrt(a * a + b * b);
     return {ra: d * b, dec : -d * a};
 }
+
+export function getCenterByCanvasRadec(radec: CanvasRadecCoords, canvasradec: CanvasRadecCoords, newCenterDec: number) {
+    const theta = Math.atan2(canvasradec.ra, -canvasradec.dec);
+    const r = Math.sqrt(canvasradec.ra * canvasradec.ra + canvasradec.dec * canvasradec.dec) * DEG_TO_RAD;
+    const sinR = Math.sin(r);
+    const cosRaDiff = Math.sin(newCenterDec) * sinR * Math.cos(theta) + Math.cos(newCenterDec) * Math.cos(r);
+    const newCenterRa = radec.ra - Math.atan2(sinR * Math.sin(theta), cosRaDiff);
+    return {ra: newCenterRa, dec: newCenterDec};
+}
