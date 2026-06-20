@@ -1,11 +1,11 @@
 import { CanvasXy, HipData, StarChartConfig, StarInformation } from "../types/index.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
-import { CoordinateConverter } from "../core/coordinates.js";
 import { ColorManager } from "./colorManager.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { DEG_TO_RAD } from "../utils/constants.js";
 import { DeviceOrientationData } from "device/deviceOrientation.js";
+import { areaCandidatesCacheInterface } from "./CanvasRenderer.js";
 
 export class HipStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
@@ -19,11 +19,12 @@ export class HipStarRenderer {
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
+        private areaCandidates: () => areaCandidatesCacheInterface | null,
     ) {
         this.initialize();
     }
 
-    private initialize(){
+    private initialize() {
         this.hipStarsColors = [];
         this.createHipStarSprites();
     }
@@ -31,15 +32,14 @@ export class HipStarRenderer {
     updateOrientationData(data: DeviceOrientationData) {
         this.orientationData = data;
     }
-    
+
     async drawHipStars(hipStars: HipData, starInformation: Array<StarInformation>): Promise<void> {
         if (hipStars.count == 0) return;
         if (this.config.displaySettings.usedStar == 'noStar') return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const currentJd = this.config.displayTime.jd;
-        
-        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
-        const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
+
+        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
 
         const centerRaRad = this.config.viewState.centerRA * DEG_TO_RAD;
         const sinCenterDec = Math.sin(this.config.viewState.centerDec * DEG_TO_RAD);
@@ -71,6 +71,13 @@ export class HipStarRenderer {
             this.hipStarsColors = this.getHipStarsColors(hipStars.bvArray);
         }
 
+        const areaInfo = this.areaCandidates();
+        const minDec = (areaInfo?.minDec ?? 0) * DEG_TO_RAD;
+        const maxDec = (areaInfo?.maxDec ?? 0) * DEG_TO_RAD;
+        const minRa = (areaInfo?.minRa ?? 0) * DEG_TO_RAD;
+        const maxRa = (areaInfo?.maxRa ?? 0) * DEG_TO_RAD;
+        const areaInfoExist = areaInfo !== null;
+
         const limitMagnitudeForWhiten = Math.max(limitingMagnitude, 7.0);
         const blurRadii = [0.2, 0.6, 0.9, 1.2]
         const colorRatios = [0.4, 0.8, 1.0, 1.0]
@@ -79,9 +86,10 @@ export class HipStarRenderer {
             for (let i = 0; i < cachedStars.count; i++) {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
-                // const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
-                const coords = { ra: cachedStars.raArray[i] * DEG_TO_RAD, dec: cachedStars.decArray[i] * DEG_TO_RAD };
-                // const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                if (areaInfoExist) {
+                    if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec || hipStars.raArray[i] < minRa || hipStars.raArray[i] > maxRa) continue;
+                }
+                const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
                     coords, this.config.displaySettings.mode,
                     centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
@@ -104,9 +112,8 @@ export class HipStarRenderer {
         } else {
             for (let i = 0; i < cachedStars.count; i++) {
                 if (cachedStars.magArray[i] > limitingMagnitude) continue;
-                // const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
-                const coords = { ra: cachedStars.raArray[i] * DEG_TO_RAD, dec: cachedStars.decArray[i] * DEG_TO_RAD };
-                // const [ifin, xy] = RaDec.toCanvasXYifin(coords, fov, this.config.canvasSize, transformConfig);
+                if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec) continue;
+                const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
                     coords, this.config.displaySettings.mode,
                     centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
@@ -120,7 +127,7 @@ export class HipStarRenderer {
     }
 
     drawHipStar(
-        mag: number, bv: number, {x, y}: CanvasXy,
+        mag: number, bv: number, { x, y }: CanvasXy,
         limitingMagnitude: number, zeroMagSize: number, limitMagnitudeForWhiten: number,
         blurRadii: number[], colorRatios: number[], opacities: string[], starColor: string, starColorRGB: [number, number, number]
     ): void {
@@ -137,13 +144,11 @@ export class HipStarRenderer {
                 this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
                 return;
             } else {
-                // console.log(mag, starSize.toFixed(1), bv10Str);
                 const off = this.createHipStarSprite(starSize, bv, this.colorManager.getColor('star'), 2.5);
                 this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
                 return;
             }
         } else {
-            // this.ctx.fillStyle = starColor;
             if (mag > limitMagnitudeForWhiten - 2.0) {
                 this.ctx.fillStyle = this.colorManager.blendColors(
                     starColorRGB,
@@ -165,65 +170,14 @@ export class HipStarRenderer {
                 this.ctx.fill();
             }
         }
-        // === スプライト描画ここまで ===
-
-        /*
-        if (starSize > 10) {
-            // 中心が白、外側が星の色のグラデーション
-            const originalFilter = this.ctx.filter;
-            this.ctx.filter = `blur(${starSize * 0.2}px)`;
-            const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, starSize);
-            gradient.addColorStop(0.2, this.colorManager.getColor('star'));
-            gradient.addColorStop(1, starColor);
-            this.ctx.beginPath();
-            this.ctx.fillStyle = gradient;
-            this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-            this.ctx.fill();
-            this.ctx.filter = originalFilter;
-        } else if (star.getMagnitude()! < 2 || starSize > 5) {
-            // 半透明の円を重ねる
-            for (let i = blurRadii.length - 1; i >= 0; i--) {
-                const color = this.colorManager.blendColors(
-                    starColorRGB,
-                    starColor,
-                    colorRatios[i]
-                );
-                this.ctx.beginPath();
-                this.ctx.fillStyle = `${color}${opacities[i]}`;
-                this.ctx.arc(x, y, starSize * blurRadii[i], 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-            // 円だと勝手にピクセルレベルでの透明度の調整などが入るためか、正方形に置き換えるより大きく見える
-        // } else {
-        //     // 小さい星：シンプルな円で描画
-        //     if (star.getMagnitude()! > limitMagnitudeForWhiten - 2.0) {
-        //         this.ctx.fillStyle = this.colorManager.blendColors(
-        //             starColorRGB,
-        //             starColor,
-        //             (limitMagnitudeForWhiten - star.getMagnitude()!) / 6.0
-        //         );
-        //     } else {
-        //         this.ctx.fillStyle = starColor;
-        //     }
-        //     this.ctx.beginPath();
-        //     this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-        //     this.ctx.fill();
-        // }
-        // } else if (starSize < 2) {
-        //     this.ctx.beginPath();
-        //     this.ctx.fillStyle = this.colorManager.getColor('star');
-        //     this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
-        //     this.ctx.fill();
-        // } else {
-        //     this.ctx.beginPath();
-        //     this.ctx.fillStyle = starColor;
-        //     this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-        //     this.ctx.fill();
-        }
-        */
     }
 
-    // HIP星データ全体を歳差運動補正してキャッシュ
+    /**
+     * HIP星データ全体を歳差運動補正してキャッシュ
+     * @param hipStars 
+     * @param jd 
+     * @returns {stars: {raArray in rad, decArray in rad, magArray, bvArray, count}, jd}
+     */
     private getCachedHipStars(hipStars: HipData, jd: number): HipData {
         if (!hipStars || hipStars.count === 0) {
             const emptyCache = {
@@ -240,7 +194,6 @@ export class HipStarRenderer {
             return emptyCache.stars;
         }
 
-        // console.log("HIP cache check:", this.hipStarsCache?.jd, jd);
         if (this.hipStarsCache !== null && Math.abs(this.hipStarsCache.jd - jd) < 10.0) {
             return this.hipStarsCache.stars;
         }
@@ -260,13 +213,13 @@ export class HipStarRenderer {
             this.hipStarsCache.jd = jd;
         }
         const precessionAngle = AstronomicalCalculator.precessionAngle('j2000', jd);
+        const sin = Math.sin(precessionAngle);
+        const cos = Math.cos(precessionAngle);
 
         // 新しいHIP星データを作成（歳差運動補正済み）
-        let originalCoords = { ra: hipStars.raArray[0], dec: hipStars.decArray[0] };
-        let radec = {ra: 0.0, dec: 0.0};
+        let radec = { ra: 0.0, dec: 0.0 };
         for (let i = 0; i < hipStars.count; i++) {
-            originalCoords = { ra: hipStars.raArray[i], dec: hipStars.decArray[i] };
-            radec = RaDec.precession(originalCoords, precessionAngle);
+            radec = RaDec.precessionFast({ ra: hipStars.raArray[i], dec: hipStars.decArray[i] }, sin, cos);
             this.hipStarsCache.stars.raArray[i] = radec.ra;
             this.hipStarsCache.stars.decArray[i] = radec.dec;
         }
@@ -329,7 +282,6 @@ export class HipStarRenderer {
     private getHipStarSprite(size: number, bv10: string): HTMLCanvasElement | null {
         // サイズを整数に丸める
         const roundedSize = Math.round(size);
-        // console.log(`${roundedSize}-${Math.round(bv * 10)}`);
         return this.hipStarSprites.get(`${roundedSize}-${bv10}`) || null;
     }
 

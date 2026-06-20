@@ -37,7 +37,7 @@ export class DataLoader {
 
         if (encodeStyle == '3bytes') {
             for (let i = 0; i < bufferByteLength; i += 3) {
-                const ra  = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
                 const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
                 const mag = (view.getUint8(i + 2) & 0x0F) * 0.1 + magOffset;
                 const index = i / 3;
@@ -47,7 +47,7 @@ export class DataLoader {
             }
         } else if (encodeStyle == '4bytes') {
             for (let i = 0; i < bufferByteLength; i += 4) {
-                const ra  = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
+                const ra = ((view.getUint8(i) << 2) | (view.getUint8(i + 1) >> 6)) * 0.001;
                 const dec = (((view.getUint8(i + 1) & 0x3F) << 4) | (view.getUint8(i + 2) >> 4)) * 0.001;
                 const mag = view.getUint8(i + 3) * 0.1 + magOffset;
                 const index = i >> 2;
@@ -58,13 +58,13 @@ export class DataLoader {
         } else {
             throw new Error(`Invalid encode style: ${encodeStyle}`);
         }
-        
+
         console.log(url, raArray.length, "stars");
         return { raArray, decArray, magArray, count };
     }
 
     // HIP星表データの読み込み
-    static async loadHIPData(): Promise<HipData> {    
+    static async loadHIPData(): Promise<HipData> {
         const h = await this.fetchText('data/hip_65.txt');
         const hipData = h.split(',').map(Number);
         const hipCount = hipData.length / 4;
@@ -72,11 +72,12 @@ export class DataLoader {
         const decArray = new Float32Array(hipCount);
         const magArray = new Float32Array(hipCount);
         const bvArray = new Float32Array(hipCount);
+        const coordCoeff = 0.001 * DEG_TO_RAD;
         for (let i = 0; i < hipData.length; i += 4) {
             const index = i >> 2;
             // bv == nullのときは[i+3]には1000が入っている
-            raArray[index] = hipData[i] * 0.001;
-            decArray[index] = hipData[i + 1] * 0.001;
+            raArray[index] = hipData[i] * coordCoeff;
+            decArray[index] = hipData[i + 1] * coordCoeff;
             magArray[index] = hipData[i + 2] * 0.1;
             bvArray[index] = hipData[i + 3] != 1000 ? hipData[i + 3] * 0.1 : NaN;
         }
@@ -222,7 +223,7 @@ export class DataLoader {
         for (let i = 0; i < ngcData.length; i += 4) {
             ngc[i / 4] = new NGCObject(
                 `NGC${i / 4 + 1}`,
-                { ra: +ngcData[i] * 0.01, dec: +ngcData[i+1] * 0.01 },
+                { ra: +ngcData[i] * 0.01, dec: +ngcData[i + 1] * 0.01 },
                 +ngcData[i + 2] * 0.1,
                 ngcData[i + 3],
                 null,
@@ -237,7 +238,7 @@ export class DataLoader {
         for (let i = 0; i < icData.length; i += 4) {
             ic[i / 4] = new NGCObject(
                 `IC${i / 4 + 1}`,
-                { ra: +icData[i] * 0.01, dec: +icData[i+1] * 0.01 },
+                { ra: +icData[i] * 0.01, dec: +icData[i + 1] * 0.01 },
                 +icData[i + 2] * 0.1,
                 icData[i + 3],
                 null,
@@ -290,8 +291,8 @@ export class DataLoader {
         const starCount = data_split.length / 6;
         const brightStars: BayerFlamData[] = new Array(starCount);
         for (let i = 0; i < data_split.length; i += 6) {
-            const flam : number | null = data_split[i + 2].length > 0 ? +data_split[i + 2] : null;
-            const bayer : string | null = data_split[i + 3].length > 0 ? formatBayerDesignation(data_split[i + 3], +data_split[i + 4]) : null;
+            const flam: number | null = data_split[i + 2].length > 0 ? +data_split[i + 2] : null;
+            const bayer: string | null = data_split[i + 3].length > 0 ? formatBayerDesignation(data_split[i + 3], +data_split[i + 4]) : null;
             const constellation = data_split[i + 5];
 
             brightStars[i / 6] = {
@@ -328,7 +329,7 @@ export class DataLoader {
         const data = await this.fetchText('data/milky_way.txt');
         const data_split = data.split(',');
         const pointCount = data_split.length / 2;
-        const milkyWay: number[][] = new Array(pointCount+1);
+        const milkyWay: number[][] = new Array(pointCount + 1);
         for (let i = 0; i < data_split.length; i += 2) {
             milkyWay[i / 2] = [+data_split[i], +data_split[i + 1]];
         }

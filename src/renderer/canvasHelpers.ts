@@ -1,6 +1,6 @@
 import { DEG_TO_RAD, RAD_TO_DEG } from '../utils/constants.js';
 import { CanvasRaDec, RaDec } from '../core/coordinates/index.js';
-import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates } from '../types/index.js';
+import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates, CanvasSize } from '../types/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
 
 export function starSize_0mag(fieldOfViewRA: number, fieldOfViewDec: number): number {
@@ -8,8 +8,8 @@ export function starSize_0mag(fieldOfViewRA: number, fieldOfViewDec: number): nu
 }
 
 export function getStarSize(
-    magnitude: number, 
-    limitingMagnitude: number, 
+    magnitude: number,
+    limitingMagnitude: number,
     starSize_0mag: number
 ): number {
     if (magnitude > limitingMagnitude) {
@@ -21,11 +21,11 @@ export function getStarSize(
     }
 }
 
-export function areaNumber(ra: number, dec: number): number {
+function areaNumber(ra: number, dec: number): number {
     return 360 * Math.floor(dec + 90) + Math.floor(ra);
 }
 
-export function areaNumberRange(ra1: number, ra2: number, dec: number): number[] {
+function areaNumberRange(ra1: number, ra2: number, dec: number): number[] {
     const startArea = areaNumber(ra1, dec);
     const endArea = areaNumber(ra2, dec);
     return [startArea, endArea];
@@ -34,16 +34,20 @@ export function areaNumberRange(ra1: number, ra2: number, dec: number): number[]
 /**
  * 小さい方以上大きい方以下の整数を返す
  */
-export function rangeInt(a: number, b: number): number[] {
-    const c = a > b ? a : b; // 大きい方
-    const d = a > b ? b : a; // 小さい方
-    const start = Math.ceil(d); // 小さい方の切り上げ
-    const end = Math.floor(c); // 大きい方の切り下げ
+function rangeInt(a: number, b: number): number[] {
+    const start = Math.ceil(Math.min(a, b));
+    const end = Math.floor(Math.max(a, b));
     if (end < start) return [];
-    return Array.from({length: end - start + 1}, (_, i) => start + i);
+    const length = end - start + 1;
+    const result = new Array(length);
+    for (let i = 0; i < length; i++) {
+        result[i] = start + i;
+    }
+    return result;
+
 }
 
-export function addEdge (
+function addEdge(
     screenRA: number, screenDec: number,
     edgeRA: number[], edgeDec: number[],
     sinPrecess: number,
@@ -51,72 +55,82 @@ export function addEdge (
     conf: TransformModeConfig
 ): void {
     const radecApp = CanvasRaDec.toRaDec({ ra: screenRA, dec: screenDec }, conf);
-    const radec = RaDec.precessionFast({ra: radecApp.ra * DEG_TO_RAD, dec: radecApp.dec * DEG_TO_RAD}, sinPrecess, cosPrecess);
+    const radec = RaDec.precessionFast({ ra: radecApp.ra * DEG_TO_RAD, dec: radecApp.dec * DEG_TO_RAD }, sinPrecess, cosPrecess);
     edgeRA.push((radec.ra * RAD_TO_DEG + 360) % 360);
     edgeDec.push(radec.dec * RAD_TO_DEG);
 }
 
-export function getAreaCandidatesFromEdge(
-    edgeRA: number[], 
-    edgeDec: number[], 
-    np: boolean, 
-    sp: boolean
+function getAreaCandidatesFromEdge(
+    edgeRA: number[],
+    edgeDec: number[],
+    np: boolean,
+    sp: boolean,
+    n85: boolean,
+    s85: boolean,
 ): number[][] {
     // npのときは+85°以北を、spのときは-85°より南をすべて含める
     const RA_min = Math.min(...edgeRA);
     const RA_max = Math.max(...edgeRA);
+    sp = sp || Math.min(...edgeDec) < -85;
+    np = np || Math.max(...edgeDec) > 85;
     const Dec_min = sp ? -90 : Math.min(...edgeDec);
     const Dec_max = np ? 89.9 : Math.max(...edgeDec);
     let ra0Dec: number[] = []; // 赤経0度線を横切るときの赤緯
 
     // 境界線をセグメントに分割
-    const segments: Array<{ra1: number, dec1: number, ra2: number, dec2: number, crossDecs: number[]}> = [];
+    const segments: Array<{ ra1: number, dec1: number, ra2: number, dec2: number, crossDecs: number[] }> = [];
     for (let i = 0; i < edgeRA.length - 1; i++) {
-        segments.push({
-            ra1: edgeRA[i], dec1: edgeDec[i],
-            ra2: edgeRA[i + 1], dec2: edgeDec[i + 1],
-            crossDecs: rangeInt(edgeDec[i], edgeDec[i+1])
-        });
-        if (edgeRA[i] > 300 && edgeRA[i+1] < 60) {
-            ra0Dec.push(edgeDec[i] + (edgeDec[i+1] - edgeDec[i]) / (edgeRA[i+1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
-        } else if (edgeRA[i] < 60 && edgeRA[i+1] > 300) {
-            ra0Dec.push(edgeDec[i] + (edgeDec[i+1] - edgeDec[i]) / (edgeRA[i] - edgeRA[i+1] + 360) * edgeRA[i]);
+        if (edgeRA[i] > 300 && edgeRA[i + 1] < 60) {
+            ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i + 1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
+        } else if (edgeRA[i] < 60 && edgeRA[i + 1] > 300) {
+            ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i] - edgeRA[i + 1] + 360) * edgeRA[i]);
+        } else {
+            segments.push({
+                ra1: edgeRA[i], dec1: edgeDec[i],
+                ra2: edgeRA[i + 1], dec2: edgeDec[i + 1],
+                crossDecs: rangeInt(edgeDec[i], edgeDec[i + 1])
+            });
         }
     }
+    const edgeLastIdx = edgeRA.length - 1;
     segments.push({
-        ra1: edgeRA[edgeRA.length - 1], dec1: edgeDec[edgeDec.length - 1],
+        ra1: edgeRA[edgeLastIdx], dec1: edgeDec[edgeDec.length - 1],
         ra2: edgeRA[0], dec2: edgeDec[0],
-        crossDecs: rangeInt(edgeDec[edgeRA.length-1], edgeDec[0])
+        crossDecs: rangeInt(edgeDec[edgeLastIdx], edgeDec[0])
     });
-    if (edgeRA[edgeRA.length - 1] > 300 && edgeRA[0] < 60) {
-        ra0Dec.push(edgeDec[edgeRA.length-1] + (edgeDec[0] - edgeDec[edgeRA.length-1]) / (edgeRA[0] - edgeRA[edgeRA.length-1] + 360) * (360 - edgeRA[edgeRA.length-1]));
-    } else if (edgeRA[edgeRA.length-1] < 60 && edgeRA[0] > 300) {
-        ra0Dec.push(edgeDec[edgeRA.length-1] + (edgeDec[0] - edgeDec[edgeRA.length-1]) / (edgeRA[edgeRA.length-1] - edgeRA[0] + 360) * edgeRA[edgeRA.length-1]);
+    if (edgeRA[edgeLastIdx] > 300 && edgeRA[0] < 60) {
+        ra0Dec.push(edgeDec[edgeLastIdx] + (edgeDec[0] - edgeDec[edgeLastIdx]) / (edgeRA[0] - edgeRA[edgeLastIdx] + 360) * (360 - edgeRA[edgeLastIdx]));
+    } else if (edgeRA[edgeLastIdx] < 60 && edgeRA[0] > 300) {
+        ra0Dec.push(edgeDec[edgeLastIdx] + (edgeDec[0] - edgeDec[edgeLastIdx]) / (edgeRA[edgeLastIdx] - edgeRA[0] + 360) * edgeRA[edgeLastIdx]);
     }
     if (np) {
-        ra0Dec.push(85);
-        ra0Dec = ra0Dec.filter(dec => dec <= 85);
+        ra0Dec = ra0Dec.filter(dec => dec < 85);
+        if (n85) {
+            ra0Dec.push(85);
+        }
     }
     if (sp) {
-        ra0Dec.push(-85);
-        ra0Dec = ra0Dec.filter(dec => dec >= -85);
+        ra0Dec = ra0Dec.filter(dec => dec > -85);
+        if (s85) {
+            ra0Dec.push(-85);
+        }
     }
     ra0Dec.sort((a, b) => a - b);
     for (let i = 0; i < ra0Dec.length; i += 2) {
         segments.push({
             ra1: 0, dec1: ra0Dec[i],
-            ra2: 0, dec2: ra0Dec[i+1],
-            crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+            ra2: 0, dec2: ra0Dec[i + 1],
+            crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
         });
         segments.push({
             ra1: 359.999, dec1: ra0Dec[i],
-            ra2: 359.999, dec2: ra0Dec[i+1],
-            crossDecs: rangeInt(ra0Dec[i], ra0Dec[i+1])
+            ra2: 359.999, dec2: ra0Dec[i + 1],
+            crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
         });
     }
 
     // i番目:赤緯i-90の線と境界線が交わる点の赤経
-    const allIntersections: { intersections: number[] }[] = Array.from({length: 180}, () => ({ intersections: [] }));
+    const allIntersections: { intersections: number[] }[] = Array.from({ length: 180 }, () => ({ intersections: [] }));
     for (const segment of segments) {
         for (const dec of segment.crossDecs) {
             const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
@@ -185,18 +199,28 @@ export function getAreaCandidates(
     viewState: ViewState,
     jd: number,
     conf: TransformModeConfig,
+    ctx: CanvasRenderingContext2D,
+    canvasSize: CanvasSize
 ): number[][] {
     if (!['AEP', 'view'].includes(conf.mode)) return [];
     const edgeRA: number[] = [];
     const edgeDec: number[] = [];
-    const raWidth = viewState.fieldOfViewRA * 0.5 + 1.0;
-    const decWidth = viewState.fieldOfViewDec * 0.5 + 1.0;
-    const currentNorthPoleJ2000 = RaDec.precession({ ra: 0, dec: 90 }, undefined, jd, 'j2000');
-    const currentSouthPoleJ2000 = RaDec.precession({ ra: 0, dec: -90 }, undefined, jd, 'j2000');
-    const npCanvasRadec = RaDec.toCanvasRadec(currentNorthPoleJ2000, conf);
-    const spCanvasRadec = RaDec.toCanvasRadec(currentSouthPoleJ2000, conf);
-    const npIsIn = Math.abs(npCanvasRadec.ra) < raWidth + 3.0 && Math.abs(npCanvasRadec.dec) < decWidth + 3.0;
-    const spIsIn = Math.abs(spCanvasRadec.ra) < raWidth + 3.0 && Math.abs(spCanvasRadec.dec) < decWidth + 3.0;
+    const J2000NorthPoleApparent = RaDec.precession({ ra: 0, dec: 90 }, undefined, 'j2000', jd);
+    const J2000N85Apparent = RaDec.precession({ ra: 0, dec: 85 }, undefined, 'j2000', jd);
+    const J2000S85Apparent = RaDec.precession({ ra: 0, dec: -85 }, undefined, 'j2000', jd);
+    const J2000SouthPoleApparent = RaDec.precession({ ra: 0, dec: -90 }, undefined, 'j2000', jd);
+    const npCanvasRadec = RaDec.toCanvasRadec(J2000NorthPoleApparent, conf);
+    const n85CanvasRadec = RaDec.toCanvasRadec(J2000N85Apparent, conf);
+    const s85CanvasRadec = RaDec.toCanvasRadec(J2000S85Apparent, conf);
+    const spCanvasRadec = RaDec.toCanvasRadec(J2000SouthPoleApparent, conf);
+
+    const margin = 0.0;
+    const raWidth = viewState.fieldOfViewRA * 0.5 + margin;
+    const decWidth = viewState.fieldOfViewDec * 0.5 + margin;
+    const npIsIn = Math.abs(npCanvasRadec.ra) < raWidth && Math.abs(npCanvasRadec.dec) < decWidth;
+    const spIsIn = Math.abs(spCanvasRadec.ra) < raWidth && Math.abs(spCanvasRadec.dec) < decWidth;
+    const n85IsIn = Math.abs(n85CanvasRadec.ra) < raWidth && Math.abs(n85CanvasRadec.dec) < decWidth;
+    const s85IsIn = Math.abs(s85CanvasRadec.ra) < raWidth && Math.abs(s85CanvasRadec.dec) < decWidth;
 
     let screenRa = -raWidth;
     let screenDec = decWidth;
@@ -213,7 +237,7 @@ export function getAreaCandidates(
     //右上から左上
     while (screenRa < raWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa += dscreenRa;
     }
@@ -222,7 +246,7 @@ export function getAreaCandidates(
     screenDec = decWidth;
     while (screenDec > -decWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
         dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec -= dscreenDec;
     }
@@ -231,7 +255,7 @@ export function getAreaCandidates(
     screenDec = -decWidth;
     while (screenRa > -raWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa -= dscreenRa;
     }
@@ -240,11 +264,12 @@ export function getAreaCandidates(
     screenDec = -decWidth;
     while (screenDec < decWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ra: screenRa, dec: screenDec}, conf);
+        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
         dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec += dscreenDec;
     }
-    return getAreaCandidatesFromEdge(edgeRA, edgeDec, npIsIn, spIsIn);
+
+    return getAreaCandidatesFromEdge(edgeRA, edgeDec, npIsIn, spIsIn, n85IsIn, s85IsIn);
 }
 
 export function getGridIntervals(
@@ -284,14 +309,14 @@ export function getBetaRange(
             90,
             Math.max(
                 config.center.dec + fov.dec / 2,
-                CanvasRaDec.toRaDec({ra: fov.ra / 2, dec: fov.dec / 2}, config).dec
+                CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: fov.dec / 2 }, config).dec
             )
         );
         minBeta = Math.max(
             -90,
             Math.min(
                 config.center.dec - fov.dec / 2,
-                CanvasRaDec.toRaDec({ra: fov.ra / 2, dec: -fov.dec / 2}, config).dec
+                CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: -fov.dec / 2 }, config).dec
             )
         );
     } else if (config.mode == 'view') {
@@ -299,13 +324,13 @@ export function getBetaRange(
             90,
             Math.max(
                 config.center.alt + fov.dec / 2,
-                CanvasRaDec.toAzAlt({ra: fov.ra / 2, dec: fov.dec / 2}, config).alt
+                CanvasRaDec.toAzAlt({ ra: fov.ra / 2, dec: fov.dec / 2 }, config).alt
             )
         );
         minBeta = Math.max(
             -90,
             Math.min(config.center.alt - fov.dec / 2,
-                CanvasRaDec.toAzAlt({ra: fov.ra / 2, dec: -fov.dec / 2}, config).alt
+                CanvasRaDec.toAzAlt({ ra: fov.ra / 2, dec: -fov.dec / 2 }, config).alt
             )
         );
     } else {
@@ -326,15 +351,15 @@ export function getAlphaRange(
 ): number {
     if (config.mode == 'AEP') {
         return Math.max(
-            (CanvasRaDec.toRaDec({ra: fov.ra / 2, dec:  fov.dec / 2}, config).ra - alpha + 360.0) % 360.0,
-            (CanvasRaDec.toRaDec({ra: fov.ra / 2, dec:          0.0}, config).ra - alpha + 360.0) % 360.0,
-            (CanvasRaDec.toRaDec({ra: fov.ra / 2, dec: -fov.dec / 2}, config).ra - alpha + 360.0) % 360.0,
+            (CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: fov.dec / 2 }, config).ra - alpha + 360.0) % 360.0,
+            (CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: 0.0 }, config).ra - alpha + 360.0) % 360.0,
+            (CanvasRaDec.toRaDec({ ra: fov.ra / 2, dec: -fov.dec / 2 }, config).ra - alpha + 360.0) % 360.0,
         );
     } else if (config.mode == 'view') {
         return Math.max(
-            (CanvasRaDec.toAzAlt({ra: -fov.ra / 2, dec:  fov.dec / 2}, config).az - alpha + 360.0) % 360.0,
-            (CanvasRaDec.toAzAlt({ra: -fov.ra / 2, dec:          0.0}, config).az - alpha + 360.0) % 360.0,
-            (CanvasRaDec.toAzAlt({ra: -fov.ra / 2, dec: -fov.dec / 2}, config).az - alpha + 360.0) % 360.0,
+            (CanvasRaDec.toAzAlt({ ra: -fov.ra / 2, dec: fov.dec / 2 }, config).az - alpha + 360.0) % 360.0,
+            (CanvasRaDec.toAzAlt({ ra: -fov.ra / 2, dec: 0.0 }, config).az - alpha + 360.0) % 360.0,
+            (CanvasRaDec.toAzAlt({ ra: -fov.ra / 2, dec: -fov.dec / 2 }, config).az - alpha + 360.0) % 360.0,
         );
     } else {
         return 0;

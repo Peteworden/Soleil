@@ -1,4 +1,4 @@
-//npm run start
+//npm run dev
 import { ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData, GaiaData, HipData } from './types/index.js';
 
 import { CacheInfoController } from './controllers/CacheInfoController.js';
@@ -108,7 +108,7 @@ let hasUrlQuery = hasUrlQueryFunc();
 let renderer: CanvasRenderer | null = null;
 let deviceOrientationManager: DeviceOrientationManager | null = null;
 let objectInfoController: ObjectInfoController | null = null;
-let settingController : SettingController | null = null;
+let settingController: SettingController | null = null;
 let interactionController: InteractionController | null = null;
 let searchController: SearchController | null = null;
 

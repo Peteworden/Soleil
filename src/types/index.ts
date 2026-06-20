@@ -37,13 +37,13 @@ export interface DeviceOrientation {
 }
 
 export type TransformModeConfig =
-    | { mode: 'AEP'; center: EquatorialCoordinates; location: LstLat}
+    | { mode: 'AEP'; center: EquatorialCoordinates; location: LstLat }
     | { mode: 'view'; center: HorizontalCoordinates; location: LstLat }
     | { mode: 'live' | 'ar'; center?: never; location: LstLat; orientationData: DeviceOrientation };
 
 export interface HipData {
-    raArray: Float32Array;  // 赤経
-    decArray: Float32Array; // 赤緯
+    raArray: Float32Array;  // 赤経, rad
+    decArray: Float32Array; // 赤緯, rad
     magArray: Float32Array; // 等級
     bvArray: Float32Array;  // B-V色指数
     count: number;          // 星の数
@@ -123,26 +123,26 @@ export interface ColorPalette {
     textSecondary: string;
     yellow: string;
     orange: string;
-    
+
     // グリッド・レティクル
     grid: string;
     gridEquatorialLine: string;
     reticle: string;
-    
+
     // 恒星
     star: string;
     starName: string;
-    
+
     // 星座
     constellationLine: string;
     constellationName: string;
-    
+
     // 天体
     solarSystem: string;
     moonShade: string;
     solarSystemMotion: string;
     dso: string;
-    
+
     // その他
     poleMark: string;
     cameraView: string;
@@ -150,7 +150,7 @@ export interface ColorPalette {
     satellite: string;
     satelliteIlluminated: string;
     satelliteShadow: string;
-    
+
     // UI要素
     border: string;
     button: string;

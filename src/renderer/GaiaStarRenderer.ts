@@ -5,22 +5,28 @@ import { ColorManager } from "./colorManager.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { DEG_TO_RAD } from "../utils/constants.js";
 import { DeviceOrientationData } from "device/deviceOrientation.js";
+import { areaCandidatesCacheInterface } from "./CanvasRenderer.js";
 
 export class GaiaStarRenderer {
     private precessionCache: { angle: number, jd: number } | null = null;
     private gaiaStarSprites: Map<string, HTMLCanvasElement> = new Map();
+
+    private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
+
     constructor(
         private ctx: CanvasRenderingContext2D,
         private config: StarChartConfig,
         private colorManager: ColorManager,
-        private areaCandidates: () => number[][],
-        private orientationData: DeviceOrientationData
+        private areaCandidates: () => areaCandidatesCacheInterface | null,
     ) {
-        console.log("GaiaStarRenderer constructor");
     }
-    
+
+    updateOrientationData(data: DeviceOrientationData) {
+        this.orientationData = data;
+    }
+
     drawGaiaStars(
-        gaiaData: GaiaData, gaiaHelpData: number[], magBrightest: number, 
+        gaiaData: GaiaData, gaiaHelpData: number[], magBrightest: number,
         starInformation: Array<StarInformation>
     ): void {
         if (this.config.displaySettings.usedStar == 'noStar') return;
@@ -30,8 +36,8 @@ export class GaiaStarRenderer {
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         if (magBrightest > limitingMagnitude) return;
         const unclipedLimitingMagnitude = AstronomicalCalculator.unclipedLimitingMagnitude(this.config.viewState);
-        
-        const fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+
+        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
         const centerRaRad = this.config.viewState.centerRA * DEG_TO_RAD;
         const sinCenterDec = Math.sin(this.config.viewState.centerDec * DEG_TO_RAD);
         const cosCenterDec = Math.cos(this.config.viewState.centerDec * DEG_TO_RAD);
@@ -41,7 +47,7 @@ export class GaiaStarRenderer {
         const sinLat = Math.sin(this.config.observationSite.latitude * DEG_TO_RAD);
         const cosLat = Math.cos(this.config.observationSite.latitude * DEG_TO_RAD);
         const siderealTime = this.config.siderealTime;
-        
+
 
         if (this.config.displaySettings.usedStar == 'to6') {
             if (magBrightest > 6.5) return;
@@ -64,7 +70,9 @@ export class GaiaStarRenderer {
         const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
 
         // キャッシュされた領域候補を使用（毎回計算しない）
-        const areas = this.areaCandidates();
+        const areasInfo = this.areaCandidates();
+        if (areasInfo === null) return;
+        const areas = areasInfo.areas;
 
         this.ctx.fillStyle = this.colorManager.getColor('star');
         const brightFillStyle = this.colorManager.getColor('star');
@@ -85,7 +93,7 @@ export class GaiaStarRenderer {
                         if (mag >= limitingMagnitude) continue;
                         const ra = raInt + gaiaData.raArray[i];
                         const dec = decInt + gaiaData.decArray[i];
-                        const coords = RaDec.precessionFast({ra: ra * DEG_TO_RAD, dec: dec * DEG_TO_RAD}, sinPrec, cosPrec);
+                        const coords = RaDec.precessionFast({ ra: ra * DEG_TO_RAD, dec: dec * DEG_TO_RAD }, sinPrec, cosPrec);
                         const [ifin, xy] = RaDec.toCanvasXYifinFast(
                             coords, this.config.displaySettings.mode,
                             centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
@@ -98,14 +106,14 @@ export class GaiaStarRenderer {
                             x: xy.x,
                             y: xy.y,
                             data: {
-                                radecJ2000: {ra, dec},
+                                radecJ2000: { ra, dec },
                                 radecApparent: coords,
                                 mag: mag
                             }
                         });
                         this.drawGaiaStar(
-                            xy, 
-                            mag, limitingMagnitude, unclipedLimitingMagnitude, zeroMagSize, 
+                            xy,
+                            mag, limitingMagnitude, unclipedLimitingMagnitude, zeroMagSize,
                             faintFillStyle, brightFillStyle
                         );
                     }
@@ -125,7 +133,7 @@ export class GaiaStarRenderer {
                         if (mag >= limitingMagnitude) continue;
                         const ra = raInt + gaiaData.raArray[i];
                         const dec = decInt + gaiaData.decArray[i];
-                        const coords = RaDec.precessionFast({ra: ra * DEG_TO_RAD, dec: dec * DEG_TO_RAD}, sinPrec, cosPrec);
+                        const coords = RaDec.precessionFast({ ra: ra * DEG_TO_RAD, dec: dec * DEG_TO_RAD }, sinPrec, cosPrec);
                         const [ifin, xy] = RaDec.toCanvasXYifinFast(
                             coords, this.config.displaySettings.mode,
                             centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
@@ -134,8 +142,8 @@ export class GaiaStarRenderer {
                         if (!ifin) continue;
 
                         this.drawGaiaStar(
-                            xy, 
-                            mag, limitingMagnitude, unclipedLimitingMagnitude, zeroMagSize, 
+                            xy,
+                            mag, limitingMagnitude, unclipedLimitingMagnitude, zeroMagSize,
                             faintFillStyle, brightFillStyle
                         );
                     }
@@ -147,7 +155,7 @@ export class GaiaStarRenderer {
 
     drawGaiaStar(
         xy: CanvasXy, mag: number,
-        limitingMagnitude: number, unclipedLimitingMagnitude: number, zeroMagSize: number, 
+        limitingMagnitude: number, unclipedLimitingMagnitude: number, zeroMagSize: number,
         faintFillStyle: string, brightFillStyle: string
     ): void {
         const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize);
@@ -171,8 +179,8 @@ export class GaiaStarRenderer {
             // if (starSize < 2.0) {
             //     this.ctx.fillRect(xy.x - starSize * 0.7, xy.y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
             // } else {
-                this.ctx.moveTo(xy.x, xy.y);
-                this.ctx.arc(xy.x, xy.y, starSize, 0, Math.PI * 2);
+            this.ctx.moveTo(xy.x, xy.y);
+            this.ctx.arc(xy.x, xy.y, starSize, 0, Math.PI * 2);
             // }
         }
     }
