@@ -1,5 +1,4 @@
-import { DataStore } from '../models/DataStore.js';
-import { EquatorialCoordinates, ViewState, StarChartConfig, CanvasSize, DeviceOrientation, Fov } from '../types/index.js';
+import { EquatorialCoordinates, ViewState, StarChartConfig, CanvasSize, DeviceOrientationData, ConstellationData, ConstellationBoundaryData } from '../types/index.js';
 import { TransformModeConfig } from '../types/index.js';
 
 export class CoordinateConverter {
@@ -72,53 +71,53 @@ export class CoordinateConverter {
             m = 0;
             d += 1;
         }
-        return [sign, d, m/10.0];
+        return [sign, d, m / 10.0];
     }
 
-    static chartConfigToTransformConfig(chartConfig: StarChartConfig, orientationData?: DeviceOrientation): TransformModeConfig {
+    static chartConfigToTransformConfig(chartConfig: StarChartConfig, orientationData?: DeviceOrientationData): TransformModeConfig {
         const mode = chartConfig.displaySettings.mode as 'AEP' | 'view' | 'live' | 'ar';
-        const location = {lst: chartConfig.siderealTime, lat: chartConfig.observationSite.latitude};
+        const location = { lst: chartConfig.siderealTime, lat: chartConfig.observationSite.latitude };
         const v = chartConfig.viewState;
         switch (mode) {
             case 'AEP':
-                return {mode: 'AEP', center:{ra:v.centerRA, dec:v.centerDec}, location: location};
+                return { mode: 'AEP', center: { ra: v.centerRA, dec: v.centerDec }, location: location };
             case 'view':
-                return {mode: 'view', center:{az:v.centerAz, alt:v.centerAlt}, location: location};
+                return { mode: 'view', center: { az: v.centerAz, alt: v.centerAlt }, location: location };
             case 'live':
                 if (orientationData == undefined) {
                     console.log('orientationData is undefined');
-                    return {mode: 'view', center:{az:v.centerAz, alt:v.centerAlt}, location: location};
+                    return { mode: 'view', center: { az: v.centerAz, alt: v.centerAlt }, location: location };
                 }
-                return {mode: 'live', location: location, orientationData: orientationData};
+                return { mode: 'live', location: location, orientationData: orientationData };
             default:
                 if (orientationData == undefined) {
                     console.log('orientationData is undefined');
-                    return {mode: 'view', center:{az:v.centerAz, alt:v.centerAlt}, location: location};
+                    return { mode: 'view', center: { az: v.centerAz, alt: v.centerAlt }, location: location };
                 }
-                return {mode: 'ar', location: location, orientationData: orientationData}
+                return { mode: 'ar', location: location, orientationData: orientationData }
         }
     }
 
     static determineConstellation(
-        center: EquatorialCoordinates
+        center: EquatorialCoordinates,
+        constellations: ConstellationData[],
+        boundaries: ConstellationBoundaryData[],
     ): string {
-        const constellations = DataStore.constellationData;
-        const boundaries = DataStore.constellationBoundariesData;
         if (constellations.length == 0 || boundaries.length == 0) {
             return "";
         }
         const a = Array(89).fill(0);
         for (const boundary of boundaries) {
-            const {num, ra1, dec1, ra2, dec2} = boundary;
+            const { num, ra1, dec1, ra2, dec2 } = boundary;
             if (Math.min(dec1, dec2) <= center.dec && center.dec < Math.max(dec1, dec2)) {
-                if (center.ra >= (center.dec-dec1) * (ra2-ra1) / (dec2-dec1) + ra1) {
-                    a[num-1] = (a[num-1] + 1) % 2;
+                if (center.ra >= (center.dec - dec1) * (ra2 - ra1) / (dec2 - dec1) + ra1) {
+                    a[num - 1] = (a[num - 1] + 1) % 2;
                 }
             }
         }
 
         let centerConstellation = "";
-        for (let i=0; i<89; i++) {
+        for (let i = 0; i < 89; i++) {
             if (a[i] == 1) {
                 centerConstellation = constellations[i].JPNname + "座";
                 break;
@@ -140,40 +139,7 @@ export class CoordinateConverter {
         if ((x1 < 0 && x2 < 0) || (x1 > canvasSize.width && x2 > canvasSize.width) ||
             (y1 < 0 && y2 < 0) || (y1 > canvasSize.height && y2 > canvasSize.height)
         ) return false;
-        if ((x1-x2) * (x1-x2) + (y1-y2) * (y1-y2) > maxLengthSquared) return false;
+        if ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2) > maxLengthSquared) return false;
         return true;
     }
-
-    // デバイスオリエンテーションを使用した画面座標への変換
-    // horizontalToScreenXY_Live(
-    //     horizontal: HorizontalCoordinates,
-    //     center: HorizontalCoordinates,
-    //     canvasSize: CanvasSize, 
-    //     deviceOrientationManager: DeviceOrientationManager
-    // ): [number, number] {
-    //     const deviceInfo = deviceOrientationManager.getDeviceInfo();
-    //     const orientationData = deviceOrientationManager.getOrientationData();
-        
-    //     // デバイスオリエンテーションが利用可能で許可されている場合
-    //     if (deviceInfo.os === 'iphone' && deviceOrientationManager.isOrientationPermitted()) {
-    //         const compassHeading = deviceOrientationManager.getCompassHeading();
-            
-    //         // コンパス方位を考慮して方位角を調整
-    //         if (compassHeading !== 0) {
-    //             const adjustedAzimuth = (horizontal.az - compassHeading + 360) % 360;
-    //             const adjustedHorizontal: HorizontalCoordinates = {
-    //                 az: adjustedAzimuth,
-    //                 alt: horizontal.alt
-    //             };
-                
-    //             // 調整された座標を画面座標に変換
-    //             const screenRaDec = this.horizontalToScreenRaDec_View(adjustedHorizontal, center);
-    //             return this.screenRaDecToScreenXY(screenRaDec, canvasSize, (window as any).config.viewState);
-    //         }
-    //     }
-        
-    //     // デバイスオリエンテーションが利用できない場合は通常の変換
-    //     const screenRaDec = this.horizontalToScreenRaDec_View(horizontal, center);
-    //     return this.screenRaDecToScreenXY(screenRaDec, canvasSize, (window as any).config.viewState);
-    // }
 }

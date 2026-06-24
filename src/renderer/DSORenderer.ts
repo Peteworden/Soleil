@@ -2,9 +2,8 @@ import { getConfig } from "../core/ConfigManager";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { CelestialObject, MessierObject } from "../models/CelestialObject.js";
-import { EquatorialCoordinates, Fov, ObjectInformation, StarChartConfig, TransformModeConfig } from "../types/index.js";
+import { DeviceOrientationData, EquatorialCoordinates, Fov, ObjectInformation, StarChartConfig, TransformModeConfig } from "../types/index.js";
 import { ColorManager } from "./colorManager.js";
-import { DeviceOrientationData } from "../device/deviceOrientation.js";
 
 export class DSORenderer {
     private imageCache: { [key: string]: HTMLImageElement } = {};
@@ -19,7 +18,7 @@ export class DSORenderer {
         private colorManager: ColorManager,
     ) {
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
     }
 
     updateOrientationData(data: DeviceOrientationData) {
@@ -35,13 +34,13 @@ export class DSORenderer {
     drawDSOObject(object: CelestialObject, category: string, objectInformation: Array<ObjectInformation>, nameCorner?: string): void {
         if (!object.getName() || object.getName() == '') return;
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
 
         const coordsJ2000 = object.getCoordinates();
         const coords = RaDec.precession(coordsJ2000, undefined, 'j2000', this.config.displayTime.jd);
         const screenXY = RaDec.toCanvasXYifin(coords, this.fov, this.config.canvasSize, this.transformConfig);
         if (!screenXY[0]) return;
-        const {x, y} = screenXY[1];
+        const { x, y } = screenXY[1];
         const type = object.getType();
         objectInformation.push({
             name: object.getName(),
@@ -170,14 +169,14 @@ export class DSORenderer {
     private drawOverlay(name: string, coords: EquatorialCoordinates, overlay: { width: number, opacity: number }, x: number, y: number, mode: string): void {
         this.ctx.save();
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        this.fov = {ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec};
+        this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
         const overlaySize = overlay.width * this.canvas.width / this.fov.ra;
         this.ctx.globalAlpha = overlay.opacity;
         if (mode == 'AEP') {
             this.ctx.drawImage(this.imageCache[name], x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
         } else if (mode == 'view') {
             this.ctx.translate(x, y);
-            const oneDegNorth = {ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999)};
+            const oneDegNorth = { ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) };
             const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.fov, this.config.canvasSize, this.transformConfig, true);
             const rotation = Math.atan2(oneDegNorthXY[1].x - x, -oneDegNorthXY[1].y + y);
             this.ctx.rotate(rotation);

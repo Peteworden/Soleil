@@ -1,4 +1,4 @@
-import { DEG_TO_RAD, RAD_TO_DEG } from "../utils/constants";
+import { RAD_TO_DEG } from "../utils/constants";
 import { saveConfigToLocalStorage, updateConfig } from "../core/ConfigManager.js";
 import { AzAlt, CanvasRaDec, CanvasXy, RaDec } from "../core/coordinates/index.js";
 import { StarChartConfig, TransformModeConfig, ViewState } from "../types/index.js";
@@ -23,17 +23,13 @@ export class InteractionController {
     private wheelClientX = 0.0;
     private wheelClientY = 0.0;
 
-    private configUpdated = true;
-
     // タッチ追跡
     private activePointers = new Set<number>();
     private pointerPositions = new Map<number, { x: number, y: number }>();
 
     // 感度設定
-    private dragSensitivity = 0.2;
     private zoomSensitivity = 0.001;
     private lastDragTime = 0;
-    private lastWheelTime = 0;
 
     constructor(
         canvas: HTMLCanvasElement,
@@ -421,8 +417,6 @@ export class InteractionController {
         if (!scale || scale == Infinity || scale == 0) return;
         this.accumulatedScale *= scale;
 
-        // const now = performance.now();
-        // if (now - this.lastWheelTime < 10) return;
         if (this.accumulatedScale == 1.0) return;
 
         if (!this.isScheduled) {
@@ -523,7 +517,6 @@ export class InteractionController {
 
                 this.accumulatedScale = 1.0;
                 this.isScheduled = false;
-                this.lastWheelTime = performance.now();
             });
         }
     };

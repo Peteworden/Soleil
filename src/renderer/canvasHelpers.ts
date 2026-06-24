@@ -117,6 +117,10 @@ function getAreaCandidatesFromEdge(
     }
     ra0Dec.sort((a, b) => a - b);
     for (let i = 0; i < ra0Dec.length; i += 2) {
+        if (ra0Dec.length >= i + 1) {
+            console.log(`Invalid array length: ${ra0Dec}`);
+            break;
+        }
         segments.push({
             ra1: 0, dec1: ra0Dec[i],
             ra2: 0, dec2: ra0Dec[i + 1],

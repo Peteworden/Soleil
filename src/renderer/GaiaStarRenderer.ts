@@ -1,10 +1,9 @@
-import { CanvasXy, GaiaData, StarChartConfig, StarInformation } from "../types/index.js";
+import { CanvasXy, DeviceOrientationData, GaiaData, StarChartConfig, StarInformation } from "../types/index.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { ColorManager } from "./colorManager.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { DEG_TO_RAD } from "../utils/constants.js";
-import { DeviceOrientationData } from "device/deviceOrientation.js";
 import { areaCandidatesCacheInterface } from "./CanvasRenderer.js";
 
 export class GaiaStarRenderer {

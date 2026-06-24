@@ -1,9 +1,9 @@
 import { acosdeg, asindeg, asinrad } from "../../core/mathUtils.js";
-import { CanvasRadecCoords, CanvasSize, CanvasXy, CartesianCoords, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, TransformModeConfig, ViewState } from "../../types";
+import { CanvasRadecCoords, CanvasSize, CanvasXy, CartesianCoords, DeviceOrientationData, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, TransformModeConfig } from "../../types";
 import { COS_EPSL, DEG_TO_RAD, EPSILON, RAD_TO_DEG, SIN_EPSL } from "../../utils/constants.js";
-import { AzAlt, CanvasRaDec, Cartesian } from "./index.js";
 import { AstronomicalCalculator } from "../../core/calculations.js";
-import { DeviceOrientationData } from "device/deviceOrientation.js";
+
+import { AzAlt, CanvasRaDec, Cartesian } from "./index.js";
 
 export function toRad(radec: EquatorialCoordinates): EquatorialCoordinates {
     return { ra: radec.ra * DEG_TO_RAD, dec: radec.dec * DEG_TO_RAD };

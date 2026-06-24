@@ -2,13 +2,7 @@ import { AzAlt, CanvasRaDec } from "../core/coordinates/index.js";
 import { getConfig, updateConfig } from "../core/ConfigManager";
 import { DEG_TO_RAD } from "../utils/constants.js";
 import { CanvasRenderer } from "renderer/CanvasRenderer.js";
-
-export interface DeviceOrientationData {
-    alpha: number;
-    beta: number;
-    gamma: number;
-    webkitCompassHeading: number;
-}
+import { DeviceOrientationData } from "types/index.js";
 
 export interface DeviceInfo {
     os: 'iphone' | 'android' | 'pc';
@@ -95,7 +89,7 @@ export class DeviceOrientationManager {
     // オリエンテーションリスナーを設定
     setupOrientationListener(): void {
         const config = getConfig();
-        
+
         // まず既存のリスナーを削除
         if (typeof window !== 'undefined' && 'addEventListener' in window) {
             if (this.deviceInfo.os === 'iphone') {
@@ -107,9 +101,9 @@ export class DeviceOrientationManager {
                 window.removeEventListener('deviceorientation', this.handleOrientation.bind(this));
             }
         }
-        
+
         // liveモードの場合のみリスナーを追加
-        if (config && ['live', 'ar'].includes(config.displaySettings.mode)) {
+        if (['live', 'ar'].includes(config.displaySettings.mode)) {
             if (typeof window !== 'undefined' && 'addEventListener' in window) {
                 if (this.deviceInfo.os === 'iphone') {
                     window.addEventListener('deviceorientation', this.handleOrientation.bind(this), true);
@@ -129,41 +123,22 @@ export class DeviceOrientationManager {
             }
         }
 
-        if (config) {
-            if (config.displaySettings.mode === 'ar' && this.videoOn == false) {
-                this.setVideoOn();
-            } else if (config.displaySettings.mode != 'ar' && this.videoOn == true) {
-                this.setVideoOff();
-            }
+        if (config.displaySettings.mode === 'ar' && this.videoOn == false) {
+            this.setVideoOn();
+        } else if (config.displaySettings.mode != 'ar' && this.videoOn == true) {
+            this.setVideoOff();
         }
     }
 
     // オリエンテーションイベントハンドラー
-    // private handleOrientation = (e: DeviceOrientationEvent) => {
-    //     // 毎回オブジェクトを new せず、既存のメモリ（プロパティ）を上書きする（GC対策）
-    //     this.orientationData.alpha = e.alpha ?? 0;
-    //     this.orientationData.beta = e.beta ?? 0;
-    //     this.orientationData.gamma = e.gamma ?? 0;
-    //     this.orientationData.webkitCompassHeading = (e as any).webkitCompassHeading ?? null;
-    // };
     private handleOrientation = (event: DeviceOrientationEvent) => {
         const config = getConfig();
-        if (!config || !['live', 'ar'].includes(config.displaySettings.mode)) {
+        if (!['live', 'ar'].includes(config.displaySettings.mode)) {
             return;
         }
         if (event.alpha === null || event.beta === null || event.gamma === null) {
             return;
         }
-        // const eventOrientationData = {
-        //     alpha: event.alpha * DEG_TO_RAD || 0,
-        //     beta: event.beta * DEG_TO_RAD || 0,
-        //     gamma: event.gamma * DEG_TO_RAD || 0,
-        //     webkitCompassHeading: (event as any).webkitCompassHeading * DEG_TO_RAD || 0
-        // };
-        // if (this.orientationData.alpha === null || this.orientationData.beta === null || this.orientationData.gamma === null) {
-        //     this.orientationData = eventOrientationData;
-        //     return;
-        // }
         this.currentOrientationData.alpha = (event.alpha ?? 0) * DEG_TO_RAD;
         this.currentOrientationData.beta = (event.beta ?? 0) * DEG_TO_RAD;
         this.currentOrientationData.gamma = (event.gamma ?? 0) * DEG_TO_RAD;
@@ -175,8 +150,8 @@ export class DeviceOrientationManager {
         this.orientationTime1 = orientationTime2;
 
         if (Math.max(
-            Math.abs(this.currentOrientationData.alpha - this.prevOrientationData.alpha), 
-            Math.abs(this.currentOrientationData.beta - this.prevOrientationData.beta), 
+            Math.abs(this.currentOrientationData.alpha - this.prevOrientationData.alpha),
+            Math.abs(this.currentOrientationData.beta - this.prevOrientationData.beta),
             Math.abs(this.currentOrientationData.gamma - this.prevOrientationData.gamma)
         ) < 10 * DEG_TO_RAD) { //移動が大きすぎないとき
             // 最近のデータが3つ(以上)あるとき
@@ -187,9 +162,9 @@ export class DeviceOrientationManager {
                 this.recentOrientationData.push(this.currentOrientationData);
                 // this.moving = (Math.abs(this.currentOrientationData.alpha - this.prevOrientationData.alpha) > 0.2 * DEG_TO_RAD);
                 this.orientationData.alpha = this.recentOrientationData.reduce((acc, val) => acc + (val.alpha || 0), 0) / this.recentOrientationData.length,
-                this.orientationData.beta = this.recentOrientationData.reduce((acc, val) => acc + (val.beta || 0), 0) / this.recentOrientationData.length,
-                this.orientationData.gamma = this.recentOrientationData.reduce((acc, val) => acc + (val.gamma || 0), 0) / this.recentOrientationData.length,
-                this.orientationData.webkitCompassHeading = this.currentOrientationData.webkitCompassHeading
+                    this.orientationData.beta = this.recentOrientationData.reduce((acc, val) => acc + (val.beta || 0), 0) / this.recentOrientationData.length,
+                    this.orientationData.gamma = this.recentOrientationData.reduce((acc, val) => acc + (val.gamma || 0), 0) / this.recentOrientationData.length,
+                    this.orientationData.webkitCompassHeading = this.currentOrientationData.webkitCompassHeading
             } else {
                 // 最近のデータが2つ以下のとき
                 this.recentOrientationData.push(this.currentOrientationData);
@@ -201,7 +176,7 @@ export class DeviceOrientationManager {
         }
 
         const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-        const centerHorizontal = CanvasRaDec.toAzAlt_Live({ra: 0.0, dec: 0.0}, this.orientationData);
+        const centerHorizontal = CanvasRaDec.toAzAlt_Live({ ra: 0.0, dec: 0.0 }, this.orientationData);
         const centerRadec = AzAlt.toRadec(centerHorizontal, lstLat);
         updateConfig({
             viewState: {
@@ -219,18 +194,18 @@ export class DeviceOrientationManager {
     setVideoOn(): void {
         const constraints = { audio: false, video: { facingMode: "environment" } };
         navigator.mediaDevices.getUserMedia(constraints)
-        .then(
-            function(stream) {
-                const video = document.getElementById('arVideo') as HTMLVideoElement;
-                if (video) {
-                    video.srcObject = stream;
-                    video.onloadedmetadata = function(e) {
-                        video.play();
-                    };
-                    video.style.display = 'block';
+            .then(
+                function (stream) {
+                    const video = document.getElementById('arVideo') as HTMLVideoElement;
+                    if (video) {
+                        video.srcObject = stream;
+                        video.onloadedmetadata = function (e) {
+                            video.play();
+                        };
+                        video.style.display = 'block';
+                    }
                 }
-            }
-        )
+            )
         this.videoOn = true;
     }
 

@@ -1,5 +1,5 @@
 import { MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
-import { BayerFlamData, ConstellationBoundaryData, ConstellationData, EquatorialCoordinates, GaiaData, HipData, StarName } from '../types/index.js';
+import { BayerFlamData, ConstellationBoundaryData, ConstellationData, GaiaData, HipData, StarName } from '../types/index.js';
 import { DEG_TO_RAD } from '../utils/constants.js';
 import { CoordinateConverter } from '../core/coordinates.js';
 import { formatBayerDesignation } from '../renderer/textFormatter.js';

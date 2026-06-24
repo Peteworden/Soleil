@@ -4,7 +4,8 @@ import { CoordinateConverter } from "../core/coordinates.js";
 import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { getConfig, updateConfig } from "../core/ConfigManager";
-import { CanvasRenderer } from "renderer/CanvasRenderer.js";
+import { CanvasRenderer } from "../renderer/CanvasRenderer.js";
+import { DataStore } from "../models/DataStore.js";
 
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
@@ -74,7 +75,9 @@ export function updateInfoDisplay() {
             }
         }
 
-        const centerConstellation = CoordinateConverter.determineConstellation({ra: centerRA, dec: centerDec});
+        const constellations = DataStore.constellationData;
+        const boundaries = DataStore.constellationBoundariesData;
+        const centerConstellation = CoordinateConverter.determineConstellation({ra: centerRA, dec: centerDec}, constellations, boundaries);
         const centerConstellationInfo = document.getElementById('centerConstellation');
         if (centerConstellationInfo) {
             centerConstellationInfo.textContent = centerConstellation;

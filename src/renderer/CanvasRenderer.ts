@@ -1,7 +1,6 @@
 import { CelestialObject, MessierObject, NGCObject, SharplessObject } from '../models/CelestialObject.js';
-import { BayerFlamData, ConstellationData, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData, CanvasXy, CanvasSize } from '../types/index.js';
+import { BayerFlamData, ConstellationData, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData, CanvasXy, CanvasSize, DeviceOrientationData } from '../types/index.js';
 import { CoordinateConverter } from '../core/coordinates.js';
-import { DeviceOrientationData } from '../device/deviceOrientation.js';
 import { ColorManager, getColorManager } from './colorManager.js';
 import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from './canvasHelpers.js';
 import { HipStarRenderer } from './HipStarRenderer.js';
@@ -11,7 +10,6 @@ import { DSORenderer } from './DSORenderer.js';
 import { AzAlt, RaDec } from '../core/coordinates/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
 import { getConfig } from '../core/ConfigManager.js';
-import { DEG_TO_RAD } from 'utils/constants.js';
 
 export interface areaCandidatesCacheInterface {
     areas: number[][],
