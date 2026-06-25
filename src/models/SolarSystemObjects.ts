@@ -51,8 +51,8 @@ export class SolarSystemObjectBase {
     hiraganaName: string;
     engName: string;
     type: SolarObjectType;
-    xyz: CartesianCoords; // 日心赤道直交座標
-    raDec: EquatorialCoordinates; // 観測地から見た赤道座標
+    xyz: CartesianCoords; // 日心赤道直交座標、J2000
+    raDec: EquatorialCoordinates; // 観測地から見た視位置
     distance: number; // 観測地からの距離（au)
     magnitude: number | undefined;
     constructor(data: any) {
@@ -202,7 +202,7 @@ export class SolarSystemDataManager {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data: SolarSystemObject[] = await response.json();
             this.solarObjects = this.createSpecificClassObjectFromArray(data);
 
@@ -280,7 +280,7 @@ export class SolarSystemDataManager {
     static getAllObjects(): SolarSystemObjectBase[] {
         return [...this.solarObjects];
     }
-    
+
     static getSun(): Sun {
         return this.solarObjects.find(obj => isSun(obj)) as Sun;
     }

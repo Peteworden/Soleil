@@ -117,9 +117,13 @@ function toCanvasRadec_View(
     const c = cosCenterAlt * cosAlt * cosAzDiff + sinCenterAlt * sinAlt;
     // const {x: a, y: b, z: c} = this.rotateY({x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt}, -Math.PI / 2 + centerAltRad);
 
-    const r = acosdeg(c); //中心からの角距離, deg
-    const d = r / Math.sqrt(a * a + b * b);
-    return { ra: d * b, dec: -d * a };
+    const r2 = a * a + b * b;
+    if (r2 > 0) {
+        const d = acosdeg(c) / Math.sqrt(r2);
+        return { ra: d * b, dec: -d * a };
+    } else {
+        return { ra: 0.0, dec: 0.0 };
+    }
 }
 // 地平座標からある方向を中心とした正距方位図法への変換
 export function toCanvasRadecFast_View(
@@ -136,9 +140,13 @@ export function toCanvasRadecFast_View(
     const c = cosCenterAlt * cosAlt * cosAzDiff + sinCenterAlt * sinAlt;
     // const {x: a, y: b, z: c} = this.rotateY({x: cosAlt * cosAzDiff, y: cosAlt * sinAzDiff, z: sinAlt}, -Math.PI / 2 + centerAltRad);
 
-    const r = acosdeg(c); //中心からの角距離, deg
-    const d = r / Math.sqrt(a * a + b * b);
-    return { ra: d * b, dec: -d * a };
+    const r2 = a * a + b * b;
+    if (r2 > 0) {
+        const d = acosdeg(c) / Math.sqrt(r2);
+        return { ra: d * b, dec: -d * a };
+    } else {
+        return { ra: 0.0, dec: 0.0 };
+    }
 }
 
 export function toCanvasRadec_Live(
@@ -156,11 +164,12 @@ export function toCanvasRadec_Live(
     const z0 = Math.sin(alt);
     // const xyz = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY({x: x0, y: y0, z: z0}, -gamma), -beta), -alpha);
     const xyz = Cartesian.rotateY(Cartesian.rotateX(Cartesian.rotateZ({ x: x0, y: y0, z: z0 }, -alpha), -beta), -gamma);
-    if (-xyz.z >= 1) {
+    const r2 = xyz.x * xyz.x + xyz.y * xyz.y;
+    if (r2 == 0.0) {
         return { ra: 0.0, dec: 0.0 };
     } else {
         const b = acosdeg(-xyz.z);
-        const d = b / Math.sqrt(xyz.x * xyz.x + xyz.y * xyz.y);
+        const d = b / Math.sqrt(r2);
         return { ra: -d * xyz.x, dec: d * xyz.y }
     }
 }
@@ -178,11 +187,12 @@ export function toCanvasRadecFast_Live(
     const z0 = Math.sin(azaltRad.alt);
     // const xyz = Cartesian.rotateZ(Cartesian.rotateX(Cartesian.rotateY({x: x0, y: y0, z: z0}, -gamma), -beta), -alpha);
     const xyz = Cartesian.rotateY(Cartesian.rotateX(Cartesian.rotateZ({ x: x0, y: y0, z: z0 }, -alpha), -beta), -gamma);
-    if (-xyz.z >= 1) {
+    const r2 = xyz.x * xyz.x + xyz.y * xyz.y;
+    if (r2 == 0.0) {
         return { ra: 0.0, dec: 0.0 };
     } else {
         const b = acosdeg(-xyz.z);
-        const d = b / Math.sqrt(xyz.x * xyz.x + xyz.y * xyz.y);
+        const d = b / Math.sqrt(r2);
         return { ra: -d * xyz.x, dec: d * xyz.y }
     }
 }

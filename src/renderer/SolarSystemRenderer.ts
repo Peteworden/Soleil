@@ -523,6 +523,9 @@ export class SolarSystemRenderer {
         this.ctx.textBaseline = 'bottom';
         const coords = minorObject.getRaDec();
         const screenXY = RaDec.toCanvasXYifin(coords, this.config.viewState.fov, this.config.canvasSize, this.transformConfig);
+        if (minorObject.getEnglishName() === 'Torifune') {
+            console.log(screenXY);
+        }
         if (!screenXY[0]) return;
         const { x, y } = screenXY[1];
         objectInformation.push({

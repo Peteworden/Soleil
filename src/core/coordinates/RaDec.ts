@@ -162,6 +162,9 @@ export function toCanvasXYifin(
     const canvasRaDec = toCanvasRadec(radec, transformConfig);
     if (Math.abs(canvasRaDec.ra) < fov.ra * 0.5 && Math.abs(canvasRaDec.dec) < fov.dec * 0.5) {
         const xy = CanvasRaDec.toCanvasXY(canvasRaDec, canvasSize, fov);
+        if (xy.x == 0.0 && xy.y == 0.0) {
+            console.log('xy == 0,0');
+        }
         return [true, xy];
     } else if (force) {
         const xy = CanvasRaDec.toCanvasXY(canvasRaDec, canvasSize, fov);
@@ -211,9 +214,13 @@ export function toCanvasRadec_AEP(
     const b = cosDec * Math.sin(ra_diff); // 左向き
     const c = cosCenterDec * cosDec * Math.cos(ra_diff) + sinCenterDec * sinDec;
 
-    const r = acosdeg(c); //中心からの角距離, deg
-    const d = 1.0 / Math.sqrt(a * a + b * b);
-    return { ra: r * d * b, dec: - r * d * a };
+    const r2 = a * a + b * b;
+    if (r2 > 0) {
+        const d = acosdeg(c) / Math.sqrt(r2);
+        return { ra: d * b, dec: -d * a };
+    } else {
+        return { ra: 0.0, dec: 0.0 };
+    }
 }
 export function toCanvasRadecFast_AEP(
     coordsRad: EquatorialCoordinates,
@@ -230,9 +237,13 @@ export function toCanvasRadecFast_AEP(
     const b = cosDec * Math.sin(ra_diff);
     const c = cosCenterDec * cosDec * cosRaDiff + sinCenterDec * sinDec;
 
-    const r = acosdeg(c); //中心からの角距離, deg
-    const d = r / Math.sqrt(a * a + b * b);
-    return { ra: d * b, dec: -d * a };
+    const r2 = a * a + b * b;
+    if (r2 > 0) {
+        const d = acosdeg(c) / Math.sqrt(r2);
+        return { ra: d * b, dec: -d * a };
+    } else {
+        return { ra: 0.0, dec: 0.0 };
+    }
 }
 
 /**
