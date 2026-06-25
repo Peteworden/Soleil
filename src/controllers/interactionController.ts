@@ -159,9 +159,9 @@ export class InteractionController {
 
         const now = performance.now();
 
-        const fov = { ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec }; // deg
-        const centerRaDec = { ra: this.latestState.centerRA, dec: this.latestState.centerDec }; // deg
-        const centerAzAlt = { az: this.latestState.centerAz, alt: this.latestState.centerAlt }; // deg
+        const fov = this.latestState.fov; // deg
+        const centerRaDec = this.latestState.centerRadec; // deg
+        const centerAzAlt = this.latestState.centerAzalt; // deg
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
         const mode = this.config.displaySettings.mode;
 
@@ -321,12 +321,9 @@ export class InteractionController {
                 }
 
                 this.latestState = {
-                    centerRA: centerRaDec.ra,
-                    centerDec: centerRaDec.dec,
-                    centerAz: centerAzAlt.az,
-                    centerAlt: centerAzAlt.alt,
-                    fieldOfViewRA: fov.ra,
-                    fieldOfViewDec: fov.dec,
+                    centerRadec: centerRaDec,
+                    centerAzalt: centerAzAlt,
+                    fov: fov,
                     starSizeKey1: this.config.viewState.starSizeKey1,
                     starSizeKey2: this.config.viewState.starSizeKey2,
                 }
@@ -434,7 +431,7 @@ export class InteractionController {
                     starMarkerElement.style.display = 'none';
                 }
 
-                const fov = { ra: this.latestState.fieldOfViewRA, dec: this.latestState.fieldOfViewDec };
+                const fov = this.latestState.fov;
                 if (this.canvas.width < this.canvas.height) {
                     this.accumulatedScale = Math.max(Math.min(this.accumulatedScale, fov.dec / 1.0), fov.ra / 270.0);
                 } else {
@@ -449,8 +446,8 @@ export class InteractionController {
 
                 const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
                 const mode = this.config.displaySettings.mode;
-                const centerRaDec = { ra: this.latestState.centerRA, dec: this.latestState.centerDec };
-                const centerAzAlt = { az: this.latestState.centerAz, alt: this.latestState.centerAlt };
+                const centerRaDec = this.latestState.centerRadec;
+                const centerAzAlt = this.latestState.centerAzalt;
 
                 if (mode == 'AEP') {
                     const transformConfig: TransformModeConfig = { mode: 'AEP', center: centerRaDec, location: lstLat }
@@ -500,12 +497,9 @@ export class InteractionController {
                 }
 
                 this.latestState = {
-                    centerRA: centerRaDec.ra,
-                    centerDec: centerRaDec.dec,
-                    centerAz: centerAzAlt.az,
-                    centerAlt: centerAzAlt.alt,
-                    fieldOfViewRA: fov.ra,
-                    fieldOfViewDec: fov.dec,
+                    centerRadec: centerRaDec,
+                    centerAzalt: centerAzAlt,
+                    fov: fov,
                     starSizeKey1: this.config.viewState.starSizeKey1,
                     starSizeKey2: this.config.viewState.starSizeKey2,
                 }

@@ -5,8 +5,8 @@ export class ShareController {
     static copyShareUrl(): void {
         try {
             const config: StarChartConfig = getConfig();
-            const ra = ShareController.roundTo(config.viewState.centerRA, 3);
-            const dec = ShareController.roundTo(config.viewState.centerDec, 3);
+            const ra = ShareController.roundTo(config.viewState.centerRadec.ra, 3);
+            const dec = ShareController.roundTo(config.viewState.centerRadec.dec, 3);
             const lat = ShareController.roundTo(config.observationSite.latitude, 3);
             const lon = ShareController.roundTo(config.observationSite.longitude, 3);
             const t = config.displayTime;
@@ -17,7 +17,7 @@ export class ShareController {
             const mm = ShareController.pad(t.minute, 2);
             const ss = ShareController.pad(t.second, 2);
             const time = `${y}${m}${d}-${hh}${mm}${ss}`;
-            const fov = ShareController.roundTo(config.viewState.fieldOfViewRA, 2);
+            const fov = ShareController.roundTo(config.viewState.fov.ra, 2);
 
             const url = new URL(window.location.href);
             url.search = '';

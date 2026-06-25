@@ -10,7 +10,7 @@ export class SettingController {
     private deviceOrientationManager;
     private renderer;
     private config: StarChartConfig;
-    constructor (
+    constructor(
         deviceOrientationManager: DeviceOrientationManager,
         renderer: CanvasRenderer | null
     ) {
@@ -28,18 +28,18 @@ export class SettingController {
         document.querySelectorAll('.setting-section').forEach(section => {
             (section as HTMLElement).style.display = 'none';
         });
-        
+
         // すべてのタブボタンからactiveクラスを削除
         document.querySelectorAll('.setting-tab').forEach(tab => {
             tab.classList.remove('active');
         });
-        
+
         // 選択されたタブを表示
         const targetTab = document.getElementById(tabName + '-tab');
         if (targetTab) {
             targetTab.style.display = 'block';
         }
-        
+
         // 選択されたタブボタンにactiveクラスを追加
         const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
         if (activeTab) {
@@ -69,15 +69,15 @@ export class SettingController {
         // 設定をUIに反映
         this.setUiOnConfig();
         SettingController.setObservationSiteOnMode(modeSelect.value);
-        
+
         // デバイスに応じてモードの有効/無効を制御
         this.updateModeSelectAvailability();
     }
-    
+
     // OKボタンが押されたら
     async finishSetting() {
         console.log('🔧 finishSetting called');
-        
+
         // 設定値を読み取ってconfigを更新
         this.updateConfigFromInputs();
 
@@ -106,13 +106,13 @@ export class SettingController {
                 cameraTiltSliderDiv.style.display = 'none';
             }
         }
-        
+
         // controlPanelの可視性を更新
         const timeController = TimeController;
         if (timeController && timeController.updateControlPanelVisibility) {
             timeController.updateControlPanelVisibility();
         }
-        
+
         // 設定値をローカルストレージに保存
         saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
@@ -120,17 +120,17 @@ export class SettingController {
         const jd = config.displayTime.jd;
         const observer = config.observationSite.observerPlanet;
         SolarSystemDataManager.updateAllData(jd, observer);
-        
+
         (window as any).renderAll();
     }
-    
+
     private updateConfigFromInputs(): void {
         console.log('🔧 updateConfigFromInputs called');
 
         const get = <T extends HTMLElement>(id: string): T | null => {
             return document.getElementById(id) as T;
         }
-        
+
         // 観測地の設定を読み取り
         const observerPlanetSelect = get<HTMLSelectElement>('observer_planet');
         const observationSiteSelect = get<HTMLSelectElement>('observation-site-select');
@@ -138,7 +138,7 @@ export class SettingController {
         const lonInput = get<HTMLInputElement>('lon');
         const nsSelect = get<HTMLSelectElement>('NSCombo');
         const ewSelect = get<HTMLSelectElement>('EWCombo');
-        
+
         if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
             const observerPlanet = observerPlanetSelect.value;
             if (latInput.value.length === 0) {
@@ -149,8 +149,8 @@ export class SettingController {
             }
             const latitude = parseFloat(latInput.value) * (nsSelect.value === '北緯' ? 1 : -1);
             const longitude = parseFloat(lonInput.value) * (ewSelect.value === '東経' ? 1 : -1);
-            
-            
+
+
             const observationSite: ObservationSite = {
                 ...this.config.observationSite,
                 observerPlanet: observerPlanet,
@@ -163,7 +163,7 @@ export class SettingController {
                 observationSite: observationSite
             });
         }
-        
+
         // 表示設定を読み取り
         const modeSelect = get<HTMLSelectElement>('mode');
         const magLimitSlider = get<HTMLInputElement>('magLimitSlider');
@@ -188,7 +188,7 @@ export class SettingController {
             modeSelect && gridCheck && magLimitSlider && usedStarSelect && darkMode &&
             reticleCheck && objectInfoCheck && starInfoCheck && starNameSelect && bayerFSCheck &&
             constellationNameCheck && constellationLineCheck &&
-            planetCheck && messierCheck && recCheck && ngcCheck && sharplessCheck && 
+            planetCheck && messierCheck && recCheck && ngcCheck && sharplessCheck &&
             cameraSelect && equinoxSelect
         ) {
             const newDisplaySettings: DisplaySettings = {
@@ -217,12 +217,12 @@ export class SettingController {
             });
             console.log('🔧 updateConfig called successfully');
         }
-        
+
         // 時刻設定を読み取り
         const dtlInput = get<HTMLInputElement>('dtl');
         const loadOnCurrentTimeCheck = get<HTMLInputElement>('loadOnCurrentTime');
         const realTime = get<HTMLSelectElement>('realTime');
-        
+
         if (dtlInput && realTime && loadOnCurrentTimeCheck) {
             let year: number, month: number, day: number, hour: number, minute: number, second: number, jd: number;
             if (realTime.value === 'off') {
@@ -283,7 +283,7 @@ export class SettingController {
             TimeController.initialize();
         }
     }
-    
+
     // main.tsのconfigから設定をUIに反映するメソッド
     setUiOnConfig() {
         this.toggleDarkMode();
@@ -305,7 +305,7 @@ export class SettingController {
                 if (element && value) element.value = value.toString();
             }
         }
-        
+
         // 観測地の設定
         const observerPlanetSelect = get<HTMLSelectElement>('observer_planet');
         const observationSiteSelect = get<HTMLSelectElement>('observation-site-select');
@@ -313,7 +313,7 @@ export class SettingController {
         const lonInput = get<HTMLInputElement>('lon');
         const nsSelect = get<HTMLSelectElement>('NSCombo');
         const ewSelect = get<HTMLSelectElement>('EWCombo');
-        
+
         if (observerPlanetSelect && observationSiteSelect && latInput && lonInput && nsSelect && ewSelect) {
             const site = this.config.observationSite;
             observerPlanetSelect.value = site.observerPlanet;
@@ -325,7 +325,7 @@ export class SettingController {
             nsSelect.value = site.latitude >= 0 ? '北緯' : '南緯';
             ewSelect.value = site.longitude >= 0 ? '東経' : '西経';
         }
-        
+
         const ds = this.config.displaySettings;
         const vs = this.config.viewState;
         apply.select(get<HTMLSelectElement>('mode'), ds.mode);
@@ -370,14 +370,14 @@ export class SettingController {
             const day = String(t.day).padStart(2, '0');
             const hour = String(t.hour).padStart(2, '0');
             const minute = String(t.minute).padStart(2, '0');
-            
+
             // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
             const localDateTime = `${year}-${month}-${day}T${hour}:${minute}`;
             dtlInput.value = localDateTime;
             loadOnCurrentTimeCheck.checked = t.loadOnCurrentTime;
             realTimeSelect.value = t.realTime;
         }
-        
+
         console.log('🔧 Settings loaded from config to UI');
     }
 
@@ -385,7 +385,7 @@ export class SettingController {
         const dtlInput = document.getElementById('dtl') as HTMLInputElement;
         if (dtlInput) {
             const now = new Date();
-            const jstString = now.toLocaleString('sv-SE', { 
+            const jstString = now.toLocaleString('sv-SE', {
                 timeZone: 'Asia/Tokyo',
                 year: 'numeric',
                 month: '2-digit',
@@ -395,7 +395,7 @@ export class SettingController {
                 second: '2-digit',
                 hour12: false
             });
-            
+
             // 'sv-SE'形式（YYYY-MM-DD HH:mm:ss）からdatetime-local形式に変換
             dtlInput.value = jstString.replace(' ', 'T');
         }
@@ -418,7 +418,7 @@ export class SettingController {
         if (!modeSelect) return;
 
         const deviceInfo = this.deviceOrientationManager.getDeviceInfo();
-        
+
         // すべてのオプションを有効にする
         Array.from(modeSelect.options).forEach(option => {
             option.disabled = false;
@@ -432,7 +432,7 @@ export class SettingController {
                     option.disabled = true;
                 }
             });
-            
+
             // 現在選択されているモードが無効の場合はviewに変更
             if (['live', 'ar'].includes(modeSelect.value)) {
                 modeSelect.value = 'view';
@@ -472,9 +472,9 @@ export class SettingController {
                 const arfovEl = document.getElementById('arFov') as HTMLInputElement;
                 const video = document.getElementById('arVideo') as HTMLVideoElement;
                 if (video && arfovEl) {
-                    const fovDeg = this.config.viewState.fieldOfViewRA;
+                    const fovDeg = this.config.viewState.fov.ra;
                     const fovVideo = parseFloat(arfovEl.value);
-                    video.style.height = `${Math.round(100*fovVideo/fovDeg)}%`;
+                    video.style.height = `${Math.round(100 * fovVideo / fovDeg)}%`;
                 }
             }
         }

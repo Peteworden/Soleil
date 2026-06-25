@@ -58,12 +58,11 @@ export function updateInfoDisplay() {
     
     // 中心座標情報を更新
     if (centerInfo) {
-        let { centerRA, centerDec, centerAlt, centerAz } = config.viewState;
+        let { centerRadec, centerAzalt } = config.viewState;
         const equinox = config.displaySettings.equinox;
         if (equinox == 'j2000') {
-            const { ra, dec } = RaDec.precession({ra: centerRA, dec: centerDec}, undefined, config.displayTime.jd, 'j2000');
-            centerRA = ra;
-            centerDec = dec;
+            const { ra, dec } = RaDec.precession(centerRadec, undefined, config.displayTime.jd, 'j2000');
+            centerRadec = {ra, dec};
             const centerLabel = document.getElementById('centerLabel');
             if (centerLabel) {
                 centerLabel.textContent = '中心(J2000.0):';
@@ -77,31 +76,30 @@ export function updateInfoDisplay() {
 
         const constellations = DataStore.constellationData;
         const boundaries = DataStore.constellationBoundariesData;
-        const centerConstellation = CoordinateConverter.determineConstellation({ra: centerRA, dec: centerDec}, constellations, boundaries);
+        const centerConstellation = CoordinateConverter.determineConstellation(centerRadec, constellations, boundaries);
         const centerConstellationInfo = document.getElementById('centerConstellation');
         if (centerConstellationInfo) {
             centerConstellationInfo.textContent = centerConstellation;
         }
 
-        let centerRArounded = Math.round(centerRA * 4 * 10);
+        let centerRArounded = Math.round(centerRadec.ra * 4 * 10);
         if (centerRArounded == 1440) centerRArounded = 0;
         const raHours = Math.floor(centerRArounded / 600);
         const raMinutes = Math.floor((centerRArounded % 600) / 10) + "." + Math.floor(centerRArounded % 10);
-        const decSign = centerDec >= 0 ? '+' : '-';
-        let centerDecrounded = Math.round(Math.abs(centerDec) * 60);
+        const decSign = centerRadec.dec >= 0 ? '+' : '-';
+        let centerDecrounded = Math.round(Math.abs(centerRadec.dec) * 60);
         const decDegrees = Math.floor(centerDecrounded / 60);
         const decMinutes = Math.floor(centerDecrounded % 60)
         let centerText = `赤経${raHours}h${raMinutes}m, 赤緯${decSign}${decDegrees}°${decMinutes}'`;
         if (config.observationSite.observerPlanet == '地球') {
-            centerText += `<br>方位角${centerAz.toFixed(2)}°, 高度${centerAlt.toFixed(2)}°`;
+            centerText += `<br>方位角${centerAzalt.az.toFixed(2)}°, 高度${centerAzalt.alt.toFixed(2)}°`;
         }
         centerInfo.innerHTML = centerText;
     }
     
     // 視野角情報を更新
     if (fovInfo) {
-        const { fieldOfViewRA, fieldOfViewDec } = config.viewState;
-        const fovText = `${fieldOfViewRA.toFixed(1)}°`;
+        const fovText = `${config.viewState.fov.ra.toFixed(1)}°`;
         fovInfo.textContent = fovText;
     }
 
@@ -226,20 +224,18 @@ function updateCanvasSize(renderer: CanvasRenderer) {
     renderer.updateCanvasSize({width: actualWidth, height: actualHeight});
     
     // 視野角も更新
-    let fovRa = config.viewState.fieldOfViewRA;
-    let fovDec = config.viewState.fieldOfViewDec;
+    let fov = config.viewState.fov;
     if (actualWidth > actualHeight) {
-        fovDec = fovRa * actualHeight / actualWidth;
+        fov.dec = fov.ra * actualHeight / actualWidth;
     } else {
-        fovRa = fovDec * actualWidth / actualHeight;
+        fov.ra = fov.dec * actualWidth / actualHeight;
     }
     
     updateConfig({
         canvasSize: { width: actualWidth, height: actualHeight },
         viewState: {
             ...config.viewState,
-            fieldOfViewRA: fovRa,
-            fieldOfViewDec: fovDec
+            fov: fov,
         }
     });
     

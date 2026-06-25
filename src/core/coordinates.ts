@@ -80,19 +80,19 @@ export class CoordinateConverter {
         const v = chartConfig.viewState;
         switch (mode) {
             case 'AEP':
-                return { mode: 'AEP', center: { ra: v.centerRA, dec: v.centerDec }, location: location };
+                return { mode: 'AEP', center: v.centerRadec, location: location };
             case 'view':
-                return { mode: 'view', center: { az: v.centerAz, alt: v.centerAlt }, location: location };
+                return { mode: 'view', center: v.centerAzalt, location: location };
             case 'live':
                 if (orientationData == undefined) {
                     console.log('orientationData is undefined');
-                    return { mode: 'view', center: { az: v.centerAz, alt: v.centerAlt }, location: location };
+                    return { mode: 'view', center: v.centerAzalt, location: location };
                 }
                 return { mode: 'live', location: location, orientationData: orientationData };
             default:
                 if (orientationData == undefined) {
                     console.log('orientationData is undefined');
-                    return { mode: 'view', center: { az: v.centerAz, alt: v.centerAlt }, location: location };
+                    return { mode: 'view', center: v.centerAzalt, location: location };
                 }
                 return { mode: 'ar', location: location, orientationData: orientationData }
         }
@@ -132,7 +132,7 @@ export class CoordinateConverter {
     getMaxLineLengthSquared(canvasSize: CanvasSize, viewState: ViewState): number {
         const xmax = canvasSize.width;
         const ymax = canvasSize.height;
-        return (30 * 2 * Math.max(xmax, ymax) / Math.max(viewState.fieldOfViewRA, viewState.fieldOfViewDec)) ** 2;
+        return (30 * 2 * Math.max(xmax, ymax) / Math.max(viewState.fov.ra, viewState.fov.dec)) ** 2;
     }
 
     shouldDrawLine(x1: number, y1: number, x2: number, y2: number, canvasSize: CanvasSize, maxLengthSquared: number): boolean {

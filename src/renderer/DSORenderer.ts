@@ -7,9 +7,7 @@ import { ColorManager } from "./colorManager.js";
 
 export class DSORenderer {
     private imageCache: { [key: string]: HTMLImageElement } = {};
-    private imageCacheNames: string[] = [];
     private transformConfig: TransformModeConfig;
-    private fov: Fov;
     private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
     constructor(
         private canvas: HTMLCanvasElement,
@@ -18,7 +16,6 @@ export class DSORenderer {
         private colorManager: ColorManager,
     ) {
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
     }
 
     updateOrientationData(data: DeviceOrientationData) {
@@ -27,18 +24,16 @@ export class DSORenderer {
 
     setImageCache(imageCache: { [key: string]: HTMLImageElement }): void {
         this.imageCache = imageCache;
-        this.imageCacheNames = Object.keys(imageCache).map(key => key.split('.')[0]);
     }
 
     // 天体を描画
     drawDSOObject(object: CelestialObject, category: string, objectInformation: Array<ObjectInformation>, nameCorner?: string): void {
         if (!object.getName() || object.getName() == '') return;
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
 
         const coordsJ2000 = object.getCoordinates();
         const coords = RaDec.precession(coordsJ2000, undefined, 'j2000', this.config.displayTime.jd);
-        const screenXY = RaDec.toCanvasXYifin(coords, this.fov, this.config.canvasSize, this.transformConfig);
+        const screenXY = RaDec.toCanvasXYifin(coords, this.config.viewState.fov, this.config.canvasSize, this.transformConfig);
         if (!screenXY[0]) return;
         const { x, y } = screenXY[1];
         const type = object.getType();
@@ -51,7 +46,7 @@ export class DSORenderer {
         });
 
         let markFlag = true;
-        if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fieldOfViewRA < 2 && object.getOverlay()!.width < 2.0 * 30.0 / this.canvas.width) {
+        if (object instanceof MessierObject && object.getOverlay() !== null && this.config.viewState.fov.ra < 2 && object.getOverlay()!.width < 2.0 * 30.0 / this.canvas.width) {
             markFlag = false;
         }
 
@@ -145,7 +140,7 @@ export class DSORenderer {
             ['AEP', 'view'].includes(this.config.displaySettings.mode) &&
             object.getOverlay() != null &&
             Object.keys(this.imageCache).includes(object.getOverlay()!.filename) &&
-            getConfig().viewState.fieldOfViewRA < 20
+            getConfig().viewState.fov.ra < 20
         ) {
             const img = this.imageCache[object.getOverlay()!.filename];
             // 画像が正常に読み込まれているかチェック
@@ -169,15 +164,14 @@ export class DSORenderer {
     private drawOverlay(name: string, coords: EquatorialCoordinates, overlay: { width: number, opacity: number }, x: number, y: number, mode: string): void {
         this.ctx.save();
         this.transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        this.fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
-        const overlaySize = overlay.width * this.canvas.width / this.fov.ra;
+        const overlaySize = overlay.width * this.canvas.width / this.config.viewState.fov.ra;
         this.ctx.globalAlpha = overlay.opacity;
         if (mode == 'AEP') {
             this.ctx.drawImage(this.imageCache[name], x - overlaySize / 2, y - overlaySize / 2, overlaySize, overlaySize);
         } else if (mode == 'view') {
             this.ctx.translate(x, y);
             const oneDegNorth = { ra: coords.ra, dec: Math.min(coords.dec + 1, 89.999999) };
-            const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.fov, this.config.canvasSize, this.transformConfig, true);
+            const oneDegNorthXY = RaDec.toCanvasXYifin(oneDegNorth, this.config.viewState.fov, this.config.canvasSize, this.transformConfig, true);
             const rotation = Math.atan2(oneDegNorthXY[1].x - x, -oneDegNorthXY[1].y + y);
             this.ctx.rotate(rotation);
             this.ctx.drawImage(this.imageCache[name], -overlaySize / 2, -overlaySize / 2, overlaySize, overlaySize);

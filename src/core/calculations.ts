@@ -16,10 +16,10 @@ export class AstronomicalCalculator {
             year -= 1;
             month += 12;
         }
-        let ans = Math.floor(365.25*year) + Math.floor(year/400)
-                - Math.floor(year/100) + Math.floor(30.59*(month-2))
-                + day + hour/24 + minute/1440 + second/86400
-                + 1721088.5;
+        let ans = Math.floor(365.25 * year) + Math.floor(year / 400)
+            - Math.floor(year / 100) + Math.floor(30.59 * (month - 2))
+            + day + hour / 24 + minute / 1440 + second / 86400
+            + 1721088.5;
         return ans;
     }
 
@@ -31,17 +31,17 @@ export class AstronomicalCalculator {
     static calculateCurrentJdTT(): number {
         const now = new Date();
         return this.jdTTFromYmdhmsJst(
-            now.getFullYear(), now.getMonth() + 1, now.getDate(), 
+            now.getFullYear(), now.getMonth() + 1, now.getDate(),
             now.getHours(), now.getMinutes(), now.getSeconds()
         );
     }
 
-    static calculateYmdhmsJstFromJdTT(jd_TT: number): {year: number, month: number, day: number, hour: number, minute: number, second: number} {
+    static calculateYmdhmsJstFromJdTT(jd_TT: number): { year: number, month: number, day: number, hour: number, minute: number, second: number } {
         const jd_JST = this.jdTTtoJST(jd_TT);
         return this.calculateYmdhmsFromJd(jd_JST);
     }
 
-    static calculateYmdhmsFromJd(jd: number): {year: number, month: number, day: number, hour: number, minute: number, second: number} {
+    static calculateYmdhmsFromJd(jd: number): { year: number, month: number, day: number, hour: number, minute: number, second: number } {
         // https://eco.mtk.nao.ac.jp/koyomi/topics/html/topics2023_1.html
         const jdn = Math.floor(jd + 0.5);
         let L = jdn + 68569;
@@ -96,7 +96,7 @@ export class AstronomicalCalculator {
         } else if (d < 1) {
             m -= 1;
             d = days[m - 1];
-        }        
+        }
         if (m > 12) {
             y += 1;
             m -= 12;
@@ -105,7 +105,7 @@ export class AstronomicalCalculator {
             m += 12;
         }
 
-        return {year: y, month: m, day: d, hour: hr, minute: min, second: sec};
+        return { year: y, month: m, day: d, hour: hr, minute: min, second: sec };
     }
 
     // グリニッジ恒星時を計算 経度を足せば地方恒星時
@@ -115,7 +115,7 @@ export class AstronomicalCalculator {
         const jd_UT = jd_TT - 0.0008;
         const h = 24 * ((jd_UT + 0.5) % 1);
         const d_UT = jd_UT - h / 24 - 2451545.0;
-        const ans = ((6.697375 + (0.065707485828 * d_UT) % 24 + 1.0027379 * h + 0.0854103 * t + 0.0000258 * t*t) % 24) * 15 * DEG_TO_RAD;
+        const ans = ((6.697375 + (0.065707485828 * d_UT) % 24 + 1.0027379 * h + 0.0854103 * t + 0.0000258 * t * t) % 24) * 15 * DEG_TO_RAD;
         return ans;
     }
 
@@ -151,7 +151,7 @@ export class AstronomicalCalculator {
         const usedStar = config.displaySettings.usedStar;
         let lm = Math.min(
             12.0,
-            Math.max(3.0, key1 - key2 * 0.5 * Math.log(config.viewState.fieldOfViewRA * config.viewState.fieldOfViewDec)),
+            Math.max(3.0, key1 - key2 * 0.5 * Math.log(config.viewState.fov.ra * config.viewState.fov.dec)),
         );
         if (usedStar == 'noStar') {
             lm = -2.0
@@ -166,7 +166,7 @@ export class AstronomicalCalculator {
     static unclipedLimitingMagnitude(viewState: ViewState): number {
         const key1 = viewState.starSizeKey1;
         const key2 = viewState.starSizeKey2;
-        let lm = key1 - key2 * 0.5 * Math.log(viewState.fieldOfViewRA * viewState.fieldOfViewDec)
+        let lm = key1 - key2 * 0.5 * Math.log(viewState.fov.ra * viewState.fov.dec)
         return lm;
     }
 }

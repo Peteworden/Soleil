@@ -36,13 +36,12 @@ export class GaiaStarRenderer {
         if (magBrightest > limitingMagnitude) return;
         const unclipedLimitingMagnitude = AstronomicalCalculator.unclipedLimitingMagnitude(this.config.viewState);
 
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
-        const centerRaRad = this.config.viewState.centerRA * DEG_TO_RAD;
-        const sinCenterDec = Math.sin(this.config.viewState.centerDec * DEG_TO_RAD);
-        const cosCenterDec = Math.cos(this.config.viewState.centerDec * DEG_TO_RAD);
-        const centerAzRad = this.config.viewState.centerAz * DEG_TO_RAD;
-        const sinCenterAlt = Math.sin(this.config.viewState.centerAlt * DEG_TO_RAD);
-        const cosCenterAlt = Math.cos(this.config.viewState.centerAlt * DEG_TO_RAD);
+        const centerRaRad = this.config.viewState.centerRadec.ra * DEG_TO_RAD;
+        const sinCenterDec = Math.sin(this.config.viewState.centerRadec.dec * DEG_TO_RAD);
+        const cosCenterDec = Math.cos(this.config.viewState.centerRadec.dec * DEG_TO_RAD);
+        const centerAzRad = this.config.viewState.centerAzalt.az * DEG_TO_RAD;
+        const sinCenterAlt = Math.sin(this.config.viewState.centerAzalt.alt * DEG_TO_RAD);
+        const cosCenterAlt = Math.cos(this.config.viewState.centerAzalt.alt * DEG_TO_RAD);
         const sinLat = Math.sin(this.config.observationSite.latitude * DEG_TO_RAD);
         const cosLat = Math.cos(this.config.observationSite.latitude * DEG_TO_RAD);
         const siderealTime = this.config.siderealTime;
@@ -66,7 +65,7 @@ export class GaiaStarRenderer {
         const sinPrec = Math.sin(precessionAngle);
         const cosPrec = Math.cos(precessionAngle);
 
-        const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        const zeroMagSize = starSize_0mag(this.config.viewState.fov);
 
         // キャッシュされた領域候補を使用（毎回計算しない）
         const areasInfo = this.areaCandidates();
@@ -96,7 +95,7 @@ export class GaiaStarRenderer {
                         const [ifin, xy] = RaDec.toCanvasXYifinFast(
                             coords, this.config.displaySettings.mode,
                             centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
-                            fov, this.config.canvasSize
+                            this.config.viewState.fov, this.config.canvasSize
                         )
                         if (!ifin) continue;
 
@@ -136,7 +135,7 @@ export class GaiaStarRenderer {
                         const [ifin, xy] = RaDec.toCanvasXYifinFast(
                             coords, this.config.displaySettings.mode,
                             centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
-                            fov, this.config.canvasSize
+                            this.config.viewState.fov, this.config.canvasSize
                         )
                         if (!ifin) continue;
 

@@ -309,13 +309,11 @@ export class TimeController {
         const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
 
         if (config.displaySettings.mode == 'AEP') {
-            const centerAzAlt = RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, lstlat);
-            viewState.centerAz = centerAzAlt.az;
-            viewState.centerAlt = centerAzAlt.alt;
+            const centerAzAlt = RaDec.toAzalt(viewState.centerRadec, lstlat);
+            viewState.centerAzalt = centerAzAlt;
         } else if (config.displaySettings.mode == 'view') {
-            const centerRaDec = AzAlt.toRadec({ az: viewState.centerAz, alt: viewState.centerAlt }, lstlat);
-            viewState.centerRA = centerRaDec.ra;
-            viewState.centerDec = centerRaDec.dec;
+            const centerRaDec = AzAlt.toRadec(viewState.centerAzalt, lstlat);
+            viewState.centerRadec = centerRaDec;
         }
 
         SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
@@ -429,13 +427,12 @@ export class TimeController {
             const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            const newCenterHorizontal = RaDec.toAzalt({ ra: config.viewState.centerRA, dec: config.viewState.centerDec }, lstlat);
+            const newCenterHorizontal = RaDec.toAzalt(config.viewState.centerRadec, lstlat);
             SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
             updateConfig({
                 viewState: {
                     ...config.viewState,
-                    centerAz: newCenterHorizontal.az,
-                    centerAlt: newCenterHorizontal.alt
+                    centerAzalt: newCenterHorizontal,
                 },
                 displayTime: {
                     jd: jd,
@@ -459,13 +456,12 @@ export class TimeController {
             const [y, m, d, h, mi, s] = [now.getFullYear(), now.getMonth() + 1, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds()];
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-            const newCenterEquatorial = AzAlt.toRadec({ az: config.viewState.centerAz, alt: config.viewState.centerAlt }, lstlat);
+            const newCenterEquatorial = AzAlt.toRadec(config.viewState.centerAzalt, lstlat);
             SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
             updateConfig({
                 viewState: {
                     ...config.viewState,
-                    centerRA: newCenterEquatorial.ra,
-                    centerDec: newCenterEquatorial.dec
+                    centerRadec: newCenterEquatorial,
                 },
                 displayTime: {
                     jd: jd,

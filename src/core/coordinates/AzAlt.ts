@@ -1,8 +1,7 @@
-import { CanvasRadecCoords, CanvasSize, CanvasXy, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, TransformModeConfig } from "../../types/index.js";
+import { CanvasRadecCoords, CanvasSize, CanvasXy, DeviceOrientationData, EquatorialCoordinates, Fov, HorizontalCoordinates, LstLat, TransformModeConfig } from "../../types/index.js";
 import { acosdeg, asindeg } from "../mathUtils.js";
 import { DEG_TO_RAD, RAD_TO_DEG } from '../../utils/constants.js';
 import { CanvasRaDec, Cartesian, RaDec } from "./index.js";
-import { DeviceOrientationData } from "device/deviceOrientation.js";
 
 export function toRad(azalt: HorizontalCoordinates): HorizontalCoordinates {
     return { az: azalt.az * DEG_TO_RAD, alt: azalt.alt * DEG_TO_RAD };

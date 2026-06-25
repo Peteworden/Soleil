@@ -176,15 +176,13 @@ export class DeviceOrientationManager {
         }
 
         const lstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
-        const centerHorizontal = CanvasRaDec.toAzAlt_Live({ ra: 0.0, dec: 0.0 }, this.orientationData);
-        const centerRadec = AzAlt.toRadec(centerHorizontal, lstLat);
+        const centerAzalt = CanvasRaDec.toAzAlt_Live({ ra: 0.0, dec: 0.0 }, this.orientationData);
+        const centerRadec = AzAlt.toRadec(centerAzalt, lstLat);
         updateConfig({
             viewState: {
                 ...config.viewState,
-                centerRA: centerRadec.ra,
-                centerDec: centerRadec.dec,
-                centerAz: centerHorizontal.az,
-                centerAlt: centerHorizontal.alt
+                centerRadec: centerRadec,
+                centerAzalt: centerAzalt,
             }
         });
 

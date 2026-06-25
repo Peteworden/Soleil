@@ -3,8 +3,8 @@ import { CanvasRaDec, RaDec } from '../core/coordinates/index.js';
 import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates, CanvasSize } from '../types/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
 
-export function starSize_0mag(fieldOfViewRA: number, fieldOfViewDec: number): number {
-    return Math.max(200.0 / (Math.min(fieldOfViewRA, fieldOfViewDec) + 15), 3.0);
+export function starSize_0mag(fov: Fov): number {
+    return Math.max(200.0 / (Math.min(fov.ra, fov.dec) + 15), 3.0);
 }
 
 export function getStarSize(
@@ -219,8 +219,8 @@ export function getAreaCandidates(
     const spCanvasRadec = RaDec.toCanvasRadec(J2000SouthPoleApparent, conf);
 
     const margin = 0.0;
-    const raWidth = viewState.fieldOfViewRA * 0.5 + margin;
-    const decWidth = viewState.fieldOfViewDec * 0.5 + margin;
+    const raWidth = viewState.fov.ra * 0.5 + margin;
+    const decWidth = viewState.fov.dec * 0.5 + margin;
     const npIsIn = Math.abs(npCanvasRadec.ra) < raWidth && Math.abs(npCanvasRadec.dec) < decWidth;
     const spIsIn = Math.abs(spCanvasRadec.ra) < raWidth && Math.abs(spCanvasRadec.dec) < decWidth;
     const n85IsIn = Math.abs(n85CanvasRadec.ra) < raWidth && Math.abs(n85CanvasRadec.dec) < decWidth;
@@ -277,17 +277,16 @@ export function getAreaCandidates(
 }
 
 export function getGridIntervals(
-    fieldOfViewRA: number,
-    fieldOfViewDec: number,
+    fov: Fov,
     alpha: number,
     beta: number
 ): number[] {
     const gridIntervalList: number[] = [0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 45.0];
-    let betaCalcInterval = Math.min(fieldOfViewDec, fieldOfViewRA) / 30;
+    let betaCalcInterval = Math.min(fov.ra, fov.dec) / 30;
     let alphaCalcInterval = Math.min(betaCalcInterval / Math.max(Math.cos(beta * Math.PI / 180), 0.1), 8);
     let betaInterval = 45.0;
     for (const interval of gridIntervalList) {
-        if (interval > Math.min(fieldOfViewDec, fieldOfViewRA) / 4) {
+        if (interval > Math.min(fov.ra, fov.dec) / 4) {
             betaInterval = interval;
             break;
         }

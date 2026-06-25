@@ -1,12 +1,11 @@
 import { asindeg } from "../mathUtils.js";
-import { CanvasRadecCoords, CanvasSize, CanvasXy, EquatorialCoordinates, Fov, HorizontalCoordinates, TransformModeConfig } from "../../types/index.js";
+import { CanvasRadecCoords, CanvasSize, CanvasXy, DeviceOrientationData, EquatorialCoordinates, Fov, HorizontalCoordinates, TransformModeConfig } from "../../types/index.js";
 import { DEG_TO_RAD, RAD_TO_DEG } from '../../utils/constants.js';
 
 import * as RaDec from "./RaDec.js"
 import * as AzAlt from "./AzAlt.js"
 import { Cartesian } from "./index.js";
 import { Matrix3x3 } from "./Cartesian.js";
-import { DeviceOrientationData } from "device/deviceOrientation.js";
 
 export function isCenter(coord: CanvasRadecCoords): boolean {
     return coord.ra == 0 && coord.dec == 0;

@@ -1,4 +1,4 @@
-import { CanvasSize, CartesianCoords } from "./astrometry";
+import { CanvasSize, CartesianCoords, EquatorialCoordinates, Fov, HorizontalCoordinates } from "./astrometry";
 
 export interface DisplaySettings {
     darkMode: boolean;
@@ -27,12 +27,9 @@ export interface DisplaySettings {
 }
 
 export interface ViewState {
-    centerRA: number;
-    centerDec: number;
-    centerAz: number;
-    centerAlt: number;
-    fieldOfViewRA: number;
-    fieldOfViewDec: number;
+    centerRadec: EquatorialCoordinates;
+    centerAzalt: HorizontalCoordinates;
+    fov: Fov;
     starSizeKey1: number;
     starSizeKey2: number;
 }

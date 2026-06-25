@@ -136,18 +136,18 @@ export class SatelliteRenderer {
      */
     private equatorialToScreen(ra: number, dec: number): { x: number; y: number } | null {
         // 中心座標からの相対位置を計算
-        const deltaRA = this.normalizeAngle(ra - this.viewState.centerRA);
-        const deltaDec = dec - this.viewState.centerDec;
+        const deltaRA = this.normalizeAngle(ra - this.viewState.centerRadec.ra);
+        const deltaDec = dec - this.viewState.centerRadec.dec;
 
         // 視野内かどうかをチェック
-        if (Math.abs(deltaRA) > this.viewState.fieldOfViewRA / 2 ||
-            Math.abs(deltaDec) > this.viewState.fieldOfViewDec / 2) {
+        if (Math.abs(deltaRA) > this.viewState.fov.ra / 2 ||
+            Math.abs(deltaDec) > this.viewState.fov.dec / 2) {
             return null;
         }
 
         // 画面座標に変換
-        const x = this.canvasSize.width / 2 + (deltaRA / this.viewState.fieldOfViewRA) * this.canvasSize.width;
-        const y = this.canvasSize.height / 2 - (deltaDec / this.viewState.fieldOfViewDec) * this.canvasSize.height;
+        const x = this.canvasSize.width / 2 + (deltaRA / this.viewState.fov.ra) * this.canvasSize.width;
+        const y = this.canvasSize.height / 2 - (deltaDec / this.viewState.fov.dec) * this.canvasSize.height;
 
         return { x, y };
     }

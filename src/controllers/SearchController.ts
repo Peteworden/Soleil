@@ -31,14 +31,14 @@ export class SearchController {
             if (searchInput) {
                 searchInput.focus();
             }
-            
+
             // 検索画面でのズーム防止イベントハンドラーを追加
             const preventZoom = (e: TouchEvent) => {
                 if (e.touches.length > 1) {
                     e.preventDefault();
                 }
             };
-            
+
             searchDiv.addEventListener('touchstart', preventZoom, { passive: false });
             searchDiv.addEventListener('touchmove', preventZoom, { passive: false });
         }
@@ -77,7 +77,7 @@ export class SearchController {
             }
         }
     }
-    
+
     performSearch(query: string) {
         // 検索処理の実装
         // 天体データから検索
@@ -93,15 +93,15 @@ export class SearchController {
             }
             return;
         }
-        
+
         // 検索結果を表示する処理
         this.displaySearchResults(this.normalizeText(query));
     }
-    
+
     private displaySearchResults(query: string) {
         const container = document.getElementById('suggestionButtonContainer');
         if (!container) return;
-        
+
         // 検索結果をクリア
         container.innerHTML = '';
 
@@ -116,12 +116,12 @@ export class SearchController {
                     coordinates: { ra: planet.raDec.ra, dec: planet.raDec.dec },
                     data: planet
                 };
-                if (this.normalizeText(planet.jpnName).startsWith(query) || 
+                if (this.normalizeText(planet.jpnName).startsWith(query) ||
                     this.normalizeText(planet.hiraganaName).startsWith(query) ||
                     this.normalizeText(planet.engName).startsWith(query)
                 ) {
                     startResults.push(result);
-                } else if (this.normalizeText(planet.jpnName).includes(query) || 
+                } else if (this.normalizeText(planet.jpnName).includes(query) ||
                     this.normalizeText(planet.hiraganaName).includes(query) ||
                     this.normalizeText(planet.engName).includes(query)
                 ) {
@@ -143,7 +143,7 @@ export class SearchController {
                         coordinates: { ra: constellation.ra, dec: constellation.dec },
                         data: constellation
                     });
-                } else if (jpnName.includes(query) || iauName.includes(query) || abbr.includes(query)) {                    
+                } else if (jpnName.includes(query) || iauName.includes(query) || abbr.includes(query)) {
                     includeResults.push({
                         type: 'constellation',
                         title: `${constellation.JPNname} (${constellation.IAUname})`,
@@ -296,12 +296,13 @@ export class SearchController {
             } else if (query.slice(0, 3) === 'ngc') {
                 queryAsNGC = query;
             }
-            if (queryAsNGC.length > 0 && 
-                !startResults.some(result => this.normalizeText(result.title).includes(queryAsNGC)) && 
+            if (queryAsNGC.length > 0 &&
+                !startResults.some(result => this.normalizeText(result.title).includes(queryAsNGC)) &&
                 !includeResults.some(result => this.normalizeText(result.title).includes(queryAsNGC))
             ) {
                 for (const ngc of DataStore.ngcData) {
-                    if (ngc.getName().toLowerCase() == queryAsNGC) {;
+                    if (ngc.getName().toLowerCase() == queryAsNGC) {
+                        ;
                         startResults.push({
                             type: 'ngc',
                             title: ngc.getName(),
@@ -315,7 +316,7 @@ export class SearchController {
         } else {
             console.log('No NGC data found');
         }
-        
+
         if (DataStore.icData) {
             let queryAsIC = '';
             if (this.isInteger(query)) {
@@ -323,8 +324,8 @@ export class SearchController {
             } else if (query.slice(0, 2) === 'ic') {
                 queryAsIC = query;
             }
-            if (queryAsIC.length > 0 && 
-                !startResults.some(result => result.title.includes(queryAsIC)) && 
+            if (queryAsIC.length > 0 &&
+                !startResults.some(result => result.title.includes(queryAsIC)) &&
                 !includeResults.some(result => result.title.includes(queryAsIC))
             ) {
                 for (const ic of DataStore.icData) {
@@ -350,8 +351,8 @@ export class SearchController {
             } else if (query.startsWith('sh2-') && this.isInteger(query.slice(4))) {
                 queryAsSharpless = query;
             }
-            if (queryAsSharpless.length > 0 && 
-                !startResults.some(result => result.title.includes(queryAsSharpless)) && 
+            if (queryAsSharpless.length > 0 &&
+                !startResults.some(result => result.title.includes(queryAsSharpless)) &&
                 !includeResults.some(result => result.title.includes(queryAsSharpless))
             ) {
                 for (const sharpless of DataStore.sharplessData) {
@@ -448,17 +449,17 @@ export class SearchController {
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                 } else if (result.type === 'sh2') {
                     const object = result.data as SharplessObject;
                     if (object) {
                         try {
                             sessionStorage.setItem('tempTarget', JSON.stringify(object));
-                        } catch (_) {}
+                        } catch (_) { }
                     }
                 } else {
-                    try { sessionStorage.removeItem('tempTarget'); } catch (_) {}
+                    try { sessionStorage.removeItem('tempTarget'); } catch (_) { }
                 }
                 await this.selectSearchResult(result.coordinates, epoch);
             });
@@ -483,7 +484,7 @@ export class SearchController {
             }
         }
     }
-    
+
     private async selectSearchResult(position0: EquatorialCoordinates, epoch: 'current' | 'j2000' = 'j2000') {
         // 検索結果が選択された時の処理
         const config = getConfig();
@@ -496,7 +497,7 @@ export class SearchController {
             position = RaDec.precession(position0, undefined, 'j2000', config.displayTime.jd);
         }
 
-        const start_vector = RaDec.toCartesian({ ra: config.viewState.centerRA, dec: config.viewState.centerDec });
+        const start_vector = RaDec.toCartesian(config.viewState.centerRadec);
         const end_vector = RaDec.toCartesian(position);
         const steps = 30;
         const path_ras: number[] = [];
@@ -523,11 +524,9 @@ export class SearchController {
         const interval = 20;
         async function move() {
             for (let i = 0; i <= steps; i++) {
-                config.viewState.centerRA = path_ras[i];
-                config.viewState.centerDec = path_decs[i];
-                config.viewState.centerAz = path_azs[i];
-                config.viewState.centerAlt = path_alts[i];
-                updateConfig({viewState: config.viewState});
+                config.viewState.centerRadec = { ra: path_ras[i], dec: path_decs[i] };
+                config.viewState.centerAzalt = { az: path_azs[i], alt: path_alts[i] };
+                updateConfig({ viewState: config.viewState });
                 await new Promise(resolve => setTimeout(resolve, interval));
             }
         }
@@ -538,7 +537,7 @@ export class SearchController {
 
     //カタカナをひらがなにする関数
     private kanaToHira(name: string): string {
-        return name.replace(/[\u30a1-\u30f6]/g, function(match: string) {
+        return name.replace(/[\u30a1-\u30f6]/g, function (match: string) {
             const chr = match.charCodeAt(0) - 0x60;
             return String.fromCharCode(chr);
         });
@@ -546,7 +545,7 @@ export class SearchController {
 
     // 全角数字・アルファベットを半角にする関数
     private toHalfWidth(name: string): string {
-        return name.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function(match: string) {
+        return name.replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (match: string) {
             const chr = match.charCodeAt(0) - 0xfee0;
             return String.fromCharCode(chr);
         });
@@ -559,7 +558,7 @@ export class SearchController {
     private isInteger(name: string): boolean {
         return /^\d+$/.test(name);
     }
-    
+
     setupSearchInput() {
         const searchInput = document.getElementById('searchInput') as HTMLInputElement;
         if (searchInput) {
@@ -567,7 +566,7 @@ export class SearchController {
                 const query = (e.target as HTMLInputElement).value;
                 this.performSearch(this.normalizeText(query));
             });
-            
+
             searchInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     const query = searchInput.value;

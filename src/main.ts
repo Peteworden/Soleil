@@ -194,18 +194,20 @@ export async function main() {
                 canvas.height = actualHeight;
 
                 // 視野角も更新
-                let fovRa = config.viewState.fieldOfViewRA;
-                let fovDec = config.viewState.fieldOfViewDec;
+                // let fovRa = config.viewState.fieldOfViewRA;
+                // let fovDec = config.viewState.fieldOfViewDec;
+                let fov = config.viewState.fov;
                 if (actualWidth > actualHeight) {
-                    fovDec = fovRa * actualHeight / actualWidth;
+                    fov.dec = fov.ra * actualHeight / actualWidth;
                 } else {
-                    fovRa = fovDec * actualWidth / actualHeight;
+                    fov.ra = fov.dec * actualWidth / actualHeight;
                 }
 
                 updateConfigOnly({
                     viewState: {
                         ...config.viewState,
-                        fieldOfViewDec: config.viewState.fieldOfViewRA * actualHeight / actualWidth
+                        // fieldOfViewDec: config.viewState.fieldOfViewRA * actualHeight / actualWidth
+                        fov: fov,
                     },
                     canvasSize: {
                         width: actualWidth,
@@ -232,7 +234,11 @@ export async function main() {
                 updateConfigOnly({
                     viewState: {
                         ...config.viewState,
-                        fieldOfViewDec: config.viewState.fieldOfViewRA * actualHeight / actualWidth
+                        // fieldOfViewDec: config.viewState.fieldOfViewRA * actualHeight / actualWidth
+                        fov: {
+                            ra: config.viewState.fov.ra,
+                            dec: config.viewState.fov.ra * actualHeight / actualWidth,
+                        }
                     },
                     canvasSize: {
                         width: actualWidth,
@@ -565,20 +571,18 @@ function updateFullScreenState(isFullscreen: boolean) {
     const actualWidth = Math.round(rect.width);
     const actualHeight = Math.round(rect.height);
 
-    let fovRa = config.viewState.fieldOfViewRA;
-    let fovDec = config.viewState.fieldOfViewDec;
+    let fov = config.viewState.fov;
     if (actualWidth > actualHeight) {
-        fovDec = fovRa * actualHeight / actualWidth;
+        fov.dec = fov.ra * actualHeight / actualWidth;
     } else {
-        fovRa = fovDec * actualWidth / actualHeight;
+        fov.ra = fov.dec * actualWidth / actualHeight;
     }
 
     updateConfig({
         canvasSize: { width: actualWidth, height: actualHeight },
         viewState: {
             ...config.viewState,
-            fieldOfViewRA: fovRa,
-            fieldOfViewDec: fovDec
+            fov: fov,
         }
     });
 }

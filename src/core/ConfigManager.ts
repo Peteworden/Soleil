@@ -22,12 +22,12 @@ export function getConfig(): StarChartConfig {
 export function resetConfig(): void {
     localStorage.removeItem('config');
     const defaultConfig = initializeConfig(true); // 初期値を取得
-    
+
     // 参照を維持したまま中身を空にしてからコピー
     // (ネストされたオブジェクトの残骸が残らないようにするため)
     clearObject(config);
     Object.assign(config, defaultConfig);
-    
+
     console.log('🔄 Config reset completed');
     if (onConfigChangeCallback) onConfigChangeCallback();
 }
@@ -46,16 +46,16 @@ export function updateConfigOnly(newConfig: Partial<StarChartConfig>): void {
         Object.assign(config.observationSite, newConfig.observationSite);
     }
     if (newConfig.displayTime) {
-         Object.assign(config.displayTime, newConfig.displayTime);
+        Object.assign(config.displayTime, newConfig.displayTime);
     }
     if (newConfig.planetMotion) {
-         Object.assign(config.planetMotion, newConfig.planetMotion);
+        Object.assign(config.planetMotion, newConfig.planetMotion);
     }
     if (newConfig.newsPopup) {
-         Object.assign(config.newsPopup, newConfig.newsPopup);
+        Object.assign(config.newsPopup, newConfig.newsPopup);
     }
     if (newConfig.canvasSize) {
-         Object.assign(config.canvasSize, newConfig.canvasSize);
+        Object.assign(config.canvasSize, newConfig.canvasSize);
     }
     // 全体の第一階層をマージ
     Object.assign(config, newConfig);
@@ -66,7 +66,7 @@ export function updateConfigOnly(newConfig: Partial<StarChartConfig>): void {
  */
 export function updateConfig(newConfig: Partial<StarChartConfig>): void {
     // ダークモードが変更された場合、色管理システムを更新
-    if (newConfig.displaySettings?.darkMode !== undefined && 
+    if (newConfig.displaySettings?.darkMode !== undefined &&
         (config.displaySettings.darkMode !== newConfig.displaySettings.darkMode)
     ) {
         import('../renderer/colorManager').then(({ getColorManager }) => {
@@ -79,7 +79,7 @@ export function updateConfig(newConfig: Partial<StarChartConfig>): void {
     // 恒星時の再計算
     if (newConfig.displayTime !== undefined || (newConfig.observationSite?.longitude !== undefined)) {
         config.siderealTime = AstronomicalCalculator.calculateLocalSiderealTime(
-            config.displayTime.jd, 
+            config.displayTime.jd,
             config.observationSite.longitude
         );
     }
@@ -122,12 +122,9 @@ function initializeConfig(
         equinox: 'apparent'
     };
     const viewState: ViewState = {
-        centerRA: 90,
-        centerDec: 0,
-        centerAz: 180,
-        centerAlt: 45,
-        fieldOfViewRA: 60,
-        fieldOfViewDec: 60,
+        centerRadec: { ra: 90, dec: 0 },
+        centerAzalt: { az: 180, alt: 45 },
+        fov: { ra: 60, dec: 60 },
         starSizeKey1: 14,
         starSizeKey2: 1.8
     };
@@ -307,10 +304,10 @@ function initializeConfig(
     }
 
     if (useUrlQuery) {
-        if (raOverride != null) viewState.centerRA = raOverride;
-        if (decOverride != null) viewState.centerDec = decOverride;
+        if (raOverride != null) viewState.centerRadec.ra = raOverride;
+        if (decOverride != null) viewState.centerRadec.dec = decOverride;
 
-        if (fovOverride != null) viewState.fieldOfViewRA = fovOverride;
+        if (fovOverride != null) viewState.fov.ra = fovOverride;
 
         if (latOverride != null) {
             observationSite.latitude = latOverride;
@@ -333,7 +330,7 @@ function initializeConfig(
         }
     }
 
-    viewState.fieldOfViewDec = viewState.fieldOfViewRA * canvasSize.height / canvasSize.width;
+    viewState.fov.dec = viewState.fov.ra * canvasSize.height / canvasSize.width;
     displayTime.jd = AstronomicalCalculator.jdTTFromYmdhmsJst(
         displayTime.year, displayTime.month, displayTime.day, displayTime.hour, displayTime.minute, displayTime.second
     );
@@ -341,22 +338,19 @@ function initializeConfig(
     const loc = { lst: siderealTime, lat: observationSite.latitude }
 
     if (useLocalStorage && (raOverride != null || decOverride != null)) {
-        const centerAzAlt =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
-        viewState.centerAz = centerAzAlt.az;
-        viewState.centerAlt = centerAzAlt.alt;
+        const centerAzAlt = RaDec.toAzalt(viewState.centerRadec, loc);
+        viewState.centerAzalt = centerAzAlt;
     } else {
         if (displaySettings.mode === 'AEP') {
-            const centerAzalt =  RaDec.toAzalt({ ra: viewState.centerRA, dec: viewState.centerDec }, loc);
-            viewState.centerAz = centerAzalt.az;
-            viewState.centerAlt = centerAzalt.alt;
+            const centerAzalt = RaDec.toAzalt(viewState.centerRadec, loc);
+            viewState.centerAzalt = centerAzalt;
         } else if (displaySettings.mode === 'view') {
-            const centerRadec =  AzAlt.toRadec({ az: viewState.centerRA, alt: viewState.centerDec }, loc);
-            viewState.centerRA = centerRadec.ra;
-            viewState.centerDec = centerRadec.dec;
+            const centerRadec = AzAlt.toRadec(viewState.centerAzalt, loc);
+            viewState.centerRadec = centerRadec;
         }
     }
 
-    const config: StarChartConfig =  {
+    const config: StarChartConfig = {
         displaySettings: displaySettings,
         viewState: viewState,
         observationSite: observationSite,

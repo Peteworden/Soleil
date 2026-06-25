@@ -38,14 +38,12 @@ export class HipStarRenderer {
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const currentJd = this.config.displayTime.jd;
 
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
-
-        const centerRaRad = this.config.viewState.centerRA * DEG_TO_RAD;
-        const sinCenterDec = Math.sin(this.config.viewState.centerDec * DEG_TO_RAD);
-        const cosCenterDec = Math.cos(this.config.viewState.centerDec * DEG_TO_RAD);
-        const centerAzRad = this.config.viewState.centerAz * DEG_TO_RAD;
-        const sinCenterAlt = Math.sin(this.config.viewState.centerAlt * DEG_TO_RAD);
-        const cosCenterAlt = Math.cos(this.config.viewState.centerAlt * DEG_TO_RAD);
+        const centerRaRad = this.config.viewState.centerRadec.ra * DEG_TO_RAD;
+        const sinCenterDec = Math.sin(this.config.viewState.centerRadec.dec * DEG_TO_RAD);
+        const cosCenterDec = Math.cos(this.config.viewState.centerRadec.dec * DEG_TO_RAD);
+        const centerAzRad = this.config.viewState.centerAzalt.az * DEG_TO_RAD;
+        const sinCenterAlt = Math.sin(this.config.viewState.centerAzalt.alt * DEG_TO_RAD);
+        const cosCenterAlt = Math.cos(this.config.viewState.centerAzalt.alt * DEG_TO_RAD);
         const sinLat = Math.sin(this.config.observationSite.latitude * DEG_TO_RAD);
         const cosLat = Math.cos(this.config.observationSite.latitude * DEG_TO_RAD);
         const siderealTime = this.config.siderealTime;
@@ -62,7 +60,7 @@ export class HipStarRenderer {
         // キャッシュされたHIP星データを使用
         const cachedStars = this.getCachedHipStars(hipStars, currentJd);
         if (cachedStars.count == 0) return;
-        const zeroMagSize = starSize_0mag(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        const zeroMagSize = starSize_0mag(this.config.viewState.fov);
 
         const starColorRGB = this.colorManager.parseRgbToList(this.colorManager.getColor('star'));
 
@@ -92,7 +90,7 @@ export class HipStarRenderer {
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
                     coords, this.config.displaySettings.mode,
                     centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
-                    fov, this.config.canvasSize
+                    this.config.viewState.fov, this.config.canvasSize
                 )
                 if (!ifin) continue;
                 const color = this.hipStarsColors[i];
@@ -116,7 +114,7 @@ export class HipStarRenderer {
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
                     coords, this.config.displaySettings.mode,
                     centerRaRad, sinCenterDec, cosCenterDec, centerAzRad, sinCenterAlt, cosCenterAlt, sinLat, cosLat, siderealTime, this.orientationData,
-                    fov, this.config.canvasSize
+                    this.config.viewState.fov, this.config.canvasSize
                 )
                 if (!ifin) continue;
                 const color = this.hipStarsColors[i];

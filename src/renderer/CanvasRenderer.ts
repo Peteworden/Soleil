@@ -143,7 +143,7 @@ export class CanvasRenderer {
             this.precessionCache = { angle: precessionAngle, jd: currentJd };
         }
 
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
+        const fov = this.config.viewState.fov;
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
 
         // tierは0から5
@@ -181,9 +181,9 @@ export class CanvasRenderer {
     drawBayerDesignations(bayerData: BayerFlamData[], limitingMagnitude: number): void {
         if (!bayerData || bayerData.length === 0) return;
         if (!this.config.displaySettings.showBayerFS) return;
-        if (this.config.viewState.fieldOfViewRA * this.config.viewState.fieldOfViewDec > 400) return;
+        if (this.config.viewState.fov.ra * this.config.viewState.fov.dec > 400) return;
 
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
+        const fov = this.config.viewState.fov;
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
 
         this.ctx.save();
@@ -227,26 +227,22 @@ export class CanvasRenderer {
         if (!["AEP", "view"].includes(this.config.displaySettings.mode)) return;
 
         let i, j;
-        const fieldOfViewRA = this.config.viewState.fieldOfViewRA;
-        const fieldOfViewDec = this.config.viewState.fieldOfViewDec;
-        const centerRA = this.config.viewState.centerRA;
-        const centerDec = this.config.viewState.centerDec;
-        const centerAz = this.config.viewState.centerAz;
-        const centerAlt = this.config.viewState.centerAlt;
+        const fov = this.config.viewState.fov;
+        const centerRadec = this.config.viewState.centerRadec;
+        const centerAzalt = this.config.viewState.centerAzalt;
         const siderealTime = this.config.siderealTime;
         const latitude = this.config.observationSite.latitude;
         const lstLat = { lst: siderealTime, lat: latitude };
         const mode = this.config.displaySettings.mode as 'AEP' | 'view';
 
-        const alpha = mode == 'AEP' ? centerRA : centerAz;
-        const beta = mode == 'AEP' ? centerDec : centerAlt;
+        const alpha = mode == 'AEP' ? centerRadec.ra : centerAzalt.az;
+        const beta = mode == 'AEP' ? centerRadec.dec : centerAzalt.alt;
 
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
 
         const [
             alphaInterval, betaInterval, alphaCalcInterval, betaCalcInterval
-        ] = getGridIntervals(fieldOfViewRA, fieldOfViewDec, alpha, beta);
+        ] = getGridIntervals(fov, alpha, beta);
         const [minBeta, maxBeta] = getBetaRange(fov, transformConfig);
         const minBetaLineIdx = Math.floor(minBeta / betaInterval);
         const maxBetaLineIdx = Math.ceil(maxBeta / betaInterval);
@@ -444,9 +440,9 @@ export class CanvasRenderer {
     }
 
     drawPoleMark(): void {
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
+        const fov = this.config.viewState.fov;
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
-        const minFov = Math.min(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec);
+        const minFov = Math.min(fov.ra, fov.dec);
         if (minFov > 20) return;
         const [ifinNorth, xyNorth] = RaDec.toCanvasXYifin({ ra: 0, dec: 90 }, fov, this.config.canvasSize, transformConfig);
         if (ifinNorth) {
@@ -466,7 +462,7 @@ export class CanvasRenderer {
         if (this.config.displaySettings.mode === 'AEP') return;
         const { x, y } = canvasXY;
         const a = 0.626 // 2025年始の天の北極とポラリスの離角
-        const a_canvas = a * this.config.canvasSize.height / this.config.viewState.fieldOfViewDec;
+        const a_canvas = a * this.config.canvasSize.height / this.config.viewState.fov.dec;
         this.ctx.font = '14px Arial';
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'bottom';
@@ -499,7 +495,6 @@ export class CanvasRenderer {
     drawConstellationLines(constellations: ConstellationData[]): void {
         if (constellations.length == 0) return;
         if (!this.config.displaySettings.showConstellationLines) return;
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.ctx.strokeStyle = this.colorManager.getColor('constellationLine');
         this.ctx.lineWidth = 1;
@@ -514,8 +509,8 @@ export class CanvasRenderer {
             for (const line of constellation.lines) {
                 coords1 = RaDec.precession({ ra: line[0], dec: line[1] }, precessionAngle);
                 coords2 = RaDec.precession({ ra: line[2], dec: line[3] }, precessionAngle);
-                [, { x: x1, y: y1 }] = RaDec.toCanvasXYifin(coords1, fov, this.config.canvasSize, transformConfig, true);
-                [, { x: x2, y: y2 }] = RaDec.toCanvasXYifin(coords2, fov, this.config.canvasSize, transformConfig, true);
+                [, { x: x1, y: y1 }] = RaDec.toCanvasXYifin(coords1, this.config.viewState.fov, this.config.canvasSize, transformConfig, true);
+                [, { x: x2, y: y2 }] = RaDec.toCanvasXYifin(coords2, this.config.viewState.fov, this.config.canvasSize, transformConfig, true);
                 if (this.coordinateConverter.shouldDrawLine(x1, y1, x2, y2, this.config.canvasSize, maxLengthSquared)) {
                     this.ctx.moveTo(x1, y1);
                     this.ctx.lineTo(x2, y2);
@@ -528,7 +523,6 @@ export class CanvasRenderer {
     writeConstellationNames(constellations: ConstellationData[]): void {
         if (constellations.length == 0) return;
         if (!this.config.displaySettings.showConstellationNames) return;
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         this.ctx.font = '12px Arial';
         this.ctx.textAlign = 'center';
@@ -537,7 +531,7 @@ export class CanvasRenderer {
         const precessionAngle = AstronomicalCalculator.precessionAngle('j2000', this.config.displayTime.jd);
         for (const constellation of constellations) {
             const radec = RaDec.precession({ ra: constellation.ra, dec: constellation.dec }, precessionAngle);
-            const canvasXY = RaDec.toCanvasXYifin(radec, fov, this.config.canvasSize, transformConfig);
+            const canvasXY = RaDec.toCanvasXYifin(radec, this.config.viewState.fov, this.config.canvasSize, transformConfig);
             if (!canvasXY[0]) continue;
             const { x, y } = canvasXY[1];
             this.objectInformation.push({
@@ -592,8 +586,8 @@ export class CanvasRenderer {
         const w2 = w * cosCameraTilt - h * sinCameraTilt;
         const h1 = -w * sinCameraTilt + h * cosCameraTilt;
         const h2 = -w * sinCameraTilt - h * cosCameraTilt;
-        const raWidth = this.config.viewState.fieldOfViewRA;
-        const decWidth = this.config.viewState.fieldOfViewDec;
+        const raWidth = this.config.viewState.fov.ra;
+        const decWidth = this.config.viewState.fov.dec;
         const centerX = this.canvas.width / 2;
         const centerY = this.canvas.height / 2;
         this.ctx.strokeStyle = this.colorManager.getColor('orange');
@@ -611,15 +605,14 @@ export class CanvasRenderer {
 
     drawMilkyWay(milkyWay: number[][]): void {
         if (milkyWay.length == 0) return;
-        if (Math.max(this.config.viewState.fieldOfViewRA, this.config.viewState.fieldOfViewDec) < 30) return;
-        const fov = { ra: this.config.viewState.fieldOfViewRA, dec: this.config.viewState.fieldOfViewDec };
+        if (Math.max(this.config.viewState.fov.ra, this.config.viewState.fov.dec) < 30) return;
         const transformConfig = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         const ifins: boolean[] = [];
         const screenXYs: number[][] = [];
         const precessionAngle = AstronomicalCalculator.precessionAngle('j2000', this.config.displayTime.jd);
         for (let i = 0; i < milkyWay.length; i++) {
             const radec = RaDec.precession({ ra: milkyWay[i][0], dec: milkyWay[i][1] }, precessionAngle);
-            const [ifin, { x, y }] = RaDec.toCanvasXYifin(radec, fov, this.config.canvasSize, transformConfig, true);
+            const [ifin, { x, y }] = RaDec.toCanvasXYifin(radec, this.config.viewState.fov, this.config.canvasSize, transformConfig, true);
             ifins.push(ifin);
             screenXYs.push([x, y]);
         }
@@ -655,10 +648,10 @@ export class CanvasRenderer {
             this.areaCandidatesCache != null &&
             Math.abs(jd - this.areaCandidatesCache.jd) < 10.0 &&
             this.areaCandidatesCache.mode == this.config.displaySettings.mode &&
-            this.areaCandidatesCache.centerRa == this.config.viewState.centerRA &&
-            this.areaCandidatesCache.centerDec == this.config.viewState.centerDec &&
-            this.areaCandidatesCache.fovRa == this.config.viewState.fieldOfViewRA &&
-            this.areaCandidatesCache.fovDec == this.config.viewState.fieldOfViewDec &&
+            this.areaCandidatesCache.centerRa == this.config.viewState.centerRadec.ra &&
+            this.areaCandidatesCache.centerDec == this.config.viewState.centerRadec.dec &&
+            this.areaCandidatesCache.fovRa == this.config.viewState.fov.ra &&
+            this.areaCandidatesCache.fovDec == this.config.viewState.fov.dec &&
             this.areaCandidatesCache.planet == this.config.observationSite.observerPlanet &&
             this.areaCandidatesCache.lat == this.config.observationSite.latitude &&
             this.areaCandidatesCache.lon == this.config.observationSite.longitude
@@ -677,8 +670,8 @@ export class CanvasRenderer {
             minDec: minDec, maxDec: maxDec, minRa: minRa, maxRa: maxRa,
             jd: jd,
             mode: this.config.displaySettings.mode,
-            centerRa: this.config.viewState.centerRA, centerDec: this.config.viewState.centerDec,
-            fovRa: this.config.viewState.fieldOfViewRA, fovDec: this.config.viewState.fieldOfViewDec,
+            centerRa: this.config.viewState.centerRadec.ra, centerDec: this.config.viewState.centerRadec.dec,
+            fovRa: this.config.viewState.fov.ra, fovDec: this.config.viewState.fov.dec,
             planet: this.config.observationSite.observerPlanet,
             lat: this.config.observationSite.latitude, lon: this.config.observationSite.longitude,
         };
