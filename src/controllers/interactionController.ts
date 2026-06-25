@@ -29,7 +29,7 @@ export class InteractionController {
 
     // 感度設定
     private zoomSensitivity = 0.001;
-    private lastDragTime = 0;
+    // private lastDragTime = 0;
 
     constructor(
         canvas: HTMLCanvasElement,
@@ -157,7 +157,7 @@ export class InteractionController {
             }
         }
 
-        const now = performance.now();
+        // const now = performance.now();
 
         const fov = this.latestState.fov; // deg
         const centerRaDec = this.latestState.centerRadec; // deg
@@ -172,10 +172,10 @@ export class InteractionController {
         if (!this.isScheduled) {
             requestAnimationFrame(() => {
                 if (this.isDragging) {
-                    if (now - this.lastDragTime < 30) {
-                        return;
-                    }
-                    this.lastDragTime = now;
+                    // if (now - this.lastDragTime < 30) {
+                    //     return;
+                    // }
+                    // this.lastDragTime = now;
                     if (e.pointerType == 'touch' && ['live', 'ar'].includes(mode)) {
                         return;
                     }
@@ -248,17 +248,17 @@ export class InteractionController {
                     this.lastX = e.clientX;
                     this.lastY = e.clientY;
                 } else if (this.isPinch) {
-                    if (now - this.lastDragTime < 100) {
-                        return;
-                    }
-                    this.lastDragTime = now;
+                    // if (now - this.lastDragTime < 100) {
+                    //     return;
+                    // }
+                    // this.lastDragTime = now;
                     const pointerIds = this.getActivePointerIds();
                     if (pointerIds.length < 2) return;
                     const x1 = this.pointerPositions.get(pointerIds[0])?.x;
                     const y1 = this.pointerPositions.get(pointerIds[0])?.y;
                     const x2 = this.pointerPositions.get(pointerIds[1])?.x;
                     const y2 = this.pointerPositions.get(pointerIds[1])?.y;
-                    if (!x1 || !y1 || !x2 || !y2) return;
+                    if (x1 === undefined || y1 === undefined || x2 === undefined || y2 === undefined) return;
                     const distance = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
                     if (this.baseDistance == 0) this.baseDistance = distance;
                     if (distance == 0) return;
@@ -357,14 +357,12 @@ export class InteractionController {
 
                     // starInfoが表示されている場合、クリックした場所がstarInfoの外側なら閉じる
                     const objectInfoElement = document.getElementById('objectInfo');
-                    let isClickOutsideObjectInfo = false;
                     const starInfoElement = document.getElementById('starInfo');
                     let isClickOutsideStarInfo = false;
                     if (objectInfoElement && objectInfoElement.style.display === 'block') {
                         const objectInfoRect = objectInfoElement.getBoundingClientRect();
                         if (clickX < objectInfoRect.left || clickX > objectInfoRect.right ||
                             clickY < objectInfoRect.top || clickY > objectInfoRect.bottom) {
-                            isClickOutsideObjectInfo = true;
                             ObjectInfoController.closeObjectInfo();
                         }
                     } else if (starInfoElement && starInfoElement.style.display === 'block') {
@@ -381,12 +379,6 @@ export class InteractionController {
                 }
             }
 
-            this.isDragging = false;
-            this.isPinch = false;
-            this.lastDragTime = performance.now();
-            this.activePointers.delete(e.pointerId);
-            this.pointerPositions.delete(e.pointerId);
-            this.canvas.releasePointerCapture(e.pointerId);
             if (e.pointerType === 'mouse') {
                 this.canvas.style.cursor = 'default';
                 this.canvas.removeEventListener('pointermove', this.onPointerMove);
@@ -396,14 +388,14 @@ export class InteractionController {
             }
             saveConfigToLocalStorage();
         } else {
-            this.isDragging = false;
-            this.isPinch = false;
-            this.lastDragTime = performance.now();
-            this.activePointers.delete(e.pointerId);
-            this.pointerPositions.delete(e.pointerId);
-            this.canvas.releasePointerCapture(e.pointerId);
             console.log('onPointerUp (2)', e.pointerType, e.pointerId);
         }
+        this.isDragging = false;
+        this.isPinch = false;
+        // this.lastDragTime = performance.now();
+        this.activePointers.delete(e.pointerId);
+        this.pointerPositions.delete(e.pointerId);
+        this.canvas.releasePointerCapture(e.pointerId);
         this.accumulatedScale = 1.0;
         this.baseDistance = 0;
     };

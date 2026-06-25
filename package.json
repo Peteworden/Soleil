@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run --prefix wasm asbuild && tsc --noEmit && vite build",
+    "build": "npm run --prefix asbuild && tsc --noEmit && vite build",
     "preview": "vite preview",
-    "build_old": "tsc && npm run --prefix wasm asbuild && cp -r public/. dist/",
+    "build_old": "tsc && npm run --prefix asbuild && cp -r public/. dist/",
     "watch": "tsc -w",
     "dev_old": "serve --cors -l 3000 --no-clipboard --no-request-logging --no-compression",
     "start": "concurrently \"npm run watch\" \"npm run dev\" && npx serve dist",
