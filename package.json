@@ -6,19 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npm run --prefix asbuild && tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "build_old": "tsc && npm run --prefix asbuild && cp -r public/. dist/",
-    "watch": "tsc -w",
-    "dev_old": "serve --cors -l 3000 --no-clipboard --no-request-logging --no-compression",
-    "start": "concurrently \"npm run watch\" \"npm run dev\" && npx serve dist",
-    "precommit": "npm run copy-files",
-    "cp-html": "copy .\\chart.html .\\Soleil\\chart.html",
-    "cp-dist": "Robocopy.exe .\\dist .\\Soleil\\dist /E /XF *.js.map",
-    "cp-style": "copy .\\styles\\styleChart.css .\\Soleil\\styles\\",
-    "cp-data": "Robocopy.exe .\\data .\\Soleil\\data /E /XF *_long.json",
-    "cp-starimages": "Robocopy.exe .\\chartImage .\\Soleil\\chartImage /E",
-    "cp-files": "npm run cp-html & npm run cp-dist & npm run cp-data & npm run cp-starimages & npm run cp-style & copy ..\\service-worker.js .\\"
+    "watch": "tsc -w"
   },
   "keywords": [],
   "author": "",
