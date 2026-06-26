@@ -117,9 +117,12 @@ export class SettingController {
         saveConfigToLocalStorage();
         // 設定反映後に全天体データを更新
         const config = getConfig();
-        const jd = config.displayTime.jd;
-        const observer = config.observationSite.observerPlanet;
-        SolarSystemManager.updateAllData(jd, observer);
+        SolarSystemManager.updateAllData(
+            config.displayTime.jd,
+            config.observationSite.observerPlanet,
+            config.observationSite.latitude,
+            config.siderealTime
+        );
 
         (window as any).renderAll();
     }
