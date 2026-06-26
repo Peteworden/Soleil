@@ -1,8 +1,4 @@
-import { getConfig } from '../core/ConfigManager';
-import { RaDec } from '../core/coordinates/index.js';
-import { SolarSystemPositionCalculator } from '../core/SolarSystemPositionCalculator.js';
-import { DataStore } from './DataStore.js';
-import { CartesianCoords, EquatorialCoordinates, LstLat } from 'types/index.js';
+import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
 
 type SolarObjectType = 'sun' | 'planet' | 'moon' | 'asteroid' | 'comet';
 
@@ -161,6 +157,9 @@ export type OrbitalObject = Planet | Asteroid | Comet;
 export function isPlanet(obj: SolarSystemObjectBase): obj is Planet {
     return obj.type === 'planet';
 }
+export function isEarth(obj: SolarSystemObjectBase): obj is Planet {
+    return obj.type === 'planet' && obj.jpnName === '地球';
+}
 export function isAsteroid(obj: SolarSystemObjectBase): obj is Asteroid {
     return obj.type === 'asteroid';
 }
@@ -179,131 +178,3 @@ export function isMoon(obj: SolarSystemObjectBase): obj is Moon {
 export function isOrbitalObject(obj: SolarSystemObjectBase): obj is OrbitalObject {
     return obj.type === 'asteroid' || obj.type === 'comet' || obj.type === 'planet';
 }
-
-/**
- * 太陽系天体データ管理クラス
- * データの読み込み、保存、検索、分類を統合管理
- */
-export class SolarSystemDataManager {
-    private static solarObjects: SolarSystemObjectBase[] = [];
-
-    static async initialize(): Promise<void> {
-        await this.loadSolarSystemObjectElements();
-        const config = getConfig();
-        this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
-    }
-
-    /**
-     * solarObjects.jsonからデータを読み込む（最初の読み込み時のみ）
-     */
-    static async loadSolarSystemObjectElements(): Promise<void> {
-        try {
-            const response = await fetch('./data/solarObjects.json');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data: SolarSystemObject[] = await response.json();
-            this.solarObjects = this.createSpecificClassObjectFromArray(data);
-
-            const userObjects = localStorage.getItem('userObject');
-            if (userObjects) {
-                const userObjectsData = JSON.parse(userObjects);
-                if (userObjectsData && userObjectsData.userSolarSystem) {
-                    for (const item of userObjectsData.userSolarSystem) {
-                        const object = item.content;
-                        if (object.orbit != null) {
-                            this.solarObjects.push(this.createSpecificClassObject(object));
-                        } else {
-                            userObjectsData.userSolarSystem.splice(userObjectsData.userSolarSystem.indexOf(item), 1);
-                        }
-                    }
-                }
-                localStorage.setItem('userObject', JSON.stringify(userObjectsData));
-            }
-        } catch (error) {
-            console.error('太陽系天体データの読み込みに失敗:', error);
-        }
-    }
-
-    static updateAllData(jd: number, observer: string | CartesianCoords): void {
-        SolarSystemPositionCalculator.updateAllData(this.solarObjects, jd, observer);
-    }
-
-    static addObjectAndRender(object: SolarSystemObjectBase): void {
-        this.solarObjects.push(object);
-        DataStore.triggerRenderUpdate();
-    }
-
-
-    /**
-     * UserObjectControllerで使用
-     * @param name 
-     * @param object 
-     */
-    static updateObjectAndRender(name: string, object: SolarSystemObjectBase): void {
-        const index = this.solarObjects.findIndex(obj => obj.jpnName === name);
-        if (name.length === 0 || index === -1) {
-            this.solarObjects.push(object);
-        } else {
-            this.solarObjects[index] = object;
-        }
-        const config = getConfig();
-        this.updateAllData(config.displayTime.jd, config.observationSite.observerPlanet);
-        DataStore.triggerRenderUpdate();
-    }
-
-    static createSpecificClassObject(data: SolarSystemObject): SolarSystemObjectBase {
-        if (isSun(data)) {
-            return new Sun(data);
-        } else if (isMoon(data)) {
-            return new Moon(data);
-        } else if (isPlanet(data)) {
-            return new Planet(data);
-        } else if (isAsteroid(data)) {
-            return new Asteroid(data);
-        } else if (isComet(data)) {
-            return new Comet(data);
-        } else {
-            throw new Error(`Unknown solar system object type: ${(data as any).type}`);
-        }
-    }
-
-    static createSpecificClassObjectFromArray(dataArray: SolarSystemObject[]): SolarSystemObjectBase[] {
-        return dataArray.map(data => this.createSpecificClassObject(data));
-    }
-
-    /**
-     * 全ての天体を取得
-     * SearchController, CanvasRendererで使用
-     */
-    static getAllObjects(): SolarSystemObjectBase[] {
-        return [...this.solarObjects];
-    }
-
-    static getSun(): Sun {
-        return this.solarObjects.find(obj => isSun(obj)) as Sun;
-    }
-
-    static getTwilight(lstLat: LstLat): string {
-        const sun = this.getSun();
-        if (!sun) return '';
-        const sunRaDec = sun.getRaDec();
-        const sunAltitude = RaDec.toAzalt(sunRaDec, lstLat).alt;
-        let twilight = '';
-        if (sunAltitude > -0.84) {
-            twilight = '昼';
-        } else if (sunAltitude > -6) {
-            twilight = '常用薄明';
-        } else if (sunAltitude > -12) {
-            twilight = '航海薄明';
-        } else if (sunAltitude > -18) {
-            twilight = '天文薄明';
-        } else if (sunAltitude <= -18) {
-            twilight = '深夜';
-        } else {
-            twilight = '';
-        }
-        return twilight;
-    }
-} 

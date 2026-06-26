@@ -16,17 +16,8 @@ export class DataStore {
     static starNames: StarName[] = [];
     static artemisEphemerides: number[][] = [];
 
-    // メシエデータ管理メソッド
     static getRecData(): MessierObject[] {
         return this.recData;
-    }
-
-    static setRecData(data: MessierObject[]): void {
-        this.recData = data;
-    }
-
-    static addRecObject(object: MessierObject): void {
-        this.recData.push(object);
     }
 
     static removeRecObject(name: string): boolean {
@@ -38,26 +29,13 @@ export class DataStore {
         return false;
     }
 
-    static addRecObjectAndRender(object: MessierObject): void {
-        this.addRecObject(object);
-        this.triggerRenderUpdate();
-    }
-
     // nameには変更前の名前が入ることを想定している
-    static updateRecObjectAndRender(name: string, object: MessierObject): void {
+    static updateRecObject(name: string, object: MessierObject): void {
         const index = this.recData.findIndex(obj => obj.getName() == name);
         if (name.length === 0 || index === -1) {
             this.recData.push(object);
         } else {
             this.recData[index] = object;
-        }
-        this.triggerRenderUpdate();
-    }
-
-    // レンダリング更新をトリガーするメソッド
-    static triggerRenderUpdate(): void {
-        if ((window as any).renderAll) {
-            (window as any).renderAll();
         }
     }
 }

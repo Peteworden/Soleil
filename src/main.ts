@@ -2,6 +2,7 @@
 import { ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData, GaiaData, HipData } from './types/index.js';
 
 import { CacheInfoController } from './controllers/CacheInfoController.js';
+import { InteractionController } from "./controllers/interactionController.js";
 import { ObjectInfoController } from './controllers/ObjectInfoController.js';
 import { ObservationSiteController } from './controllers/ObservationSiteController.js';
 import { ShareController } from './controllers/ShareController.js';
@@ -12,16 +13,15 @@ import { UserObjectController } from './controllers/UserObjectController.js';
 
 import { MessierObject, NGCObject, SharplessObject } from './models/CelestialObject.js';
 import { DataStore } from './models/DataStore.js';
-import { SolarSystemDataManager } from './models/SolarSystemObjects.js';
 
 import { CanvasRenderer } from './renderer/CanvasRenderer.js';
-import { InteractionController } from "./controllers/interactionController.js";
 
-import { AstronomicalCalculator } from './core/calculations.js';
 import { DataLoader } from './loaders/DataLoader.js';
 import { DeviceOrientationManager } from './device/deviceOrientation.js';
 import { updateInfoDisplay, handleResize } from './utils/uiUtils.js';
+import { AstronomicalCalculator } from './core/calculations.js';
 import { config, getConfig, resetConfig, setConfigChangeListener, updateConfig, updateConfigOnly } from './core/ConfigManager.js';
+import { SolarSystemManager } from './core/SolarSystemManager.js';
 
 const news: { time: string, title: string, text: string }[] = [
     { time: '2026-05-15T00:00:00', title: '高速化', text: '高速化などを目的に、プログラムを大幅に書き換えました。これまですごく無駄な処理をさせていたことがわかりました...。バグあったら教えてください。' },
@@ -450,7 +450,7 @@ export async function main() {
         };
         loadDataStep();
 
-        await SolarSystemDataManager.initialize();
+        await SolarSystemManager.initialize(config.displayTime.jd, config.observationSite.observerPlanet, config.observationSite.latitude, config.siderealTime);
 
         interactionController = new InteractionController(canvas, config, objectInfoController);
         (window as any).interactionController = interactionController;

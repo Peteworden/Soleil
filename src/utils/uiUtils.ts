@@ -1,11 +1,11 @@
 import { CanvasSize, LstLat } from "../types/index.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { CoordinateConverter } from "../core/coordinates.js";
-import { SolarSystemDataManager } from "../models/SolarSystemObjects.js";
 import { RaDec } from "../core/coordinates/index.js";
 import { getConfig, updateConfig } from "../core/ConfigManager";
 import { CanvasRenderer } from "../renderer/CanvasRenderer.js";
 import { DataStore } from "../models/DataStore.js";
+import { SolarSystemManager } from "../core/SolarSystemManager.js";
 
 export function updateInfoDisplay() {
     // 位置・時刻・中心座標・視野角の情報を更新
@@ -50,7 +50,7 @@ export function updateInfoDisplay() {
             minute: '2-digit'
         });
         const lstLat: LstLat = {lst: config.siderealTime, lat: config.observationSite.latitude};
-        const twilight = SolarSystemDataManager.getTwilight(lstLat);
+        const twilight = SolarSystemManager.getTwilight(lstLat);
         if (twilight != '') {
             timeInfo.textContent = timeText + ' (' + twilight + ')';
         }

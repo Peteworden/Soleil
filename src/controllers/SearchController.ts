@@ -1,11 +1,11 @@
 import { EquatorialCoordinates } from '../types/index.js';
 import { NGCObject, SharplessObject } from '../models/CelestialObject.js';
 import { DataStore } from '../models/DataStore.js';
-import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { ObjectInfoController } from './ObjectInfoController.js';
 import { Cartesian, RaDec } from '../core/coordinates/index.js';
 import { getConfig, updateConfig } from '../core/ConfigManager';
 import { InteractionController } from './interactionController.js';
+import { SolarSystemManager } from '../core/SolarSystemManager.js';
 
 interface SearchResult {
     type: 'planet' | 'constellation' | 'messier' | 'rec' | 'ngc' | 'ic' | 'sh2' | 'starName';
@@ -108,8 +108,8 @@ export class SearchController {
         const startResults: SearchResult[] = [];
         const includeResults: SearchResult[] = [];
 
-        if (SolarSystemDataManager.getAllObjects()) {
-            for (const planet of SolarSystemDataManager.getAllObjects()) {
+        if (SolarSystemManager.getAllObjects()) {
+            for (const planet of SolarSystemManager.getAllObjects()) {
                 const result: SearchResult = {
                     type: 'planet',
                     title: `${planet.jpnName} (${planet.engName})`,

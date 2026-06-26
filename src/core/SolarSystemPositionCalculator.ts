@@ -1,15 +1,17 @@
-import { Asteroid, Sun, Moon, MinorObject, Planet, SolarSystemObjectBase, isPlanet, isSun, isMinorObject, isMoon, EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements, isOrbitalObject, OrbitalObject } from '../models/SolarSystemObjects.js';
-import { COS_EPSL, DEG_TO_RAD, EARTH_RADIUS_TO_AU, EPSILON, KM_TO_AU, RAD_TO_DEG, SIN_EPSL } from '../utils/constants.js';
+import { Asteroid, Moon, MinorObject, Planet, SolarSystemObjectBase, isPlanet, isSun, isMinorObject, isMoon, EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements, isOrbitalObject, OrbitalObject, isEarth } from '../models/SolarSystemObjects.js';
+import { COS_EPSL, DEG_TO_RAD, EARTH_RADIUS_TO_AU, EPSILON, SIN_EPSL } from '../utils/constants.js';
 import { acosdeg, acosrad } from './mathUtils.js';
 import { Cartesian, RaDec } from './coordinates/index.js';
 import { CartesianCoords, EquatorialCoordinates } from 'types/index.js';
-import { getConfig } from '../core/ConfigManager.js';
 
 /**
  * observerは観測者がいる天体の名前か日心直交座標
  */
 export class SolarSystemPositionCalculator {
-    static updateAllData(objects: SolarSystemObjectBase[], jd: number, observer: string | CartesianCoords): void {
+    static updateAllData(
+        objects: SolarSystemObjectBase[], jd: number, observer: string | CartesianCoords,
+        lat: number, siderealTime: number
+    ): void {
         if (objects.length === 0) {
             console.warn('天体データがありません');
             return;
@@ -33,19 +35,21 @@ export class SolarSystemPositionCalculator {
             this.calculateXYZ(obj, jd);
         });
 
+        // 月のxyzも日心にする
         const moon = objects.find(obj => isMoon(obj));
-        const earth = objects.find(obj => isPlanet(obj) && obj.jpnName === "地球");
+        const earth = objects.find(obj => isEarth(obj));
         if (moon && earth) {
             moon.xyz = Cartesian.add(earth.xyz, moon.xyz);
         }
 
-        // 全天体の位置と等級を更新
+        // 全天体の観測者基準の位置と等級を更新
         if (typeof observer === 'string') {
-            const config = getConfig();
-            const latitude = config.observationSite.latitude;
-            const siderealTime = config.siderealTime;
+            if (lat == undefined || siderealTime == undefined) {
+                console.log('lat or sidereal time is undefined in solar system object updateAllData');
+                return;
+            }
             objects.forEach(obj => {
-                this.updateObjectRadecDistanceMagnitude(obj, jd, observer, observerPlanetObject.xyz, latitude, siderealTime);
+                this.updateObjectRadecDistanceMagnitude(obj, jd, observer, observerPlanetObject.xyz, lat, siderealTime);
             });
         } else {
             objects.forEach(obj => {
@@ -102,22 +106,18 @@ export class SolarSystemPositionCalculator {
             if (typeof observer === 'string' && observer === "地球") {
                 earth = observerPlanetObject!;
             } else {
-                earth = this.deepCopySolarSystemObject(objects0.find(obj => isPlanet(obj) && obj.jpnName === "地球") as SolarSystemObjectBase);
+                earth = this.deepCopySolarSystemObject(objects0.find(obj => isEarth(obj)) as SolarSystemObjectBase);
                 this.calculateXYZ(earth, jd);
             }
-            target.xyz.x += earth.xyz.x;
-            target.xyz.y += earth.xyz.y;
-            target.xyz.z += earth.xyz.z;
+            target.xyz = Cartesian.add(target.xyz, earth.xyz);
         } else if (typeof observer === 'string' && isMoon(observerPlanetObject!)) {
             if (target.jpnName == "地球") {
                 earth = target;
             } else {
-                earth = this.deepCopySolarSystemObject(objects0.find(obj => isPlanet(obj) && obj.jpnName === "地球") as SolarSystemObjectBase);
+                earth = this.deepCopySolarSystemObject(objects0.find(obj => isEarth(obj)) as SolarSystemObjectBase);
                 this.calculateXYZ(earth, jd);
             }
-            observerPlanetObject.xyz.x += earth.xyz.x;
-            observerPlanetObject.xyz.y += earth.xyz.y;
-            observerPlanetObject.xyz.z += earth.xyz.z;
+            observerPlanetObject.xyz = Cartesian.add(observerPlanetObject.xyz, earth.xyz);
         }
 
         if (typeof observer === 'string') {

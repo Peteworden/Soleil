@@ -2,10 +2,10 @@ import { MessierObject } from "../models/CelestialObject.js";
 import { CoordinateConverter } from "../core/coordinates.js";
 import { DataStore } from "../models/DataStore.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
-import { Asteroid, Comet, SolarSystemDataManager, SolarSystemObjectBase,
-    EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements
-} from "../models/SolarSystemObjects.js";
+import { Asteroid, Comet, SolarSystemObjectBase, EllipticOrbitalElements, ParabolicOrHyperbolicOrbitalElements } from "../models/SolarSystemObjects.js";
 import { ObjectInfoController } from "./ObjectInfoController.js";
+import { getConfig } from "../core/ConfigManager.js";
+import { SolarSystemManager } from "../core/SolarSystemManager.js";
 
 // フォームのクリアは入力画面を出るときに行う
 // idはLocalStorageを読んでいるときと編集するときだけ-1以外にする
@@ -13,7 +13,7 @@ import { ObjectInfoController } from "./ObjectInfoController.js";
 interface miniMessier {
     name: string;
     alt_name: string[];
-    coordinates: {ra: number, dec: number};
+    coordinates: { ra: number, dec: number };
     magnitude: number;
     type: string;
     description: string;
@@ -204,7 +204,7 @@ export class UserObjectController {
         // 既存の内容をクリア
         userObjectRecItems.innerHTML = '';
         userObjectSolarSystemItems.innerHTML = '';
-        
+
         const localUserObjectData = localStorage.getItem('userObject');
         if (!localUserObjectData) {
             userObjectRecItems.innerHTML = '<tr><td>お気に入り天体がありません</td></tr>';
@@ -238,14 +238,14 @@ export class UserObjectController {
                 <th width="${deleteButtonWidth}px"></th>
             `;
             userObjectRecItems.appendChild(headerRow);
-            
+
             // データ行を追加
             for (const userRecItem of userRecs) {
                 const userRecId = userRecItem.id;
                 const userRec = userRecItem.content;
                 const userRecElement = document.createElement('tr');
                 userRecElement.className = 'userObject-manage-item';
-                
+
                 // プロパティに直接アクセス
                 const ra = this.coordinateConverter.radeg2hm(userRec.coordinates.ra);
                 const dec = this.coordinateConverter.decdeg2dm(userRec.coordinates.dec);
@@ -258,11 +258,11 @@ export class UserObjectController {
                     <td width="${editButtonWidth}px"><button class="userObject-item-edit" type="button">詳細・編集</button></td>
                     <td width="${deleteButtonWidth}px"><button class="userObject-item-delete" type="button">削除</button></td>
                 `;
-                
+
                 // HTML挿入後にイベントリスナーを設定
                 const editButton = userRecElement.querySelector('.userObject-item-edit') as HTMLButtonElement;
                 const deleteButton = userRecElement.querySelector('.userObject-item-delete') as HTMLButtonElement;
-                
+
                 if (editButton) {
                     editButton.addEventListener('click', () => {
                         this.editUserRecObject(userRecId, userRec);
@@ -278,7 +278,7 @@ export class UserObjectController {
         } else {
             userObjectRecItems.innerHTML = '<tr><td>お気に入り天体がありません</td></tr>';
         }
-        
+
         // 太陽系天体の処理
         const userSolarSystem = userObjectData.userSolarSystem;
         if (userSolarSystem && userSolarSystem.length > 0) {
@@ -292,7 +292,7 @@ export class UserObjectController {
                 <th width="${deleteButtonWidth}px"></th>
             `;
             userObjectSolarSystemItems.appendChild(solarSystemHeaderRow);
-            
+
             // データ行を追加
             for (const userSolarSystemItem of userSolarSystem) {
                 const userSolarSystemId = userSolarSystemItem.id;
@@ -305,11 +305,11 @@ export class UserObjectController {
                     <td width="${editButtonWidth}px"><button class="userObject-item-edit" type="button">詳細・編集</button></td>
                     <td width="${deleteButtonWidth}px"><button class="userObject-item-delete" type="button">削除</button></td>
                 `;
-                
+
                 // HTML挿入後にイベントリスナーを設定
                 const editButton = userSolarSystemElement.querySelector('.userObject-item-edit') as HTMLButtonElement;
                 const deleteButton = userSolarSystemElement.querySelector('.userObject-item-delete') as HTMLButtonElement;
-                
+
                 if (editButton) {
                     editButton.addEventListener('click', () => {
                         this.editUserSolarSystemObject(userSolarSystemId, userSolarSystemObject);
@@ -335,7 +335,7 @@ export class UserObjectController {
         const decInput = document.getElementById('userObject-rec-dec') as HTMLInputElement;
         const magnitudeInput = document.getElementById('userObject-rec-mag') as HTMLInputElement;
         const descriptionInput = document.getElementById('userObject-rec-description') as HTMLTextAreaElement;
-        
+
         if (nameInput && altnameInput && typeSelect && raInput && decInput && magnitudeInput && descriptionInput) {
             const name: string = nameInput.value.trim();
             if (name.length === 0) {
@@ -396,11 +396,11 @@ export class UserObjectController {
                 description,
                 null // wiki
             );
-            
+
             // DataStoreに追加
             const previousName = this.deleteUserObject('rec', this.objectId);
             this.saveObject(this.objectId, recObject);
-            DataStore.updateRecObjectAndRender(previousName, recObject);
+            DataStore.updateRecObject(previousName, recObject);
             this.objectId = -1;
 
             this.setManagement();
@@ -412,9 +412,10 @@ export class UserObjectController {
             if (userObjectManage) {
                 userObjectManage.style.display = 'block';
             }
-            
+
             // フォームを白紙に
             this.clearRecForm();
+            (window as any).renderAll();
         }
     }
 
@@ -558,8 +559,8 @@ export class UserObjectController {
                 hiraganaName: hiraganaName,
                 engName: engName,
                 type: type,
-                xyz: {x: 0, y: 0, z: 0},
-                raDec: {ra: 0, dec: 0},
+                xyz: { x: 0, y: 0, z: 0 },
+                raDec: { ra: 0, dec: 0 },
                 distance: 0,
                 magnitude: 0,
                 orbit: {
@@ -576,14 +577,19 @@ export class UserObjectController {
             };
 
             const previousName = this.deleteUserObject('solarSystem', this.objectId);
+            const config = getConfig();
+            const jd = config.displayTime.jd;
+            const obsPlanet = config.observationSite.observerPlanet;
+            const lat = config.observationSite.latitude;
+            const sidTime = config.siderealTime;
             if (type === 'asteroid') {
                 const ellipticObject = new Asteroid(ellipticObjectJson);
                 this.saveObject(this.objectId, ellipticObject);
-                SolarSystemDataManager.updateObjectAndRender(previousName, ellipticObject);
+                SolarSystemManager.updateObject(previousName, ellipticObject, jd, obsPlanet, lat, sidTime);
             } else {
                 const ellipticObject = new Comet(ellipticObjectJson);
                 this.saveObject(this.objectId, ellipticObject);
-                SolarSystemDataManager.updateObjectAndRender(previousName, ellipticObject);
+                SolarSystemManager.updateObject(previousName, ellipticObject, jd, obsPlanet, lat, sidTime);
             }
             this.objectId = -1;
 
@@ -596,9 +602,10 @@ export class UserObjectController {
             if (userObjectManage) {
                 userObjectManage.style.display = 'block';
             }
-            
+
             // フォームを白紙に
             this.clearEllipticForm();
+            (window as any).renderAll();
         }
     }
 
@@ -691,8 +698,8 @@ export class UserObjectController {
                 hiraganaName: hiraganaName,
                 engName: engName,
                 type: 'comet',
-                xyz: {x: 0, y: 0, z: 0},
-                raDec: {ra: 0, dec: 0},
+                xyz: { x: 0, y: 0, z: 0 },
+                raDec: { ra: 0, dec: 0 },
                 distance: 0,
                 magnitude: 0,
                 orbit: {
@@ -709,7 +716,12 @@ export class UserObjectController {
 
             const previousName = this.deleteUserObject('solarSystem', this.objectId);
             this.saveObject(this.objectId, hyperbolicObject);
-            SolarSystemDataManager.updateObjectAndRender(previousName, hyperbolicObject);
+            const config = getConfig();
+            const jd = config.displayTime.jd;
+            const obsPlanet = config.observationSite.observerPlanet;
+            const lat = config.observationSite.latitude;
+            const sidTime = config.siderealTime;
+            SolarSystemManager.updateObject(previousName, hyperbolicObject, jd, obsPlanet, lat, sidTime);
             this.objectId = -1;
 
             this.setManagement();
@@ -721,8 +733,9 @@ export class UserObjectController {
             if (userObjectManage) {
                 userObjectManage.style.display = 'block';
             }
-            
+
             this.clearHyperbolicForm();
+            (window as any).renderAll();
         }
     }
 
@@ -823,8 +836,8 @@ export class UserObjectController {
                 hiraganaName: hiraganaName,
                 engName: engName,
                 type: 'comet',
-                xyz: {x: 0, y: 0, z: 0},
-                raDec: {ra: 0, dec: 0},
+                xyz: { x: 0, y: 0, z: 0 },
+                raDec: { ra: 0, dec: 0 },
                 distance: 0,
                 magnitude: 0,
                 orbit: {
@@ -841,7 +854,12 @@ export class UserObjectController {
 
             const previousName = this.deleteUserObject('solarSystem', this.objectId);
             this.saveObject(this.objectId, hyperbolicObject);
-            SolarSystemDataManager.updateObjectAndRender(previousName, hyperbolicObject);
+            const config = getConfig();
+            const jd = config.displayTime.jd;
+            const obsPlanet = config.observationSite.observerPlanet;
+            const lat = config.observationSite.latitude;
+            const sidTime = config.siderealTime;
+            SolarSystemManager.updateObject(previousName, hyperbolicObject, jd, obsPlanet, lat, sidTime);
             this.objectId = -1;
 
             this.setManagement();
@@ -853,8 +871,9 @@ export class UserObjectController {
             if (userObjectManage) {
                 userObjectManage.style.display = 'block';
             }
-            
+
             this.clearHyperbolicForm();
+            (window as any).renderAll();
         }
     }
 
@@ -887,7 +906,7 @@ export class UserObjectController {
         const nameInput = document.getElementById('userObject-rec-name') as HTMLInputElement;
         if (nameInput) {
             nameInput.focus();
-            nameInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         this.objectId = userRecId;
         userObjectRec.style.display = 'block';
@@ -907,7 +926,7 @@ export class UserObjectController {
         console.log(userObject);
 
         const orbit_ymdhms = AstronomicalCalculator.calculateYmdhmsFromJd(userObject.orbit.t0);
-        const orbit_ymd = `${orbit_ymdhms.year}-${orbit_ymdhms.month}-${(orbit_ymdhms.day+orbit_ymdhms.hour/24+orbit_ymdhms.minute/1440).toFixed(2)}`;
+        const orbit_ymd = `${orbit_ymdhms.year}-${orbit_ymdhms.month}-${(orbit_ymdhms.day + orbit_ymdhms.hour / 24 + orbit_ymdhms.minute / 1440).toFixed(2)}`;
         const orbitType = userObject.orbit.e < 0.99999999 ? 'elliptic' : (userObject.orbit.e < 1.00000001 ? 'parabolic' : 'hyperbolic');
         let fieldMappings = {
             [`userObject-${orbitType}-type`]: userObject.type,
@@ -937,7 +956,7 @@ export class UserObjectController {
             fieldMappings['userObject-hyperbolic-q'] = orbit.q;
             fieldMappings['userObject-hyperbolic-e'] = orbit.e;
         }
-        
+
         for (const [id, value] of Object.entries(fieldMappings)) {
             const element = document.getElementById(id) as HTMLInputElement | HTMLSelectElement;
             if (element && value != null) {
@@ -949,10 +968,10 @@ export class UserObjectController {
         const nameInput = document.getElementById(`userObject-${orbitType}-jpnName`) as HTMLInputElement;
         if (nameInput) {
             nameInput.focus();
-            nameInput.scrollIntoView({behavior: 'smooth', block: 'center'});
+            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
         this.objectId = userObjectId;
-    
+
         if (orbitType === 'elliptic') {
             userObjectElliptic.style.display = 'block';
         } else if (orbitType === 'parabolic') {
@@ -1097,11 +1116,14 @@ export class UserObjectController {
     }
 
     // 本当に削除する
-    private static deleteUserObject(type: string, userObjectId: number): string{
+    private static deleteUserObject(type: string, userObjectId: number): string {
         const savedUserObjectData = localStorage.getItem('userObject');
         let ans = '';
         if (savedUserObjectData) {
-            const savedUserObjects: {userRecs: {id:number, content:miniMessier}[], userSolarSystem: {id:number, content:miniElliptic | miniParabolic | miniHyperbolic}[]} = JSON.parse(savedUserObjectData);
+            const savedUserObjects: {
+                userRecs: { id: number, content: miniMessier }[],
+                userSolarSystem: { id: number, content: miniElliptic | miniParabolic | miniHyperbolic }[]
+            } = JSON.parse(savedUserObjectData);
             if (type === 'rec') {
                 const previousObject = savedUserObjects.userRecs.find(obj => obj.id === userObjectId);
                 if (previousObject) {
@@ -1153,7 +1175,7 @@ export class UserObjectController {
         // 枠の色を元に戻す
         input.style.border = '';
         // input.style.backgroundColor = '';
-        
+
         // エラーメッセージを削除
         const errorDiv = document.getElementById(`userObject-${title}-error`);
         if (errorDiv) {
@@ -1270,11 +1292,11 @@ export class UserObjectController {
         const savedUserObjectData = localStorage.getItem('userObject');
         let ans = '';
         if (savedUserObjectData) {
-            const savedUserObjects: {userRecs: {id:number, content:MessierObject}[], userSolarSystem: {id:number, content:SolarSystemObjectBase}[]} = JSON.parse(savedUserObjectData);
+            const savedUserObjects: { userRecs: { id: number, content: MessierObject }[], userSolarSystem: { id: number, content: SolarSystemObjectBase }[] } = JSON.parse(savedUserObjectData);
             if (object instanceof MessierObject) {
                 // 最初のrec
                 if (savedUserObjects.userRecs.length === 0) {
-                    savedUserObjects.userRecs.push({id:0, content:object});
+                    savedUserObjects.userRecs.push({ id: 0, content: object });
                 } else {
                     const previousObject = savedUserObjects.userRecs.find(obj => obj.id === id);
                     if (previousObject) {
@@ -1283,13 +1305,13 @@ export class UserObjectController {
                         ans = previousName;
                     } else { // ないはず
                         const biggestId = Math.max(...savedUserObjects.userRecs.map(obj => obj.id));
-                        savedUserObjects.userRecs.push({id:biggestId+1, content:object});
+                        savedUserObjects.userRecs.push({ id: biggestId + 1, content: object });
                         console.log("userRecs was empty but id was not -1");
                     }
                 }
             } else {
                 if (savedUserObjects.userSolarSystem.length === 0) {
-                    savedUserObjects.userSolarSystem.push({id:0, content:object});
+                    savedUserObjects.userSolarSystem.push({ id: 0, content: object });
                 } else {
                     const previousObject = savedUserObjects.userSolarSystem.find(obj => obj.id === id);
                     if (previousObject) {
@@ -1298,17 +1320,17 @@ export class UserObjectController {
                         ans = previousName;
                     } else {
                         const biggestId = Math.max(...savedUserObjects.userSolarSystem.map(obj => obj.id));
-                        savedUserObjects.userSolarSystem.push({id:biggestId+1, content:object});
+                        savedUserObjects.userSolarSystem.push({ id: biggestId + 1, content: object });
                     }
                 }
             }
             localStorage.setItem('userObject', JSON.stringify(savedUserObjects));
         } else {
             if (object instanceof MessierObject) {
-                const savedUserObjects: {userRecs: {id:number, content:MessierObject}[], userSolarSystem: {id:number, content:SolarSystemObjectBase}[]} = {userRecs: [{id:0, content:object}], userSolarSystem: []};
+                const savedUserObjects: { userRecs: { id: number, content: MessierObject }[], userSolarSystem: { id: number, content: SolarSystemObjectBase }[] } = { userRecs: [{ id: 0, content: object }], userSolarSystem: [] };
                 localStorage.setItem('userObject', JSON.stringify(savedUserObjects));
             } else {
-                const savedUserObjects: {userRecs: {id:number, content:MessierObject}[], userSolarSystem: {id:number, content:SolarSystemObjectBase}[]} = {userRecs: [], userSolarSystem: [{id:0, content:object}]};
+                const savedUserObjects: { userRecs: { id: number, content: MessierObject }[], userSolarSystem: { id: number, content: SolarSystemObjectBase }[] } = { userRecs: [], userSolarSystem: [{ id: 0, content: object }] };
                 localStorage.setItem('userObject', JSON.stringify(savedUserObjects));
             }
         }

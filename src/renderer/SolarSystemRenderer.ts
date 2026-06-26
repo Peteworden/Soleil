@@ -1,6 +1,6 @@
 import { Cartesian, RaDec } from "../core/coordinates/index.js";
-import { MinorObject, Moon, Planet, SolarSystemDataManager, SolarSystemObjectBase, Sun } from "../models/SolarSystemObjects.js";
-import { CartesianCoords, EquatorialCoordinates, Fov, ObjectInformation, StarChartConfig, TransformModeConfig } from "../types/index.js";
+import { MinorObject, Moon, Planet, SolarSystemObjectBase, Sun } from "../models/SolarSystemObjects.js";
+import { CartesianCoords, EquatorialCoordinates, ObjectInformation, StarChartConfig, TransformModeConfig } from "../types/index.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { ColorManager } from "./colorManager.js";
@@ -8,6 +8,7 @@ import { SolarSystemPositionCalculator } from "../core/SolarSystemPositionCalcul
 import { AU_TO_EARTH_RADIUS, AU_TO_KM, DEG_TO_RAD, EPSILON, KM_TO_AU } from "../utils/constants.js";
 import { DataStore } from "../models/DataStore.js";
 import { CoordinateConverter } from "../core/coordinates.js";
+import { SolarSystemManager } from "../core/SolarSystemManager";
 
 export class SolarSystemRenderer {
     private fullMoonImage_256px: HTMLImageElement;
@@ -23,7 +24,7 @@ export class SolarSystemRenderer {
         private colorManager: ColorManager,
         private orientationData: { alpha: number, beta: number, gamma: number, webkitCompassHeading: number }
     ) {
-        const chartImageDir = './chartImage/'; // SolarSystemRenderer.jsはrenderer直下にある
+        const chartImageDir = './chartImage/';
         this.fullMoonImage_256px = new Image();
         this.fullMoonImage_256px.src = chartImageDir + 'fullMoon_v2_256px.png';
         this.fullMoonImage_256px.onload = () => {
@@ -45,7 +46,7 @@ export class SolarSystemRenderer {
     }
 
     drawSolarSystemObjects(objectInformation: Array<ObjectInformation>): void {
-        const objects = SolarSystemDataManager.getAllObjects();
+        const objects = SolarSystemManager.getAllObjects();
         if (objects.length == 0) return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
         const zeroMagSize = starSize_0mag(this.config.viewState.fov);
@@ -523,9 +524,6 @@ export class SolarSystemRenderer {
         this.ctx.textBaseline = 'bottom';
         const coords = minorObject.getRaDec();
         const screenXY = RaDec.toCanvasXYifin(coords, this.config.viewState.fov, this.config.canvasSize, this.transformConfig);
-        if (minorObject.getEnglishName() === 'Torifune') {
-            console.log(screenXY);
-        }
         if (!screenXY[0]) return;
         const { x, y } = screenXY[1];
         objectInformation.push({
@@ -575,7 +573,7 @@ export class SolarSystemRenderer {
         const timeDisplayStep = this.config.planetMotion.timeDisplayStep;
         const timeDisplayContent = this.config.planetMotion.timeDisplayContent;
         const halfCount = Math.floor(duration / interval);
-        const objectsBaseData = SolarSystemDataManager.getAllObjects();
+        const objectsBaseData = SolarSystemManager.getAllObjects();
         for (const planet of this.config.planetMotion.planet) {
             if (planet == this.config.observationSite.observerPlanet) continue;
             const jds: number[] = [];

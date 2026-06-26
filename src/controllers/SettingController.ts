@@ -1,10 +1,10 @@
 import { AstronomicalCalculator } from "../core/calculations.js";
 import { TimeController } from "./TimeController.js";
-import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { DisplaySettings, DisplayTime, ObservationSite, StarChartConfig } from "types/index.js";
 import { getConfig, saveConfigToLocalStorage, updateConfig } from "../core/ConfigManager.js";
 import { DeviceOrientationManager } from "device/deviceOrientation.js";
 import { CanvasRenderer } from "renderer/CanvasRenderer.js";
+import { SolarSystemManager } from "../core/SolarSystemManager.js";
 
 export class SettingController {
     private deviceOrientationManager;
@@ -119,7 +119,7 @@ export class SettingController {
         const config = getConfig();
         const jd = config.displayTime.jd;
         const observer = config.observationSite.observerPlanet;
-        SolarSystemDataManager.updateAllData(jd, observer);
+        SolarSystemManager.updateAllData(jd, observer);
 
         (window as any).renderAll();
     }

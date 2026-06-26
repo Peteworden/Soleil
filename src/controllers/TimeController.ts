@@ -1,8 +1,8 @@
 
 import { AzAlt, RaDec } from "../core/coordinates/index.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
-import { SolarSystemDataManager } from '../models/SolarSystemObjects.js';
 import { getConfig, updateConfig } from "../core/ConfigManager";
+import { SolarSystemManager } from "../core/SolarSystemManager.js";
 
 export class TimeController {
     private static timeControl: HTMLDivElement | null = null;
@@ -316,7 +316,7 @@ export class TimeController {
             viewState.centerRadec = centerRaDec;
         }
 
-        SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
+        SolarSystemManager.updateAllData(jd, config.observationSite.observerPlanet);
         this.updateTimeDisplay();
 
         updateConfig({
@@ -428,7 +428,7 @@ export class TimeController {
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
             const newCenterHorizontal = RaDec.toAzalt(config.viewState.centerRadec, lstlat);
-            SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
+            SolarSystemManager.updateAllData(jd, config.observationSite.observerPlanet);
             updateConfig({
                 viewState: {
                     ...config.viewState,
@@ -457,7 +457,7 @@ export class TimeController {
             const jd = AstronomicalCalculator.jdTTFromYmdhmsJst(y, m, d, h, mi, s);
             const lstlat = { lst: config.siderealTime, lat: config.observationSite.latitude };
             const newCenterEquatorial = AzAlt.toRadec(config.viewState.centerAzalt, lstlat);
-            SolarSystemDataManager.updateAllData(jd, config.observationSite.observerPlanet);
+            SolarSystemManager.updateAllData(jd, config.observationSite.observerPlanet);
             updateConfig({
                 viewState: {
                     ...config.viewState,
