@@ -17,7 +17,6 @@ export class TimeController {
 
     // スライダー基準点（スライダー操作中は更新しない）
     private static sliderBaseJd: number = 0;
-    private static isDragging: boolean = false;
 
     // 初期化済みフラグ（イベントリスナーの重複登録を防止）
     private static isInitialized: boolean = false;
@@ -59,12 +58,10 @@ export class TimeController {
 
         // スライダーイベント
         this.timeSlider.addEventListener('input', (e) => {
-            this.isDragging = true;
             this.handleSliderInput(e);
         });
 
         this.timeSlider.addEventListener('change', (e) => {
-            this.isDragging = false;
             // ドラッグ終了後、基準点を更新
             const config = getConfig();
             this.sliderBaseJd = config.displayTime.jd;
@@ -174,13 +171,18 @@ export class TimeController {
     }
 
     // 時刻表示を更新
-    private static updateTimeDisplay() {
+    private static updateTimeDisplay(
+        mo?: number, day?: number, hr?: number, mi?: number
+    ) {
         const display = document.getElementById('timeDisplayCompact');
         if (!display) return;
 
-        const config = getConfig();
-        const dt = config.displayTime;
-        display.textContent = `${dt.month}/${dt.day} ${String(dt.hour).padStart(2, '0')}:${String(dt.minute).padStart(2, '0')}`;
+        if (mo == undefined || day == undefined || hr == undefined || mi == undefined) {
+            const config = getConfig();
+            const dt = config.displayTime;
+            mo = dt.month; day = dt.day; hr = dt.hour; mi = dt.minute;
+        }
+        display.textContent = `${mo}/${day} ${String(hr).padStart(2, '0')}:${String(mi).padStart(2, '0')}`;
     }
 
     // 一歩進む
@@ -316,9 +318,6 @@ export class TimeController {
             viewState.centerRadec = centerRaDec;
         }
 
-        SolarSystemManager.updateAllData(jd, config.observationSite.observerPlanet, lstlat.lat, lstlat.lst);
-        this.updateTimeDisplay();
-
         updateConfig({
             viewState: viewState,
             displayTime: {
@@ -334,6 +333,9 @@ export class TimeController {
             },
             siderealTime: AstronomicalCalculator.calculateLocalSiderealTime(jd, config.observationSite.longitude || 135)
         });
+
+        SolarSystemManager.updateAllData(jd, config.observationSite.observerPlanet, lstlat.lat, lstlat.lst);
+        this.updateTimeDisplay(targetJd.month, targetJd.day, targetJd.hour, targetJd.minute);
     }
 
     private static handleSliderInput(event: Event) {
@@ -350,6 +352,7 @@ export class TimeController {
         }
 
         const jd = AstronomicalCalculator.calculateCurrentJdTT();
+        console.log('set To current time', jd);
         this.setTime(jd);
     }
 

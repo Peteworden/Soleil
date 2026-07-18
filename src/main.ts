@@ -1074,6 +1074,58 @@ function showNewsPopupIfNeeded() {
     }
 }
 
+export function showTemporaryWarning(message: string) {
+    // 既存の警告トーストがあれば一度削除する（連続タップ対策）
+    const existingToast = document.getElementById('runtime-toast-warning');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // トースト用のコンテナ要素を作成
+    const toast = document.createElement('div');
+    toast.id = 'runtime-toast-warning';
+    toast.innerText = message;
+
+    // スタイルをJavaScript側で直接指定（親要素の影響を受けない固定配置）
+    Object.assign(toast.style, {
+        position: 'fixed',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: '#ff4d4d',
+        color: '#ffffff',
+        padding: '12px 24px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        zIndex: '9999', // 最前面に表示
+        fontSize: '14px',
+        fontWeight: 'bold',
+        opacity: '0',
+        transition: 'opacity 0.3s ease',
+        pointerEvents: 'none', // クリックの邪魔をしない
+        textAlign: 'center',
+        maxWidth: '90%'
+    });
+
+    document.body.appendChild(toast);
+
+    // フェードイン
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+    });
+
+    // 2秒間（2000ms）表示したあと、フェードアウトして削除
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        // アニメーションが終わるのを待ってから要素を完全に削除
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 2000);
+}
+
 /**
  * デバッグ情報をタイトルバーの右端に表示
  * @param text 表示するテキスト

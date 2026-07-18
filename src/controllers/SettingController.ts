@@ -5,6 +5,7 @@ import { getConfig, saveConfigToLocalStorage, updateConfig } from "../core/Confi
 import { DeviceOrientationManager } from "device/deviceOrientation.js";
 import { CanvasRenderer } from "renderer/CanvasRenderer.js";
 import { SolarSystemManager } from "../core/SolarSystemManager.js";
+import { showTemporaryWarning } from "../main.js";
 
 export class SettingController {
     private deviceOrientationManager;
@@ -231,13 +232,35 @@ export class SettingController {
             if (realTime.value === 'off') {
                 const dtlValue = dtlInput.value; // "2024-01-15T10:30" 形式
                 if (dtlValue) {
-                    const date = new Date(dtlValue);
-                    year = date.getFullYear();
-                    month = date.getMonth() + 1;
-                    day = date.getDate();
-                    hour = date.getHours();
-                    minute = date.getMinutes();
-                    second = date.getSeconds();
+                    const match = dtlValue.match(/^([+-]?\d+)-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+                    if (match) {
+                        year = parseInt(match[1], 10);
+                        month = parseInt(match[2], 10);
+                        day = parseInt(match[3], 10);
+                        hour = parseInt(match[4], 10);
+                        minute = parseInt(match[5], 10);
+                        second = match[6] ? parseInt(match[6], 10) : 0;
+
+                        // ★ 1582年10月5日 〜 10月14日の存在しない期間を判定
+                        if (year === 1582 && month === 10 && day >= 5 && day <= 14) {
+                            // 動的トーストで警告を表示（親要素が消えても2秒間残る）
+                            showTemporaryWarning("※1582年10月5日〜14日は暦の改定により存在しないため、10月15日に自動補正されました。");
+
+                            // グレゴリオ暦の開始日に強制補正
+                            day = 15;
+                            hour = 0;
+                            minute = 0;
+                            second = 0;
+
+                            // 入力フォーム側の表示も書き換え
+                            dtlInput.value = `1582-10-15T00:00`;
+                        }
+                    } else {
+                        // フォールバック（パース失敗時）
+                        const t = this.config.displayTime;
+                        year = t.year; month = t.month; day = t.day;
+                        hour = t.hour; minute = t.minute; second = t.second;
+                    }
                 } else {
                     // デフォルト値
                     const t = this.config.displayTime;
@@ -259,8 +282,11 @@ export class SettingController {
                 hour = currentJd.hour;
                 minute = currentJd.minute;
                 second = currentJd.second;
-                // YYYY-MM-DDTHH:MM 形式でローカル時間を直接設定
-                const localDateTime = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+                // input[type="datetime-local"] に値を戻す際は、4桁未満の年に対応するためパディング
+                const formatYear = year < 0
+                    ? `-${String(Math.abs(year)).padStart(4, '0')}`
+                    : String(year).padStart(4, '0');
+                const localDateTime = `${formatYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
                 dtlInput.value = localDateTime;
                 if (realTime.value === 'radec') {
                     TimeController.toggleRealTime('radec');
