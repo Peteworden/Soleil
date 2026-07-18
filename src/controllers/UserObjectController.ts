@@ -468,7 +468,7 @@ export class UserObjectController {
                     const year: number = parseInt(epochYmdArray[0]);
                     const month: number = parseInt(epochYmdArray[1]);
                     const day: number = parseFloat(epochYmdArray[2]);
-                    epoch = AstronomicalCalculator.calculateJdFromYmdhms(year, month, day);
+                    epoch = AstronomicalCalculator.calculateJdUtcFromYmdhmsUtc(year, month, day);
                     if (isNaN(epoch)) {
                         this.showError('epoch', epochYmdInput, '元期はYYYY-MM-DD(.dd)の形式で入力してください');
                         return;
@@ -649,7 +649,7 @@ export class UserObjectController {
                     const year: number = parseInt(epochYmdArray[0]);
                     const month: number = parseInt(epochYmdArray[1]);
                     const day: number = parseFloat(epochYmdArray[2]);
-                    epoch = AstronomicalCalculator.calculateJdFromYmdhms(year, month, day);
+                    epoch = AstronomicalCalculator.calculateJdUtcFromYmdhmsUtc(year, month, day);
                     this.clearError('epoch', epochYmdInput);
                 } catch (error) {
                     this.showError('epoch', epochYmdInput, '元期はYYYY-MM-DD(.dd)の形式で入力してください');
@@ -780,7 +780,7 @@ export class UserObjectController {
                     const year: number = parseInt(epochYmdArray[0]);
                     const month: number = parseInt(epochYmdArray[1]);
                     const day: number = parseFloat(epochYmdArray[2]);
-                    epoch = AstronomicalCalculator.calculateJdFromYmdhms(year, month, day);
+                    epoch = AstronomicalCalculator.calculateJdUtcFromYmdhmsUtc(year, month, day);
                     this.clearError('epoch', epochYmdInput);
                 } catch (error) {
                     this.showError('epoch', epochYmdInput, '元期はYYYY-MM-DD(.dd)の形式で入力してください');
@@ -925,7 +925,7 @@ export class UserObjectController {
 
         console.log(userObject);
 
-        const orbit_ymdhms = AstronomicalCalculator.calculateYmdhmsFromJd(userObject.orbit.t0);
+        const orbit_ymdhms = AstronomicalCalculator.calculateYmdhmsLocalFromJdUtc(userObject.orbit.t0, 0);
         const orbit_ymd = `${orbit_ymdhms.year}-${orbit_ymdhms.month}-${(orbit_ymdhms.day + orbit_ymdhms.hour / 24 + orbit_ymdhms.minute / 1440).toFixed(2)}`;
         const orbitType = userObject.orbit.e < 0.99999999 ? 'elliptic' : (userObject.orbit.e < 1.00000001 ? 'parabolic' : 'hyperbolic');
         let fieldMappings = {

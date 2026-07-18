@@ -2,28 +2,6 @@ import { StarChartConfig, ViewState } from '../types/index.js';
 import { DEG_TO_RAD } from '../utils/constants.js';
 
 export class AstronomicalCalculator {
-    // static YmdhmsLocalFromYmdhmsUtc(
-    //     yr: number, mo: number, dy: number, hr: number, mi: number, sc: number, timezone: number
-    // ): { year: number, month: number, day: number, hour: number, minute: number, second: number } {
-    //     hr += timezone;
-    //     if (hr > 24) {
-    //         hr -= 24;
-    //         dy++;
-    //     }
-    //     let daysOfMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 11];
-    //     const isUruu = (yr % 4 === 0 && yr % 100 != 0) || (yr % 400 === 0);
-    //     if (isUruu) daysOfMonth[1] = 29;
-    //     if (daysOfMonth[mo - 1] < dy) {
-    //         dy -= daysOfMonth[mo - 1];
-    //         mo += 1;
-    //     }
-    //     if (mo > 12) {
-    //         mo -= 12;
-    //         yr += 1;
-    //     }
-    //     return {year: yr, month: mo, day: dy, hour: hr, minute: mi, second: sc};
-    // }
-
     static jdUTCtoJdTT(jdUTC: number): number {
         return jdUTC + 0.0008;
     }
@@ -52,7 +30,7 @@ export class AstronomicalCalculator {
     }
 
     // ユリウス日を計算
-    static calculateJdFromYmdhmsUtc(year: number, month: number, day: number, hour: number = 0, minute: number = 0, second: number = 0): number {
+    static calculateJdUtcFromYmdhmsUtc(year: number, month: number, day: number, hour: number = 0, minute: number = 0, second: number = 0): number {
         // ★ 時刻のアンダーフロー/オーバーフローを日数に変換して正規化する
         // hour - 9 などでマイナスになっても、Math.floor を使えば正しく前日に繰り下がります
         const extraDays = Math.floor(hour / 24);
@@ -103,7 +81,7 @@ export class AstronomicalCalculator {
     }
 
     static jdTTFromYmdhmsJst(year: number, month: number, day: number, hour: number = 0, minute: number = 0, second: number = 0): number {
-        const jdUtc = this.calculateJdFromYmdhmsUtc(year, month, day, hour - 9, minute, second);
+        const jdUtc = this.calculateJdUtcFromYmdhmsUtc(year, month, day, hour - 9, minute, second);
         return this.jdUTCtoJdTT(jdUtc);
     }
 
