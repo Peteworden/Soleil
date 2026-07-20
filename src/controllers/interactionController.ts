@@ -164,6 +164,7 @@ export class InteractionController {
         const centerAzAlt = this.latestState.centerAzalt; // deg
         const lstLat = { lst: this.config.siderealTime, lat: this.config.observationSite.latitude };
         const mode = this.config.displaySettings.mode;
+        const canvasRect = this.canvas.getBoundingClientRect();
 
         // ポインターの座標を更新
         // 複数の指が同時に動くときはonPointerMoveは指毎に呼ばれるので、描画間隔を時間で管理するときもこれはreturnの前に呼ぶ
@@ -172,10 +173,6 @@ export class InteractionController {
         if (!this.isScheduled) {
             requestAnimationFrame(() => {
                 if (this.isDragging) {
-                    // if (now - this.lastDragTime < 30) {
-                    //     return;
-                    // }
-                    // this.lastDragTime = now;
                     if (e.pointerType == 'touch' && ['live', 'ar'].includes(mode)) {
                         return;
                     }
@@ -191,12 +188,11 @@ export class InteractionController {
                     if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
                         return;
                     }
-                    // console.log("slow enough");
 
                     // 前回のポインター位置のスクリーン座標（キャンバス左上からの座標）
-                    const lastXY = { x: this.lastX - this.canvas.offsetLeft, y: this.lastY - this.canvas.offsetTop };
+                    const lastXY = { x: this.lastX - canvasRect.left, y: this.lastY - canvasRect.top };
                     // 現在のポインター位置のスクリーン座標
-                    const currentXY = { x: e.clientX - this.canvas.offsetLeft, y: e.clientY - this.canvas.offsetTop };
+                    const currentXY = { x: e.clientX - canvasRect.left, y: e.clientY - canvasRect.top };
 
                     // 前回のポインター位置のスクリーンRaDec
                     const lastCanvasRaDec = CanvasXy.toCanvasRadec(lastXY, fov, this.config.canvasSize);
@@ -218,6 +214,7 @@ export class InteractionController {
                             centerRaDec.ra = RaDec.getCenterByCanvasRadec(lastRadec, currentCanvasRadec, centerRaDec.dec).ra;
                         }
                         centerRaDec.ra = (centerRaDec.ra % 360 + 360) % 360;
+                        console.log(`centerRaDec: ${centerRaDec.ra}, ${centerRaDec.dec}`);
                         const newCenterAzalt = RaDec.toAzalt(centerRaDec, lstLat);
                         centerAzAlt.az = newCenterAzalt.az;
                         centerAzAlt.alt = newCenterAzalt.alt;
@@ -248,10 +245,6 @@ export class InteractionController {
                     this.lastX = e.clientX;
                     this.lastY = e.clientY;
                 } else if (this.isPinch) {
-                    // if (now - this.lastDragTime < 100) {
-                    //     return;
-                    // }
-                    // this.lastDragTime = now;
                     const pointerIds = this.getActivePointerIds();
                     if (pointerIds.length < 2) return;
                     const x1 = this.pointerPositions.get(pointerIds[0])?.x;
@@ -264,7 +257,7 @@ export class InteractionController {
                     if (distance == 0) return;
 
                     // ピンチ中心点のスクリーン座標（キャンバス左上からの座標）
-                    const pinchXY = { x: (x1 + x2) / 2 - this.canvas.offsetLeft, y: (y1 + y2) / 2 - this.canvas.offsetTop };
+                    const pinchXY = { x: (x1 + x2) / 2 - canvasRect.left, y: (y1 + y2) / 2 - canvasRect.top };
 
                     // 1より大きければ拡大、小さければ縮小
                     let scale = distance / this.baseDistance;
@@ -408,6 +401,8 @@ export class InteractionController {
 
         if (this.accumulatedScale == 1.0) return;
 
+        const canvasRect = this.canvas.getBoundingClientRect();
+
         if (!this.isScheduled) {
             this.isScheduled = true;
             requestAnimationFrame(() => {
@@ -431,7 +426,7 @@ export class InteractionController {
                 }
 
                 // マウス位置のスクリーン座標（中心からのオフセット）
-                const mouseXY = { x: this.wheelClientX - this.canvas.offsetLeft, y: this.wheelClientY - this.canvas.offsetTop };
+                const mouseXY = { x: this.wheelClientX - canvasRect.left, y: this.wheelClientY - canvasRect.top };
 
                 // ズーム前のマウス位置のスクリーンRaDec
                 const mouseCanvasRadec = CanvasXy.toCanvasRadec(mouseXY, fov, this.config.canvasSize);

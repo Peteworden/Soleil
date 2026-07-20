@@ -11,6 +11,12 @@ export class HipStarRenderer {
     private hipStarsCache: { stars: HipData, jd: number } | null = null;
     private hipStarsColors: string[] = [];
     private hipStarSprites: Map<string, HTMLCanvasElement> = new Map();
+    private renderBatches = new Map<number, Array<{ index: number, x: number, y: number, bv10Str: string, size: number }>>([
+        [0.5, []],
+        [0.7, []],
+        [0.9, []],
+        [1.0, []]
+    ]);
 
     private orientationData: DeviceOrientationData = { alpha: 0, beta: 0, gamma: 0, webkitCompassHeading: 0 };
 
@@ -32,10 +38,20 @@ export class HipStarRenderer {
         this.orientationData = data;
     }
 
+    calculateOpacity(mag: number, unclipedLimitingMagnitude: number): number {
+        // return 1.0;
+        // if (unclipedLimitingMagnitude < 6) return 1.0;
+        if (mag < unclipedLimitingMagnitude - 1.5) return 1.0;
+        if (mag < unclipedLimitingMagnitude - 1.0) return 0.9;
+        if (mag < unclipedLimitingMagnitude - 0.5) return 0.7;
+        return 0.5;
+    }
+
     async drawHipStars(hipStars: HipData, starInformation: Array<StarInformation>): Promise<void> {
         if (hipStars.count == 0) return;
         if (this.config.displaySettings.usedStar == 'noStar') return;
         const limitingMagnitude = AstronomicalCalculator.limitingMagnitude(this.config);
+        const unclipedLimitingMagnitude = AstronomicalCalculator.unclipedLimitingMagnitude(this.config.viewState);
         const currentJd = this.config.displayTime.jd;
 
         const centerRaRad = this.config.viewState.centerRadec.ra * DEG_TO_RAD;
@@ -79,6 +95,11 @@ export class HipStarRenderer {
         const blurRadii = [0.2, 0.6, 0.9, 1.2]
         const colorRatios = [0.4, 0.8, 1.0, 1.0]
         const opacities = ['ff', 'ff', 'bf', '40']
+        for (const starsArray of this.renderBatches.values()) {
+            // lengthを0にすることで、配列のメモリ領域を維持したまま要素だけが解放され、効率的
+            // Map.clear()やnew Map()をするとガベージコレクションが増える
+            starsArray.length = 0;
+        }
         if (this.config.displaySettings.showStarInfo) {
             for (let i = 0; i < cachedStars.count; i++) {
                 const mag = cachedStars.magArray[i];
@@ -93,7 +114,6 @@ export class HipStarRenderer {
                     this.config.viewState.fov, this.config.canvasSize
                 )
                 if (!ifin) continue;
-                const color = this.hipStarsColors[i];
                 starInformation.push({
                     type: 'hipStar',
                     x: xy.x,
@@ -104,11 +124,23 @@ export class HipStarRenderer {
                         bv: cachedStars.bvArray[i]
                     }
                 });
-                this.drawHipStar(mag, hipStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                // this.drawHipStar(mag, hipStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
+                const bv = hipStars.bvArray[i];
+                const bv10Str = (starSize > 2 && !Number.isNaN(bv)) ? Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString() : "null";
+                const opacity = this.calculateOpacity(mag, unclipedLimitingMagnitude);
+                this.renderBatches.get(opacity)?.push({
+                    index: i,
+                    x: xy.x,
+                    y: xy.y,
+                    bv10Str: bv10Str,
+                    size: starSize
+                });
             }
         } else {
             for (let i = 0; i < cachedStars.count; i++) {
-                if (cachedStars.magArray[i] > limitingMagnitude) continue;
+                const mag = cachedStars.magArray[i];
+                if (mag > limitingMagnitude) continue;
                 if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec) continue;
                 const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
@@ -117,10 +149,65 @@ export class HipStarRenderer {
                     this.config.viewState.fov, this.config.canvasSize
                 )
                 if (!ifin) continue;
-                const color = this.hipStarsColors[i];
-                this.drawHipStar(cachedStars.magArray[i], cachedStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                // this.drawHipStar(cachedStars.magArray[i], cachedStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
+                const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
+                const bv = hipStars.bvArray[i];
+                const bv10Str = (starSize > 2 && !Number.isNaN(bv)) ? Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString() : "null";
+                const opacity = this.calculateOpacity(mag, unclipedLimitingMagnitude);
+                this.renderBatches.get(opacity)?.push({
+                    index: i,
+                    x: xy.x,
+                    y: xy.y,
+                    bv10Str: bv10Str,
+                    size: starSize
+                });
             }
         }
+
+        for (const [opacity, stars] of this.renderBatches.entries()) {
+            if (stars.length === 0) continue;
+            this.ctx.globalAlpha = opacity;
+            this.ctx.beginPath();
+            for (const star of stars) {
+                if (star.size <= 2) {
+                    this.ctx.moveTo(star.x + star.size, star.y);
+                    this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                }
+            }
+            // 小さい星の基本色を設定して一括塗りつぶし
+            this.ctx.fillStyle = '#DDDDDD';
+            this.ctx.fill();
+
+            const coloredStarsMap = new Map<string, Array<{ x: number, y: number, size: number }>>();
+
+            for (const star of stars) {
+                if (star.size > 2) {
+                    const sprite = this.getHipStarSprite(star.size, star.bv10Str);
+                    if (sprite) {
+                        this.ctx.drawImage(sprite, star.x - sprite.width / 2, star.y - sprite.height / 2);
+                    } else {
+                        // スプライトがない場合は、その星の色をキーにして Map に座標をストック
+                        const color = this.hipStarsColors[star.index];
+                        if (!coloredStarsMap.has(color)) {
+                            coloredStarsMap.set(color, []);
+                        }
+                        coloredStarsMap.get(color)!.push({ x: star.x, y: star.y, size: star.size });
+                    }
+                }
+            }
+
+            // 3. スプライトがない大きい星を「色ごと」にバッチ描画（ステート変更を最小化）
+            for (const [color, starList] of coloredStarsMap.entries()) {
+                this.ctx.beginPath();
+                this.ctx.fillStyle = color; // 色の変更は1色につき1回だけ
+                for (const star of starList) {
+                    this.ctx.moveTo(star.x + star.size, star.y);
+                    this.ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                }
+                this.ctx.fill(); // 同じ色の星を一気に塗りつぶす
+            }
+        }
+        this.ctx.globalAlpha = 1.0;
     }
 
     drawHipStar(
@@ -130,7 +217,7 @@ export class HipStarRenderer {
     ): void {
         const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
 
-        // === スプライト描画（高速化版、将来的に有効化する場合はコメント解除） ===
+        // === スプライト描画 ===
         if (starSize > 2) {
             let bv10Str = "null";
             if (!Number.isNaN(bv)) {
@@ -245,7 +332,6 @@ export class HipStarRenderer {
             const key = `${size}-null`;
             this.hipStarSprites.set(key, off);
         }
-        // console.log(`HIP star sprites created: ${this.hipStarSprites.size} sprites`);
     }
 
     createHipStarSprite(size: number, bv: number, baseColor: string, haloMultiplier: number): HTMLCanvasElement {

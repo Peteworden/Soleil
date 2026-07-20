@@ -3,6 +3,10 @@ import { CanvasRaDec, RaDec } from '../core/coordinates/index.js';
 import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates, CanvasSize } from '../types/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
 
+// バグがあったらここにその状態のリンクを貼る
+// https://peteworden.github.io/Soleil/chart.html?ra=28.486&dec=56.473&lat=35.03&lon=135.78&time=20260720-124312&fov=36.97
+// https://peteworden.github.io/Soleil/chart.html?ra=30.168&dec=55.449&lat=35.03&lon=135.78&time=20260720-124312&fov=71.8
+
 export function starSize_0mag(fov: Fov): number {
     return Math.max(200.0 / (Math.min(fov.ra, fov.dec) + 15), 3.0);
 }
