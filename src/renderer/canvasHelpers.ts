@@ -12,16 +12,19 @@ export function starSize_0mag(fov: Fov): number {
 }
 
 export function getStarSize(
-    magnitude: number,
-    limitingMagnitude: number,
-    starSize_0mag: number
+    mag: number,
+    limMag: number,
+    zeroMagSize: number
 ): number {
-    if (magnitude > limitingMagnitude) {
+    if (mag > limMag) {
         return 1;
-    } else if (magnitude > 0) {
-        return 1.0 + starSize_0mag * Math.pow((limitingMagnitude - magnitude) / limitingMagnitude, 1.6);
+        // } else if (mag > 0) {
+        //     return 1.0 + zeroMagSize * Math.pow((limMag - mag) / limMag, 1.8);
+        // } else {
+        //     return zeroMagSize - mag + 1.0;
+        // }
     } else {
-        return starSize_0mag - magnitude;
+        return Math.min(20, Math.pow(zeroMagSize, -(mag - limMag) / limMag) + 3 - 2 * Math.atan(2.0 * (mag - 0.2 * limMag)));
     }
 }
 

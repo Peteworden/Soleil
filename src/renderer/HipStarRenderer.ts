@@ -77,8 +77,7 @@ export class HipStarRenderer {
         const cachedStars = this.getCachedHipStars(hipStars, currentJd);
         if (cachedStars.count == 0) return;
         const zeroMagSize = starSize_0mag(this.config.viewState.fov);
-
-        const starColorRGB = this.colorManager.parseRgbToList(this.colorManager.getColor('star'));
+        // const starColorRGB = this.colorManager.parseRgbToList(this.colorManager.getColor('star'));
 
         if (this.hipStarsColors.length == 0) {
             this.hipStarsColors = this.getHipStarsColors(hipStars.bvArray);
@@ -87,14 +86,10 @@ export class HipStarRenderer {
         const areaInfo = this.areaCandidates();
         const minDec = (areaInfo?.minDec ?? 0) * DEG_TO_RAD;
         const maxDec = (areaInfo?.maxDec ?? 0) * DEG_TO_RAD;
-        const minRa = (areaInfo?.minRa ?? 0) * DEG_TO_RAD;
-        const maxRa = (areaInfo?.maxRa ?? 0) * DEG_TO_RAD;
+        const minRa = (areaInfo?.minRa ?? 0) * DEG_TO_RAD; // 信用できない
+        const maxRa = (areaInfo?.maxRa ?? 0) * DEG_TO_RAD; // 信用できない
         const areaInfoExist = areaInfo !== null;
 
-        const limitMagnitudeForWhiten = Math.max(limitingMagnitude, 7.0);
-        const blurRadii = [0.2, 0.6, 0.9, 1.2]
-        const colorRatios = [0.4, 0.8, 1.0, 1.0]
-        const opacities = ['ff', 'ff', 'bf', '40']
         for (const starsArray of this.renderBatches.values()) {
             // lengthを0にすることで、配列のメモリ領域を維持したまま要素だけが解放され、効率的
             // Map.clear()やnew Map()をするとガベージコレクションが増える
@@ -124,7 +119,6 @@ export class HipStarRenderer {
                         bv: cachedStars.bvArray[i]
                     }
                 });
-                // this.drawHipStar(mag, hipStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
                 const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
                 const bv = hipStars.bvArray[i];
                 const bv10Str = (starSize > 2 && !Number.isNaN(bv)) ? Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString() : "null";
@@ -141,7 +135,9 @@ export class HipStarRenderer {
             for (let i = 0; i < cachedStars.count; i++) {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
-                if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec) continue;
+                if (areaInfoExist) {
+                    if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec || hipStars.raArray[i] < minRa || hipStars.raArray[i] > maxRa) continue;
+                }
                 const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
                     coords, this.config.displaySettings.mode,
@@ -149,7 +145,6 @@ export class HipStarRenderer {
                     this.config.viewState.fov, this.config.canvasSize
                 )
                 if (!ifin) continue;
-                // this.drawHipStar(cachedStars.magArray[i], cachedStars.bvArray[i], xy, limitingMagnitude, zeroMagSize, limitMagnitudeForWhiten, blurRadii, colorRatios, opacities, color, starColorRGB);
                 const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
                 const bv = hipStars.bvArray[i];
                 const bv10Str = (starSize > 2 && !Number.isNaN(bv)) ? Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString() : "null";
@@ -210,51 +205,51 @@ export class HipStarRenderer {
         this.ctx.globalAlpha = 1.0;
     }
 
-    drawHipStar(
-        mag: number, bv: number, { x, y }: CanvasXy,
-        limitingMagnitude: number, zeroMagSize: number, limitMagnitudeForWhiten: number,
-        blurRadii: number[], colorRatios: number[], opacities: string[], starColor: string, starColorRGB: [number, number, number]
-    ): void {
-        const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
+    // drawHipStar(
+    //     mag: number, bv: number, { x, y }: CanvasXy,
+    //     limitingMagnitude: number, zeroMagSize: number, limitMagnitudeForWhiten: number,
+    //     blurRadii: number[], colorRatios: number[], opacities: string[], starColor: string, starColorRGB: [number, number, number]
+    // ): void {
+    //     const starSize = getStarSize(mag, limitingMagnitude, zeroMagSize) + 0.4;
 
-        // === スプライト描画 ===
-        if (starSize > 2) {
-            let bv10Str = "null";
-            if (!Number.isNaN(bv)) {
-                bv10Str = Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString();
-            }
-            const sprite = this.getHipStarSprite(starSize, bv10Str);
-            if (sprite) {
-                this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
-                return;
-            } else {
-                const off = this.createHipStarSprite(starSize, bv, this.colorManager.getColor('star'), 2.5);
-                this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
-                return;
-            }
-        } else {
-            if (mag > limitMagnitudeForWhiten - 2.0) {
-                this.ctx.fillStyle = this.colorManager.blendColors(
-                    starColorRGB,
-                    starColor,
-                    (limitMagnitudeForWhiten - mag) / 6.0
-                );
-            } else {
-                this.ctx.fillStyle = starColor;
-            }
-            if (starSize < 2) {
-                this.ctx.beginPath();
-                // this.ctx.fillStyle = starColor;
-                this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
-                this.ctx.fill();
-            } else {
-                this.ctx.beginPath();
-                // this.ctx.fillStyle = starColor;
-                this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-        }
-    }
+    //     // === スプライト描画 ===
+    //     if (starSize > 2) {
+    //         let bv10Str = "null";
+    //         if (!Number.isNaN(bv)) {
+    //             bv10Str = Math.round(Math.max(-0.4, Math.min(2.0, bv)) * 10).toString();
+    //         }
+    //         const sprite = this.getHipStarSprite(starSize, bv10Str);
+    //         if (sprite) {
+    //             this.ctx.drawImage(sprite, x - sprite.width / 2, y - sprite.height / 2);
+    //             return;
+    //         } else {
+    //             const off = this.createHipStarSprite(starSize, bv, this.colorManager.getColor('star'), 2.5);
+    //             this.ctx.drawImage(off, x - off.width / 2, y - off.height / 2);
+    //             return;
+    //         }
+    //     } else {
+    //         if (mag > limitMagnitudeForWhiten - 2.0) {
+    //             this.ctx.fillStyle = this.colorManager.blendColors(
+    //                 starColorRGB,
+    //                 starColor,
+    //                 (limitMagnitudeForWhiten - mag) / 6.0
+    //             );
+    //         } else {
+    //             this.ctx.fillStyle = starColor;
+    //         }
+    //         if (starSize < 2) {
+    //             this.ctx.beginPath();
+    //             // this.ctx.fillStyle = starColor;
+    //             this.ctx.fillRect(x - starSize * 0.7, y - starSize * 0.7, starSize * 1.4, starSize * 1.4);
+    //             this.ctx.fill();
+    //         } else {
+    //             this.ctx.beginPath();
+    //             // this.ctx.fillStyle = starColor;
+    //             this.ctx.arc(x, y, starSize, 0, Math.PI * 2);
+    //             this.ctx.fill();
+    //         }
+    //     }
+    // }
 
     /**
      * HIP星データ全体を歳差運動補正してキャッシュ

@@ -24,6 +24,7 @@ import { config, getConfig, resetConfig, setConfigChangeListener, updateConfig, 
 import { SolarSystemManager } from './core/SolarSystemManager.js';
 
 const news: { time: string, title: string, text: string }[] = [
+    { time: '2026-08-03T23:30:00', title: '星の大きさ計算式を変更', text: '星の等級から大きさを計算する式を、べき乗を使ったものから指数関数とarctanを使ったものに変更しました。どうでしょうか？' },
     { time: '2026-05-15T00:00:00', title: '高速化', text: '高速化などを目的に、プログラムを大幅に書き換えました。これまですごく無駄な処理をさせていたことがわかりました...。バグあったら教えてください。' },
     { time: '2026-04-16T21:00:00', title: 'C/2025 R3 (PANSTARRS)', text: 'PANSTARRS彗星（C/2025 R3）を追加しました。明け方の東の空、双眼鏡で見えるかも！？' },
     { time: '2026-04-05T00:00:00', title: 'Artemis II オリオン宇宙船の表示', text: 'Artemis II打ち上げ成功！ということで、オリオン宇宙船（Orion Integrity）の位置が出ます！表示される条件などは右上の三本線から。' },

@@ -660,10 +660,10 @@ export class CanvasRenderer {
         }
         const conf = CoordinateConverter.chartConfigToTransformConfig(this.config, this.orientationData);
         const areas = getAreaCandidates(this.config.viewState, jd, conf, this.ctx, this.config.canvasSize);
-        const minDec = Math.floor(Math.min(...areas.map(([a, _]) => a)) / 360) - 90;
-        const maxDec = Math.ceil(Math.max(...areas.map(([_, b]) => b)) / 360) - 89;
-        const minRa = Math.floor(Math.min(...areas.map(([a, _]) => a)) % 360);
-        const maxRa = Math.ceil(Math.max(...areas.map(([_, b]) => b)) % 360) + 1;
+        const minDec = Math.floor(Math.min(...areas.map(([a, _]) => a / 360)) - 90);
+        const maxDec = Math.ceil(Math.max(...areas.map(([_, b]) => b / 360)) - 89);
+        const minRa = Math.floor(Math.min(...areas.map(([a, _]) => a % 360)));
+        const maxRa = Math.ceil(Math.max(...areas.map(([_, b]) => b % 360)) + 1);
         // キャッシュを更新
         this.areaCandidatesCache = {
             areas: areas,
