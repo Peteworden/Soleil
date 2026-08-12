@@ -1,6 +1,6 @@
 import { DEG_TO_RAD, RAD_TO_DEG } from '../utils/constants.js';
 import { CanvasRaDec, RaDec } from '../core/coordinates/index.js';
-import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates, CanvasSize } from '../types/index.js';
+import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates, CanvasSize, ConstellationData } from '../types/index.js';
 import { AstronomicalCalculator } from '../core/calculations.js';
 
 // バグがあったらここにその状態のリンクを貼る
@@ -25,6 +25,17 @@ export function getStarSize(
         // }
     } else {
         return Math.min(15, Math.pow(zeroMagSize, -(mag - limMag) / limMag) + 3 - 2 * Math.atan(2.0 * (mag - 0.2 * limMag)));
+    }
+}
+
+export function ifDrawConstellation(constellation: ConstellationData, fov: Fov): boolean {
+    const minFov = Math.min(fov.ra, fov.dec);
+    if (constellation.tier == 1) {
+        return true;
+    } else if (constellation.tier == 2) {
+        return minFov < 70;
+    } else {
+        return minFov < 50;
     }
 }
 

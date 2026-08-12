@@ -2,7 +2,7 @@ import { CelestialObject, MessierObject, NGCObject, SharplessObject } from '../m
 import { BayerFlamData, ConstellationData, StarInformation, StarChartConfig, StarName, ObjectInformation, GaiaData, HipData, CanvasXy, CanvasSize, DeviceOrientationData } from '../types/index.js';
 import { CoordinateConverter } from '../core/coordinates.js';
 import { ColorManager, getColorManager } from './colorManager.js';
-import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange } from './canvasHelpers.js';
+import { getAreaCandidates, getGridIntervals, getBetaRange, getGridLineWidth, getAlphaRange, ifDrawConstellation } from './canvasHelpers.js';
 import { HipStarRenderer } from './HipStarRenderer.js';
 import { GaiaStarRenderer } from './GaiaStarRenderer.js';
 import { SolarSystemRenderer } from './SolarSystemRenderer.js';
@@ -530,6 +530,7 @@ export class CanvasRenderer {
         this.ctx.fillStyle = this.colorManager.getColor('constellationName');
         const precessionAngle = AstronomicalCalculator.precessionAngle('j2000', this.config.displayTime.jd);
         for (const constellation of constellations) {
+            if (!ifDrawConstellation(constellation, this.config.viewState.fov)) continue;
             const radec = RaDec.precession({ ra: constellation.ra, dec: constellation.dec }, precessionAngle);
             const canvasXY = RaDec.toCanvasXYifin(radec, this.config.viewState.fov, this.config.canvasSize, transformConfig);
             if (!canvasXY[0]) continue;

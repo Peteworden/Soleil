@@ -36,6 +36,7 @@ export interface ConstellationData {
     abbr: string;
     ra: number;
     dec: number;
+    tier: number;
     lines: number[][];
 }
 
