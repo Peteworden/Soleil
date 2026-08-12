@@ -1,4 +1,7 @@
-//npm run dev
+// npm run dev ... localhost
+// npm run watch ... バグの確認
+// main.tsをほかのファイルからインポートしないこと。イベントリスナーが二重で登録されるなどする。main.tsに書きたくなった関数は別のファイルに書くこと。
+
 import { ConstellationData, StarName, ConstellationBoundaryData, BayerFlamData, GaiaData, HipData } from './types/index.js';
 
 import { CacheInfoController } from './controllers/CacheInfoController.js';
@@ -24,6 +27,8 @@ import { config, getConfig, resetConfig, setConfigChangeListener, updateConfig, 
 import { SolarSystemManager } from './core/SolarSystemManager.js';
 
 const news: { time: string, title: string, text: string }[] = [
+    { time: '2026-08-12T12:00:00', title: '検索に関するバグの修正', text: '天体を検索した後に星図を動かしたときのバグを直しました。' },
+    { time: '2026-08-12T12:00:00', title: '星座名の表示', text: '広い範囲を見ているときは表示する星座名を減らすようにしました。' },
     { time: '2026-08-03T23:30:00', title: '星の大きさ計算式を変更', text: '星の等級から大きさを計算する式を、べき乗を使ったものから指数関数とarctanを使ったものに変更しました。どうでしょうか？' },
     { time: '2026-05-15T00:00:00', title: '高速化', text: '高速化などを目的に、プログラムを大幅に書き換えました。これまですごく無駄な処理をさせていたことがわかりました...。バグあったら教えてください。' },
     { time: '2026-04-16T21:00:00', title: 'C/2025 R3 (PANSTARRS)', text: 'PANSTARRS彗星（C/2025 R3）を追加しました。明け方の東の空、双眼鏡で見えるかも！？' },
@@ -1073,58 +1078,6 @@ function showNewsPopupIfNeeded() {
             console.log(`お知らせポップアップ: 表示完了 (${currentTime})`);
         }, 500);
     }
-}
-
-export function showTemporaryWarning(message: string) {
-    // 既存の警告トーストがあれば一度削除する（連続タップ対策）
-    const existingToast = document.getElementById('runtime-toast-warning');
-    if (existingToast) {
-        existingToast.remove();
-    }
-
-    // トースト用のコンテナ要素を作成
-    const toast = document.createElement('div');
-    toast.id = 'runtime-toast-warning';
-    toast.innerText = message;
-
-    // スタイルをJavaScript側で直接指定（親要素の影響を受けない固定配置）
-    Object.assign(toast.style, {
-        position: 'fixed',
-        top: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        backgroundColor: '#ff4d4d',
-        color: '#ffffff',
-        padding: '12px 24px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-        zIndex: '9999', // 最前面に表示
-        fontSize: '14px',
-        fontWeight: 'bold',
-        opacity: '0',
-        transition: 'opacity 0.3s ease',
-        pointerEvents: 'none', // クリックの邪魔をしない
-        textAlign: 'center',
-        maxWidth: '90%'
-    });
-
-    document.body.appendChild(toast);
-
-    // フェードイン
-    requestAnimationFrame(() => {
-        toast.style.opacity = '1';
-    });
-
-    // 2秒間（2000ms）表示したあと、フェードアウトして削除
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        // アニメーションが終わるのを待ってから要素を完全に削除
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300);
-    }, 2000);
 }
 
 /**

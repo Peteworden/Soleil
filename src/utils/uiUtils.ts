@@ -14,9 +14,9 @@ export function updateInfoDisplay() {
     const centerInfo = document.getElementById('centerInfo');
     const fovInfo = document.getElementById('fovInfo');
     const limitingMagnitudeInfo = document.getElementById('limitingMagnitudeInfo');
-    
+
     const config = getConfig();
-    
+
     // 観測地情報を更新
     if (locationInfo) {
         const observationSite = config.observationSite;
@@ -37,7 +37,7 @@ export function updateInfoDisplay() {
             locationInfo.textContent = locationText;
         }
     }
-    
+
     // 時刻情報を更新
     if (timeInfo) {
         const { year, month, day, hour, minute, second } = config.displayTime;
@@ -49,20 +49,20 @@ export function updateInfoDisplay() {
             hour: '2-digit',
             minute: '2-digit'
         });
-        const lstLat: LstLat = {lst: config.siderealTime, lat: config.observationSite.latitude};
+        const lstLat: LstLat = { lst: config.siderealTime, lat: config.observationSite.latitude };
         const twilight = SolarSystemManager.getTwilight(lstLat);
         if (twilight != '') {
             timeInfo.textContent = timeText + ' (' + twilight + ')';
         }
     }
-    
+
     // 中心座標情報を更新
     if (centerInfo) {
         let { centerRadec, centerAzalt } = config.viewState;
         const equinox = config.displaySettings.equinox;
         if (equinox == 'j2000') {
             const { ra, dec } = RaDec.precession(centerRadec, undefined, config.displayTime.jd, 'j2000');
-            centerRadec = {ra, dec};
+            centerRadec = { ra, dec };
             const centerLabel = document.getElementById('centerLabel');
             if (centerLabel) {
                 centerLabel.textContent = '中心(J2000.0):';
@@ -96,7 +96,7 @@ export function updateInfoDisplay() {
         }
         centerInfo.innerHTML = centerText;
     }
-    
+
     // 視野角情報を更新
     if (fovInfo) {
         const fovText = `${config.viewState.fov.ra.toFixed(1)}°`;
@@ -113,7 +113,7 @@ export function handleResize(renderer: CanvasRenderer) {
     const mobileDock = document.getElementById('mobileButtonDock');
     const topButtons = document.querySelector('.top-right-buttons');
     const bottomButtons = document.querySelector('.bottom-right-buttons');
-    
+
     if (window.innerWidth <= 768) {
         if (mobileDock) mobileDock.style.display = 'flex';
         if (topButtons) (topButtons as HTMLElement).style.display = 'none';
@@ -123,7 +123,7 @@ export function handleResize(renderer: CanvasRenderer) {
         if (topButtons) (topButtons as HTMLElement).style.display = 'flex';
         if (bottomButtons) (bottomButtons as HTMLElement).style.display = 'flex';
     }
-    
+
     // Canvasサイズの更新とrenderAllの呼び出し
     updateCanvasSize(renderer);
 }
@@ -142,7 +142,7 @@ export function getAvailableScreenSize(): { width: number, height: number } {
             height: window.screen.height
         };
     }
-    
+
     // 通常時はブラウザのUIを除いた領域を使用
     // 一般的なブラウザUIの高さを推定（ツールバー、ブックマークバー、タブなど）
     const estimatedBrowserUI = {
@@ -151,16 +151,16 @@ export function getAvailableScreenSize(): { width: number, height: number } {
         left: 0,    // 通常は左側にUIはない
         right: 0    // 通常は右側にUIはない
     };
-    
+
     // 実際の利用可能な領域を計算
     const availableWidth = window.screen.width - estimatedBrowserUI.left - estimatedBrowserUI.right;
     const availableHeight = window.screen.height - estimatedBrowserUI.top - estimatedBrowserUI.bottom;
-    
+
     // window.innerWidth/innerHeightと比較して、より小さい方を採用
     // （実際のブラウザウィンドウサイズが画面より小さい場合）
     const actualWidth = Math.min(availableWidth, window.innerWidth);
     const actualHeight = Math.min(availableHeight, window.innerHeight);
-    
+
     return {
         width: actualWidth,
         height: actualHeight
@@ -189,23 +189,23 @@ export function measureBrowserUI(): { top: number, bottom: number, left: number,
     if (document.fullscreenElement) {
         return { top: 0, bottom: 0, left: 0, right: 0 };
     }
-    
+
     // 画面サイズとウィンドウサイズの差からUIサイズを推定
     const screenWidth = window.screen.width;
     const screenHeight = window.screen.height;
     const windowWidth = window.outerWidth;
     const windowHeight = window.outerHeight;
-    
+
     // ウィンドウの位置を取得（可能な場合）
     const windowLeft = window.screenX || 0;
     const windowTop = window.screenY || 0;
-    
+
     // UIサイズを計算
     const left = windowLeft;
     const top = windowTop;
     const right = screenWidth - (windowLeft + windowWidth);
     const bottom = screenHeight - (windowTop + windowHeight);
-    
+
     return { top, bottom, left, right };
 }
 
@@ -215,14 +215,14 @@ export function measureBrowserUI(): { top: number, bottom: number, left: number,
 function updateCanvasSize(renderer: CanvasRenderer) {
     // グローバルなconfigとrendererにアクセス
     const config = getConfig();
-    
+
     // const { width, height } = getCurrentWindowSize();
     // rendererのcanvasサイズも更新（実際の表示サイズに合わせる）
     const rect = renderer.getCanvasBoundingClientRect();
     const actualWidth = Math.round(rect.width);
     const actualHeight = Math.round(rect.height);
-    renderer.updateCanvasSize({width: actualWidth, height: actualHeight});
-    
+    renderer.updateCanvasSize({ width: actualWidth, height: actualHeight });
+
     // 視野角も更新
     let fov = config.viewState.fov;
     if (actualWidth > actualHeight) {
@@ -230,7 +230,7 @@ function updateCanvasSize(renderer: CanvasRenderer) {
     } else {
         fov.ra = fov.dec * actualWidth / actualHeight;
     }
-    
+
     updateConfig({
         canvasSize: { width: actualWidth, height: actualHeight },
         viewState: {
@@ -238,7 +238,7 @@ function updateCanvasSize(renderer: CanvasRenderer) {
             fov: fov,
         }
     });
-    
+
     console.log(`Canvasサイズを更新: ${actualWidth}x${actualHeight}`);
 }
 
@@ -255,15 +255,15 @@ export function getAvailableSize(): CanvasSize {
             height: window.screen.height
         };
     }
-    
+
     const ui = measureBrowserUI();
     const availableWidth = window.screen.width - ui.left - ui.right;
     const availableHeight = window.screen.height - ui.top - ui.bottom;
-    
+
     // 実際のウィンドウサイズと比較して、より小さい方を採用
     const actualWidth = Math.min(availableWidth, window.innerWidth);
     const actualHeight = Math.min(availableHeight, window.innerHeight);
-    
+
     return {
         width: actualWidth,
         height: actualHeight
@@ -273,7 +273,7 @@ export function getAvailableSize(): CanvasSize {
 export function getCanvasSize(): CanvasSize {
     const availableSize = getAvailableSize();
     let heightDiff = 0;
-    
+
     // タイトルバーの高さを取得
     const title = document.getElementById('title');
     if (title) {
@@ -281,14 +281,14 @@ export function getCanvasSize(): CanvasSize {
         console.log('title height:', titleHeight);
         heightDiff += titleHeight;
     }
-    
+
     // モバイルボタンドックの高さを取得（表示されている場合のみ）
     const mobileDock = document.getElementById('mobileButtonDock');
     if (mobileDock) {
         const computedStyle = window.getComputedStyle(mobileDock);
         const isVisible = computedStyle.display !== 'none';
         console.log('mobileDock display:', computedStyle.display);
-        
+
         if (isVisible) {
             const dockHeight = mobileDock.offsetHeight || 0;
             console.log('mobileDock height:', dockHeight);
@@ -299,11 +299,11 @@ export function getCanvasSize(): CanvasSize {
         width: availableSize.width,
         height: availableSize.height - heightDiff
     };
-    
+
     console.log('Available size:', availableSize);
     console.log('Height difference:', heightDiff);
     console.log('Final canvas size:', canvasSize);
-    
+
     return canvasSize;
 }
 
@@ -331,18 +331,62 @@ export function setupTimeUpdate() {
     updateTimeDisplay();
 }
 
-// export function showLoading(show: boolean = true) {
-//     const loadingText = document.getElementById('loadingtext');
-//     if (loadingText) {
-//         loadingText.textContent = show ? 'Loading...' : '';
-//         loadingText.style.display = show ? 'block' : 'none';
-//     }
-// }
+export function showTemporaryWarning(message: string) {
+    // 既存の警告トーストがあれば一度削除する（連続タップ対策）
+    const existingToast = document.getElementById('runtime-toast-warning');
+    if (existingToast) {
+        existingToast.remove();
+    }
+
+    // トースト用のコンテナ要素を作成
+    const toast = document.createElement('div');
+    toast.id = 'runtime-toast-warning';
+    toast.innerText = message;
+
+    // スタイルをJavaScript側で直接指定（親要素の影響を受けない固定配置）
+    Object.assign(toast.style, {
+        position: 'fixed',
+        top: '20px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        backgroundColor: '#ff4d4d',
+        color: '#ffffff',
+        padding: '12px 24px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        zIndex: '9999', // 最前面に表示
+        fontSize: '14px',
+        fontWeight: 'bold',
+        opacity: '0',
+        transition: 'opacity 0.3s ease',
+        pointerEvents: 'none', // クリックの邪魔をしない
+        textAlign: 'center',
+        maxWidth: '90%'
+    });
+
+    document.body.appendChild(toast);
+
+    // フェードイン
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+    });
+
+    // 2秒間（2000ms）表示したあと、フェードアウトして削除
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        // アニメーションが終わるのを待ってから要素を完全に削除
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 2000);
+}
 
 export function showError(message: string) {
     // エラーメッセージを表示
     console.error(message);
-    
+
     // エラー表示用の要素を作成（必要に応じて）
     const errorDiv = document.createElement('div');
     errorDiv.style.cssText = `
@@ -359,9 +403,9 @@ export function showError(message: string) {
         text-align: center;
     `;
     errorDiv.textContent = message;
-    
+
     document.body.appendChild(errorDiv);
-    
+
     // 3秒後に自動削除
     setTimeout(() => {
         if (errorDiv.parentNode) {
@@ -369,55 +413,3 @@ export function showError(message: string) {
         }
     }, 3000);
 }
-
-// /**
-//  * CSS適用後にキャンバスサイズを再計算
-//  * @param canvas HTMLCanvasElement
-//  */
-// export function recalculateCanvasSize(canvas: HTMLCanvasElement): void {
-//     // 少し遅延を入れてCSSの適用を待つ
-//     setTimeout(() => {
-//         const newSize = getCanvasSize();
-//         console.log('Recalculating canvas size:', newSize);
-        
-//         canvas.width = newSize.width;
-//         canvas.height = newSize.height;
-
-//         // updateConfigいる？
-        
-//         // レンダリングを再実行
-//         if ((window as any).renderAll) {
-//             (window as any).renderAll();
-//         }
-//     }, 100);
-// }
-
-// export function showSuccess(message: string) {
-//     // 成功メッセージを表示
-//     console.log(message);
-    
-//     const successDiv = document.createElement('div');
-//     successDiv.style.cssText = `
-//         position: fixed;
-//         top: 50%;
-//         left: 50%;
-//         transform: translate(-50%, -50%);
-//         background: rgba(0, 255, 0, 0.9);
-//         color: white;
-//         padding: 20px;
-//         border-radius: 8px;
-//         z-index: 1000;
-//         max-width: 80%;
-//         text-align: center;
-//     `;
-//     successDiv.textContent = message;
-    
-//     document.body.appendChild(successDiv);
-    
-//     // 2秒後に自動削除
-//     setTimeout(() => {
-//         if (successDiv.parentNode) {
-//             successDiv.parentNode.removeChild(successDiv);
-//         }
-//     }, 2000);
-// } 

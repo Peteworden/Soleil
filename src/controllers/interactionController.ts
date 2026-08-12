@@ -141,6 +141,8 @@ export class InteractionController {
             this.isDragging = false;
             this.isPinch = true;
         }
+
+        this.latestState = { ...this.config.viewState };
     };
 
     private onPointerMove = (e: PointerEvent): void => {

@@ -67,8 +67,10 @@ export class SearchController {
 
     toggleSearch() {
         const searchDiv = document.getElementById('search');
+        console.log(searchDiv);
         if (searchDiv) {
-            if (searchDiv.style.display === 'block') {
+            const isOpen = document.body.classList.contains('search-open');
+            if (isOpen) {
                 document.body.classList.remove('search-open');
                 this.closeSearch();
             } else {
@@ -527,6 +529,7 @@ export class SearchController {
                 config.viewState.centerRadec = { ra: path_ras[i], dec: path_decs[i] };
                 config.viewState.centerAzalt = { az: path_azs[i], alt: path_alts[i] };
                 updateConfig({ viewState: config.viewState });
+                console.log(config.viewState.centerRadec.ra, config.viewState.centerRadec.dec);
                 await new Promise(resolve => setTimeout(resolve, interval));
             }
         }

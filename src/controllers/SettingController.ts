@@ -5,7 +5,7 @@ import { getConfig, saveConfigToLocalStorage, updateConfig } from "../core/Confi
 import { DeviceOrientationManager } from "device/deviceOrientation.js";
 import { CanvasRenderer } from "renderer/CanvasRenderer.js";
 import { SolarSystemManager } from "../core/SolarSystemManager.js";
-import { showTemporaryWarning } from "../main.js";
+import { showTemporaryWarning } from "../utils/uiUtils.js";
 
 export class SettingController {
     private deviceOrientationManager;
