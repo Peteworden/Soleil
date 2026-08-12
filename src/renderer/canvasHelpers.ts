@@ -24,7 +24,7 @@ export function getStarSize(
         //     return zeroMagSize - mag + 1.0;
         // }
     } else {
-        return Math.min(20, Math.pow(zeroMagSize, -(mag - limMag) / limMag) + 3 - 2 * Math.atan(2.0 * (mag - 0.2 * limMag)));
+        return Math.min(15, Math.pow(zeroMagSize, -(mag - limMag) / limMag) + 3 - 2 * Math.atan(2.0 * (mag - 0.2 * limMag)));
     }
 }
 

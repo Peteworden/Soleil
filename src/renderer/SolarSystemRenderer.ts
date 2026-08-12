@@ -87,7 +87,7 @@ export class SolarSystemRenderer {
             y: y,
             data: sun
         });
-        const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fov.ra, 13);
+        const radius = Math.max(this.canvas.width * (0.267 / sun.getDistance()) / this.config.viewState.fov.ra, 15);
 
         this.ctx.font = '15px serif';
         this.ctx.textAlign = 'left';
@@ -107,7 +107,7 @@ export class SolarSystemRenderer {
         const moonDist = moon.getDistance(); // au
         const angRadius = 0.259 / (moonDist * AU_TO_KM / 384400);
         const pxRadius0 = this.canvas.width * angRadius / this.config.viewState.fov.ra;
-        const radius = Math.max(pxRadius0, 13);
+        const radius = Math.max(pxRadius0, 15);
         const scale = radius / pxRadius0; // 実際の視半径より何倍に見せているか
         // 地球-月-太陽
         const angleEMS = RaDec.distance(moonDeg, Cartesian.toRaDec(moon.getXYZ()));
