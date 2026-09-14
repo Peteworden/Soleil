@@ -157,10 +157,10 @@ export function toCanvasRadecFast(
 
 export function toCanvasXYifin(
     radec: EquatorialCoordinates,
-    fov: Fov, canvasSize: CanvasSize, transformConfig: TransformModeConfig, force: boolean = false
+    fov: Fov, canvasSize: CanvasSize, transformConfig: TransformModeConfig, force: boolean = false, margin: number = 0.0
 ): [boolean, CanvasXy] {
     const canvasRaDec = toCanvasRadec(radec, transformConfig);
-    if (Math.abs(canvasRaDec.ra) < fov.ra * 0.5 && Math.abs(canvasRaDec.dec) < fov.dec * 0.5) {
+    if (Math.abs(canvasRaDec.ra) < fov.ra * 0.5 + margin && Math.abs(canvasRaDec.dec) < fov.dec * 0.5 + margin) {
         const xy = CanvasRaDec.toCanvasXY(canvasRaDec, canvasSize, fov);
         if (xy.x == 0.0 && xy.y == 0.0) {
             console.log('xy == 0,0');

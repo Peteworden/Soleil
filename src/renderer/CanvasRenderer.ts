@@ -49,7 +49,6 @@ export class CanvasRenderer {
         this.config = getConfig();
 
         this.objectInformation = [];
-        console.log("CanvasRenderer constructor");
 
         this.coordinateConverter = new CoordinateConverter();
 

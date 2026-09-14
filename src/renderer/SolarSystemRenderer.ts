@@ -126,7 +126,7 @@ export class SolarSystemRenderer {
         });
 
         const SunInMoonNorthCoord = Cartesian.rotateY(RaDec.toCartesian({ ra: sunDeg.ra - moonDeg.ra, dec: sunDeg.dec }), -Math.PI / 2 + moonRad.dec)
-        // 南から、天球の外から見て反時計回りに測った、月から見た太陽の方向
+        // 南から、地球から見て時計回りに測った、月に対する太陽の方向
         const angleSMS = Math.atan2(SunInMoonNorthCoord.y, SunInMoonNorthCoord.x);
         const littleSunDirection = {
             ra: moonDeg.ra + 0.5 * Math.sin(angleSMS) / Math.cos(moonRad.dec),

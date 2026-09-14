@@ -18,11 +18,6 @@ export function getStarSize(
 ): number {
     if (mag > limMag) {
         return 1;
-        // } else if (mag > 0) {
-        //     return 1.0 + zeroMagSize * Math.pow((limMag - mag) / limMag, 1.8);
-        // } else {
-        //     return zeroMagSize - mag + 1.0;
-        // }
     } else {
         return Math.min(15, Math.pow(zeroMagSize, -(mag - limMag) / limMag) + 3 - 2 * Math.atan(2.0 * (mag - 0.2 * limMag)));
     }
@@ -86,208 +81,212 @@ export function getAreaCandidates(
     canvasSize: CanvasSize
 ): number[][] {
     if (!['AEP', 'view'].includes(conf.mode)) return [];
+
     const edgeRA: number[] = [];
     const edgeDec: number[] = [];
-    const J2000NorthPoleApparent = RaDec.precession({ ra: 0, dec: 90 }, undefined, 'j2000', jd);
-    const J2000N85Apparent = RaDec.precession({ ra: 0, dec: 85 }, undefined, 'j2000', jd);
-    const J2000S85Apparent = RaDec.precession({ ra: 0, dec: -85 }, undefined, 'j2000', jd);
-    const J2000SouthPoleApparent = RaDec.precession({ ra: 0, dec: -90 }, undefined, 'j2000', jd);
-    const npCanvasRadec = RaDec.toCanvasRadec(J2000NorthPoleApparent, conf);
-    const n85CanvasRadec = RaDec.toCanvasRadec(J2000N85Apparent, conf);
-    const s85CanvasRadec = RaDec.toCanvasRadec(J2000S85Apparent, conf);
-    const spCanvasRadec = RaDec.toCanvasRadec(J2000SouthPoleApparent, conf);
 
     const margin = 1.5;
+    const poleArea = 4.0;
+    const poleMargin = 3.0;
+
     const raWidth = viewState.fov.ra * 0.5 + margin;
     const decWidth = viewState.fov.dec * 0.5 + margin;
-    let npIsIn = Math.abs(npCanvasRadec.ra) < raWidth && Math.abs(npCanvasRadec.dec) < decWidth;
-    let spIsIn = Math.abs(spCanvasRadec.ra) < raWidth && Math.abs(spCanvasRadec.dec) < decWidth;
-    const n85IsIn = Math.abs(n85CanvasRadec.ra) < raWidth && Math.abs(n85CanvasRadec.dec) < decWidth;
-    const s85IsIn = Math.abs(s85CanvasRadec.ra) < raWidth && Math.abs(s85CanvasRadec.dec) < decWidth;
 
+    const J2000NorthPoleApparent = RaDec.precession({ ra: 0, dec: 90 }, undefined, 'j2000', jd);
+    const J2000SouthPoleApparent = RaDec.precession({ ra: 0, dec: -90 }, undefined, 'j2000', jd);
+
+    const northPoleCanvasRaDec = RaDec.toCanvasRadec(J2000NorthPoleApparent, conf);
+    const southPoleCanvasRaDec = RaDec.toCanvasRadec(J2000SouthPoleApparent, conf);
+
+    let npIsIn =
+        Math.abs(northPoleCanvasRaDec.ra) < raWidth + poleMargin &&
+        Math.abs(northPoleCanvasRaDec.dec) < decWidth + poleMargin;
+
+    let spIsIn =
+        Math.abs(southPoleCanvasRaDec.ra) < raWidth + poleMargin &&
+        Math.abs(southPoleCanvasRaDec.dec) < decWidth + poleMargin;
+
+    // deg
     let screenRa = -raWidth;
     let screenDec = decWidth;
-    let dscreenRa = 0.0;
-    let dscreenDec = 0.0;
-    let edgePointRadec: EquatorialCoordinates;
+    let dscreenRa = 0.3;
+    let dscreenDec = 0.3;
 
-    let precessionAngle = AstronomicalCalculator.precessionAngle(jd, 'j2000');
-    let sinPrecess = Math.sin(precessionAngle);
-    let cosPrecess = Math.cos(precessionAngle);
+    const precessionAngle = AstronomicalCalculator.precessionAngle(jd, 'j2000');
+    const sinPrecess = Math.sin(precessionAngle);
+    const cosPrecess = Math.cos(precessionAngle);
 
-    // 天球全体が見えるときの処理はごまかしているかも
-
-    //右上から左上
+    // 右上から左上
     while (screenRa < raWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
+        const edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa += dscreenRa;
     }
-    //左上から左下
+
+    // 左上から左下
     screenRa = raWidth;
     screenDec = decWidth;
     while (screenDec > -decWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
-        dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec -= dscreenDec;
     }
-    //左下から右下
+
+    // 左下から右下
     screenRa = raWidth;
     screenDec = -decWidth;
     while (screenRa > -raWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
+        const edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
         dscreenRa = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenRa -= dscreenRa;
     }
-    //右下から右上
+
+    // 右下から右上
     screenRa = -raWidth;
     screenDec = -decWidth;
     while (screenDec < decWidth) {
         addEdge(screenRa, screenDec, edgeRA, edgeDec, sinPrecess, cosPrecess, conf);
-        edgePointRadec = CanvasRaDec.toRaDec({ ra: screenRa, dec: screenDec }, conf);
-        dscreenDec = 0.3 * Math.max(Math.cos(edgePointRadec.dec * Math.PI / 180), 0.01);
         screenDec += dscreenDec;
     }
 
-    // npのときは+85°以北を、spのときは-85°より南をすべて含める
-    const RA_min = Math.min(...edgeRA);
-    const RA_max = Math.max(...edgeRA);
-    spIsIn = spIsIn || Math.min(...edgeDec) < -85;
-    npIsIn = npIsIn || Math.max(...edgeDec) > 85;
-    const Dec_min = spIsIn ? -90 : Math.min(...edgeDec);
-    const Dec_max = npIsIn ? 89.9 : Math.max(...edgeDec);
+    // --------------------------------------------------
+    // ここから境界線からareaを作る
+    // --------------------------------------------------
 
-    let ra0Dec: number[] = []; // 赤経0度線を横切るときの赤緯
-
-    // 境界線をセグメントに分割
-    const segments: Array<{ ra1: number, dec1: number, ra2: number, dec2: number, crossDecs: number[] }> = [];
-    for (let i = 0; i < edgeRA.length - 1; i++) {
-        if (edgeRA[i] > 300 && edgeRA[i + 1] < 60) {
-            ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i + 1] - edgeRA[i] + 360) * (360 - edgeRA[i]));
-        } else if (edgeRA[i] < 60 && edgeRA[i + 1] > 300) {
-            ra0Dec.push(edgeDec[i] + (edgeDec[i + 1] - edgeDec[i]) / (edgeRA[i] - edgeRA[i + 1] + 360) * edgeRA[i]);
-        } else {
-            segments.push({
-                ra1: edgeRA[i], dec1: edgeDec[i],
-                ra2: edgeRA[i + 1], dec2: edgeDec[i + 1],
-                crossDecs: rangeInt(edgeDec[i], edgeDec[i + 1])
-            });
-        }
-    }
-    const edgeLastIdx = edgeRA.length - 1;
-    segments.push({
-        ra1: edgeRA[edgeLastIdx], dec1: edgeDec[edgeDec.length - 1],
-        ra2: edgeRA[0], dec2: edgeDec[0],
-        crossDecs: rangeInt(edgeDec[edgeLastIdx], edgeDec[0])
-    });
-    if (edgeRA[edgeLastIdx] > 300 && edgeRA[0] < 60) {
-        ra0Dec.push(edgeDec[edgeLastIdx] + (edgeDec[0] - edgeDec[edgeLastIdx]) / (edgeRA[0] - edgeRA[edgeLastIdx] + 360) * (360 - edgeRA[edgeLastIdx]));
-    } else if (edgeRA[edgeLastIdx] < 60 && edgeRA[0] > 300) {
-        ra0Dec.push(edgeDec[edgeLastIdx] + (edgeDec[0] - edgeDec[edgeLastIdx]) / (edgeRA[edgeLastIdx] - edgeRA[0] + 360) * edgeRA[edgeLastIdx]);
+    if (edgeRA.length !== edgeDec.length) {
+        throw new Error('edgeRA and edgeDec must have the same length.');
     }
 
-    // edgeRA, edgeDecの出番はここまで
+    if (edgeRA.length === 0) return [];
+    const len = edgeRA.length;
 
-    if (npIsIn) {
-        ra0Dec = ra0Dec.filter(dec => dec < 85);
-        if (n85IsIn) {
-            ra0Dec.push(85);
-        }
-    }
-    if (spIsIn) {
-        ra0Dec = ra0Dec.filter(dec => dec > -85);
-        if (s85IsIn) {
-            ra0Dec.push(-85);
-        }
-    }
-    ra0Dec.sort((a, b) => a - b);
-    if (ra0Dec.length % 2 == 1) {
-        console.log(`Odd array length: ${ra0Dec}`);
-    }
-    for (let i = 0; i < ra0Dec.length; i += 2) {
-        if (ra0Dec.length <= i + 1) {
-            console.log(`Invalid array length: ${ra0Dec}, i=${i}`);
-            break;
-        }
-        segments.push({
-            ra1: 0, dec1: ra0Dec[i],
-            ra2: 0, dec2: ra0Dec[i + 1],
-            crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
-        });
-        segments.push({
-            ra1: 359.999, dec1: ra0Dec[i],
-            ra2: 359.999, dec2: ra0Dec[i + 1],
-            crossDecs: rangeInt(ra0Dec[i], ra0Dec[i + 1])
-        });
-    }
+    const rawDecMin = Math.min(...edgeDec);
+    const rawDecMax = Math.max(...edgeDec);
 
-    // i番目:赤緯i-90の線と境界線が交わる点の赤経
-    const allIntersections: { intersections: number[] }[] = Array.from({ length: 180 }, () => ({ intersections: [] }));
-    for (const segment of segments) {
-        for (const dec of segment.crossDecs) {
-            const t = (dec - segment.dec1) / (segment.dec2 - segment.dec1);
-            let intersectionRA;
-            if (segment.ra1 > 300 && segment.ra2 < 60) {
-                intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 + 360) + 360) % 360;
-            } else if (segment.ra1 < 60 && segment.ra2 > 300) {
-                intersectionRA = (segment.ra1 + t * (segment.ra2 - segment.ra1 - 360) + 360) % 360;
-            } else {
-                intersectionRA = segment.ra1 + t * (segment.ra2 - segment.ra1);
-            }
-            allIntersections[dec + 90].intersections.push(intersectionRA);
-        }
-    }
+    npIsIn = npIsIn || rawDecMax > 90.0 - poleArea;
+    spIsIn = spIsIn || rawDecMin < -90.0 + poleArea;
 
-    const candidateAreas: number[][] = [];
-    const raRanges: number[][] = [];
-    if (Dec_max > 84) {
-        candidateAreas.push([areaNumber(0, 85.5), areaNumber(359.9, 89.9)]);
-        for (let dec = 85.5; dec <= 89.9; dec++) {
-            raRanges.push([0, 359.9, dec]);
-        }
-    }
-    if (Dec_min < -84) {
-        candidateAreas.push([areaNumber(0, -89.9), areaNumber(359.9, -85.5)]);
-        for (let dec = -89.9; dec <= -85.5; dec++) {
-            raRanges.push([0, 359.9, dec]);
-        }
-    }
-    // 赤緯1度ごとに
-    for (let dec = (spIsIn ? -85 : Math.floor(Dec_min)); dec <= (npIsIn ? 84 : Math.floor(Dec_max)); dec++) {
-        const intersections: number[] = allIntersections[dec + 90].intersections;
-        intersections.sort((a, b) => a - b);
-        // let count = 0;
+    // 赤経0度線を横切るときの赤緯
+    let ra0Dec: number[] = [];
 
-        // 交点のペアで領域を決定
-        if (intersections.length === 0) {
-            // この場合はないはずだがある
-            // 交点がない場合は範囲全体を含める
-            if (RA_max > 300 && RA_min < 60) {
-                raRanges.push([0, Math.min(RA_min, 359.9), dec]);
-                raRanges.push([Math.max(RA_max, 0), 359.9, dec]);
-                candidateAreas.push(areaNumberRange(0, Math.min(RA_min, 359.9), dec));
-                candidateAreas.push(areaNumberRange(Math.max(RA_max, 0), 359.9, dec));
-            } else {
-                raRanges.push([Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec]);
-                candidateAreas.push(areaNumberRange(Math.max(RA_min, 0), Math.min(RA_max, 359.9), dec));
-            }
-        } else {
-            // console.log(dec, intersections.length, intersections);
-            for (let i = 0; i < intersections.length - 1; i += 2) {
-                const startRA = Math.max(intersections[i], 0);
-                const endRA = Math.min(intersections[i + 1], 359.9);
-                if (startRA < endRA) {
-                    raRanges.push([startRA, endRA, dec]);
-                    candidateAreas.push(areaNumberRange(startRA, endRA, dec));
-                    // count++;
+    // dec + 90 番目：
+    // 赤緯dec°線と境界線の交点の赤経
+    const allIntersections: number[][] = Array.from({ length: 180 }, () => []);
+
+    for (let i = 0; i < len; i++) {
+        const ra1 = edgeRA[i];
+        const dec1 = edgeDec[i];
+        const ra2 = edgeRA[(i + 1) % len];
+        const dec2 = edgeDec[(i + 1) % len];
+
+        // aの方がbより南
+        let raa = ra1, deca = dec1;
+        let rab = ra2, decb = dec2;
+        if (dec2 < dec1) {
+            raa = ra2; deca = dec2;
+            rab = ra1; decb = dec1;
+        }
+
+        const crossDec = rangeInt(dec1, dec2);
+
+        if (raa > 300 && rab < 60) {
+            const d0 = deca + (decb - deca) / (ra2 - ra1 + 360) * (360 - ra1);
+            ra0Dec.push(d0);
+            for (const dec of crossDec) {
+                if (dec < d0) {
+                    allIntersections[dec + 90].push(raa + (rab + 360 - raa) / (decb - deca) * (dec - deca));
+                } else {
+                    allIntersections[dec + 90].push(rab - (rab + 360 - raa) / (decb - deca) * (decb - dec));
                 }
             }
+        } else if (raa < 60 && rab > 300) {
+            const d0 = deca + (decb - deca) / (ra1 - ra2 + 360) * ra1;
+            ra0Dec.push(d0);
+            for (const dec of crossDec) {
+                if (dec < d0) {
+                    allIntersections[dec + 90].push(raa - (raa + 360 - rab) / (decb - deca) * (dec - deca));
+                } else {
+                    allIntersections[dec + 90].push(rab + (raa + 360 - rab) / (decb - deca) * (decb - dec));
+                }
+            }
+        } else {
+            for (const dec of crossDec) {
+                allIntersections[dec + 90].push(raa + (rab - raa) / (decb - deca) * (dec - deca));
+            }
         }
     }
-    return candidateAreas;
+
+    if (npIsIn) {
+        ra0Dec.push(90 - poleArea - 1);
+        ra0Dec = ra0Dec.filter(dec => dec <= 90 - poleArea);
+        for (let i = 180 - Math.floor(poleArea); i < 180; i++) {
+            allIntersections[i] = [0, 360];
+        }
+    }
+
+    if (spIsIn) {
+        ra0Dec.push(-90 + poleArea);
+        ra0Dec = ra0Dec.filter(dec => dec >= -90 + poleArea);
+        for (let i = 0; i < Math.ceil(poleArea); i++) {
+            allIntersections[i] = [0, 360];
+        }
+    }
+
+    if (ra0Dec.length > 0) {
+        ra0Dec.sort((a, b) => a - b);
+        const ra0DecNegNum = ra0Dec.filter(d => d < 0).length;
+        const [originIsIn, _] = RaDec.toCanvasXYifin({ ra: 0, dec: 0 }, viewState.fov, canvasSize, conf, false, margin);
+        const startIndex = originIsIn ? (ra0DecNegNum + 1) % 2 : ra0DecNegNum % 2;
+        for (let i = startIndex; i < ra0Dec.length - 1; i++) {
+            const crossDec = rangeInt(ra0Dec[i], ra0Dec[i + 1]);
+            for (const d of crossDec) {
+                allIntersections[d + 90].push(0, 360);
+            }
+        }
+    }
+
+    const area: number[][] = [];
+
+    if (npIsIn) {
+        area.push([
+            areaNumber(0, Math.min(90 - poleArea, Math.ceil(rawDecMax))),
+            areaNumber(359.9, 89.9),
+        ]);
+    }
+    if (spIsIn) {
+        area.push([
+            areaNumber(0, -90),
+            areaNumber(359.9, Math.max(-90 + poleArea - 0.1, Math.floor(rawDecMin))),
+        ]);
+    }
+
+    const decStart = Math.max(Math.floor(rawDecMin), -90 + (spIsIn ? Math.ceil(poleArea) : 0));
+    const decEnd = Math.min(Math.ceil(rawDecMax), 90 - (npIsIn ? Math.ceil(poleArea) : 0));
+    for (let dec = decStart; dec < decEnd; dec++) {
+        const intersections = allIntersections[dec + 90];
+
+        if (intersections.length > 0) {
+            intersections.sort((a, b) => a - b);
+
+            let longestRaStrokeIndex = 0;
+            let longestRaStroke = 0;
+            for (let i = 0; i < intersections.length - 1; i += 2) {
+                const raStroke = intersections[i + 1] - intersections[i];
+                if (raStroke > longestRaStroke) {
+                    longestRaStrokeIndex = i;
+                    longestRaStroke = raStroke;
+                }
+            }
+
+            const ra = (intersections[longestRaStrokeIndex] + intersections[longestRaStrokeIndex + 1]) / 2;
+            const [midIsIn, _] = RaDec.toCanvasXYifin({ ra: ra, dec: dec }, viewState.fov, canvasSize, conf, false, margin);
+            for (let i = midIsIn ? 0 : 1; i < intersections.length - 1; i += 2) {
+                area.push(areaNumberRange(intersections[i], intersections[i + 1], dec));
+            }
+        }
+    }
+    return area;
 }
 
 export function getGridIntervals(
