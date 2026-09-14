@@ -271,17 +271,18 @@ export function getAreaCandidates(
 
             let longestRaStrokeIndex = 0;
             let longestRaStroke = 0;
-            for (let i = 0; i < intersections.length - 1; i += 2) {
-                const raStroke = intersections[i + 1] - intersections[i];
+            for (let i = 0; i < intersections.length - 1; i++) {
+                const raStroke = intersections[(i + 1) % intersections.length] - intersections[i];
                 if (raStroke > longestRaStroke) {
                     longestRaStrokeIndex = i;
                     longestRaStroke = raStroke;
                 }
             }
 
-            const ra = (intersections[longestRaStrokeIndex] + intersections[longestRaStrokeIndex + 1]) / 2;
-            const [midIsIn, _] = RaDec.toCanvasXYifin({ ra: ra, dec: dec }, viewState.fov, canvasSize, conf, false, margin);
-            for (let i = midIsIn ? 0 : 1; i < intersections.length - 1; i += 2) {
+            const midRa = (intersections[longestRaStrokeIndex] + intersections[longestRaStrokeIndex + 1]) / 2;
+            const [midIsIn, _] = RaDec.toCanvasXYifin({ ra: midRa, dec: dec }, viewState.fov, canvasSize, conf, false, margin);
+            const start = (midIsIn == (longestRaStrokeIndex % 2 == 0)) ? 0 : 1;
+            for (let i = start; i < intersections.length - 1; i += 2) {
                 area.push(areaNumberRange(intersections[i], intersections[i + 1], dec));
             }
         }
