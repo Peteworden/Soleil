@@ -281,6 +281,8 @@ export function getAreaCandidates(
 
             const midRa = (intersections[longestRaStrokeIndex] + intersections[longestRaStrokeIndex + 1]) / 2;
             const [midIsIn, _] = RaDec.toCanvasXYifin({ ra: midRa, dec: dec }, viewState.fov, canvasSize, conf, false, margin);
+            // 偶→奇の中央が画角の中なら0、外なら1、奇→偶の中央が画角の中なら1、外なら0
+            // 「画角の中か」と「偶数か」の真偽が同じなら0、異なれば1
             const start = (midIsIn == (longestRaStrokeIndex % 2 == 0)) ? 0 : 1;
             for (let i = start; i < intersections.length - 1; i += 2) {
                 area.push(areaNumberRange(intersections[i], intersections[i + 1], dec));
