@@ -115,6 +115,11 @@ export function toEcliptic(radec: EquatorialCoordinates): { lon: number, lat: nu
     return { lon: (lon + 360) % 360, lat: lat };
 }
 
+/**
+ * @param radec deg
+ * @param distance 
+ * @returns 
+ */
 export function toCartesian(radec: EquatorialCoordinates, distance: number = 1): CartesianCoords {
     const { ra, dec } = toRad(radec);
     const cosDec = Math.cos(dec);

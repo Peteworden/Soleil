@@ -1,4 +1,4 @@
-import { CanvasXy, DeviceOrientationData, HipData, StarChartConfig, StarInformation } from "../types/index.js";
+import { DeviceOrientationData, HipData, StarChartConfig, StarInformation } from "../types/index.js";
 import { getStarSize, starSize_0mag } from "./canvasHelpers.js";
 import { ColorManager } from "./colorManager.js";
 import { AstronomicalCalculator } from "../core/calculations.js";
@@ -86,8 +86,8 @@ export class HipStarRenderer {
         const areaInfo = this.areaCandidates();
         const minDec = (areaInfo?.minDec ?? 0) * DEG_TO_RAD;
         const maxDec = (areaInfo?.maxDec ?? 0) * DEG_TO_RAD;
-        const minRa = (areaInfo?.minRa ?? 0) * DEG_TO_RAD; // 信用できない
-        const maxRa = (areaInfo?.maxRa ?? 0) * DEG_TO_RAD; // 信用できない
+        // const minRa = (areaInfo?.minRa ?? 0) * DEG_TO_RAD; // 信用できない
+        // const maxRa = (areaInfo?.maxRa ?? 0) * DEG_TO_RAD; // 信用できない
         const areaInfoExist = areaInfo !== null;
 
         for (const starsArray of this.renderBatches.values()) {
@@ -100,7 +100,8 @@ export class HipStarRenderer {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
                 if (areaInfoExist) {
-                    if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec || hipStars.raArray[i] < minRa || hipStars.raArray[i] > maxRa) continue;
+                    if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec) continue;
+                    // if(hipStars.raArray[i] < minRa || hipStars.raArray[i] > maxRa) continue;
                 }
                 const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(
@@ -136,7 +137,8 @@ export class HipStarRenderer {
                 const mag = cachedStars.magArray[i];
                 if (mag > limitingMagnitude) continue;
                 if (areaInfoExist) {
-                    if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec || hipStars.raArray[i] < minRa || hipStars.raArray[i] > maxRa) continue;
+                    if (hipStars.decArray[i] < minDec || hipStars.decArray[i] > maxDec) continue;
+                    // if(hipStars.raArray[i] < minRa || hipStars.raArray[i] > maxRa) continue;
                 }
                 const coords = { ra: cachedStars.raArray[i], dec: cachedStars.decArray[i] };
                 const [ifin, xy] = RaDec.toCanvasXYifinFast(

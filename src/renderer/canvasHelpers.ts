@@ -172,7 +172,7 @@ export function getAreaCandidates(
 
     // dec + 90 番目：
     // 赤緯dec°線と境界線の交点の赤経
-    const allIntersections: number[][] = Array.from({ length: 180 }, () => []);
+    const allIntersections: number[][] = Array.from({ length: 181 }, () => []);
 
     for (let i = 0; i < len; i++) {
         const ra1 = edgeRA[i];
@@ -188,10 +188,11 @@ export function getAreaCandidates(
             rab = ra1; decb = dec1;
         }
 
-        const crossDec = rangeInt(dec1, dec2);
+        const crossDec = rangeInt(deca, decb);
+        // if (crossDec.length > 0) console.log(deca, decb, crossDec);
 
         if (raa > 300 && rab < 60) {
-            const d0 = deca + (decb - deca) / (ra2 - ra1 + 360) * (360 - ra1);
+            const d0 = deca + (decb - deca) / (rab - raa + 360) * (360 - raa);
             ra0Dec.push(d0);
             for (const dec of crossDec) {
                 if (dec < d0) {
@@ -201,7 +202,7 @@ export function getAreaCandidates(
                 }
             }
         } else if (raa < 60 && rab > 300) {
-            const d0 = deca + (decb - deca) / (ra1 - ra2 + 360) * ra1;
+            const d0 = deca + (decb - deca) / (raa - rab + 360) * raa;
             ra0Dec.push(d0);
             for (const dec of crossDec) {
                 if (dec < d0) {
@@ -218,6 +219,7 @@ export function getAreaCandidates(
     }
 
     if (npIsIn) {
+        // 北5°分は全部乗せ。84°~85°分はまだ検討
         ra0Dec.push(90 - poleArea - 1);
         ra0Dec = ra0Dec.filter(dec => dec <= 90 - poleArea);
         for (let i = 180 - Math.floor(poleArea); i < 180; i++) {
@@ -235,13 +237,24 @@ export function getAreaCandidates(
 
     if (ra0Dec.length > 0) {
         ra0Dec.sort((a, b) => a - b);
-        const ra0DecNegNum = ra0Dec.filter(d => d < 0).length;
-        const [originIsIn, _] = RaDec.toCanvasXYifin({ ra: 0, dec: 0 }, viewState.fov, canvasSize, conf, false, margin);
-        const startIndex = originIsIn ? (ra0DecNegNum + 1) % 2 : ra0DecNegNum % 2;
+        var checkPointDec = 0.0;
+        var awayFromFrame = ra0Dec.filter(d => Math.abs(d - checkPointDec) < 1.0).length == 0;
+        while (!awayFromFrame) {
+            checkPointDec += 3.0;
+            awayFromFrame = ra0Dec.filter(d => Math.abs(d - checkPointDec) < 1.0).length == 0;
+        }
+        const numSouthernCrossPoints = ra0Dec.filter(d => d < checkPointDec).length;
+        const checkPointRaDecApparent = RaDec.precession({ ra: 0, dec: checkPointDec }, undefined, 'j2000', jd);
+        const [checkPointIsIn, _] = RaDec.toCanvasXYifin(checkPointRaDecApparent, viewState.fov, canvasSize, conf, false, margin);
+        const startIndex = checkPointIsIn ? (numSouthernCrossPoints + 1) % 2 : numSouthernCrossPoints % 2;
         for (let i = startIndex; i < ra0Dec.length - 1; i++) {
             const crossDec = rangeInt(ra0Dec[i], ra0Dec[i + 1]);
+            // console.log('crossDec', ra0Dec[i], ra0Dec[i + 1], crossDec);
             for (const d of crossDec) {
-                allIntersections[d + 90].push(0, 360);
+                // console.log(d);
+                // console.log(allIntersections[d + 90]);
+                allIntersections[d + 90].push(0);
+                allIntersections[d + 90].push(360);
             }
         }
     }
@@ -271,7 +284,7 @@ export function getAreaCandidates(
 
             let longestRaStrokeIndex = 0;
             let longestRaStroke = 0;
-            for (let i = 0; i < intersections.length - 1; i++) {
+            for (let i = 0; i < intersections.length; i++) {
                 const raStroke = intersections[(i + 1) % intersections.length] - intersections[i];
                 if (raStroke > longestRaStroke) {
                     longestRaStrokeIndex = i;
@@ -280,7 +293,8 @@ export function getAreaCandidates(
             }
 
             const midRa = (intersections[longestRaStrokeIndex] + intersections[longestRaStrokeIndex + 1]) / 2;
-            const [midIsIn, _] = RaDec.toCanvasXYifin({ ra: midRa, dec: dec }, viewState.fov, canvasSize, conf, false, margin);
+            const midRaDecApparent = RaDec.precession({ ra: midRa, dec: dec }, undefined, 'j2000', jd);
+            const [midIsIn, _] = RaDec.toCanvasXYifin(midRaDecApparent, viewState.fov, canvasSize, conf, false, margin);
             // 偶→奇の中央が画角の中なら0、外なら1、奇→偶の中央が画角の中なら1、外なら0
             // 「画角の中か」と「偶数か」の真偽が同じなら0、異なれば1
             const start = (midIsIn == (longestRaStrokeIndex % 2 == 0)) ? 0 : 1;

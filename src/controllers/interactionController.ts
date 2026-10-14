@@ -216,7 +216,6 @@ export class InteractionController {
                             centerRaDec.ra = RaDec.getCenterByCanvasRadec(lastRadec, currentCanvasRadec, centerRaDec.dec).ra;
                         }
                         centerRaDec.ra = (centerRaDec.ra % 360 + 360) % 360;
-                        console.log(`centerRaDec: ${centerRaDec.ra}, ${centerRaDec.dec}`);
                         const newCenterAzalt = RaDec.toAzalt(centerRaDec, lstLat);
                         centerAzAlt.az = newCenterAzalt.az;
                         centerAzAlt.alt = newCenterAzalt.alt;
