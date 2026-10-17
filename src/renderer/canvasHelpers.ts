@@ -4,8 +4,6 @@ import { TransformModeConfig, ViewState, Fov, EquatorialCoordinates, CanvasSize,
 import { AstronomicalCalculator } from '../core/calculations.js';
 
 // バグがあったらここにその状態のリンクを貼る
-// https://peteworden.github.io/Soleil/chart.html?ra=28.486&dec=56.473&lat=35.03&lon=135.78&time=20260720-124312&fov=36.97
-// https://peteworden.github.io/Soleil/chart.html?ra=30.168&dec=55.449&lat=35.03&lon=135.78&time=20260720-124312&fov=71.8
 
 export function starSize_0mag(fov: Fov): number {
     return Math.max(200.0 / (Math.min(fov.ra, fov.dec) + 15), 3.0);
@@ -189,7 +187,6 @@ export function getAreaCandidates(
         }
 
         const crossDec = rangeInt(deca, decb);
-        // if (crossDec.length > 0) console.log(deca, decb, crossDec);
 
         if (raa > 300 && rab < 60) {
             const d0 = deca + (decb - deca) / (rab - raa + 360) * (360 - raa);
@@ -249,10 +246,7 @@ export function getAreaCandidates(
         const startIndex = checkPointIsIn ? (numSouthernCrossPoints + 1) % 2 : numSouthernCrossPoints % 2;
         for (let i = startIndex; i < ra0Dec.length - 1; i++) {
             const crossDec = rangeInt(ra0Dec[i], ra0Dec[i + 1]);
-            // console.log('crossDec', ra0Dec[i], ra0Dec[i + 1], crossDec);
             for (const d of crossDec) {
-                // console.log(d);
-                // console.log(allIntersections[d + 90]);
                 allIntersections[d + 90].push(0);
                 allIntersections[d + 90].push(360);
             }
