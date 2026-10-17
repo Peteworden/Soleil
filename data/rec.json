@@ -42,5 +42,6 @@
 {"name":"イータ・カリーナ星雲","alt_name":["いーたかりーなせいうん"],"ra":"10 45.1","dec":"-59 52","vmag":"100","class":"Nb","description":"明るく大きな星雲"},
 {"name":"大マゼラン雲","alt_name":["LMC"],"search_keys":["だいまぜらんうん","だいまぜらんぎんが"],"ra":"5 23.6","dec":"-69 45","vmag":"100","class":"Gx","description":"大マゼラン銀河。視直径約10°"},
 {"name":"小マゼラン雲","alt_name":["SMC"],"search_keys":["しょうまぜらんうん","しょうまぜらんぎんが"],"ra":"0 52.7","dec":"-72 50","vmag":"100","class":"Gx","description":"小マゼラン銀河。視直径約5°"},
+{"name":"Andromeda's Parachute","alt_name":[""],"ra":"1 47.2","dec":"46 31","vmag":"","class":"?","description":"z = 2.377（約110億光年先）のクエーサー。重力レンズ効果で4つに分裂して見え、そのうちの3つが合わせて15等級台に見える。"},
 {"name":"","alt_name":[""],"ra":"","dec":"","vmag":"","class":"","description":""}
 ]
